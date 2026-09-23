@@ -109,7 +109,9 @@ b,strong{font-weight:700;color:var(--ink)}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 
 /* ---------------- INTAKE ---------------- */
-#inSvg{width:100%;height:auto;touch-action:none}
+#inSvg{width:100%;height:auto;touch-action:none;border-radius:10px}
+body.framed #publication>.ctrls{padding-right:48px}
+#publication .auto{top:auto;bottom:0;right:0}
 #inSvg,#projSvg,#stackSvg,#pubSvg,#cartoSvg,.panel svg{overflow:hidden}
 .pin{cursor:grab}.pin:active{cursor:grabbing}
 .pin .shadow{fill:rgba(5,5,6,.18)}
@@ -310,7 +312,7 @@ b,strong{font-weight:700;color:var(--ink)}
       <div class="seg" role="group" aria-label="Record status"><button data-st="0" aria-pressed="true">Functional</button><button data-st="1" aria-pressed="false">Under repair</button><button data-st="2" aria-pressed="false">Closed</button></div></div>
     <div class="seg" role="group" aria-label="Distribution"><button data-pm="svc" aria-pressed="true">Services</button><button data-pm="files" aria-pressed="false">Files by email</button></div>
   </div>
-  <div class="stage"><svg id="pubSvg" viewBox="0 0 800 400" role="img" aria-label="PostGIS publishes one set of services. Four applications show the same record."></svg></div>
+  <div class="stage"><svg id="pubSvg" viewBox="0 0 800 420" role="img" aria-label="PostGIS publishes one set of services. Four applications show the same record."></svg></div>
   <p class="small muted" id="pbNote" aria-live="polite"></p>
 </section>
 
