@@ -131,6 +131,95 @@ out.stack = {
 };
 delete out.worldPt; delete out.world.proj;
 
+
+// ================= v4: real context layers (Natural Earth 10m, public domain) =================
+const rd = f => JSON.parse(fs.readFileSync("data/" + f));
+const VIEWB = turf.bboxPolygon([78.6, 16.6, 86.2, 25.2]);
+const clipLine = f => { try { const c = turf.bboxClip(turf.simplify(f, { tolerance: 0.006, highQuality: false }), [78.6, 16.6, 86.2, 25.2]); return c.geometry.coordinates.length ? c : null; } catch (e) { return null; } };
+const lpath = g => path0(g.type === "Feature" ? g.geometry : g);
+out.ctx = {
+  states: rd("cg_admin1.json").features.filter(f => f.properties.name !== "Chhattisgarh").map(f => {
+    let cl = turf.intersect(turf.featureCollection([f, VIEWB])); if (!cl) return null; cl = turf.simplify(cl, { tolerance: 0.01 });
+    const c = turf.centerOfMass(cl).geometry.coordinates; return { n: f.properties.name.replace("Orissa", "Odisha"), d: path(cl), c: P(c).map(v => +v.toFixed(1)) };
+  }).filter(Boolean),
+  rivers: rd("cg_ne_10m_rivers_lake_centerlines.json").features.map(f => { const c = clipLine(f); return c ? { n: (f.properties.name || "").replace("Mahäna Nadï", "Mahanadi").replace("Godävari", "Godavari"), d: lpath(c), r: f.properties.scalerank } : null; }).filter(Boolean),
+  rail: rd("cg_ne_10m_railroads.json").features.map(f => { const c = clipLine(f); return c ? lpath(c) : null; }).filter(Boolean).join(""),
+  roads: rd("cg_ne_10m_roads.json").features.filter(f => f.properties.type === "Major Highway" || f.properties.sr <= 5).map(f => { const c = clipLine(f); return c ? lpath(c) : null; }).filter(Boolean).join(""),
+  cities: rd("cg_places.json").features.map(f => ({ n: f.properties.name, cg: f.properties.adm1name === "Chhattisgarh", p: f.properties.pop_max, xy: P(f.geometry.coordinates).map(v => +v.toFixed(1)) })),
+};
+// river label anchor: point at ~55% along the longest clipped part inside CG
+out.ctx.rivers.forEach(r => { r.d = r.d; });
+
+// ================= v4: organic sub-district geometry for the cartography zoom =================
+(function () {
+  const feat = target, b = turf.bbox(feat);
+  // Poisson-disk seeds (Bridson), deterministic
+  let s2 = 7; const R = () => (s2 = (s2 * 16807) % 2147483647) / 2147483647;
+  const r0 = 0.04, pts = [], active = [];
+  const inF = p => turf.booleanPointInPolygon(turf.point(p), feat);
+  let first; for (let g = 0; g < 500 && !first; g++) { const p = [b[0] + R() * (b[2] - b[0]), b[1] + R() * (b[3] - b[1])]; if (inF(p)) first = p; }
+  pts.push(first); active.push(first);
+  while (active.length && pts.length < 400) {
+    const i = Math.floor(R() * active.length), a = active[i]; let ok = false;
+    for (let k = 0; k < 24; k++) { const ang = R() * 2 * Math.PI, d = r0 * (1 + R() * .9); const p = [a[0] + Math.cos(ang) * d, a[1] + Math.sin(ang) * d * .93];
+      if (p[0] < b[0] - .05 || p[0] > b[2] + .05 || p[1] < b[1] - .05 || p[1] > b[3] + .05) continue;
+      if (pts.every(q => (q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2 > r0 * r0)) { pts.push(p); active.push(p); ok = true; break; } }
+    if (!ok) active.splice(i, 1);
+  }
+  const seeds = pts;
+  const vor = Delaunay.from(seeds).voronoi([b[0] - .08, b[1] - .08, b[2] + .08, b[3] + .08]);
+  // deterministic midpoint displacement on shared edges -> surveyed-looking boundaries
+  const hash = (x, y) => { let h = Math.floor(x * 1e5) * 73856093 ^ Math.floor(y * 1e5) * 19349663; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967295; };
+  function wiggle(a, c, depth) {
+    if (depth === 0) return [];
+    const m = [(a[0] + c[0]) / 2, (a[1] + c[1]) / 2], L = Math.hypot(c[0] - a[0], c[1] - a[1]);
+    const t = (hash(m[0], m[1]) - .5) * L * .32, nx = -(c[1] - a[1]) / (L || 1), ny = (c[0] - a[0]) / (L || 1);
+    const mp = [m[0] + nx * t, m[1] + ny * t];
+    return [...wiggle(a, mp, depth - 1), mp, ...wiggle(mp, c, depth - 1)];
+  }
+  function edge(a, c) { const fwd = a[0] < c[0] || (a[0] === c[0] && a[1] < c[1]); const [p, q] = fwd ? [a, c] : [c, a]; const w = wiggle(p, q, 3); return fwd ? w : w.reverse(); }
+  const cells = [];
+  seeds.forEach((sd, i) => {
+    const poly = vor.cellPolygon(i); if (!poly) return;
+    const ring = []; for (let j = 0; j < poly.length - 1; j++) { ring.push(poly[j], ...edge(poly[j], poly[j + 1])); } ring.push(ring[0]);
+    let clip; try { clip = turf.intersect(turf.featureCollection([turf.polygon([ring]), feat])); } catch (e) { clip = null; }
+    if (clip && turf.area(clip) > 2e6) cells.push({ seed: sd, f: clip });
+  });
+  // tehsils = unions of villages grouped around 5 seeds (so tehsil and village lines coincide)
+  const tseeds = [[81.63, 21.25], [81.95, 21.35], [81.75, 20.95], [81.45, 21.05], [82.05, 21.05]];
+  const groups = tseeds.map(() => []);
+  cells.forEach(c => { let bi = 0, bd = 1e9; tseeds.forEach((t, k) => { const d = (t[0] - c.seed[0]) ** 2 + (t[1] - c.seed[1]) ** 2; if (d < bd) { bd = d; bi = k; } }); groups[bi].push(c.f); });
+  const teh = groups.filter(g => g.length).map(g => { let u = g[0]; for (let k = 1; k < g.length; k++) { try { u = turf.union(turf.featureCollection([u, g[k]])) || u; } catch (e) {} } return path(u); });
+  // settlements: one Anganwadi near most village centres, GP nodes every ~7 villages, fibre from Raipur outward (MST)
+  const vill = cells.map(c => path(c.f));
+  const cen = cells.map(c => { const p = turf.pointOnFeature(c.f).geometry.coordinates; return [p[0] + (R() - .5) * .006, p[1] + (R() - .5) * .006]; });
+  const aw = cen.filter((_, i) => i % 5 !== 3).map(p => P(p).map(v => +v.toFixed(1)));
+  const gpIdx = cen.map((_, i) => i).filter(i => i % 7 === 0); const gp = gpIdx.map(i => cen[i]);
+  const hub = [81.63, 21.25]; const nodes = [hub, ...gp]; const inT = [0], rest = new Set(nodes.map((_, i) => i).slice(1)), edges = [];
+  while (rest.size) { let best = null; for (const i of inT) for (const j of rest) { const d = (nodes[i][0] - nodes[j][0]) ** 2 + (nodes[i][1] - nodes[j][1]) ** 2; if (!best || d < best[2]) best = [i, j, d]; } edges.push([best[0], best[1]]); inT.push(best[1]); rest.delete(best[1]); }
+  out.carto.village = vill;
+  out.carto.tehsil = teh;
+  out.carto.aw = aw;
+  out.carto.gp = gp.map(p => P(p).map(v => +v.toFixed(1)));
+  out.carto.fibre = edges.map(([i, j]) => path0({ type: "LineString", coordinates: [nodes[i], nodes[j]] })).join("");
+  out.carto.hub = P(hub).map(v => +v.toFixed(1));
+  console.log("villages", vill.length, "tehsils", teh.length, "aw", aw.length, "gp", gp.length);
+})();
+// km scale: SVG units per km at the state centre
+{ const a = P([CM, 21]), c = P([CM + 1 / (111.32 * Math.cos(21 * Math.PI / 180)), 21]); out.kmPx = +Math.hypot(c[0] - a[0], c[1] - a[1]).toFixed(4); }
+// inverse helper data: a coarse lon/lat lattice in SVG space so the page can invert pointer -> lon/lat by bilinear lookup
+out.lattice = { lon0: 79.8, lat0: 17.4, step: .2, nx: 27, ny: 37, xy: [] };
+for (let j = 0; j < 37; j++) for (let i = 0; i < 27; i++) out.lattice.xy.push(P([79.8 + i * .2, 17.4 + j * .2]).map(v => +v.toFixed(2)));
+
+// ================= v4: intake inset (plate carrée fitted to the state, so the page can invert pointer -> lon/lat linearly)
+{ const IB = [79.9, 17.4, 84.8, 24.5], IW = 300, IH = 380;
+  const sx = IW / (IB[2] - IB[0]) * Math.cos(21 * Math.PI / 180), sy = IH / (IB[3] - IB[1]); const k = Math.min(sx / Math.cos(21 * Math.PI / 180), sy);
+  const kx = k * Math.cos(21 * Math.PI / 180), ky = k; const ox = (IW - (IB[2] - IB[0]) * kx) / 2, oy = (IH - (IB[3] - IB[1]) * ky) / 2;
+  const f = ([lo, la]) => [ox + (lo - IB[0]) * kx, oy + (IB[3] - la) * ky];
+  const pp = g => { const rings = g.type === "Polygon" ? [g.coordinates] : g.coordinates; return rings.map(poly => poly.map(r => "M" + r.map(p => f(p).map(v => v.toFixed(1)).join(",")).join("L") + "Z").join("")).join(""); };
+  out.inset = { W: IW, H: IH, lon0: IB[0], lat1: IB[3], kx: +kx.toFixed(4), ky: +ky.toFixed(4), ox: +ox.toFixed(2), oy: +oy.toFixed(2), state: pp(stFeat.geometry), districts: districts.features.map(d => pp(d.geometry)).join("") };
+}
+
 fs.writeFileSync("data.js", "window.GT=" + JSON.stringify(out) + ";");
 console.log(JSON.stringify(facts, null, 1));
 console.log("cells", cells.length, "bytes", fs.statSync("data.js").size, "precR", out.precR);

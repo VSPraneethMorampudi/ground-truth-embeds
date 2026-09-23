@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ground Truth · Figures</title>
+<!--
+  GROUND TRUTH · interactive figures for the StoryMap (State Geoportal, CHiPS)          v4
+  Views (URL hash):  #intake  #conversion  #projection  #storage  #publication  #cartography
+  Options: &head (show the heading when framed)  &auto=off  &crs=u44|u45|lcc|wgs  &scale=0..5
+
+  Type: Avenir Next World, loaded from the story's own ArcGIS portal so the figures match the story.
+  UI grammar and colour: GitLab Pajamas tokens (neutral controls, data-viz ramps).
+  Geography: Chhattisgarh districts (2011 vintage, simplified); rivers, rail, roads, cities, neighbouring
+  states from Natural Earth 10m (public domain). Sub-district cells, assets and fibre are illustrative.
+-->
+<style>
+@font-face{font-family:"Avenir Next World";font-weight:400;font-display:swap;src:local("Avenir Next World"),local("AvenirNextWorld-Regular"),url("https://cogcg.cgstate.gov.in/portal/apps/storymaps/static/storymaps-website-common/fonts/Avenir_Next_World/09ab0626-bb45-4650-acc8-0182d693df02.woff2") format("woff2")}
+@font-face{font-family:"Avenir Next World";font-weight:500;font-display:swap;src:local("Avenir Next World Medium"),local("AvenirNextWorld-Medium"),url("https://cogcg.cgstate.gov.in/portal/apps/storymaps/static/storymaps-website-common/fonts/Avenir_Next_World/a53dd870-d60f-11ec-9404-069abf4c3446.woff2") format("woff2")}
+@font-face{font-family:"Avenir Next World";font-weight:700;font-display:swap;src:local("Avenir Next World Bold"),local("AvenirNextWorld-Bold"),url("https://cogcg.cgstate.gov.in/portal/apps/storymaps/static/storymaps-website-common/fonts/Avenir_Next_World/074dfc70-6436-4f4b-9314-d1e69287aea1.woff2") format("woff2")}
+@font-face{font-family:"GitLab Mono";src:url("fonts/GitLabMono-sub.woff2") format("woff2");font-weight:400;font-display:swap}
+:root{
+  --n0:#fff;--n10:#f7f7f5;--n50:#ecebea;--n100:#dcdbd9;--n200:#c1bfbe;--n300:#a5a3a3;--n400:#8a8888;--n500:#747273;--n600:#646163;--n700:#4d4b4e;--n800:#3a383d;--n900:#28272d;--n950:#18171d;--n1000:#050408;
+  --blue-50:#e9f3fc;--blue-100:#cbe2f9;--blue-500:#1f75cb;--blue-700:#2f5ca0;
+  --green-50:#ecf4ee;--green-100:#c3e6cd;--green-500:#108548;--green-700:#306440;
+  --red-50:#fcf1ef;--red-100:#fdd4cd;--red-500:#dd2b0e;--red-700:#a32c12;
+  --orange-50:#fdf1dd;--orange-100:#f5d9a8;--orange-400:#c17d10;--orange-500:#ab6100;--orange-700:#894b16;
+  --dv-blue-100:#d2dcff;--dv-blue-500:#617ae2;--dv-blue-700:#3f51ae;
+  --dv-orange-100:#f5d6b3;--dv-orange-200:#eebd8c;--dv-orange-500:#c95d2e;--dv-orange-700:#92430a;
+  --dv-aqua-500:#0090b1;--dv-aqua-600:#007b9b;--dv-aqua-700:#006381;
+  --dv-magenta-500:#cf4d81;--dv-magenta-700:#9a2e5d;
+  /* cartography */
+  --land:#fff;--land-out:#eceae5;--state-edge:#fbfaf8;--dist:#cfcac3;--outline:#3a383d;
+  --water:#6f9bc8;--water-ink:#3f6c9c;--rail:#8a8888;--road:#e3b98f;
+  --page:#f4f7f1;
+  --ink:var(--n900);--text:var(--n800);--muted:var(--n600);--line:var(--n100);
+  --font:"Avenir Next World","Avenir Next",Avenir,"Segoe UI",system-ui,-apple-system,sans-serif;
+  --mono:"GitLab Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:8px;--focus:0 0 0 1px #fff,0 0 0 3px var(--blue-500);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--page);color:var(--text);font:400 15px/1.5 var(--font);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body.framed{background:transparent;overflow:hidden}
+body.framed.scroll{overflow:auto}
+.view{display:none;min-height:100vh;padding:clamp(14px,2.6vw,28px);flex-direction:column;gap:14px;max-width:1100px;margin:0 auto;justify-content:center;position:relative}
+.view.on{display:flex}
+body.framed .view.on{min-height:calc(100vh / var(--z,1))}
+.hd{display:grid;gap:2px}
+body.framed:not(.head) .hd{display:none}
+.hd h1{font-size:22px;line-height:1.25;font-weight:700;color:var(--ink)}
+.hd p{color:var(--muted);font-size:14px}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus{outline:none}:focus-visible{box-shadow:var(--focus);border-radius:6px}
+svg{display:block;overflow:visible}
+svg text{font-family:var(--font)}
+.halo{paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
+.mono{font-family:var(--mono);font-size:12.5px;letter-spacing:-.01em}
+.ic{width:16px;height:16px;fill:currentColor;flex:none;display:inline-block;vertical-align:-3px}
+.ic.sm{width:12px;height:12px;vertical-align:-1px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.muted{color:var(--muted)}
+.small{font-size:13px;line-height:18px}
+.tiny{font-size:12px;line-height:16px}
+.label{font-size:12px;line-height:16px;font-weight:500;color:var(--muted);letter-spacing:.01em}
+b,strong{font-weight:700;color:var(--ink)}
+/* layout: figure + rail */
+.fig{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(250px,1fr);gap:clamp(14px,2.4vw,28px);align-items:center}
+@media (max-width:560px){.fig{grid-template-columns:1fr}}
+.stage{position:relative;min-width:0}
+.rail{display:grid;gap:14px;align-content:center;min-width:0}
+.rule{height:1px;background:var(--line)}
+/* Pajamas controls */
+.seg{display:inline-flex;flex-wrap:wrap}
+.seg button{height:32px;padding:0 12px;border:1px solid var(--n200);background:var(--n0);color:var(--n800);font-size:14px;margin-left:-1px;border-radius:0;position:relative;transition:background .15s,border-color .15s;white-space:nowrap}
+.seg button:first-child{margin-left:0;border-radius:var(--r) 0 0 var(--r)}
+.seg button:last-child{border-radius:0 var(--r) var(--r) 0}
+.seg button:hover{background:rgba(5,5,6,.05);border-color:var(--n400);z-index:1}
+.seg button[aria-pressed=true]{background:var(--n50);border-color:var(--n300);box-shadow:inset 0 0 0 1px var(--n300);color:var(--n950);font-weight:500;z-index:2}
+.tabs{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.tabs button{border:0;background:none;padding:6px 12px 9px;color:var(--n600);font-size:14px;border-radius:6px 6px 0 0;transition:color .15s,box-shadow .15s}
+.tabs button:hover{color:var(--n950);box-shadow:inset 0 -2px 0 var(--n200)}
+.tabs button[aria-pressed=true]{color:var(--n950);font-weight:500;box-shadow:inset 0 -2px 0 var(--n1000)}
+.btn{height:32px;border:1px solid var(--n200);background:var(--n0);color:var(--n800);border-radius:var(--r);padding:0 12px;font-size:14px;display:inline-flex;align-items:center;gap:6px;transition:background .15s,border-color .15s}
+.btn:hover{background:rgba(5,5,6,.05);border-color:var(--n400)}
+.btn.icon{width:32px;padding:0;justify-content:center}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;line-height:16px;padding:2px 7px;border-radius:9999px;white-space:nowrap;font-weight:500}
+.chip.ok{background:var(--green-100);color:var(--green-700)}.chip.bad{background:var(--red-100);color:var(--red-700)}
+.chip.wait{background:var(--n100);color:var(--n700)}.chip.warn{background:var(--orange-100);color:var(--orange-700)}
+.toggle{display:inline-flex;align-items:center;gap:8px;border:0;background:none;padding:0;font-size:14px}
+.toggle .track{width:40px;height:24px;border-radius:9999px;background:var(--n0);border:1px solid var(--n400);position:relative;transition:background .15s,border-color .15s}
+.toggle .knob{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--n800);transition:transform .18s cubic-bezier(.3,1.4,.6,1),background .15s}
+.toggle[aria-checked=true] .track{background:var(--n800);border-color:var(--n800)}
+.toggle[aria-checked=true] .knob{transform:translateX(16px);background:#fff}
+/* autoplay control: a quiet round button with a progress ring */
+.auto{position:absolute;top:0;right:0;z-index:6;width:30px;height:30px;border-radius:50%;border:0;background:rgba(255,255,255,.9);display:grid;place-items:center;color:var(--n700);box-shadow:0 0 0 1px var(--line)}
+.auto svg.ring{position:absolute;inset:0;width:30px;height:30px;transform:rotate(-90deg)}
+.auto .ring circle{fill:none;stroke-width:2}
+.auto .ring .trk{stroke:transparent}
+.auto .ring .prog{stroke:var(--n800);stroke-dasharray:88;stroke-dashoffset:88;stroke-linecap:round}
+.auto.run .ring .prog{animation:ringfill var(--ms) linear}
+@keyframes ringfill{to{stroke-dashoffset:0}}
+.auto:hover{color:var(--n950)}
+.hint{position:absolute;left:0;bottom:0;font-size:12.5px;color:var(--n600);display:flex;gap:6px;align-items:center;transition:opacity .5s;pointer-events:none;background:rgba(255,255,255,.85);padding:3px 8px;border-radius:9999px}
+.hint.gone{opacity:0}
+.tip{position:fixed;pointer-events:none;background:var(--n900);color:#fff;font-size:12.5px;line-height:17px;padding:6px 9px;border-radius:6px;opacity:0;transition:opacity .12s;z-index:20;max-width:250px}
+.tip b{color:#fff}.tip.on{opacity:1}
+.fade{transition:opacity .4s ease}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* ---------------- INTAKE ---------------- */
+#inSvg{width:100%;height:auto;touch-action:none}
+#inSvg,#projSvg,#stackSvg,#pubSvg,#cartoSvg,.panel svg{overflow:hidden}
+.pin{cursor:grab}.pin:active{cursor:grabbing}
+.pin .shadow{fill:rgba(5,5,6,.18)}
+.form{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;align-items:baseline}
+.form dt{font-size:12px;color:var(--muted)}
+.form dd{font-family:var(--mono);font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums}
+.form dd .cut{color:var(--n300)}
+.ctrls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--n200);border-radius:var(--r);height:32px;overflow:hidden;background:#fff}
+.stepper button{width:30px;height:30px;border:0;background:none;font-size:16px;color:var(--n700)}
+.stepper button:hover{background:var(--n10)}
+.stepper span{min-width:92px;text-align:center;font-size:13px;border-left:1px solid var(--n100);border-right:1px solid var(--n100);line-height:30px}
+.checks{list-style:none;display:grid;gap:0}
+.checks li{display:grid;grid-template-columns:18px 1fr auto;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--n50);font-size:14px}
+.checks li:last-child{border-bottom:0}
+.checks .st{width:16px;height:16px;border-radius:50%;background:var(--n100);display:grid;place-items:center;transition:background .2s,transform .2s}
+.checks li.pass .st{background:var(--green-500)}
+.checks li.fail .st{background:var(--red-500)}
+.checks li.pass .st,.checks li.fail .st{transform:scale(1.08)}
+.checks .st svg{width:10px;height:10px;fill:#fff}
+.checks .why{font-size:12px;color:var(--muted);text-align:right}
+.checks li.fail .why{color:var(--red-700)}
+.verdict{display:flex;align-items:center;gap:12px;min-height:40px}
+.stamp{font-weight:700;font-size:15px;letter-spacing:.14em;text-transform:uppercase;border:2px solid currentColor;border-radius:6px;padding:3px 10px;transform:rotate(-4deg);opacity:0}
+.stamp.ok{color:var(--green-500)}.stamp.bad{color:var(--red-500)}
+.stamp.show{animation:stamp .45s cubic-bezier(.2,1.6,.4,1) forwards}
+@keyframes stamp{0%{opacity:0;transform:rotate(-4deg) scale(1.9)}60%{opacity:1;transform:rotate(-4deg) scale(.94)}100%{opacity:1;transform:rotate(-4deg) scale(1)}}
+.log{list-style:none;display:grid;gap:3px;font-size:12.5px;color:var(--muted)}
+.log li{display:flex;gap:8px;align-items:center;animation:logIn .3s ease}
+@keyframes logIn{from{opacity:0;transform:translateY(-4px)}}
+.log .dot{width:6px;height:6px;border-radius:50%;flex:none}
+
+/* ---------------- CONVERSION ---------------- */
+.panels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(10px,1.6vw,18px)}
+@media (max-width:560px){.panels{grid-template-columns:1fr}}
+.panel{display:grid;gap:8px}
+.panel svg{width:100%;height:auto;touch-action:none;border-radius:6px}
+.panel .cap{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.panel .cap b{font-size:15px}
+.handle{cursor:grab}.handle:active{cursor:grabbing}
+.tol{transition:opacity .2s}
+.mapping{display:grid;grid-template-columns:auto 22px minmax(0,1fr);max-width:640px;gap:4px 8px;align-items:center;font-size:12.5px}
+.mapping .raw{font-family:var(--mono);color:var(--n700);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mapping .to{font-family:var(--mono);color:var(--n400);transition:color .3s}
+.mapping .to.done{color:var(--green-700)}
+.mapping .ar{color:var(--n300);text-align:center}
+.bar3{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.pips{display:flex;gap:4px}.pips i{width:22px;height:4px;border-radius:2px;background:var(--n100);transition:background .3s}.pips i.on{background:var(--green-500)}
+
+/* ---------------- PROJECTION ---------------- */
+#projSvg{width:100%;height:auto;max-height:74vh}
+.cell{transition:fill .6s,stroke .6s}
+.probe{pointer-events:none;transition:opacity .2s}
+.bars{display:grid;gap:10px}
+.bars .row{display:grid;grid-template-columns:92px 1fr 64px;gap:10px;align-items:center;font-size:13.5px;transition:opacity .2s}
+.bars .row.dim{opacity:.55}
+.bars .trk{position:relative;height:10px;background:var(--n50);border-radius:2px}
+.bars .trk::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--n400)}
+.bars .fill{position:absolute;top:0;bottom:0;border-radius:2px;transition:left .25s,width .25s,background .25s}
+.bars .v{font-family:var(--mono);font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
+.bars .row.on .v,.bars .row.on span:first-child{font-weight:700;color:var(--ink)}
+.legend{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.legend .g{height:6px;flex:1;border-radius:3px;background:linear-gradient(90deg,#3f51ae,#97acff 30%,#f7f7f5 50%,#e99b60 70%,#92430a)}
+
+/* ---------------- STORAGE ---------------- */
+#stackSvg{width:100%;height:auto;touch-action:none;cursor:crosshair}
+.layer{transition:transform .9s cubic-bezier(.2,.8,.2,1),opacity .3s}
+.stack.focus .layer{opacity:.28}.stack.focus .layer.on{opacity:1}
+.here{display:grid;gap:0}
+.here .row{display:grid;grid-template-columns:10px 1fr;gap:4px 12px;padding:9px 0;border-bottom:1px solid var(--n50);cursor:default}
+.here .row:last-child{border-bottom:0}
+.here .sw{width:10px;height:10px;border-radius:2px;margin-top:6px}
+.here .t{font-size:12px;color:var(--muted);font-family:var(--mono)}
+.here .v{grid-column:2;font-size:15px;color:var(--ink);font-weight:500;transition:opacity .2s}
+.here .row:hover .t{color:var(--ink)}
+
+/* ---------------- PUBLICATION ---------------- */
+#pubSvg{width:100%;height:auto}
+.pub-edge{fill:none;stroke:var(--n200);stroke-width:1.4}
+.pub-edge.live{stroke:var(--n400);stroke-dasharray:2 5;animation:dash 1.1s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-14}}
+.pulse{offset-rotate:0deg}.pulse.go{animation:mv .9s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes mv{from{offset-distance:0%}to{offset-distance:100%}}
+.scr .blink{animation:flash .8s ease}
+@keyframes flash{0%{opacity:.2}100%{opacity:1}}
+
+/* ---------------- CARTOGRAPHY ---------------- */
+.mapbox{position:relative;border-radius:10px;overflow:hidden;background:var(--land-out);box-shadow:0 0 0 1px var(--line)}
+#cartoSvg{width:100%;height:auto;aspect-ratio:1/1;max-height:74vh;display:block;touch-action:manipulation}
+.mapui{position:absolute;left:10px;top:10px;display:grid;gap:0;border-radius:var(--r);overflow:hidden;box-shadow:0 0 1px rgba(5,5,6,.3),0 1px 4px rgba(5,5,6,.2)}
+.mapui button{width:32px;height:32px;border:0;background:#fff;font-size:18px;color:var(--n800);display:grid;place-items:center}
+.mapui button+button{border-top:1px solid var(--n100)}
+.mapui button:hover{background:var(--n10)}
+.mapui button:disabled{color:var(--n300);cursor:default}
+.scalebar{position:absolute;left:10px;bottom:10px;background:rgba(255,255,255,.88);border-radius:4px;padding:3px 6px 4px;font-size:11px;color:var(--n800);display:grid;gap:2px}
+.scalebar i{display:block;height:5px;border:1.5px solid var(--n800);border-top:0}
+.scaleread{font-family:var(--mono);font-size:22px;color:var(--ink);font-variant-numeric:tabular-nums}
+.lyr{list-style:none;display:grid;gap:0}
+.lyr li{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--n50);font-size:14px;transition:opacity .25s}
+.lyr li:last-child{border-bottom:0}
+.lyr li.off{opacity:.42}
+.lyr svg{width:22px;height:14px}
+.lyr .th{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.cg{transition:opacity .45s}
+</style>
+</head>
+<body>
+<!--SPRITE-->
+<div class="tip" id="tip" role="tooltip"></div>
+
+<!-- ============================================================ INDEX -->
+<section class="view" id="index">
+  <div class="hd" style="display:grid"><h1>Ground Truth · figures</h1><p>Six interactive figures for the story. Each URL below is one embed.</p></div>
+  <ul id="idx" style="list-style:none;display:grid;gap:0;max-width:720px"></ul>
+</section>
+
+<!-- ============================================================ INTAKE -->
+<section class="view" id="intake" aria-labelledby="in-h">
+  <div class="hd"><h1 id="in-h">Where does a record land?</h1></div>
+  <div class="fig">
+    <div class="stage">
+      <svg id="inSvg" role="img" aria-label="World map with a draggable pin and an inset of Chhattisgarh. The pin's coordinates are validated live."></svg>
+      <div class="hint" id="inHint"><svg class="ic sm"><use href="#i-location"/></svg>Drag the pin anywhere, or into the inset</div>
+    </div>
+    <div class="rail">
+      <dl class="form" aria-live="polite">
+        <dt>Asset ID</dt><dd id="fId">AWC-RPR-00412</dd>
+        <dt>Latitude</dt><dd id="fLat">21.251384</dd>
+        <dt>Longitude</dt><dd id="fLon">81.629641</dd>
+      </dl>
+      <div class="ctrls">
+        <div class="stepper" role="group" aria-label="Decimal places"><button id="decM" aria-label="Fewer decimals">−</button><span id="decV">6 decimals</span><button id="decP" aria-label="More decimals">+</button></div>
+        <button class="btn" id="swap"><svg class="ic sm"><use href="#i-retry"/></svg>Swap lat/long</button>
+      </div>
+      <ul class="checks" id="checks"></ul>
+      <div class="verdict"><span class="stamp" id="stamp">Accepted</span><span class="small muted" id="vWhy"></span></div>
+      <div class="rule"></div>
+      <ul class="log" id="log" aria-label="Recent submissions"></ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ CONVERSION -->
+<section class="view" id="conversion" aria-labelledby="cv-h">
+  <div class="hd"><h1 id="cv-h">Fix the submission</h1></div>
+  <div class="panels" id="panels"></div>
+  <div class="bar3">
+    <div class="pips" aria-hidden="true"><i></i><i></i><i></i></div>
+    <span class="small" id="cvState">3 topology errors in this submission</span>
+    <button class="btn" id="cvReset" style="margin-left:auto"><svg class="ic sm"><use href="#i-retry"/></svg>Reset</button>
+  </div>
+  <div class="rule"></div>
+  <div class="mapping" id="mapping" aria-label="Field mapping to the state schema"></div>
+</section>
+
+<!-- ============================================================ PROJECTION -->
+<section class="view" id="projection" aria-labelledby="pj-h">
+  <div class="hd"><h1 id="pj-h">How long is a kilometre here?</h1></div>
+  <div class="tabs" role="group" aria-label="Map shows error in">
+    <button data-crs="u44" aria-pressed="true">UTM 44N</button><button data-crs="u45" aria-pressed="false">UTM 45N</button><button data-crs="lcc" aria-pressed="false">State LCC</button><button data-crs="wgs" aria-pressed="false">WGS 84</button>
+  </div>
+  <div class="fig">
+    <div class="stage">
+      <svg id="projSvg" role="img" aria-label="Chhattisgarh coloured by how much a measured kilometre is stretched or shrunk in the selected coordinate system"></svg>
+      <div class="hint" id="pjHint"><svg class="ic sm"><use href="#i-location"/></svg>Move across the map to measure</div>
+    </div>
+    <div class="rail">
+      <div><div class="label">At</div><div class="mono" id="pjAt" style="font-size:15px;color:var(--ink)">—</div><div class="small muted" id="pjDist">—</div></div>
+      <div><div class="label" style="margin-bottom:8px">A 1 km line measures</div><div class="bars" id="bars"></div></div>
+      <div class="rule"></div>
+      <p class="small" id="pjNote"></p>
+      <div class="legend" id="pjLeg"><span>−1 m</span><span class="g"></span><span>+1 m per km</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ STORAGE -->
+<section class="view" id="storage" aria-labelledby="st-h">
+  <div class="hd"><h1 id="st-h">One spot, every layer</h1></div>
+  <div class="fig">
+    <div class="stage">
+      <svg id="stackSvg" viewBox="0 0 560 560" role="img" aria-label="Four layers stacked on the same Chhattisgarh outline. A pin passes through every layer at the same location."></svg>
+      <div class="hint" id="stHint"><svg class="ic sm"><use href="#i-location"/></svg>Point anywhere on the stack</div>
+    </div>
+    <div class="rail">
+      <div><div class="label">Same coordinates, four schemas</div><div class="mono" id="stAt" style="font-size:14px;color:var(--ink);margin-top:2px">—</div></div>
+      <div class="here" id="here"></div>
+      <p class="tiny muted">Tables are named <span class="mono">department_theme_geometry_scale</span>. District names are real; leases, centres and GP nodes are illustrative.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ PUBLICATION -->
+<section class="view" id="publication" aria-labelledby="pb-h">
+  <div class="hd"><h1 id="pb-h">Change it once</h1></div>
+  <div class="ctrls" style="justify-content:space-between">
+    <div class="ctrls"><span class="small muted">AWC-RPR-00412 is</span>
+      <div class="seg" role="group" aria-label="Record status"><button data-st="0" aria-pressed="true">Functional</button><button data-st="1" aria-pressed="false">Under repair</button><button data-st="2" aria-pressed="false">Closed</button></div></div>
+    <div class="seg" role="group" aria-label="Distribution"><button data-pm="svc" aria-pressed="true">Services</button><button data-pm="files" aria-pressed="false">Files by email</button></div>
+  </div>
+  <div class="stage"><svg id="pubSvg" viewBox="0 0 800 400" role="img" aria-label="PostGIS publishes one set of services. Four applications show the same record."></svg></div>
+  <p class="small muted" id="pbNote" aria-live="polite"></p>
+</section>
+
+<!-- ============================================================ CARTOGRAPHY -->
+<section class="view" id="cartography" aria-labelledby="ca-h">
+  <div class="hd"><h1 id="ca-h">What draws at each scale</h1></div>
+  <div class="fig" style="grid-template-columns:minmax(0,1.35fr) minmax(250px,1fr)">
+    <div class="stage">
+      <div class="mapbox">
+        <svg id="cartoSvg" viewBox="0 0 520 520" role="img" aria-label="Map of Chhattisgarh that zooms to Raipur district; layers switch on at their scale"></svg>
+        <div class="mapui"><button id="zIn" aria-label="Zoom in">+</button><button id="zOut" aria-label="Zoom out">−</button></div>
+        <div class="scalebar" aria-hidden="true"><span id="sbT">50 km</span><i id="sbI" style="width:60px"></i></div>
+      </div>
+    </div>
+    <div class="rail">
+      <div><div class="label">Map scale</div><div class="scaleread" id="scaleRead">1:4,000,000</div></div>
+      <ul class="lyr" id="lyr"></ul>
+      <div class="rule"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <div><div class="scaleread" style="font-size:18px" id="featN">27</div><div class="tiny muted">features requested for this view</div></div>
+        <button class="toggle" role="switch" aria-checked="true" id="limTog"><span class="track"><span class="knob"></span></span><span id="limTxt">Scale limits on</span></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>/*DATA*/</script>
+<script>
+(function(){
+"use strict";
+const G=window.GT,F=G.facts;
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const NS="http://www.w3.org/2000/svg";
+function el(t,a,p){const e=document.createElementNS(NS,t);if(a)for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
+function txt(a,p,s){const e=el("text",a,p);e.textContent=s;return e}
+const ICON=(n,c="ic")=>`<svg class="${c}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const REDUCE=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const fmt=n=>Math.round(n).toLocaleString("en-US");
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const tip=$("#tip");
+function showTip(e,h){tip.innerHTML=h;tip.classList.add("on");tip.style.left=Math.min(e.clientX+14,innerWidth-260)+"px";tip.style.top=Math.min(e.clientY+14,innerHeight-60)+"px"}
+function hideTip(){tip.classList.remove("on")}
+function setPressed(sel,btn){$$(sel).forEach(b=>b.setAttribute("aria-pressed",String(b===btn)))}
+function svgPt(svg,e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse())}
+function tween(ms,fn,done){if(REDUCE||ms<=0){fn(1);done&&done();return()=>{}}const t0=performance.now();let raf;const step=n=>{const t=Math.min(1,(n-t0)/ms);fn(ease(t));if(t<1)raf=requestAnimationFrame(step);else done&&done()};raf=requestAnimationFrame(step);return()=>cancelAnimationFrame(raf)}
+const wait=ms=>new Promise(r=>setTimeout(r,REDUCE?0:ms));
+// lon/lat -> map SVG (state LCC) via the build-time lattice
+const LT=G.lattice;
+function ll2xy(lon,lat){const fx=(lon-LT.lon0)/LT.step,fy=(lat-LT.lat0)/LT.step;const i=clamp(Math.floor(fx),0,LT.nx-2),j=clamp(Math.floor(fy),0,LT.ny-2),u=fx-i,v=fy-j;
+  const P=(a,b)=>LT.xy[b*LT.nx+a];const a=P(i,j),b=P(i+1,j),c=P(i,j+1),d=P(i+1,j+1);
+  return[lerp(lerp(a[0],b[0],u),lerp(c[0],d[0],u),v),lerp(lerp(a[1],b[1],u),lerp(c[1],d[1],u),v)]}
+function xy2ll(x,y){let lon=82.3,lat=21;for(let k=0;k<12;k++){const p=ll2xy(lon,lat),q=ll2xy(lon+.01,lat),r=ll2xy(lon,lat+.01);
+  const a=(q[0]-p[0])/.01,b=(r[0]-p[0])/.01,c=(q[1]-p[1])/.01,d=(r[1]-p[1])/.01,det=a*d-b*c;const dx=x-p[0],dy=y-p[1];lon+=(d*dx-b*dy)/det;lat+=(-c*dx+a*dy)/det}return[lon,lat]}
+
+/* ---------------- router ---------------- */
+const VIEWS={intake:"Drag a pin; the four intake checks run live",conversion:"Drag to fix a duplicate, a dangle and a sliver",projection:"Measure a kilometre anywhere in four coordinate systems",storage:"Point at the stack; every layer answers for the same spot",publication:"Change one record; every consumer updates",cartography:"Zoom from state to village; layers switch on at their scale"};
+const OPT={};
+function parse(){const p=location.hash.slice(1).split("&");const v=p.shift();for(const k in OPT)delete OPT[k];p.forEach(x=>{const[a,b]=x.split("=");OPT[a]=b===undefined?true:decodeURIComponent(b)});return v}
+const INIT={},inited={};
+const framed=(()=>{try{return window.self!==window.top}catch(e){return true}})();
+function route(){const v=parse(),id=VIEWS[v]?v:"index";
+  document.body.classList.toggle("framed",framed);document.body.classList.toggle("head",!!OPT.head||!framed);
+  $$(".view").forEach(s=>s.classList.toggle("on",s.id===id));document.title="Ground Truth · "+(VIEWS[id]?id:"figures");
+  if(!inited[id]&&INIT[id]){INIT[id]();inited[id]=true}
+  requestAnimationFrame(fit)}
+function fit(){const v=$(".view.on");if(!v||!framed)return;v.style.zoom=1;document.body.style.setProperty("--z",1);
+  if(innerWidth<560){document.body.classList.add("scroll");return}
+  const z=Math.min(1,innerHeight/v.scrollHeight),zz=Math.max(.62,z);v.style.zoom=zz;document.body.style.setProperty("--z",zz);document.body.classList.toggle("scroll",z<.62)}
+let fitT;addEventListener("resize",()=>{clearTimeout(fitT);fitT=setTimeout(fit,120)});
+
+/* ---------------- autoplay: runs on screen while the reader is idle ---------------- */
+function Auto(id,ms,tick,{host,first=true,enter,hint}={}){
+  const view=$("#"+id),h=host?$(host):view,b=document.createElement("button");b.className="auto";b.type="button";h.appendChild(b);b.style.setProperty("--ms",ms+"ms");
+  let timer=null,idle=null,visible=false,active=false,off=REDUCE||OPT.auto==="off",started=false,touched=false;
+  const running=()=>visible&&!active&&!off&&document.visibilityState==="visible";
+  function render(){const r=running();b.classList.toggle("run",r);
+    b.innerHTML=`<svg class="ring" viewBox="0 0 30 30"><circle class="trk" cx="15" cy="15" r="14"/><circle class="prog" cx="15" cy="15" r="14"/></svg>${ICON(r?"pause":"play","ic sm")}`;
+    b.setAttribute("aria-label",off?"Play demonstration":"Pause demonstration");b.title=off?"Play":"Pause"}
+  function sched(){clearTimeout(timer);render();if(running())timer=setTimeout(()=>{Promise.resolve(tick()).then(sched)},ms)}
+  function poke(){if(!touched&&hint){touched=true;$(hint)?.classList.add("gone")}active=true;clearTimeout(idle);idle=setTimeout(()=>{active=false;sched()},4000);sched()}
+  ["pointerdown","keydown","wheel"].forEach(ev=>view.addEventListener(ev,e=>{if(b.contains(e.target))return;poke()},{passive:true}));
+  view.addEventListener("pointermove",e=>{if(e.pointerType==="mouse"&&!b.contains(e.target)&&e.target.closest(".stage,.rail,.panels,.ctrls,.tabs"))poke()},{passive:true});
+  b.onclick=e=>{e.stopPropagation();off=!off;active=false;if(!off)Promise.resolve(tick()).then(sched);else sched()};
+  new IntersectionObserver(es=>{visible=es[0].isIntersecting;if(visible&&!started){started=true;enter&&enter();if(first&&!off)setTimeout(()=>{if(running())Promise.resolve(tick()).then(sched)},enter?800:300)}sched()},{threshold:.3}).observe(view);
+  document.addEventListener("visibilitychange",sched);render();
+  return{busy:()=>active}}
+
+/* ---------------- INDEX ---------------- */
+INIT.index=()=>{const base=location.href.split("#")[0];for(const k in VIEWS){const li=document.createElement("li");li.style.cssText="padding:12px 0;border-bottom:1px solid var(--line);display:grid;gap:2px";
+  li.innerHTML=`<a href="#${k}" style="color:var(--ink);font-weight:700;text-decoration:none">${k[0].toUpperCase()+k.slice(1)}</a><span class="small muted">${VIEWS[k]}</span><span class="mono" style="color:var(--blue-700);word-break:break-all">${base}#${k}</span>`;$("#idx").appendChild(li)}};
+
+/* ---------------- shared cartographic base ---------------- */
+const LBL={"Madhya Pradesh":[70,130],"Maharashtra":[46,430],"Telangana":[92,612],"Odisha":[455,395],"Jharkhand":[472,120],"Uttar Pradesh":[250,20],"Andhra Pradesh":[300,630],"Bihar":[520,10]};
+function drawContext(svg,{labels=true,rivers=true,rail=false,roads=false,cities=true,k=1,riverLabels=true}={}){
+  const g=el("g",{},svg);
+  el("rect",{x:-3000,y:-3000,width:7000,height:7000,fill:"var(--land-out)"},g);
+  G.ctx.states.forEach(s=>el("path",{d:s.d,fill:"#f1efeb",stroke:"#fff","stroke-width":1.4*k,"vector-effect":"non-scaling-stroke"},g));
+  el("path",{d:G.state,fill:"var(--land)"},g);
+  const L={};
+  if(roads)L.roads=el("path",{d:G.ctx.roads,fill:"none",stroke:"var(--road)","stroke-width":1.1,"vector-effect":"non-scaling-stroke"},g);
+  if(rivers){L.rivers=el("g",{fill:"none",stroke:"var(--water)","stroke-linecap":"round"},g);G.ctx.rivers.forEach(r=>{const p=el("path",{d:r.d,"stroke-width":r.r<=4?1.4:1,"vector-effect":"non-scaling-stroke",opacity:.85},L.rivers);p._n=r.n})}
+  if(rail){L.rail=el("g",{},g);el("path",{d:G.ctx.rail,fill:"none",stroke:"var(--rail)","stroke-width":1.6,"vector-effect":"non-scaling-stroke"},L.rail);el("path",{d:G.ctx.rail,fill:"none",stroke:"#fff","stroke-width":.8,"stroke-dasharray":"3 3","vector-effect":"non-scaling-stroke"},L.rail)}
+  L.dist=el("g",{fill:"none",stroke:"var(--dist)","stroke-width":.8,"vector-effect":"non-scaling-stroke"},g);G.districts.forEach(d=>el("path",{d:d.d,"vector-effect":"non-scaling-stroke"},L.dist));
+  L.outline=el("path",{d:G.state,fill:"none",stroke:"var(--outline)","stroke-width":1.5,"stroke-linejoin":"round","vector-effect":"non-scaling-stroke"},g);
+  L.top=el("g",{},g);
+  if(rivers&&riverLabels){L.rlab=el("g",{"font-style":"italic",fill:"var(--water-ink)","font-size":10.5*k,class:"halo"},L.top);
+    const seen={};L.rivers.querySelectorAll("path").forEach(p=>{const n=p._n;if(!n||seen[n]||!["Mahanadi","Indravati","Son","Wainganga","Godavari"].includes(n))return;const len=p.getTotalLength();if(len<60)return;seen[n]=1;
+      const a=p.getPointAtLength(len*.45),b=p.getPointAtLength(len*.45+8);let ang=Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI;if(ang>90)ang-=180;if(ang<-90)ang+=180;
+      txt({x:a.x,y:a.y-4,transform:`rotate(${ang.toFixed(1)} ${a.x} ${a.y})`,"text-anchor":"middle"},L.rlab,n)})}
+  if(labels){L.slab=el("g",{fill:"#a8a39b","font-size":9.5*k,"letter-spacing":2*k,"font-weight":500},L.top);for(const n in LBL)txt({x:LBL[n][0],y:LBL[n][1],"text-anchor":"middle"},L.slab,n.toUpperCase())}
+  if(cities){L.city=el("g",{},L.top);G.ctx.cities.forEach(c=>{if(!c.cg&&!["Nagpur","Sambalpur","Raurkela","Jabalpur"].includes(c.n))return;
+    el("circle",{cx:c.xy[0],cy:c.xy[1],r:(c.cg?2.8:2.2)*k,fill:c.cg?"var(--n900)":"#9d978e",stroke:"#fff","stroke-width":1*k},L.city);
+    txt({x:c.xy[0]+(c.n==="Bhilai"?-5:5)*k,y:c.xy[1]+(c.n==="Bhilai"?9:-4)*k,"text-anchor":c.n==="Bhilai"?"end":"start","font-size":(c.cg?11:9.5)*k,"font-weight":c.cg?700:400,fill:c.cg?"var(--n900)":"#8a857d",class:"halo"},L.city,c.n)})}
+  return L}
+
+/* ============================================================ INTAKE */
+INIT.intake=()=>{
+  const S=$("#inSvg");S.setAttribute("viewBox","262 -14 332 206");
+  const ex=l=>(l+180)/360*640,ey=l=>(90-l)/180*320,ix=x=>x/640*360-180,iy=y=>90-y/320*180;
+  // world
+  el("rect",{x:200,y:-20,width:460,height:260,fill:"#e9eef1"},S);
+  const gr=el("g",{stroke:"#dde5ea","stroke-width":.4,fill:"none"},S);for(let lo=-30;lo<=150;lo+=15)el("line",{x1:ex(lo),x2:ex(lo),y1:0,y2:200},gr);for(let la=-15;la<=90;la+=15)el("line",{x1:200,x2:660,y1:ey(la),y2:ey(la)},gr);
+  el("line",{x1:200,x2:660,y1:ey(0),y2:ey(0),stroke:"#c9d4db","stroke-width":.5,"stroke-dasharray":"2 2"},S);el("line",{x1:ex(0),x2:ex(0),y1:0,y2:200,stroke:"#c9d4db","stroke-width":.5,"stroke-dasharray":"2 2"},S);
+  el("path",{d:G.world.land,fill:"#fbfaf8",stroke:"#cfcac3","stroke-width":.35},S);
+  const gl=el("g",{"font-size":4.6,fill:"#8a95a0","font-style":"italic"},S);
+  txt({x:ex(-18),y:ey(30)},gl,"Atlantic Ocean");txt({x:ex(68),y:ey(-8)},gl,"Indian Ocean");txt({x:ex(40),y:ey(86.2)},gl,"Arctic Ocean");txt({x:ex(2),y:ey(-3.2),"font-style":"normal","font-size":3.8,fill:"#98a3ad"},gl,"0°, 0°");
+  // envelope on the world
+  const envX=ex(80.25),envY=ey(24.11),envW=ex(84.40)-envX,envH=ey(17.78)-envY;
+  el("rect",{x:envX,y:envY,width:envW,height:envH,fill:"rgba(31,117,203,.12)",stroke:"var(--blue-500)","stroke-width":.5},S);
+  // inset (plate carrée of the state)
+  const I=G.inset,IS=.3,IX=494,IY=56;
+  const ig=el("g",{transform:`translate(${IX} ${IY}) scale(${IS})`},S);
+  el("rect",{x:-6,y:-6,width:I.W+12,height:I.H+12,rx:10,fill:"#fff",stroke:"#cfcac3","stroke-width":1.4},ig);
+  el("line",{x1:envX+envW,y1:envY+envH,x2:IX,y2:IY+(I.H+12)*IS*.5,stroke:"var(--blue-500)","stroke-width":.35},S);
+  el("rect",{x:(80.25-I.lon0)*I.kx+I.ox,y:(I.lat1-24.11)*I.ky+I.oy,width:(84.40-80.25)*I.kx,height:(24.11-17.78)*I.ky,fill:"rgba(31,117,203,.06)",stroke:"var(--blue-500)","stroke-width":1.2,"stroke-dasharray":"4 3"},ig);
+  el("path",{d:I.state,fill:"#fbfaf8",stroke:"none"},ig);el("path",{d:I.districts,fill:"none",stroke:"#d8d3cc","stroke-width":.9},ig);el("path",{d:I.state,fill:"none",stroke:"var(--outline)","stroke-width":1.6},ig);
+  txt({x:6,y:22,"font-size":18,fill:"var(--n700)","font-weight":700},ig,"Chhattisgarh");
+  const in2ll=(x,y)=>[I.lon0+(x-I.ox)/I.kx,I.lat1-(y-I.oy)/I.ky],ll2in=(lo,la)=>[I.ox+(lo-I.lon0)*I.kx,I.oy+(I.lat1-la)*I.ky];
+  const inInset=(x,y)=>x>=IX&&x<=IX+(I.W)*IS&&y>=IY&&y<=IY+I.H*IS;
+  // pins (world + inset echo)
+  const mkPin=(p,s)=>{const g=el("g",{class:"pin"},p);el("ellipse",{class:"shadow",cx:0,cy:0,rx:2.4*s,ry:.9*s},g);
+    const body=el("path",{d:`M0 0 C ${-1.2*s} ${-3.2*s} ${-4.2*s} ${-5.2*s} ${-4.2*s} ${-8.6*s} A ${4.2*s} ${4.2*s} 0 1 1 ${4.2*s} ${-8.6*s} C ${4.2*s} ${-5.2*s} ${1.2*s} ${-3.2*s} 0 0Z`,fill:"var(--n800)",stroke:"#fff","stroke-width":.5*s},g);
+    el("circle",{cx:0,cy:-8.6*s,r:1.6*s,fill:"#fff"},g);g._b=body;return g};
+  const pinW=mkPin(S,1.35),pinI=mkPin(ig,3.2);
+  const ghost=el("line",{stroke:"var(--red-500)","stroke-width":.5,"stroke-dasharray":"1.5 1.5",opacity:0},S);
+  // state
+  let rec={id:"AWC-RPR-00412",lat:21.251384,lon:81.629641,dec:6,dup:false};
+  const seen=new Set(["AWC-RPR-00412"]);
+  const CK=[["env","Inside the state envelope"],["nul","Not an empty 0, 0"],["pre","Six decimal places"],["uid","Asset ID not already used"]];
+  $("#checks").innerHTML=CK.map(([k,t])=>`<li id="ck-${k}"><span class="st"></span><span>${t}</span><span class="why"></span></li>`).join("");
+  const R=v=>+(+v).toFixed(rec.dec);
+  function evaluate(){const la=R(rec.lat),lo=R(rec.lon);const m=10**-rec.dec*111320/2;
+    return{env:la>=17.78&&la<=24.11&&lo>=80.25&&lo<=84.40,nul:!(la===0&&lo===0),pre:rec.dec>=6,uid:!rec.dup,
+      why:{env:la>80?"lands in the Arctic":la===0&&lo===0?"lands at 0, 0":"outside Chhattisgarh",nul:"0, 0",pre:`±${m>=1000?(m/1000).toFixed(1)+" km":fmt(m)+" m"} on the ground`,uid:"duplicate"}}}
+  function field(v){const s=(+v).toFixed(rec.dec),full=(+v).toFixed(6);return s+(rec.dec<6?`<span class="cut">${"0".repeat(6-rec.dec)}</span>`:"")}
+  function paint(){$("#fId").textContent=rec.id;$("#fLat").innerHTML=field(rec.lat);$("#fLon").innerHTML=field(rec.lon);$("#decV").textContent=rec.dec+" decimal"+(rec.dec===1?"":"s");
+    const [wx,wy]=[ex(R(rec.lon)),ey(R(rec.lat))];pinW.setAttribute("transform",`translate(${wx} ${wy})`);
+    const inside=R(rec.lat)>=17.4&&R(rec.lat)<=24.5&&R(rec.lon)>=79.9&&R(rec.lon)<=84.8;pinI.style.opacity=inside?1:0;
+    if(inside){const[a,b]=ll2in(R(rec.lon),R(rec.lat));pinI.setAttribute("transform",`translate(${a} ${b})`)}}
+  let seq=0;
+  function clearChecks(){CK.forEach(([k])=>{const li=$("#ck-"+k);li.className="";li.querySelector(".st").innerHTML="";li.querySelector(".why").textContent=""});$("#stamp").className="stamp";$("#vWhy").textContent=""}
+  async function judge(animate=true,logIt=true){const my=++seq,r=evaluate();clearChecks();
+    for(const [k] of CK){if(my!==seq)return;if(animate)await wait(150);const li=$("#ck-"+k),ok=r[k];li.className=ok?"pass":"fail";
+      li.querySelector(".st").innerHTML=`<svg viewBox="0 0 16 16"><use href="#i-${ok?"check":"close-xs"}"/></svg>`;li.querySelector(".why").textContent=ok?"":r.why[k]}
+    const ok=CK.every(([k])=>r[k]);const col=ok?"var(--green-500)":"var(--red-500)";pinW._b.setAttribute("fill",col);pinI._b.setAttribute("fill",col);
+    if(animate)await wait(120);if(my!==seq)return;stamp.textContent=ok?"Accepted":"Returned";stamp.className="stamp show "+(ok?"ok":"bad");
+    $("#vWhy").textContent=ok?"Loaded for conversion":"Sent back with an error report";
+    if(!logIt)return;const RS={env:"outside the envelope",nul:"empty 0, 0",pre:"too few decimals",uid:"duplicate ID"};const li=document.createElement("li");const first=CK.find(([k])=>!r[k]);li.innerHTML=`<span class="dot" style="background:${col}"></span><span class="mono" style="font-size:12px">${rec.id}</span><span>${ok?"accepted":RS[first[0]]}</span>`;
+    const log=$("#log");log.prepend(li);while(log.children.length>3)log.lastChild.remove();
+    if(ok)seen.add(rec.id)}
+  function setAll(){pinW._b.setAttribute("fill","var(--n800)");pinI._b.setAttribute("fill","var(--n800)")}
+  // dragging
+  let drag=null,newN=1;
+  S.addEventListener("pointerdown",e=>{const p=svgPt(S,e);drag={};S.setPointerCapture(e.pointerId);moveTo(p);});
+  S.addEventListener("pointermove",e=>{if(!drag)return;moveTo(svgPt(S,e))});
+  S.addEventListener("pointerup",()=>{if(!drag)return;drag=null;rec.id="AWC-NEW-"+String(newN++).padStart(4,"0");rec.dup=false;paint();judge()});
+  function moveTo(p){clearChecks();let lo,la;if(inInset(p.x,p.y)){[lo,la]=in2ll((p.x-IX)/IS,(p.y-IY)/IS)}else{lo=ix(p.x);la=iy(p.y)}
+    rec.lon=+clamp(lo,-180,180).toFixed(6);rec.lat=+clamp(la,-89,89).toFixed(6);setAll();seq++;$("#stamp").className="stamp";paint()}
+  $("#decM").onclick=()=>{rec.dec=Math.max(0,rec.dec-1);paint();judge()};
+  $("#decP").onclick=()=>{rec.dec=Math.min(6,rec.dec+1);paint();judge()};
+  $("#swap").onclick=()=>{[rec.lat,rec.lon]=[rec.lon,clamp(rec.lat,-180,180)];if(Math.abs(rec.lat)>89)rec.lat=Math.sign(rec.lat)*89;paint();judge()};
+  // demonstration
+  const SC=[{id:"AWC-RPR-00412",lat:21.251384,lon:81.629641,dec:6},{id:"AWC-BSR-01877",lat:81.713205,lon:22.079618,dec:6},{id:"GP-KBR-0093",lat:0,lon:0,dec:6},{id:"AWC-DNT-00230",lat:18.89,lon:81.35,dec:2},{id:"AWC-RPR-00412",lat:21.25139,lon:81.629655,dec:6,dup:true},{id:"MIN-KRB-L-0071",lat:22.357046,lon:82.682119,dec:6}];
+  let si=1;
+  async function demo(){const s=SC[si++%SC.length];const from={lat:rec.lat,lon:rec.lon};Object.assign(rec,{id:s.id,dec:s.dec,dup:!!s.dup});setAll();seq++;clearChecks();paint();
+    await new Promise(res=>tween(900,t=>{rec.lat=lerp(from.lat,s.lat,t);rec.lon=lerp(from.lon,s.lon,t);paint();pinW.setAttribute("transform",pinW.getAttribute("transform")+` translate(0 ${-Math.sin(t*Math.PI)*10})`)},res));
+    rec.lat=s.lat;rec.lon=s.lon;paint();await judge()}
+  paint();judge(false,false);
+  Auto("intake",4200,demo,{host:"#intake .stage",hint:"#inHint"});
+};
+
+/* ============================================================ CONVERSION */
+INIT.conversion=()=>{
+  const PAN=[
+    {k:"pt",t:"Points",d:"Two offices sent the same centre",svg:`<rect width="260" height="190" fill="#fbfaf8"/>
+      <g fill="none" stroke="#e2ded8" stroke-width="1"><path d="M0 64 C40 58 60 70 96 60 S150 40 180 46 260 52 260 52"/><path d="M0 136 C50 128 80 146 120 138 S200 120 260 130"/><path d="M92 0 C96 40 84 90 90 130 S80 170 84 190"/><path d="M186 0 C180 50 196 90 186 130 S190 170 194 190"/></g>
+      <path d="M-10 170 C40 150 80 160 120 150 S200 110 270 120" fill="none" stroke="#9dbfe0" stroke-width="3" opacity=".6"/>
+      <g fill="var(--dv-blue-500)" stroke="#fff" stroke-width="1.5"><circle cx="40" cy="98" r="5.5"/><circle cx="62" cy="30" r="5.5"/><circle cx="222" cy="92" r="5.5"/><circle cx="54" cy="160" r="5.5"/><circle cx="150" cy="168" r="5.5"/><circle cx="232" cy="28" r="5.5"/></g>
+      <g fill="var(--dv-aqua-600)" stroke="#fff" stroke-width="1.5"><rect x="130" y="24" width="10" height="10" transform="rotate(45 135 29)"/><rect x="214" y="150" width="10" height="10" transform="rotate(45 219 155)"/></g>
+      <circle id="ptA" cx="140" cy="100" r="6" fill="var(--dv-blue-500)" stroke="#fff" stroke-width="1.5"/>
+      <circle class="tol" id="ptTol" cx="140" cy="100" r="16" fill="rgba(97,122,226,.08)" stroke="var(--dv-blue-500)" stroke-dasharray="2 3" opacity="0"/>
+      <g id="ptB" class="handle"><circle r="16" fill="transparent"/><circle r="6" fill="var(--dv-blue-500)" stroke="#fff" stroke-width="1.5"/><circle r="11" fill="none" stroke="var(--red-500)" stroke-width="1.5" class="flag"/></g>
+      <text id="ptL" x="140" y="80" text-anchor="middle" font-size="11" font-weight="700" fill="var(--red-700)" class="halo">duplicate</text>`},
+    {k:"ln",t:"Lines",d:"A fibre spur stops 11 m short",svg:`<rect width="260" height="190" fill="#fbfaf8"/>
+      <defs><marker id="ar" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 1L9 5L0 9z" fill="var(--dv-aqua-600)"/></marker></defs>
+      <path d="M-5 40 C60 50 90 20 150 30 S220 60 265 50" fill="none" stroke="var(--road)" stroke-width="3" opacity=".7"/>
+      <path d="M24 160 L64 140 L100 112 L128 104 L166 78 L204 60 L236 34" fill="none" stroke="var(--dv-aqua-600)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" marker-mid="url(#ar)"/>
+      <g fill="var(--dv-aqua-600)" stroke="#fff" stroke-width="1.5"><rect x="17" y="153" width="14" height="14" rx="2"/><rect x="230" y="28" width="12" height="12" transform="rotate(45 236 34)"/><rect x="172" y="164" width="11" height="11" transform="rotate(45 177.5 169.5)"/></g>
+      <circle cx="128" cy="104" r="4" fill="#fff" stroke="var(--dv-aqua-600)" stroke-width="2"/>
+      <circle class="tol" id="lnTol" cx="128" cy="104" r="14" fill="rgba(0,123,155,.08)" stroke="var(--dv-aqua-600)" stroke-dasharray="2 3" opacity="0"/>
+      <path id="lnSpur" d="M177.5 169.5 L150 148 L140 122" fill="none" stroke="var(--dv-aqua-600)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <g id="lnEnd" class="handle"><circle r="15" fill="transparent"/><circle r="4.5" fill="#fff" stroke="var(--red-500)" stroke-width="2"/></g>
+      <text id="lnL" x="182" y="118" font-size="11" font-weight="700" fill="var(--red-700)" class="halo">dangle · 11 m</text>
+      <g font-size="9.5" fill="var(--n500)" font-family="var(--mono)"><text x="40" y="184">0.0 km</text><text x="214" y="22">8.7 km</text></g>
+      <text x="6" y="146" font-size="10" font-weight="700" fill="var(--dv-aqua-700)" class="halo">Block</text>`},
+    {k:"pg",t:"Polygons",d:"Two leases leave a 0.4 ha gap",svg:`<rect width="260" height="190" fill="#fbfaf8"/>
+      <defs><pattern id="hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="var(--red-50)"/><line x1="0" y1="0" x2="0" y2="5" stroke="var(--red-500)" stroke-width="1.6"/></pattern></defs>
+      <path d="M24 44 L126 30 L132 150 L34 164 Z" fill="var(--dv-orange-100)" stroke="var(--dv-orange-500)" stroke-width="2"/>
+      <path id="pgGap" d="M126 30 L148 34 L154 149 L132 150 Z" fill="url(#hatch)"/>
+      <path id="pgB" d="M148 34 L230 48 L224 146 L154 149 Z" fill="var(--dv-blue-100)" stroke="var(--dv-blue-500)" stroke-width="2"/>
+      <g fill="#fff" stroke="var(--n800)" stroke-width="1.2"><circle cx="24" cy="44" r="3"/><circle cx="126" cy="30" r="3"/><circle cx="132" cy="150" r="3"/><circle cx="34" cy="164" r="3"/><circle cx="230" cy="48" r="3"/><circle cx="224" cy="146" r="3"/></g>
+      <g id="pgH" class="handle"><rect x="-12" y="-18" width="24" height="36" fill="transparent"/><rect x="-4" y="-11" width="8" height="22" rx="3" fill="#fff" stroke="var(--n800)" stroke-width="1.4"/><path d="M-1.5 -5v10M1.5 -5v10" stroke="var(--n800)" stroke-width="1"/></g>
+      <g font-size="12" font-weight="700" fill="var(--n900)"><text x="52" y="102">Lease A</text><text x="166" y="102">Lease B</text></g>
+      <text id="pgL" x="141" y="176" text-anchor="middle" font-size="11" font-weight="700" fill="var(--red-700)" class="halo">sliver · 0.4 ha</text>`}];
+  const box=$("#panels");
+  PAN.forEach(p=>{const d=document.createElement("div");d.className="panel";d.innerHTML=`<svg id="sv-${p.k}" viewBox="0 0 260 190" role="img" aria-label="${p.t}: ${p.d}">${p.svg}<g class="ghost" opacity="0"><path d="M0 0 L0 15 L4 11.5 L7 18 L9.5 17 L6.6 10.6 L11.5 10.6 Z" fill="#fff" stroke="var(--n900)" stroke-width="1.2" stroke-linejoin="round"/></g></svg><div class="cap"><span><b>${p.t}</b></span><span class="chip bad" id="st-${p.k}">1 issue</span></div><div class="small muted">${p.d}</div>`;box.appendChild(d)});
+  const M=[["AWC_NAME","awc_name"],["Status: Functional / functional / F","status_cd = 1"],["LAT, LONG as text","geom Point(4326)"],["Dist: Raipur / RAIPUR / Rpr","lgd_dist_cd"]];
+  $("#mapping").innerHTML=M.map(([a,b])=>`<span class="raw">${a}</span><span class="ar">→</span><span class="to">${b}</span>`).join("");
+  const fixed={pt:false,ln:false,pg:false};
+  // state setters
+  const P0={pt:[166,84],ln:[140,122],pg:[151,92]};
+  const pos={...Object.fromEntries(Object.entries(P0).map(([k,v])=>[k,v.slice()]))};
+  function drawPt(){const[x,y]=pos.pt;$("#ptB").setAttribute("transform",`translate(${x} ${y})`)}
+  function drawLn(){const[x,y]=pos.ln;$("#lnEnd").setAttribute("transform",`translate(${x} ${y})`);$("#lnSpur").setAttribute("d",`M177.5 169.5 L150 148 L${x} ${y}`)}
+  function drawPg(){const dx=pos.pg[0]-151;$("#pgH").setAttribute("transform",`translate(${pos.pg[0]} 92)`);
+    const a=[148+dx,34-dx*.18],b=[154+dx,149+dx*.04];$("#pgB").setAttribute("d",`M${a} L230 48 L224 146 L${b} Z`);$("#pgGap").setAttribute("d",`M126 30 L${a} L${b} L132 150 Z`)}
+  const draw={pt:drawPt,ln:drawLn,pg:drawPg};
+  const TARGET={pt:[140,100],ln:[128,104],pg:[129,92]},TOL={pt:16,ln:14,pg:10};
+  function setFixed(k,v){fixed[k]=v;const c=$("#st-"+k);c.className="chip "+(v?"ok":"bad");c.innerHTML=v?ICON("check","ic sm")+"Fixed":"1 issue";
+    const L={pt:["#ptL","merged","duplicate"],ln:["#lnL","snapped","dangle · 11 m"],pg:["#pgL","shared edge","sliver · 0.4 ha"]}[k];
+    const t=$(L[0]);t.textContent=v?L[1]:L[2];t.setAttribute("fill",v?"var(--green-700)":"var(--red-700)");
+    if(k==="pt"){$("#ptB .flag").setAttribute("opacity",v?0:1);$("#ptB").style.opacity=v?0:1;$("#ptA").setAttribute("stroke",v?"var(--green-500)":"#fff");$("#ptA").setAttribute("stroke-width",v?3:1.5)}
+    if(k==="ln"){$("#lnEnd circle:last-child").setAttribute("stroke",v?"var(--dv-aqua-600)":"var(--red-500)");if(v){$("#lnEnd").style.opacity=0}else $("#lnEnd").style.opacity=1}
+    if(k==="pg"){$("#pgH").style.opacity=v?0:1}
+    const n=Object.values(fixed).filter(Boolean).length;$$(".pips i").forEach((p,i)=>p.classList.toggle("on",i<n));
+    $("#cvState").textContent=n===3?"All three fixed. Fields mapped; ready to load.":`${3-n} topology error${3-n===1?"":"s"} left in this submission`;
+    $$("#mapping .to").forEach((e,i)=>setTimeout(()=>e.classList.toggle("done",n===3),n===3?i*180:0))}
+  function snapTo(k,done){const from=pos[k].slice(),to=TARGET[k];tween(220,t=>{pos[k]=[lerp(from[0],to[0],t),lerp(from[1],to[1],t)];draw[k]()},()=>{setFixed(k,true);done&&done()})}
+  function reset(){for(const k in pos){pos[k]=P0[k].slice();draw[k]();setFixed(k,false)}}
+  // drag
+  ["pt","ln","pg"].forEach(k=>{const svg=$("#sv-"+k),h=$({pt:"#ptB",ln:"#lnEnd",pg:"#pgH"}[k]),tol=$({pt:"#ptTol",ln:"#lnTol",pg:"#pgGap"}[k]);let on=false;
+    h.addEventListener("pointerdown",e=>{if(fixed[k])return;on=true;h.setPointerCapture(e.pointerId);if(k!=="pg")tol.setAttribute("opacity",1)});
+    h.addEventListener("pointermove",e=>{if(!on)return;const p=svgPt(svg,e);pos[k]=k==="pg"?[clamp(p.x,126,200),92]:[clamp(p.x,4,256),clamp(p.y,4,186)];draw[k]()});
+    h.addEventListener("pointerup",()=>{if(!on)return;on=false;if(k!=="pg")tol.setAttribute("opacity",0);const d=Math.hypot(pos[k][0]-TARGET[k][0],pos[k][1]-TARGET[k][1]);if(d<=TOL[k])snapTo(k);});
+  });
+  $("#cvReset").onclick=reset;
+  // demonstration: a ghost cursor performs the next fix
+  async function demo(){const k=["pt","ln","pg"].find(x=>!fixed[x]);if(!k){await wait(900);reset();return}
+    const svg=$("#sv-"+k),gh=svg.querySelector(".ghost"),start=pos[k].slice(),tgt=TARGET[k],tol=$({pt:"#ptTol",ln:"#lnTol"}[k]||"#none");
+    const put=(x,y)=>gh.setAttribute("transform",`translate(${x} ${y})`);const from=[start[0]+46,start[1]+40];put(...from);gh.setAttribute("opacity",1);
+    await new Promise(r=>tween(500,t=>put(lerp(from[0],start[0],t),lerp(from[1],start[1],t)),r));await wait(160);if(tol)tol.setAttribute("opacity",1);
+    await new Promise(r=>tween(800,t=>{pos[k]=[lerp(start[0],tgt[0]+(k==="pg"?0:3),t),k==="pg"?92:lerp(start[1],tgt[1]+3,t)];draw[k]();put(...pos[k])},r));
+    if(tol)tol.setAttribute("opacity",0);await new Promise(r=>snapTo(k,r));await wait(250);gh.setAttribute("opacity",0)}
+  reset();
+  Auto("conversion",2200,demo,{host:"#panels",hint:null});
+  $("#panels").style.position="relative";
+};
+
+/* ============================================================ PROJECTION */
+let setCrs=()=>{};
+INIT.projection=()=>{
+  const S=$("#projSvg");S.setAttribute("viewBox","14 6 492 628");
+  const L=drawContext(S,{labels:true,rivers:true,cities:false,riverLabels:true});
+  const defs=el("defs",{},S),cp=el("clipPath",{id:"stClip"},defs);el("path",{d:G.state},cp);
+  const heat=el("g",{"clip-path":"url(#stClip)"},S);L.rivers.parentNode.insertBefore(heat,L.rivers);
+  const cells=G.cells.map(c=>{const p=el("path",{d:c.d,class:"cell",fill:"#f3f2f0","stroke-width":.6},heat);p._c=c;return p});
+  const byKey={};G.cells.forEach((c,i)=>byKey[c.lo.toFixed(2)+"_"+c.la.toFixed(2)]=cells[i]);
+  const gy=l=>G.grat.find(g=>g.t===l+"°N").lab[1];
+  const grat=el("g",{"font-size":9.5,fill:"var(--n500)","font-family":"var(--mono)"},S);
+  G.grat.forEach(g=>{if(g.ax==="x")txt({x:g.lab[0],y:630,"text-anchor":"middle"},grat,g.t);else txt({x:18,y:g.lab[1]-2},grat,g.t)});
+  // cities on top
+  G.ctx.cities.filter(c=>c.cg).forEach(c=>{el("circle",{cx:c.xy[0],cy:c.xy[1],r:2.6,fill:"var(--n900)",stroke:"#fff","stroke-width":1},S);txt({x:c.xy[0]+(c.n==="Bhilai"?-5:5),y:c.xy[1]+(c.n==="Bhilai"?10:-4),"text-anchor":c.n==="Bhilai"?"end":"start","font-size":11,"font-weight":700,fill:"var(--n900)",class:"halo"},S,c.n)});
+  const zone=el("g",{class:"fade",opacity:0},S);
+  el("path",{d:G.m84,stroke:"var(--dv-magenta-500)","stroke-width":1.6,"stroke-dasharray":"6 4",fill:"none"},zone);
+  el("path",{d:G.east,fill:"rgba(207,77,129,.10)",stroke:"var(--dv-magenta-500)","stroke-width":1.6},zone);
+  const mt=G.m84.slice(1).split("L").map(s=>s.split(",").map(Number)),top=mt[mt.length-1];
+  txt({x:top[0]-5,y:40,"text-anchor":"end","font-size":11,"font-weight":700,fill:"var(--dv-magenta-700)",class:"halo"},zone,"84° E · UTM zone edge");
+  // probe
+  const pr=el("g",{class:"probe",opacity:0},S);
+  el("circle",{r:16,fill:"none",stroke:"var(--n900)","stroke-width":1.2},pr);el("circle",{r:2,fill:"var(--n900)"},pr);
+  el("path",{d:"M-24 0h6M18 0h6M0 -24v6M0 18v6",stroke:"var(--n900)","stroke-width":1.2},pr);
+  const prT=txt({x:22,y:-20,"font-size":12,"font-weight":700,fill:"var(--n900)",class:"halo"},pr,"");
+  const km=el("g",{},pr);const kmL=el("line",{x1:-G.kmPx/2,x2:G.kmPx/2,y1:30,y2:30,stroke:"var(--n900)","stroke-width":2},km);
+  const NM={u44:"UTM 44N",u45:"UTM 45N",lcc:"State LCC"};
+  $("#bars").innerHTML=["u44","u45","lcc"].map(k=>`<div class="row" id="br-${k}"><span>${NM[k]}</span><span class="trk"><span class="fill"></span></span><span class="v">—</span></div>`).join("");
+  const col=v=>v>0?"var(--dv-orange-500)":"var(--dv-blue-500)";
+  const kmAt=lat=>{const a=6378137,e2=0.00669437999,p=lat*Math.PI/180;return Math.PI/180*a*Math.cos(p)/Math.sqrt(1-e2*Math.sin(p)**2)/1000};
+  let cur="u44",lastC=null;
+  const NOTE={
+    u44:`Covers the state to 84° E. The ${fmt(F.areaEast)} km² beyond it (${F.eastDistricts.join(", ")}) is outside the zone, yet still within about 1 m per km.`,
+    u45:`Right for the eastern sliver only. In the west it stretches every kilometre by up to ${(F.u45.max/1000).toFixed(1)} m.`,
+    lcc:`One grid for the whole state, error balanced north and south. No layer is split at 84° E.`,
+    wgs:`Degrees, not metres: a degree of longitude is ${kmAt(17.79).toFixed(1)} km in the south and ${kmAt(24.1).toFixed(1)} km in the north. Nothing is measured in this system.`};
+  function probe(c){if(!c){pr.setAttribute("opacity",0);return}lastC=c;const[x,y]=ll2xy(c.lo,c.la);pr.setAttribute("transform",`translate(${x} ${y})`);pr.setAttribute("opacity",1);
+    $("#pjAt").textContent=`${c.la.toFixed(2)}° N  ${c.lo.toFixed(2)}° E`;
+    const onE=c.lo>84;$("#pjDist").textContent=onE?"East of 84° E, in UTM zone 45N":"West of 84° E, in UTM zone 44N";
+    if(cur==="wgs"){prT.textContent=`1° long = ${kmAt(c.la).toFixed(2)} km`;kmL.setAttribute("stroke","var(--n900)")}
+    else{const v=c[cur];prT.textContent=`1 km → ${(1000+v/1000).toFixed(2)} m`;kmL.setAttribute("stroke",col(v))}
+    ["u44","u45","lcc"].forEach(k=>{const v=c[k]/1000,r=$("#br-"+k),f=r.querySelector(".fill"),w=clamp(Math.abs(v)/1.5,0,1)*50;
+      f.style.left=(v<0?50-w:50)+"%";f.style.width=w+"%";f.style.background=col(v);r.querySelector(".v").textContent=(v>0?"+":v<0?"−":"")+Math.abs(v).toFixed(2)+(Math.abs(v)>1.5?" ▸":"");
+      r.classList.toggle("on",k===cur);r.classList.toggle("dim",cur!=="wgs"&&k!==cur)})}
+  const color=v=>{const t=clamp(v/1000,-1,1),L2=(a,b,t)=>a.map((x,i)=>Math.round(x+(b[i]-x)*t));const P0=[247,247,245],N=[63,81,174],N2=[151,172,255],P2=[233,155,96],PZ=[146,67,10];
+    const c=t<0?(-t<.6?L2(P0,N2,-t/.6):L2(N2,N,(-t-.6)/.4)):(t<.6?L2(P0,P2,t/.6):L2(P2,PZ,(t-.6)/.4));return`rgb(${c})`};
+  setCrs=k=>{if(!NOTE[k])return;cur=k;setPressed("[data-crs]",$(`[data-crs=${k}]`));cells.forEach(p=>{const c=k==="wgs"?"#f6f5f2":color(p._c[k]);p.setAttribute("fill",c);p.setAttribute("stroke",c)});
+    zone.setAttribute("opacity",k==="u44"||k==="u45"?1:0);$("#pjNote").textContent=NOTE[k];$("#pjLeg").style.visibility=k==="wgs"?"hidden":"visible";if(lastC)probe(lastC)};
+  $$("[data-crs]").forEach(b=>b.onclick=()=>setCrs(b.dataset.crs));
+  heat.addEventListener("pointermove",e=>{const c=e.target._c;if(c)probe(c)});
+  S.addEventListener("pointerleave",()=>{});
+  // demonstration: sweep west→east across the zone edge, then down the state; switch system each loop
+  const path=[[80.7,21.05],[81.6,21.25],[82.5,21.8],[83.4,22.4],[84.2,22.85]],path2=[[82.9,23.6],[82.2,21.4],[81.6,19.6],[81.4,18.3]];
+  const order=["u44","lcc","u45","wgs"];let loop=0;
+  const cellAt=(lo,la)=>{const cx=80.2+Math.floor((lo-80.2)/.1+1e-9)*.1+.05,cy=17.75+Math.floor((la-17.75)/.1+1e-9)*.1+.05;const k=cx.toFixed(2)+"_"+cy.toFixed(2);return byKey[k]?byKey[k]._c:null};
+  async function sweep(pts,ms){for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1];await new Promise(r=>tween(ms,t=>{const c=cellAt(lerp(a[0],b[0],t),lerp(a[1],b[1],t));if(c)probe(c)},r))}}
+  async function demo(){setCrs(order[loop++%order.length]);await sweep(loop%2?path:path2,650)}
+  setCrs(OPT.crs||"u44");probe(cellAt(81.63,21.25));
+  Auto("projection",1400,demo,{host:"#projection .stage",hint:"#pjHint"});
+};
+
+/* ============================================================ STORAGE */
+INIT.storage=()=>{
+  const S=$("#stackSvg"),sc=.6,CX=250,GAP=112,TOP=100,c=Math.SQRT1_2;
+  const iso=(x,y,i)=>{const X=(x-G.W/2)*sc,Y=(y-G.H/2)*sc;return[CX+(X-Y)*c,TOP+i*GAP+(X+Y)*c*.42]};
+  const uniso=(px,py,i)=>{const a=(px-CX)/c,b=(py-TOP-i*GAP)/(c*.42);const X=(a+b)/2,Y=(b-a)/2;return[X/sc+G.W/2,Y/sc+G.H/2]};
+  const tf=i=>`translate(${CX} ${TOP+i*GAP}) scale(1 .42) rotate(45) scale(${sc}) translate(${-G.W/2} ${-G.H/2})`;
+  const L=[
+    {k:"bn",t:"bharatnet.bn_fibre_line_10k",n:"BharatNet",sw:"var(--dv-aqua-600)",draw:g=>{el("path",{d:G.stack.fibre,fill:"none",stroke:"var(--dv-aqua-600)","stroke-width":3},g);G.stack.gp.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:6,fill:"#fff",stroke:"var(--dv-aqua-600)","stroke-width":2.5},g))}},
+    {k:"awc",t:"wcd.wcd_anganwadi_pt_10k",n:"Anganwadi",sw:"var(--dv-blue-500)",draw:g=>{G.stack.aw.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:4.4,fill:"var(--dv-blue-500)"},g))}},
+    {k:"min",t:"mining.mining_lease_poly_5k",n:"Mining",sw:"var(--dv-orange-500)",draw:g=>{el("path",{d:G.stack.mines,fill:"var(--dv-orange-500)",stroke:"var(--dv-orange-700)","stroke-width":1},g)}},
+    {k:"ref",t:"reference.admin_village_poly",n:"Revenue",sw:"var(--n700)",draw:g=>{G.districts.forEach(d=>el("path",{d:d.d,fill:"none",stroke:"var(--n400)","stroke-width":1.3},g))}}];
+  const stack=el("g",{class:"stack"},S);
+  [...L].reverse().forEach((l,ri)=>{const i=3-ri;l.slot=i;const g=el("g",{class:"layer"},stack);
+    el("path",{d:G.state,transform:"translate(0 8) "+tf(i),fill:"rgba(60,50,40,.07)"},g);
+    const inner=el("g",{transform:tf(i)},g);el("path",{d:G.state,fill:i===3?"#fbfaf8":"rgba(255,255,255,.95)",stroke:"#bdb7ae","stroke-width":1.6},inner);l.draw(inner);
+    txt({x:446,y:TOP+i*GAP+4,"font-size":12.5,"font-weight":700,fill:"var(--n800)"},g,l.n);l.g=g});
+  // pin
+  const pin=el("g",{},S);const pl=el("line",{stroke:"var(--n900)","stroke-width":1.3},pin);const pe=[0,1,2,3].map(()=>el("ellipse",{rx:8,ry:3.4,fill:"var(--n900)",stroke:"#fff","stroke-width":1.5},pin));const ph=el("circle",{r:4.5,fill:"var(--n900)"},pin);
+  // lookup helpers (flat SVG space)
+  const hid=el("g",{opacity:0,"pointer-events":"none"},S);const dp=G.districts.map(d=>{const p=el("path",{d:d.d},hid);p._n=d.n;return p});
+  const K=1/G.kmPx,dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1])*K;
+  const mines=[[82.68,22.35],[83.45,22.2],[82.6,22.8],[81.25,18.65],[81.08,20.58],[83.35,21.95],[82.85,23.05]].map(p=>ll2xy(...p));
+  const here=$("#here");here.innerHTML=[...L].reverse().map(l=>`<div class="row" data-k="${l.k}"><span class="sw" style="background:${l.sw}"></span><span class="t">${l.t}</span><span class="v" id="hv-${l.k}">—</span></div>`).join("");
+  const focus=k=>{stack.classList.toggle("focus",!!k);L.forEach(l=>l.g.classList.toggle("on",l.k===k))};
+  $$("#here .row").forEach(r=>{r.onmouseenter=()=>focus(r.dataset.k);r.onmouseleave=()=>focus(null)});
+  let at=[G.W/2,G.H/2];
+  function place(x,y){at=[x,y];const d=dp.find(p=>p.isPointInFill(new DOMPoint(x,y)));
+    const pts=[0,1,2,3].map(i=>iso(x,y,i));pl.setAttribute("x1",pts[0][0]);pl.setAttribute("y1",pts[0][1]-30);pl.setAttribute("x2",pts[3][0]);pl.setAttribute("y2",pts[3][1]);
+    pts.forEach((p,i)=>{pe[i].setAttribute("cx",p[0]);pe[i].setAttribute("cy",p[1])});ph.setAttribute("cx",pts[0][0]);ph.setAttribute("cy",pts[0][1]-30);pin.style.opacity=d?1:.35;
+    const [lo,la]=xy2ll(x,y);$("#stAt").textContent=`${la.toFixed(4)}° N  ${lo.toFixed(4)}° E`;
+    if(!d){["ref","min","awc","bn"].forEach(k=>$("#hv-"+k).textContent="outside the state");return}
+    $("#hv-ref").textContent=d._n+" district";
+    const nm=Math.min(...mines.map(m=>dist(m,[x,y])));$("#hv-min").textContent=nm<3?"inside a lease":`nearest lease ${fmt(nm)} km`;
+    const n10=G.stack.aw.filter(p=>dist(p,[x,y])<=25).length;$("#hv-awc").textContent=`${n10} centre${n10===1?"":"s"} within 25 km`;
+    const ng=Math.min(...G.stack.gp.map(p=>dist(p,[x,y])));$("#hv-bn").textContent=ng<1?"at a GP node":`nearest GP node ${fmt(ng)} km`}
+  S.addEventListener("pointermove",e=>{const p=svgPt(S,e);let best=null;for(let i=0;i<4;i++){const q=uniso(p.x,p.y,i);if(dp.some(d=>d.isPointInFill(new DOMPoint(q[0],q[1])))){best=q;break}}if(best)place(...best)});
+  const collapse=on=>L.forEach(l=>l.g.style.transform=on?`translateY(${(1.5-l.slot)*GAP}px)`:"");if(!REDUCE)collapse(true);
+  const tour=G.stack.aw.filter((_,i)=>i%23===5);let ti=0;
+  async function demo(){const from=at.slice(),to=tour[ti++%tour.length];const L2=L[ti%4];focus(L2.k);await new Promise(r=>tween(900,t=>place(lerp(from[0],to[0],t),lerp(from[1],to[1],t)),r));await wait(500);focus(null)}
+  place(...G.stack.pin);
+  Auto("storage",2000,demo,{host:"#storage .stage",hint:"#stHint",enter:()=>setTimeout(()=>collapse(false),120)});
+};
+
+/* ============================================================ PUBLICATION */
+INIT.publication=()=>{
+  const S=$("#pubSvg");
+  const STC=["var(--green-500)","var(--orange-400)","var(--red-500)"],STN=["Functional","Under repair","Closed"];
+  // source
+  const db=el("g",{},S);const X=36,Y=150,W=96,H=86;
+  el("path",{d:`M${X} ${Y+10} v${H-20} a${W/2} 10 0 0 0 ${W} 0 v${-(H-20)}`,fill:"var(--n800)"},db);el("ellipse",{cx:X+W/2,cy:Y+10,rx:W/2,ry:10,fill:"var(--n700)"},db);
+  el("ellipse",{cx:X+W/2,cy:Y+36,rx:W/2,ry:10,fill:"none",stroke:"var(--n700)"},db);
+  txt({x:X+W/2,y:Y+62,"text-anchor":"middle","font-size":13,"font-weight":700,fill:"#fff"},db,"PostGIS");
+  const rec=el("g",{},S);el("rect",{x:18,y:74,width:132,height:52,rx:8,fill:"#fff",stroke:"var(--n100)"},rec);
+  txt({x:30,y:94,"font-size":11,fill:"var(--n600)","font-family":"var(--mono)"},rec,"AWC-RPR-00412");
+  const rDot=el("circle",{cx:34,cy:111,r:4.5,fill:STC[0]},rec);const rTxt=txt({x:44,y:115,"font-size":12.5,"font-weight":700,fill:"var(--n900)"},rec,STN[0]);
+  el("path",{d:"M84 126 V150",stroke:"var(--n300)","stroke-dasharray":"2 3"},S);
+  // endpoint
+  const ep=el("g",{class:"svc"},S);el("rect",{x:176,y:170,width:222,height:46,rx:8,fill:"#fff",stroke:"var(--n200)"},ep);
+  txt({x:190,y:189,"font-size":11,fill:"var(--n600)"},ep,"One service endpoint");txt({x:190,y:206,"font-size":11.5,"font-family":"var(--mono)",fill:"var(--n900)"},ep,".../rest/services/…/FeatureServer");
+  const e0=el("path",{d:`M${X+W} ${Y+43} C150 193 160 193 176 193`,class:"pub-edge"},S);
+  // consumers: four small application windows, each showing the same point on the same state
+  const SCR=[{n:"State Geoportal",x:450,y:18,w:150,h:120,kind:"map"},{n:"Mining app",x:620,y:18,w:160,h:120,kind:"list"},{n:"Anganwadi app",x:458,y:214,w:100,h:160,kind:"phone"},{n:"Partner agency",x:620,y:236,w:160,h:120,kind:"map2"}];
+  const pRec=ll2xy(81.629641,21.251384);
+  const edges=[e0],scrs=[];
+  SCR.forEach((s,i)=>{const g=el("g",{class:"scr"},S);const cx=s.x+s.w/2,cy=s.y+s.h/2;
+    const ed=el("path",{d:`M398 193 C 430 193 ${s.x-40} ${cy} ${s.x} ${cy}`,class:"pub-edge"},S);edges.push(ed);ed._i=i;
+    if(s.kind==="phone"){el("rect",{x:s.x,y:s.y,width:s.w,height:s.h,rx:14,fill:"var(--n900)"},g);el("rect",{x:s.x+5,y:s.y+12,width:s.w-10,height:s.h-24,rx:4,fill:"#fff"},g)}
+    else{el("rect",{x:s.x,y:s.y,width:s.w,height:s.h,rx:8,fill:"#fff",stroke:"var(--n200)"},g);el("path",{d:`M${s.x} ${s.y+16}h${s.w}`,stroke:"var(--n100)"},g);[0,1,2].forEach(k=>el("circle",{cx:s.x+10+k*8,cy:s.y+8,r:2.4,fill:"var(--n200)"},g))}
+    txt({x:s.kind==="phone"?cx:s.x+s.w-8,y:s.kind==="phone"?s.y+s.h+16:s.y+11.5,"text-anchor":s.kind==="phone"?"middle":"end","font-size":s.kind==="phone"?11.5:9.5,"font-weight":s.kind==="phone"?700:500,fill:s.kind==="phone"?"var(--n800)":"var(--n600)"},g,s.n);
+    const body=el("g",{},g);let dot,lab,ver;
+    if(s.kind==="map"||s.kind==="map2"){const mw=s.w-16,mh=s.h-26,k=Math.min(mw/G.W,mh/G.H)*1.0;const ox=s.x+8+(mw-G.W*k)/2,oy=s.y+20+(mh-G.H*k)/2;
+      el("rect",{x:s.x+1,y:s.y+17,width:s.w-2,height:s.h-18,fill:s.kind==="map2"?"#eef1f4":"#f6f4f0",rx:0},body);
+      const m=el("g",{transform:`translate(${ox} ${oy}) scale(${k})`},body);el("path",{d:G.state,fill:"#fff",stroke:"var(--n500)","stroke-width":1.2/k},m);
+      if(s.kind==="map")el("path",{d:G.districts.map(d=>d.d).join(""),fill:"none",stroke:"#ddd7cf","stroke-width":.6/k},m);
+      dot=el("circle",{cx:pRec[0],cy:pRec[1],r:4.5/k,fill:STC[0],stroke:"#fff","stroke-width":1.2/k},m)}
+    if(s.kind==="list"){for(let r=0;r<5;r++){const y=s.y+26+r*18;el("rect",{x:s.x+8,y:y,width:s.w-16,height:14,rx:3,fill:r===2?"var(--n10)":"none"},body);
+      el("rect",{x:s.x+12,y:y+5,width:r===2?46:30+((r*17)%24),height:4,rx:2,fill:r===2?"var(--n700)":"var(--n100)"},body);
+      if(r===2){dot=el("circle",{cx:s.x+s.w-62,cy:y+7,r:3.5,fill:STC[0]},body);lab=txt({x:s.x+s.w-56,y:y+10.5,"font-size":8.5,fill:"var(--n800)","font-weight":500},body,STN[0])}else el("rect",{x:s.x+s.w-44,y:y+5,width:26,height:4,rx:2,fill:"var(--n100)"},body)}}
+    if(s.kind==="phone"){const px=s.x+10,py=s.y+22;el("rect",{x:px,y:py,width:s.w-20,height:34,rx:4,fill:"var(--n10)"},body);txt({x:px+4,y:py+12,"font-size":7.5,fill:"var(--n600)","font-family":"var(--mono)"},body,"AWC-RPR-00412");
+      dot=el("circle",{cx:px+7,cy:py+24,r:3.2,fill:STC[0]},body);lab=txt({x:px+13,y:py+27,"font-size":8.5,"font-weight":700,fill:"var(--n800)"},body,STN[0]);
+      for(let r=0;r<4;r++)el("rect",{x:px,y:py+44+r*16,width:s.w-20,height:10,rx:3,fill:"var(--n10)"},body)}
+    ver=txt({x:s.kind==="phone"?cx:s.x+8,y:s.kind==="phone"?s.y+s.h+30:s.y+s.h+14,"text-anchor":s.kind==="phone"?"middle":"start","font-size":10.5,fill:"var(--n500)"},g,"");
+    scrs.push({g,dot,lab,ver,body})});
+  let st=0,mode="svc";const now=()=>new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  const VER=["file v5 · 2 Aug","file v3 · 11 Mar","file v5 · 2 Aug","file v2 · 19 Jan"],STALE=[0,1,0,3];
+  function setMode(m){mode=m;setPressed("[data-pm]",$(`[data-pm=${m}]`));edges.forEach(e=>e.classList.toggle("live",m==="svc"));ep.style.opacity=m==="svc"?1:.25;
+    scrs.forEach((s,i)=>{s.ver.textContent=m==="files"?VER[i]:"";s.ver.setAttribute("fill",m==="files"?"var(--red-700)":"var(--n500)")});
+    $("#pbNote").textContent=m==="files"?"Before services, every application kept its own copy. Emailing a new file reaches whoever opens it.":"The applications read one endpoint. The record changes in one place.";}
+  function paintScr(i,s){const c=STC[s];scrs[i].dot.setAttribute("fill",c);if(scrs[i].lab)scrs[i].lab.textContent=STN[s];scrs[i].body.classList.remove("blink");void scrs[i].body.getBBox();scrs[i].body.classList.add("blink")}
+  const pg=el("g",{},S);
+  function fire(p,delay,done){if(REDUCE){done();return}setTimeout(()=>{const c=el("circle",{r:5,fill:"var(--blue-500)",stroke:"#fff","stroke-width":1.5,class:"pulse"},pg);c.style.offsetPath=`path("${p.getAttribute("d")}")`;c.getBoundingClientRect();c.classList.add("go");c.addEventListener("animationend",()=>{c.remove();done()},{once:true})},delay)}
+  function setStatus(s){st=s;setPressed("[data-st]",$(`[data-st="${s}"]`));rDot.setAttribute("fill",STC[s]);rTxt.textContent=STN[s];
+    if(mode==="svc"){fire(e0,0,()=>{});edges.slice(1).forEach((e,i)=>fire(e,900,()=>{paintScr(e._i,s);scrs[e._i].ver.textContent="updated "+now();scrs[e._i].ver.setAttribute("fill","var(--green-700)")}));
+      setTimeout(()=>{$("#pbNote").innerHTML=`Changed once, at ${now()}. All four applications show <b>${STN[s]}</b>.`},REDUCE?0:1900)}
+    else{[0,2].forEach(i=>setTimeout(()=>{paintScr(i,s);scrs[i].ver.textContent="file v6 · today";scrs[i].ver.setAttribute("fill","var(--green-700)")},REDUCE?0:600));
+      $("#pbNote").textContent="The new file reached two of four applications. The Mining app and the partner agency still show the old status."}}
+  $$("[data-st]").forEach(b=>b.onclick=()=>setStatus(+b.dataset.st));
+  $$("[data-pm]").forEach(b=>b.onclick=()=>{setMode(b.dataset.pm);scrs.forEach((s,i)=>paintScr(i,0));setPressed("[data-st]",$('[data-st="0"]'));rDot.setAttribute("fill",STC[0]);rTxt.textContent=STN[0];st=0});
+  setMode("svc");
+  let step=0;async function demo(){if(mode!=="svc")setMode("svc");setStatus((st+1)%3);step++;await wait(300)}
+  Auto("publication",3800,demo,{host:"#publication .stage"});
+};
+
+/* ============================================================ CARTOGRAPHY */
+let setScale=()=>{};
+INIT.cartography=()=>{
+  const S=$("#cartoSvg"),SC=[4000000,1000000,250000,100000,25000,10000];
+  const b=G.carto.bbox,cx=b[0]+b[2]/2,cy=b[1]+b[3]/2,hub=G.carto.hub;
+  const full=650,sizes=[full,b[3]*2.4,b[3]*1.2,b[3]*.62,b[3]*.3,b[3]*.17];
+  const ctr=[[G.W/2,G.H/2-6],[cx,cy],[cx,cy],[hub[0]+4,hub[1]+4],[hub[0]+2,hub[1]+3],[hub[0]+1,hub[1]+2]];
+  const VB=sizes.map((s,i)=>[ctr[i][0]-s/2,ctr[i][1]-s/2,s,s]);
+  const L=drawContext(S,{labels:true,rivers:true,rail:true,roads:true,cities:false,riverLabels:false});
+  // sub-district layers inserted under the outline
+  const under=L.dist;
+  const gVill=el("g",{class:"cg",fill:"none",stroke:"#d9d3ca","stroke-width":.8},S);G.carto.village.forEach(d=>el("path",{d,"vector-effect":"non-scaling-stroke"},gVill));
+  const gTeh=el("g",{class:"cg",fill:"none",stroke:"#9d8f7e","stroke-width":1.3,"stroke-dasharray":"5 2 1 2"},S);G.carto.tehsil.forEach(d=>el("path",{d,"vector-effect":"non-scaling-stroke"},gTeh));
+  under.parentNode.insertBefore(gVill,under);under.parentNode.insertBefore(gTeh,under);
+  const gFib=el("path",{d:G.carto.fibre,fill:"none",stroke:"var(--dv-aqua-600)","stroke-width":1.6,"vector-effect":"non-scaling-stroke",class:"cg"},S);
+  const gPts=el("g",{class:"cg"},S);
+  const aw=G.carto.aw.map(p=>el("circle",{cx:p[0],cy:p[1],r:1,fill:"var(--dv-blue-500)",stroke:"#fff"},gPts));
+  const gp=G.carto.gp.map(p=>el("rect",{fill:"#fff",stroke:"var(--dv-aqua-600)"},gPts));
+  const gClut=el("g",{class:"cg",fill:"var(--dv-blue-500)","fill-opacity":.8},S);const clut=G.clutter.map(p=>el("circle",{cx:p[0],cy:p[1],r:1},gClut));
+  // labels (constant screen size)
+  const gLab=el("g",{},S);
+  const cities=G.ctx.cities.filter(c=>c.cg||["Nagpur","Sambalpur","Raurkela","Jabalpur"].includes(c.n)).map(c=>{const g=el("g",{},gLab);const d=el("circle",{cx:c.xy[0],cy:c.xy[1],fill:c.cg?"var(--n900)":"#9d978e",stroke:"#fff"},g);const t=txt({x:c.xy[0],y:c.xy[1],"font-weight":c.cg?700:400,fill:c.cg?"var(--n900)":"#8a857d",class:"halo"},g,c.n);return{c,d,t}});
+  const dlab=G.districts.map(d=>{const t=txt({x:d.c[0],y:d.c[1],"text-anchor":"middle",fill:"#8f877c","font-size":8,class:"halo","letter-spacing":.3},gLab,d.n.replace("Dakshin Bastar ","").replace("Uttar Bastar ",""));return t});
+  const rlab=[];L.rivers.querySelectorAll("path").forEach(p=>{if(!["Mahanadi","Indravati","Son","Wainganga"].includes(p._n))return;if(rlab.find(r=>r.n===p._n))return;const len=p.getTotalLength();if(len<60)return;rlab.push({n:p._n,p,len,t:txt({"font-style":"italic",fill:"var(--water-ink)",class:"halo","text-anchor":"middle"},gLab,p._n)})});
+  const LY=[["Districts and rivers",Infinity,'<rect x="3" y="2" width="16" height="10" fill="none" stroke="#3a383d" stroke-width="1.6"/><path d="M2 10 C8 6 12 12 20 6" stroke="#6f9bc8" fill="none" stroke-width="1.6"/>'],
+            ["State rail and highways",-250000,'<path d="M1 5h20" stroke="#8a8888" stroke-width="2"/><path d="M1 5h20" stroke="#fff" stroke-width="1" stroke-dasharray="3 3"/><path d="M1 11h20" stroke="#e3b98f" stroke-width="1.6"/>'],
+            ["Tehsils",1000000,'<path d="M1 7h20" stroke="#9d8f7e" stroke-width="1.6" stroke-dasharray="5 2 1 2"/>'],
+            ["Villages",100000,'<path d="M2 3l7 2 11-2M3 12l8-2 9 3M9 5l2 5" fill="none" stroke="#bdb3a6" stroke-width="1.3"/>'],
+            ["Anganwadi centres, GP nodes, fibre",25000,'<circle cx="6" cy="7" r="3.5" fill="#617ae2" stroke="#fff"/><path d="M10 7h9" stroke="#007b9b" stroke-width="1.6"/><rect x="15" y="4" width="6" height="6" fill="#fff" stroke="#007b9b" stroke-width="1.4"/>']];
+  $("#lyr").innerHTML=LY.map(l=>`<li><svg viewBox="0 0 22 14">${l[2]}</svg><span>${l[0]}</span><span class="th">${l[1]===Infinity?"always":l[1]<0?"≥ 1:"+fmt(-l[1]):"≤ 1:"+fmt(l[1])}</span></li>`).join("");
+  const rows=$$("#lyr li");
+  let lim=true,cur=0,vb=VB[0].slice(),anim=null;
+  function apply(v){S.setAttribute("viewBox",v.map(n=>n.toFixed(2)).join(" "));const k=v[2]/520;
+    aw.forEach(c=>{c.setAttribute("r",4.4*k);c.setAttribute("stroke-width",1.2*k)});
+    gp.forEach((r,i)=>{const p=G.carto.gp[i],s=8*k;r.setAttribute("x",p[0]-s/2);r.setAttribute("y",p[1]-s/2);r.setAttribute("width",s);r.setAttribute("height",s);r.setAttribute("stroke-width",1.8*k)});
+    clut.forEach(c=>c.setAttribute("r",1.3*k));
+    cities.forEach(({c,d,t})=>{d.setAttribute("r",(c.cg?3:2.2)*k);d.setAttribute("stroke-width",k);const L=c.n==="Bhilai";t.setAttribute("x",c.xy[0]+(L?-5:5)*k);t.setAttribute("y",c.xy[1]+(L?10:-4)*k);t.setAttribute("text-anchor",L?"end":"start");t.setAttribute("font-size",(c.cg?12:10)*k);t.style.strokeWidth=3*k+"px"});
+    dlab.forEach(t=>{t.setAttribute("font-size",9*k);t.style.strokeWidth=2.5*k+"px"});
+    rlab.forEach(r=>{const a=r.p.getPointAtLength(r.len*.42),bb=r.p.getPointAtLength(r.len*.42+6);let ang=Math.atan2(bb.y-a.y,bb.x-a.x)*180/Math.PI;if(ang>90)ang-=180;if(ang<-90)ang+=180;
+      r.t.setAttribute("x",a.x);r.t.setAttribute("y",a.y-3*k);r.t.setAttribute("transform",`rotate(${ang.toFixed(1)} ${a.x} ${a.y})`);r.t.setAttribute("font-size",10.5*k);r.t.style.strokeWidth=3*k+"px"});
+    if(L.slab){L.slab.setAttribute("font-size",9.5*k);L.slab.setAttribute("letter-spacing",2*k)}
+    // scale bar: pick a round distance near 70 px
+    const kmPerPx=v[2]/520/G.kmPx*(520/S.getBoundingClientRect().width||1);const want=70*kmPerPx;const nice=[.5,1,2,5,10,20,50,100,200];const d=nice.find(n=>n>=want*.7)||200;
+    $("#sbT").textContent=d<1?d*1000+" m":d+" km";$("#sbI").style.width=(d/kmPerPx).toFixed(0)+"px"}
+  const inView=(p,v)=>p[0]>=v[0]&&p[0]<=v[0]+v[2]&&p[1]>=v[1]&&p[1]<=v[1]+v[3];
+  function update(i){const s=SC[i],v=VB[i],on=LY.map(l=>l[1]<0?(!lim||s>=-l[1]):(!lim||s<=l[1]));
+    L.rail.classList.add("cg");L.roads.classList.add("cg");L.rail.style.opacity=on[1]?1:0;L.roads.style.opacity=on[1]?1:0;gTeh.style.opacity=on[2]?1:0;gVill.style.opacity=on[3]?1:0;gPts.style.opacity=on[4]&&(lim||i>=3)?1:0;gFib.style.opacity=on[4]&&(lim||i>=3)?1:0;gClut.style.opacity=!lim&&i<3?1:0;
+    dlab.forEach(t=>t.style.opacity=i<=1?1:0);if(L.slab)L.slab.style.opacity=i===0?1:0;
+    rows.forEach((r,j)=>r.classList.toggle("off",!on[j]));
+    let n=G.districts.length+G.ctx.rivers.length+1;if(on[1])n+=44+17;if(on[2])n+=i<1?146:G.carto.tehsil.length;
+    if(on[3])n+=i<3?(lim?0:20000):Math.round(G.carto.village.length*Math.min(1,(v[2]*v[3])/(b[2]*b[3])));
+    if(on[4])n+=i<3?(lim?0:G.clutter.length*20):[...G.carto.aw,...G.carto.gp].filter(p=>inView(p,v)).length;
+    $("#featN").textContent=(!lim&&i<3?"≈ ":"")+fmt(n);$("#zIn").disabled=i>=5;$("#zOut").disabled=i<=0}
+  setScale=i=>{i=clamp(i,0,5);cur=i;$("#scaleRead").textContent="1:"+fmt(SC[i]);update(i);const from=vb.slice(),to=VB[i];if(anim)anim();
+    anim=tween(750,t=>{const size=Math.exp(lerp(Math.log(from[2]),Math.log(to[2]),t));const fc=[from[0]+from[2]/2,from[1]+from[3]/2],tc=[to[0]+to[2]/2,to[1]+to[3]/2];vb=[lerp(fc[0],tc[0],t)-size/2,lerp(fc[1],tc[1],t)-size/2,size,size];apply(vb)})};
+  $("#zIn").onclick=()=>setScale(cur+1);$("#zOut").onclick=()=>setScale(cur-1);
+  S.addEventListener("dblclick",e=>{e.preventDefault();setScale(cur+1)});
+  $("#limTog").onclick=()=>{lim=!lim;$("#limTog").setAttribute("aria-checked",String(lim));$("#limTxt").textContent=lim?"Scale limits on":"Scale limits off";update(cur)};
+  // district names on hover
+  const hot=el("g",{},S);G.districts.forEach(d=>{const p=el("path",{d:d.d,fill:"transparent"},hot);p.addEventListener("pointermove",e=>showTip(e,`<b>${d.n}</b> district`));p.addEventListener("pointerleave",hideTip)});
+  S.insertBefore(hot,gLab);
+  apply(vb);setScale(OPT.scale!==undefined?+OPT.scale:0);
+  let dir=1;Auto("cartography",1900,()=>{let n=cur+dir;if(n>5||n<0){dir=-dir;n=cur+dir}setScale(n)},{host:"#cartography .stage",first:false});
+  addEventListener("resize",()=>apply(vb));
+};
+
+addEventListener("hashchange",route);route();
+})();
+</script>
+</body>
+</html>
