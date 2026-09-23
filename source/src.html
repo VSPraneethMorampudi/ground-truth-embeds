@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ground Truth · Embeds</title>
+<!--
+  GROUND TRUTH · StoryMap embed set · State Geoportal, CHiPS          v2
+  ---------------------------------------------------------------------------
+  One self-contained file (no network requests). Choose a view by URL hash:
+    #intake  #conversion  #projection  #storage  #publication  #cartography
+  Options, joined with "&":
+    bare         hide the eyebrow + headline (use inside sidecars: the narrative panel already has the heading)
+    crs=u44|u45|lcc|wgs    projection: initial tab
+    scale=0..5   cartography: initial scale step
+  Example: https://<host>/ground-truth/index.html#projection&bare&crs=lcc
+
+  Geometry: Chhattisgarh district boundaries (27 districts, 2011 census vintage), simplified for web.
+  Replace with the Revenue Department layer before publishing (see build.js).
+  Village cells, points, leases and fibre routes are ILLUSTRATIVE, not real assets.
+-->
+<style>
+:root{
+  /* Story theme tokens (sampled from the StoryMap) + AA-safe text variants */
+  --accent:#CA5900;        /* fills, rules, large display only */
+  --accent-ink:#A34700;    /* orange text on light: 5.6:1 on #FFF */
+  --accent-soft:#F8E6D6;
+  --teal:#004D4C;          /* 10.0:1 on #FFF */
+  --teal-2:#2B7A75;
+  --teal-soft:#D8E9E6;
+  --ink:#1B2727;           /* headings */
+  --text:#3F4A50;          /* body 9.0:1 */
+  --muted:#5C676C;         /* captions 5.8:1 */
+  --bg:#F4F7F1;            /* story background */
+  --paper:#FBFCF9;         /* map paper */
+  --card:#FFFFFF;
+  --line:#D6DCD3;
+  --bad:#B3261E; --bad-soft:#FBE3E0;
+  --ok:#23704F;  --ok-soft:#DDF0E6;
+  --font:"Avenir Next World","Avenir Next",Avenir,"Segoe UI",system-ui,-apple-system,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;
+  --r:12px;
+  --shadow:0 1px 2px rgba(27,39,39,.06),0 4px 16px rgba(27,39,39,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font:15px/1.55 var(--font);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.view{display:none;min-height:100vh;min-height:100svh;padding:clamp(14px,3.2vw,36px);flex-direction:column;gap:14px;max-width:1080px;margin:0 auto;justify-content:center}
+.view.on{display:flex}
+.view{position:relative}
+.auto{position:absolute;top:10px;right:12px;z-index:5;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:rgba(255,255,255,.92);backdrop-filter:blur(4px);border-radius:999px;padding:4px 11px 4px 9px;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.02em;box-shadow:var(--shadow);min-height:28px}
+.auto .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.auto.run .dot{background:var(--accent);animation:blink 1.6s ease-in-out infinite}
+.auto.run{color:var(--accent-ink)}
+.auto .bar{position:absolute;left:10px;right:10px;bottom:2px;height:2px;border-radius:2px;background:var(--accent);transform-origin:left;transform:scaleX(0);opacity:.55}
+.auto.run .bar{animation:fill var(--ms) linear}
+@keyframes blink{50%{opacity:.35}}
+@keyframes fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.layer{transition:transform .9s cubic-bezier(.2,.8,.2,1),opacity .3s}
+.dist-hot{fill:transparent;pointer-events:all;cursor:default}
+.dist-hot:hover{fill:rgba(202,89,0,.10)}
+.bare .hd{display:none}
+.hd{display:grid;gap:4px}
+.eyebrow{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);font-weight:700}
+h1{font-size:clamp(19px,2.6vw,27px);color:var(--ink);font-weight:700;line-height:1.2;letter-spacing:-.01em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.pad{padding:14px 16px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.between{justify-content:space-between}
+.cap{font-size:12.5px;color:var(--muted);line-height:1.5}
+.note{font-size:11.5px;color:var(--muted)}
+.mono{font-family:var(--mono);font-size:12.5px}
+b,strong{color:var(--ink);font-weight:700}
+button{font:inherit;cursor:pointer;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{font-family:var(--font)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* controls */
+.seg{display:inline-flex;border:1px solid var(--teal);border-radius:999px;background:var(--card);padding:2px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:none;padding:6px 13px;border-radius:999px;color:var(--teal);font-weight:600;font-size:12.5px;min-height:34px;transition:background .2s,color .2s}
+.seg button:hover{background:var(--teal-soft)}
+.seg button[aria-pressed=true]{background:var(--teal);color:#fff}
+.btn{border:0;background:#AE4C00;color:#fff;border-radius:999px;padding:8px 18px;font-weight:700;font-size:13px;min-height:38px;box-shadow:0 2px 6px rgba(202,89,0,.25);transition:transform .15s,background .2s}
+.btn:hover{background:#933F00}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.55;cursor:default}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;line-height:1.4}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.chip.wait{background:#ECEFEA;color:var(--muted)}
+.chip.teal{background:var(--teal-soft);color:var(--teal)}
+.chip.acc{background:var(--accent-soft);color:var(--accent-ink)}
+.stat{display:grid;gap:0}
+.stat .n{font-size:clamp(20px,2.6vw,26px);font-weight:700;color:var(--ink);line-height:1.15;font-variant-numeric:tabular-nums}
+.stat .l{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.tip{position:fixed;pointer-events:none;background:var(--ink);color:#fff;font-size:12px;padding:6px 9px;border-radius:8px;box-shadow:var(--shadow);opacity:0;transition:opacity .12s;z-index:9;max-width:240px;line-height:1.4}
+.tip.on{opacity:1}
+.fade{transition:opacity .35s ease}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* ---------- index ---------- */
+.idx{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.idx a{text-decoration:none;color:inherit;display:grid;gap:4px}
+.idx a:hover{border-color:var(--accent)}
+.idx .mono{color:var(--teal);word-break:break-all}
+
+/* ---------- intake ---------- */
+.intake-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:760px){.intake-grid{grid-template-columns:1fr}}
+.checks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media (max-width:560px){.checks{grid-template-columns:repeat(2,1fr)}}
+.check{border-top:3px solid var(--accent);padding:6px 2px 0;font-size:12px;line-height:1.4}
+.check b{display:block;font-size:12.5px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr{cursor:pointer;transition:background .2s}
+tbody tr:hover,tbody tr.sel{background:#F3F6F0}
+tbody tr:last-child td{border-bottom:0}
+td.mono{white-space:nowrap}
+td .why{display:block;font-size:11.5px;color:var(--bad);margin-top:3px;font-weight:600}
+.tablewrap{overflow-x:auto}
+.mapstack{display:grid;gap:10px}
+.mapcard{position:relative;overflow:hidden}
+.maplbl{position:absolute;left:10px;top:8px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--muted);background:rgba(251,252,249,.85);padding:2px 6px;border-radius:4px}
+.pin{transition:opacity .35s,transform .35s}
+.pin.hide{opacity:0}
+.pin.hl circle.core{stroke:var(--ink);stroke-width:2}
+.ring{animation:ring 1.8s ease-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes ring{from{transform:scale(.6);opacity:.9}to{transform:scale(2.4);opacity:0}}
+
+/* ---------- conversion ---------- */
+.conv-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.conv-grid{grid-template-columns:1fr}}
+.conv-grid figure{padding:10px;display:grid;gap:8px}
+.conv-grid figcaption{font-size:12.5px;line-height:1.45}
+.conv-grid figcaption b{font-size:13.5px}
+.geo .fx{transition:opacity .45s}
+.geo[data-s=raw] .qa,.geo[data-s=qa] .raw{opacity:0}
+.issue{font-size:11px;font-weight:700}
+.map-tbl{display:grid;grid-template-columns:1fr auto 1fr;gap:6px 12px;align-items:center;font-size:12.5px}
+.map-tbl .arrow{color:var(--muted)}
+.map-tbl .v{font-family:var(--mono);font-size:12px;padding:3px 8px;border-radius:6px;background:#F1F4EF;transition:background .3s,color .3s}
+.geo[data-s=qa] .map-tbl .v.to{background:var(--teal-soft);color:var(--teal)}
+.geo[data-s=raw] .map-tbl .v.to{background:var(--bad-soft);color:var(--bad)}
+
+/* ---------- projection ---------- */
+.proj-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(250px,.9fr);gap:14px;align-items:stretch}
+@media (max-width:760px){.proj-grid{grid-template-columns:1fr}}
+.proj-map{padding:8px;display:flex;align-items:center;justify-content:center}
+.proj-map svg{max-height:72vh;width:auto;max-width:100%}
+.cell{transition:fill .5s}
+.side{display:grid;gap:12px;align-content:start}
+.legend-bar{height:10px;border-radius:5px;background:linear-gradient(90deg,#0E5F5B,#7FB0A9 30%,#F4F2EC 50%,#E7A676 70%,#B24E00)}
+.legend-ticks{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:3px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.proj4{font-family:var(--mono);font-size:11px;background:#F1F4EF;border-radius:8px;padding:8px 10px;word-break:break-all;color:var(--teal);line-height:1.5}
+.linkbtn{border:0;background:none;color:var(--accent-ink);font-weight:700;font-size:12px;padding:2px 0;text-decoration:underline;text-underline-offset:3px}
+
+/* ---------- storage ---------- */
+.stor-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(240px,.8fr);gap:14px;align-items:center}
+@media (max-width:760px){.stor-grid{grid-template-columns:1fr}}
+.layer{cursor:pointer;transition:transform .35s cubic-bezier(.2,.8,.2,1),opacity .3s}
+.layer .plate{transition:fill .25s,stroke .25s}
+.stack.focus .layer{opacity:.35}
+.stack.focus .layer.on{opacity:1}
+.layer.on .plate{stroke:var(--accent);stroke-width:2.2}
+.llist{display:grid;gap:8px}
+.llist button{display:grid;grid-template-columns:14px 1fr;gap:4px 10px;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:9px 12px;transition:border-color .2s,background .2s}
+.llist button[aria-pressed=true]{border-color:var(--accent);background:#FFF9F3}
+.llist .sw{width:14px;height:14px;border-radius:4px;margin-top:3px}
+.llist .t{font-weight:700;color:var(--ink);font-size:13px}
+.llist .s{grid-column:2;font-family:var(--mono);font-size:11.5px;color:var(--teal)}
+.name{display:flex;flex-wrap:wrap;gap:0;font-family:var(--mono);font-size:clamp(15px,2.2vw,20px);color:var(--ink)}
+.name .part{padding:3px 6px;border-radius:6px;border-bottom:3px solid transparent;cursor:default;transition:background .2s,border-color .2s}
+.name .part:hover,.name .part.on{background:var(--accent-soft);border-color:var(--accent)}
+.name .sep{color:var(--muted);padding:3px 0}
+
+/* ---------- publication ---------- */
+.pub-node rect,.pub-node path{transition:fill .3s,stroke .3s}
+.pub-node.hit .box{fill:#FFF3E8;stroke:var(--accent)}
+.pub-edge{fill:none;stroke:#C4CEC2;stroke-width:1.4;transition:opacity .3s}
+.pub-edge.flow{stroke:var(--teal-2);stroke-dasharray:4 7;animation:dash 1.2s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-22}}
+.pulse{offset-rotate:0deg}
+.pulse.go{animation:mv 1s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes mv{from{offset-distance:0%}to{offset-distance:100%}}
+.badge{font-size:10.5px;font-weight:700}
+.mode-files .svc,.mode-files .pub-edge{opacity:.12}
+.mail{opacity:0;transition:opacity .3s}
+.mode-files .mail{opacity:1}
+
+/* ---------- cartography ---------- */
+.carto-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(250px,.85fr);gap:14px;align-items:stretch}
+@media (max-width:760px){.carto-grid{grid-template-columns:1fr}}
+.carto-map{padding:8px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.carto-map svg{max-height:70vh;width:auto;max-width:100%;aspect-ratio:1/1}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:30px;background:transparent}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--teal-soft),var(--accent-soft))}
+input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--teal-soft),var(--accent-soft))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3);margin-top:-8px}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.scaleRead{font-family:var(--mono);font-size:clamp(22px,3.4vw,30px);color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.1}
+.ticks{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);font-family:var(--mono)}
+.layers{display:grid;gap:6px}
+.layers div{display:grid;grid-template-columns:18px 1fr auto;align-items:center;gap:8px;padding:7px 10px;border-radius:9px;border:1px solid var(--line);background:var(--card);font-size:12.5px;transition:opacity .25s,border-color .25s}
+.layers div.off{opacity:.45}
+.layers .st{font-size:11px;font-weight:700}
+.layers svg{width:18px;height:18px}
+.cg{transition:opacity .4s}
+.counter{font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<!-- ================================================================ INDEX -->
+<section class="view" id="index" aria-labelledby="idx-h">
+  <div class="hd"><p class="eyebrow">Ground Truth · StoryMap embed set</p><h1 id="idx-h">Six views, one file</h1></div>
+  <p class="cap" style="max-width:70ch">Paste a URL into a StoryMaps <b>Embed</b> block, or a sidecar slide's media → <b>Embed</b>. Add <span class="mono">&amp;bare</span> inside sidecars: the narrative panel already carries the heading.</p>
+  <div class="idx" id="idxList"></div>
+</section>
+
+<!-- ================================================================ INTAKE -->
+<section class="view" id="intake" aria-labelledby="in-h">
+  <div class="hd"><p class="eyebrow">Intake · automated validation</p><h1 id="in-h">Every record is checked before it becomes geometry</h1></div>
+  <div class="checks">
+    <div class="check"><b>Envelope</b>17.78–24.11° N · 80.25–84.40° E</div>
+    <div class="check"><b>Null island</b>Rejects 0, 0</div>
+    <div class="check"><b>Precision</b>Six decimal places (±0.1 m)</div>
+    <div class="check"><b>Unique ID</b>One asset, one ID</div>
+  </div>
+  <div class="intake-grid">
+    <div class="card tablewrap">
+      <table>
+        <caption class="sr">Sample submitted records and validation results</caption>
+        <thead><tr><th scope="col">Asset ID</th><th scope="col">Lat, long</th><th scope="col">Result</th></tr></thead>
+        <tbody id="inRows"></tbody>
+      </table>
+    </div>
+    <div class="mapstack">
+      <div class="card mapcard"><span class="maplbl">Where records land</span>
+        <svg id="worldSvg" viewBox="0 0 640 320" role="img" aria-label="World map: a transposed record lands in the Arctic Ocean north of Svalbard; a zero record lands at 0,0 in the Gulf of Guinea"></svg>
+      </div>
+      <div class="card mapcard"><span class="maplbl">Inside the envelope</span>
+        <svg id="cgInSvg" role="img" aria-label="Chhattisgarh map with accepted records, the imprecise record, and the duplicate"></svg>
+      </div>
+    </div>
+  </div>
+  <div class="row between">
+    <div class="row"><button class="btn" id="runIn">Run validation</button>
+      <span class="chip ok" id="inOk">0 accepted</span><span class="chip bad" id="inBad">0 returned</span></div>
+    <p class="cap" id="inCap" aria-live="polite">Illustrative records. Rejected rows go back with a record-level error report. Nothing is silently corrected.</p>
+  </div>
+</section>
+
+<!-- ================================================================ CONVERSION -->
+<section class="view" id="conversion" aria-labelledby="cv-h">
+  <div class="hd"><p class="eyebrow">Conversion · coordinates to geometry</p><h1 id="cv-h">Three geometry types, and the clean-up nobody sees</h1></div>
+  <div class="row between">
+    <div class="seg" role="group" aria-label="Data state">
+      <button aria-pressed="true" data-cv="raw">As submitted</button>
+      <button aria-pressed="false" data-cv="qa">After topology &amp; schema QA</button>
+    </div>
+    <span class="chip bad" id="cvCount">3 topology errors · 3 schema mismatches</span>
+  </div>
+  <div class="geo" id="geo" data-s="raw" style="display:grid;gap:12px">
+    <div class="conv-grid" id="convCards"></div>
+    <div class="card pad" style="display:grid;gap:10px">
+      <div class="row between"><b style="font-size:13px">Field mapping to the state schema</b><span class="note">Coded domains applied</span></div>
+      <div class="map-tbl" id="mapTbl"></div>
+    </div>
+    <div class="row" style="gap:8px">
+      <span class="note" style="margin-right:4px">Output</span>
+      <span class="chip wait">Shapefile · exchange</span><span class="chip wait">GeoJSON · web</span><span class="chip teal">File GDB / PostGIS · working master</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ PROJECTION -->
+<section class="view" id="projection" aria-labelledby="pj-h">
+  <div class="hd"><p class="eyebrow">Projection · measuring a state that crosses a zone edge</p><h1 id="pj-h">How far is a kilometre off, anywhere in Chhattisgarh?</h1></div>
+  <div class="seg" role="group" aria-label="Coordinate reference system">
+    <button data-crs="wgs" aria-pressed="false">WGS 84 · 4326</button>
+    <button data-crs="u44" aria-pressed="true">UTM 44N · 32644</button>
+    <button data-crs="u45" aria-pressed="false">UTM 45N · 32645</button>
+    <button data-crs="lcc" aria-pressed="false">State LCC</button>
+  </div>
+  <div class="proj-grid">
+    <div class="card proj-map"><svg id="projSvg" role="img" aria-labelledby="pjDesc"></svg></div>
+    <div class="side">
+      <div class="card pad" style="display:grid;gap:10px">
+        <p class="cap" id="pjDesc" aria-live="polite"></p>
+        <div class="stats" id="pjStats"></div>
+      </div>
+      <div class="card pad" id="pjLegend" style="display:grid;gap:4px">
+        <span class="note"><b>Scale error</b>: metres gained (+) or lost (−) per kilometre measured</span>
+        <div class="legend-bar"></div>
+        <div class="legend-ticks"><span>−1.0</span><span>−0.5</span><span>0</span><span>+0.5</span><span>≥ +1.0 m/km</span></div>
+      </div>
+      <div class="card pad" id="pjDef" style="display:none;gap:6px">
+        <div class="row between"><b style="font-size:12.5px">Suggested definition</b><button class="linkbtn" id="copyDef">Copy proj string</button></div>
+        <div class="proj4" id="defTxt"></div>
+        <span class="note">Standard parallels by the one-sixth rule on the state's latitude range. Swap in your adopted parameters.</span>
+      </div>
+    </div>
+  </div>
+  <p class="note">Hover the map for values. Computed on the WGS 84 ellipsoid with proj4 over a 0.1° grid. District lines: 2011 census vintage, simplified.</p>
+</section>
+
+<!-- ================================================================ STORAGE -->
+<section class="view" id="storage" aria-labelledby="st-h">
+  <div class="hd"><p class="eyebrow">Storage · PostgreSQL / PostGIS</p><h1 id="st-h">One reference schema. Every layer snaps to the same village.</h1></div>
+  <div class="stor-grid">
+    <div class="card" style="padding:6px"><svg id="stackSvg" viewBox="0 0 560 560" role="img" aria-label="Four layers stacked over the same Chhattisgarh base: Revenue boundaries at the bottom, then mining leases, Anganwadi centres and BharatNet. A vertical line pins one village through every layer."></svg></div>
+    <div style="display:grid;gap:12px">
+      <div class="llist" id="llist" role="group" aria-label="Layers"></div>
+      <div class="card pad" style="display:grid;gap:6px">
+        <span class="note">Every table's name is fixed at load. Hover or tab through each part:</span>
+        <div class="name" id="nameParts"></div>
+        <p class="cap" id="nameInfo" aria-live="polite" style="min-height:3.2em"></p>
+      </div>
+    </div>
+  </div>
+  <div class="row" style="gap:8px"><span class="chip teal">GiST index on every geometry column</span><span class="chip teal">SRID + geometry-type constraints</span><span class="chip teal">Versioned edits</span></div>
+</section>
+
+<!-- ================================================================ PUBLICATION -->
+<section class="view" id="publication" aria-labelledby="pb-h">
+  <div class="hd"><p class="eyebrow">Publication · services, not files</p><h1 id="pb-h">One endpoint. Every consumer reads it.</h1></div>
+  <div class="row between">
+    <div class="seg" role="group" aria-label="Distribution model">
+      <button data-pm="svc" aria-pressed="true">Published services</button>
+      <button data-pm="files" aria-pressed="false">Files by email</button>
+    </div>
+    <button class="btn" id="pushBtn">Update one record</button>
+  </div>
+  <div class="card" style="padding:8px"><svg id="pubSvg" viewBox="0 0 760 380" role="img" aria-label="PostGIS publishes map, feature, tile and image services. The State Geoportal, the Mining, Anganwadi and BharatNet applications, and external agencies all read the same services."></svg></div>
+  <p class="cap" id="pbCap" aria-live="polite">Record <span class="mono">AWC-RPR-00412</span> changes status once in PostGIS.</p>
+</section>
+
+<!-- ================================================================ CARTOGRAPHY -->
+<section class="view" id="cartography" aria-labelledby="ca-h">
+  <div class="hd"><p class="eyebrow">Cartography · scale dependency</p><h1 id="ca-h">Each layer draws only at the scale where it can be read</h1></div>
+  <div class="carto-grid">
+    <div class="card carto-map"><svg id="cartoSvg" viewBox="0 0 520 640" role="img" aria-label="Map of Chhattisgarh that zooms into Raipur district as the scale gets larger"></svg></div>
+    <div style="display:grid;gap:12px;align-content:start">
+      <div class="card pad" style="display:grid;gap:6px">
+        <span class="note">Map scale</span>
+        <div class="scaleRead" id="scaleRead">1:4,000,000</div>
+        <input type="range" id="scale" min="0" max="5" step="1" value="0" aria-label="Map scale">
+        <div class="ticks"><span>4M</span><span>1M</span><span>250k</span><span>100k</span><span>25k</span><span>10k</span></div>
+      </div>
+      <div class="layers" id="layerList"></div>
+      <div class="card pad" style="display:grid;gap:8px">
+        <div class="row between"><b style="font-size:12.5px">Scale limits</b>
+          <div class="seg" role="group" aria-label="Scale limits"><button data-lim="on" aria-pressed="true">On</button><button data-lim="off" aria-pressed="false">Off</button></div></div>
+        <div class="stat"><span class="n counter" id="featN">0</span><span class="l">features requested in this frame · illustrative</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="cap" id="caCap" aria-live="polite"></p>
+  <p class="note">District lines are real (2011 vintage, simplified). Sub-district cells and assets are illustrative.</p>
+</section>
+
+<script>/*DATA*/</script>
+<script>
+(function(){
+"use strict";
+const G=window.GT, F=G.facts;
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const NS="http://www.w3.org/2000/svg";
+function el(t,a,p){const e=document.createElementNS(NS,t);if(a)for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
+function txt(t,a,p,s){const e=el(t,a,p);e.textContent=s;return e}
+const REDUCE=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const fmt=n=>Math.round(n).toLocaleString("en-US");
+const tip=$("#tip");
+function showTip(e,html){tip.innerHTML=html;tip.classList.add("on");const x=Math.min(e.clientX+14,innerWidth-250),y=Math.min(e.clientY+14,innerHeight-60);tip.style.left=x+"px";tip.style.top=y+"px"}
+function hideTip(){tip.classList.remove("on")}
+function setPressed(sel,btn){$$(sel).forEach(b=>b.setAttribute("aria-pressed",String(b===btn)))}
+
+/* ------------------------------------------------ router + options */
+const VIEWS={
+  intake:["Intake","Four checks run on sample records; rejects are pinned where they would have landed.","Sidecar: Intake (replaces or follows the image)"],
+  conversion:["Conversion","Points, lines, polygons and field mapping, before and after QA.","Sidecar: Conversion slide"],
+  projection:["Projection","Real scale error across the state in 4326, UTM 44N, UTM 45N and the state LCC.","Sidecar: Projection slide · &crs=lcc to open on LCC"],
+  storage:["Storage","Exploded layer stack on the real state outline, plus the naming decoder.","Sidecar: Storage slide"],
+  publication:["Publication","One endpoint feeding every consumer, compared with emailing files.","Sidecar: Publication slide"],
+  cartography:["Cartography","Zoom from state to village; layers switch on at their scale.","Sidecar: Cartography slide"]};
+const OPT={};
+function parse(){const parts=location.hash.slice(1).split("&");const v=parts.shift();for(const k in OPT)delete OPT[k];parts.forEach(p=>{const[a,b]=p.split("=");OPT[a]=b===undefined?true:decodeURIComponent(b)});return v}
+const inited={};
+function route(){const v=parse();const id=VIEWS[v]?v:"index";const framed=(()=>{try{return window.self!==window.top}catch(e){return true}})();document.body.classList.toggle("bare",!!OPT.bare||(framed&&!OPT.head));
+  $$(".view").forEach(s=>s.classList.toggle("on",s.id===id));document.title="Ground Truth · "+(VIEWS[id]?VIEWS[id][0]:"Embeds");
+  if(!inited[id]&&INIT[id]){INIT[id]();inited[id]=true}
+  if(id==="projection"&&OPT.crs)setCrs(OPT.crs);
+  if(id==="cartography"&&OPT.scale!==undefined){$("#scale").value=OPT.scale;setScale(+OPT.scale)}}
+const INIT={};
+/* Autoplay: runs while the embed is on screen and the reader is idle.
+   Moving the pointer, touching or focusing inside pauses it; 3.5 s of idle resumes it.
+   The pill toggles it off/on. Reduced-motion users get no autoplay. */
+function Auto(id,ms,tick,{first=true,enter}={}){
+  const view=$("#"+id),pill=document.createElement("button");pill.className="auto";pill.type="button";view.appendChild(pill);pill.style.setProperty("--ms",ms+"ms");
+  let timer=null,idle=null,visible=false,active=false,off=REDUCE||OPT.auto==="off",started=false;
+  const running=()=>visible&&!active&&!off&&document.visibilityState==="visible";
+  function render(){const r=running();pill.classList.toggle("run",r);
+    pill.innerHTML=`<i class="dot"></i>${off?"Auto-play off · tap to play":r?"Playing · move to explore":"Paused while you explore"}<i class="bar"></i>`;
+    pill.setAttribute("aria-label",off?"Start auto-play":"Stop auto-play")}
+  function sched(){clearTimeout(timer);render();if(running())timer=setTimeout(()=>{tick();sched()},ms)}
+  function poke(){if(pillHit)return;active=true;clearTimeout(idle);idle=setTimeout(()=>{active=false;sched()},3500);sched()}
+  let pillHit=false;pill.addEventListener("pointerenter",()=>pillHit=true);pill.addEventListener("pointerleave",()=>pillHit=false);
+  ["pointermove","pointerdown","wheel","keydown","focusin"].forEach(ev=>view.addEventListener(ev,e=>{if(e.target===pill||pill.contains(e.target))return;if(ev==="pointermove"&&e.pointerType!=="mouse")return;poke()},{passive:true}));
+  pill.onclick=e=>{e.stopPropagation();off=!off;active=false;if(!off){tick()}sched()};
+  new IntersectionObserver(es=>{visible=es[0].isIntersecting;
+    if(visible&&!started){started=true;if(enter)enter();if(first&&!off)setTimeout(tick,enter?700:250)}sched()},{threshold:.3}).observe(view);
+  document.addEventListener("visibilitychange",sched);render();
+  return{stop(){off=true;sched()}}}
+
+/* ------------------------------------------------ INDEX */
+INIT.index=()=>{const base=location.href.split("#")[0];const L=$("#idxList");
+  for(const k in VIEWS){const a=document.createElement("a");a.className="card pad";a.href="#"+k;
+    a.innerHTML=`<b>${VIEWS[k][0]}</b><span class="cap">${VIEWS[k][1]}</span><span class="note">${VIEWS[k][2]}</span><span class="mono">${base.replace(/^https?:\/\//,"")}#${k}&amp;bare</span>`;L.appendChild(a)}};
+
+/* ------------------------------------------------ shared: base state map */
+function baseMap(svg,{districts=true,fill="#EEF2EA",stroke="var(--ink)",dstroke="#B9C4B6"}={}){
+  svg.setAttribute("viewBox",`0 0 ${G.W} ${G.H}`);
+  const g=el("g",{},svg);
+  el("path",{d:G.state,fill,stroke:"none"},g);
+  if(districts)G.districts.forEach(d=>el("path",{d:d.d,fill:"none",stroke:dstroke,"stroke-width":.8,"vector-effect":"non-scaling-stroke"},g));
+  el("path",{d:G.state,fill:"none",stroke,"stroke-width":1.4,"stroke-linejoin":"round","vector-effect":"non-scaling-stroke"},g);
+  return g}
+
+/* ------------------------------------------------ INTAKE */
+INIT.intake=()=>{
+  const R=[
+   {id:"AWC-RPR-00412",lat:"21.251384",lon:"81.629641",ok:true,at:"a"},
+   {id:"AWC-BSR-01877",lat:"81.713205",lon:"22.079618",why:"Outside envelope · lat and long transposed",at:"transposed"},
+   {id:"GP-KBR-0093",lat:"0",lon:"0",why:"Null island · empty fields saved as zero",at:"nullisl"},
+   {id:"AWC-DNT-00230",lat:"18.89",lon:"81.35",why:"Precision · two decimals, a 1.1 km cell",at:"p"},
+   {id:"GP-SRG-0418",lat:"23.118302",lon:"83.195774",ok:true,at:"b"},
+   {id:"AWC-RPR-00412",lat:"21.251390",lon:"81.629655",why:"Duplicate ID · already submitted",at:"dup"},
+   {id:"MIN-KRB-L-0071",lat:"22.357046",lon:"82.682119",ok:true,at:"c"}];
+  // world
+  const W=$("#worldSvg");
+  el("rect",{width:640,height:320,fill:"#E6EEF0"},W);
+  for(let x=0;x<=640;x+=640/12)el("line",{x1:x,x2:x,y1:0,y2:320,stroke:"#D5E0E3","stroke-width":.6},W);
+  for(let y=0;y<=320;y+=320/6)el("line",{x1:0,x2:640,y1:y,y2:y,stroke:"#D5E0E3","stroke-width":.6},W);
+  el("path",{d:G.world.land,fill:"#FBFCF9",stroke:"#C9D2C6","stroke-width":.5},W);
+  const ex=l=>(l+180)/360*640, ey=l=>(90-l)/180*320;
+  el("rect",{x:ex(80.25),y:ey(24.11),width:ex(84.40)-ex(80.25),height:ey(17.78)-ey(24.11),fill:"none",stroke:"var(--teal)","stroke-width":1.2},W);
+  el("path",{d:G.world.cg,fill:"var(--teal)"},W);
+  txt("text",{x:ex(84.4)+6,y:ey(21)+4,"font-size":13,fill:"var(--teal)","font-weight":700},W,"Chhattisgarh");
+  el("line",{x1:0,x2:640,y1:160,y2:160,stroke:"#C3D0D4","stroke-dasharray":"3 3"},W);
+  el("line",{x1:320,x2:320,y1:0,y2:320,stroke:"#C3D0D4","stroke-dasharray":"3 3"},W);
+  const wpins={};
+  const wp=(key,[x,y],label,anchor)=>{const g=el("g",{class:"pin hide"},W);const r=el("circle",{cx:x,cy:y,r:5,fill:"none",stroke:"var(--bad)","stroke-width":2,class:"ring"},g);
+    el("circle",{cx:x,cy:y,r:4.5,fill:"var(--bad)",stroke:"#fff","stroke-width":1.5,class:"core"},g);
+    const t=txt("text",{x:x+(anchor==="end"?-9:9),y:y+4,"font-size":13,"font-weight":700,fill:"var(--bad)","text-anchor":anchor||"start"},g,label);
+    el("path",{d:`M${G.worldPts.cg[0]} ${G.worldPts.cg[1]} Q ${(x+G.worldPts.cg[0])/2} ${Math.min(y,G.worldPts.cg[1])-40} ${x} ${y}`,fill:"none",stroke:"var(--bad)","stroke-width":1,"stroke-dasharray":"3 3",opacity:.7},g);
+    wpins[key]=g};
+  wp("transposed",G.worldPts.transposed,"81.7° N, 22.1° E · Arctic Ocean");
+  wp("nullisl",G.worldPts.nullisl,"0, 0 · Gulf of Guinea");
+  // state
+  const S=$("#cgInSvg");baseMap(S,{fill:"#EEF2EA"});
+  S.setAttribute("viewBox",`20 20 ${G.W-40} ${G.H-40}`);S.style.maxHeight="40vh";S.style.width="100%";
+  const cpins={};
+  const cp=(key,[x,y],kind)=>{const g=el("g",{class:"pin hide"},S);
+    if(kind==="ok"){el("circle",{cx:x,cy:y,r:7,fill:"var(--teal)",stroke:"#fff","stroke-width":2,class:"core"},g)}
+    else if(kind==="prec"){el("rect",{x:x-14,y:y-14,width:28,height:28,fill:"rgba(179,38,30,.10)",stroke:"var(--bad)","stroke-width":1.5,"stroke-dasharray":"3 2"},g);el("circle",{cx:x,cy:y,r:4,fill:"var(--bad)",class:"core"},g);txt("text",{x:x+20,y:y+4,"font-size":17,"font-weight":700,fill:"var(--bad)"},g,"somewhere in a 1.1 km cell")}
+    else if(kind==="dup"){el("circle",{cx:x+5,cy:y-5,r:7,fill:"var(--bad)",stroke:"#fff","stroke-width":2,class:"core"},g);txt("text",{x:x+16,y:y-8,"font-size":17,"font-weight":700,fill:"var(--bad)"},g,"same asset, two records")}
+    cpins[key]=g};
+  cp("a",G.intakePts.a,"ok");cp("b",G.intakePts.b,"ok");cp("c",G.intakePts.c,"ok");cp("p",G.intakePts.p,"prec");cp("dup",G.intakePts.a,"dup");
+  const pinOf=r=>wpins[r.at]||cpins[r.at];
+  // rows
+  const tb=$("#inRows");const rows=R.map((r,i)=>{const tr=document.createElement("tr");tr.tabIndex=0;
+    tr.innerHTML=`<td class="mono">${r.id}</td><td class="mono">${r.lat}<br>${r.lon}</td><td class="res"><span class="chip wait">Pending</span></td>`;
+    const sel=()=>{$$("#inRows tr").forEach(x=>x.classList.toggle("sel",x===tr));Object.values({...wpins,...cpins}).forEach(p=>p.classList.remove("hl"));const p=pinOf(r);if(p&&!p.classList.contains("hide"))p.classList.add("hl")};
+    tr.onmouseenter=sel;tr.onfocus=sel;tr.onclick=sel;tb.appendChild(tr);return tr});
+  let busy=false;
+  function reset(){rows.forEach(tr=>tr.querySelector(".res").innerHTML='<span class="chip wait">Pending</span>');Object.values({...wpins,...cpins}).forEach(p=>p.classList.add("hide"));$("#inOk").textContent="0 accepted";$("#inBad").textContent="0 returned"}
+  const run=()=>{if(busy)return;busy=true;reset();let i=0,ok=0,bad=0;$("#runIn").disabled=true;
+    const step=()=>{const r=R[i],tr=rows[i];tr.querySelector(".res").innerHTML=r.ok?'<span class="chip ok">Accepted</span>':`<span class="chip bad">Returned</span><span class="why">${r.why}</span>`;
+      r.ok?ok++:bad++;$("#inOk").textContent=ok+" accepted";$("#inBad").textContent=bad+" returned";pinOf(r).classList.remove("hide");
+      i++;if(i<R.length)setTimeout(step,REDUCE?0:520);else{busy=false;$("#runIn").disabled=false;$("#runIn").textContent="Run again";$("#inCap").textContent=`${bad} of ${R.length} records returned with a record-level error report. Nothing is silently corrected.`}};
+    step()};
+  $("#runIn").onclick=run;Auto("intake",9000,run);
+};
+
+/* ------------------------------------------------ CONVERSION */
+INIT.conversion=()=>{
+  const cards=[
+  {t:"Points",s:"Discrete assets",c:"Anganwadi centres ● and BharatNet GP nodes ◆. One coordinate each.",svg:`
+    <rect width="260" height="190" rx="8" fill="var(--paper)"/>
+    <g fill="none" stroke="#D6DDD2" stroke-width="1"><path d="M0 60 L70 48 L120 70 L180 40 L260 55"/><path d="M0 130 L60 120 L110 140 L170 118 L260 132"/><path d="M70 48 L60 120 L50 190"/><path d="M120 70 L110 140 L120 190"/><path d="M180 40 L170 118 L190 190"/><path d="M70 0 L70 48"/><path d="M180 0 L180 40"/></g>
+    <g fill="var(--accent)" stroke="#fff" stroke-width="1.5"><circle cx="38" cy="90" r="6"/><circle cx="95" cy="98" r="6"/><circle cx="140" cy="100" r="6"/><circle cx="82" cy="160" r="6"/><circle cx="215" cy="92" r="6"/><circle cx="150" cy="160" r="6"/></g>
+    <g fill="var(--teal)" stroke="#fff" stroke-width="1.5"><rect x="118" y="26" width="11" height="11" transform="rotate(45 123.5 31.5)"/><rect x="218" y="150" width="11" height="11" transform="rotate(45 223.5 155.5)"/></g>
+    <g class="fx raw"><circle cx="146" cy="96" r="6" fill="var(--bad)" stroke="#fff" stroke-width="1.5"/><circle cx="143" cy="98" r="15" fill="none" stroke="var(--bad)" stroke-width="1.5" stroke-dasharray="3 2"/><text x="163" y="80" class="issue" fill="var(--bad)">duplicate</text></g>
+    <g class="fx qa"><circle cx="140" cy="100" r="15" fill="none" stroke="var(--ok)" stroke-width="1.5"/><text x="163" y="80" class="issue" fill="var(--ok)">merged</text></g>`},
+  {t:"Lines",s:"Networks",c:"BharatNet fibre. Vertex order carries direction and chainage from the block node.",svg:`
+    <rect width="260" height="190" rx="8" fill="var(--paper)"/>
+    <defs><marker id="ar" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto"><path d="M0 1L9 5L0 9z" fill="var(--teal)"/></marker></defs>
+    <path d="M28 160 L70 138 L104 110 L130 104 L168 76 L205 60 L236 34" fill="none" stroke="var(--teal)" stroke-width="3.2" stroke-linejoin="round" marker-mid="url(#ar)"/>
+    <path class="fx qa" d="M130 104 L150 150 L176 168" fill="none" stroke="var(--teal)" stroke-width="3.2" stroke-linejoin="round"/>
+    <g class="fx raw"><path d="M138 116 L154 152 L176 168" fill="none" stroke="var(--teal)" stroke-width="3.2" stroke-linejoin="round"/><circle cx="133" cy="109" r="11" fill="none" stroke="var(--bad)" stroke-width="1.5" stroke-dasharray="3 2"/><text x="150" y="124" class="issue" fill="var(--bad)">dangle · 11 m gap</text></g>
+    <g class="fx qa"><circle cx="130" cy="104" r="11" fill="none" stroke="var(--ok)" stroke-width="1.5"/><text x="150" y="124" class="issue" fill="var(--ok)">snapped</text></g>
+    <g font-size="10" fill="var(--muted)" font-family="var(--mono)"><text x="40" y="172">0.0 km</text><text x="80" y="100">3.1</text><text x="198" y="30">8.7 km</text></g>
+    <g fill="var(--teal)" stroke="#fff" stroke-width="1.5"><rect x="21" y="153" width="14" height="14" rx="2"/><rect x="229" y="27" width="13" height="13" transform="rotate(45 235.5 33.5)"/><rect x="170" y="162" width="12" height="12" transform="rotate(45 176 168)"/></g>
+    <text x="14" y="186" font-size="10" font-weight="700" fill="var(--teal)">Block node</text>`},
+  {t:"Polygons",s:"Bounded areas",c:"Mining leases. Rings must close and share edges with neighbours, with no gaps or overlaps.",svg:`
+    <rect width="260" height="190" rx="8" fill="var(--paper)"/>
+    <defs><pattern id="hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#FBE3E0"/><line x1="0" y1="0" x2="0" y2="5" stroke="var(--bad)" stroke-width="2"/></pattern></defs>
+    <path d="M26 44 L126 30 L132 150 L36 164 Z" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2"/>
+    <path class="fx qa" d="M126 30 L228 48 L222 146 L132 150 Z" fill="var(--teal-soft)" stroke="var(--teal)" stroke-width="2"/>
+    <g class="fx raw"><path d="M134 33 L228 48 L222 146 L140 149 Z" fill="var(--teal-soft)" stroke="var(--teal)" stroke-width="2"/><path d="M126 30 L134 33 L140 149 L132 150 Z" fill="url(#hatch)"/><text x="142" y="176" class="issue" fill="var(--bad)">sliver · 0.4 ha gap</text></g>
+    <g class="fx qa"><text x="142" y="176" class="issue" fill="var(--ok)">shared edge</text></g>
+    <g fill="#fff" stroke="var(--ink)" stroke-width="1.2"><circle cx="26" cy="44" r="3"/><circle cx="126" cy="30" r="3"/><circle cx="132" cy="150" r="3"/><circle cx="36" cy="164" r="3"/><circle cx="228" cy="48" r="3"/><circle cx="222" cy="146" r="3"/></g>
+    <g font-size="11.5" font-weight="700" fill="var(--ink)"><text x="56" y="100">Lease A</text><text x="152" y="100">Lease B</text></g>`}];
+  const box=$("#convCards");
+  cards.forEach(c=>{const f=document.createElement("figure");f.className="card";f.innerHTML=`<svg viewBox="0 0 260 190" role="img" aria-label="${c.t}: ${c.c}">${c.svg}</svg><figcaption><b>${c.t}</b> · ${c.s}<br><span class="cap">${c.c}</span></figcaption>`;box.appendChild(f)});
+  const M=[["AWC_NAME","awc_name"],["Status: “Functional” / “functional” / “F”","status_cd = 1"],["LAT, LONG (text)","geom · Point, SRID 4326"],["Dist: “Raipur” / “RAIPUR” / “Rpr”","lgd_dist_cd · from LGD master"]];
+  const T=$("#mapTbl");M.forEach(([a,b])=>{T.insertAdjacentHTML("beforeend",`<span class="v">${a}</span><span class="arrow" aria-hidden="true">→</span><span class="v to">${b}</span>`)});
+  const setCv=k=>{const b=$(`[data-cv=${k}]`);setPressed("[data-cv]",b);$("#geo").dataset.s=k;const qa=k==="qa";const c=$("#cvCount");c.className="chip "+(qa?"ok":"bad");c.textContent=qa?"0 errors · schema-conformant":"3 topology errors · 3 schema mismatches"};
+  $$("[data-cv]").forEach(b=>b.onclick=()=>setCv(b.dataset.cv));
+  $$("#convCards figure").forEach(f=>{f.addEventListener("pointerenter",()=>setCv("qa"));f.addEventListener("pointerleave",()=>setCv("raw"))});
+  Auto("conversion",3400,()=>setCv($("#geo").dataset.s==="raw"?"qa":"raw"));
+};
+
+/* ------------------------------------------------ PROJECTION */
+let setCrs=()=>{};
+INIT.projection=()=>{
+  const S=$("#projSvg");S.setAttribute("viewBox",`0 0 ${G.W} ${G.H}`);
+  const defs=el("defs",{},S);const cp=el("clipPath",{id:"stClip"},defs);el("path",{d:G.state},cp);
+  el("rect",{width:G.W,height:G.H,fill:"var(--paper)"},S);
+  const grat=el("g",{fill:"none",stroke:"#DDE3D9","stroke-width":1},S);
+  G.grat.forEach(g=>el("path",{d:g.d},grat));
+  const gl=el("g",{"font-size":10.5,fill:"var(--muted)","font-family":"var(--mono)"},S);
+  G.grat.forEach(g=>{if(g.ax==="x")txt("text",{x:g.lab[0],y:G.H-6,"text-anchor":"middle"},gl,g.t);else txt("text",{x:6,y:g.lab[1]-3},gl,g.t)});
+  const heat=el("g",{"clip-path":"url(#stClip)"},S);
+  const base=el("path",{d:G.state,fill:"#EEF2EA"},heat);
+  const cells=G.cells.map(c=>{const p=el("path",{d:c.d,class:"cell",fill:"#EEF2EA","stroke-width":.7},heat);p._c=c;return p});
+  const dl=el("g",{fill:"none",stroke:"rgba(27,39,39,.28)","stroke-width":.8},S);G.districts.forEach(d=>el("path",{d:d.d},dl));
+  el("path",{d:G.state,fill:"none",stroke:"var(--ink)","stroke-width":1.6,"stroke-linejoin":"round"},S);
+  const eastG=el("g",{class:"fade",opacity:0},S);
+  el("path",{d:G.east,fill:"none",stroke:"var(--accent)","stroke-width":2.5},eastG);
+  el("path",{d:G.m84,stroke:"var(--accent)","stroke-width":2,"stroke-dasharray":"7 5",fill:"none"},eastG);
+  const m84pts=G.m84.slice(1).split("L").map(s=>s.split(",").map(Number));
+  const mTop=m84pts[m84pts.length-1];txt("text",{x:mTop[0]-6,y:mTop[1]+40,"text-anchor":"end","font-size":12,"font-weight":700,fill:"var(--accent-ink)"},eastG,"84° E · zone edge");
+  // district name on hover
+  const hov=txt("text",{x:G.W-12,y:22,"text-anchor":"end","font-size":12,"font-weight":700,fill:"var(--ink)"},S,"");
+  const wgsG=el("g",{class:"fade",opacity:0,"font-size":11,"font-weight":700,fill:"var(--teal)"},S);
+  const kmAt=lat=>{const a=6378137,e2=0.00669437999,p=lat*Math.PI/180;return Math.PI/180*a*Math.cos(p)/Math.sqrt(1-e2*Math.sin(p)**2)/1000};
+  const gy=l=>G.grat.find(g=>g.t===l+"°N").lab[1];
+  txt("text",{x:G.W-14,y:gy(24)-8,"text-anchor":"end"},wgsG,`1° of longitude = ${kmAt(24.106).toFixed(1)} km`);
+  txt("text",{x:G.W-14,y:gy(18)-8,"text-anchor":"end"},wgsG,`1° of longitude = ${kmAt(17.788).toFixed(1)} km`);
+  const color=v=>{const t=Math.max(-1,Math.min(1,v/1000));const lerp=(a,b,t)=>a.map((x,i)=>Math.round(x+(b[i]-x)*t));
+    const P0=[244,242,236],N=[14,95,91],Pz=[178,78,0],N2=[127,176,169],P2=[231,166,118];
+    let c;if(t<0){const u=-t;c=u<.6?lerp(P0,N2,u/.6):lerp(N2,N,(u-.6)/.4)}else{c=t<.6?lerp(P0,P2,t/.6):lerp(P2,Pz,(t-.6)/.4)}return`rgb(${c})`};
+  const mk=v=>(v<0?"−":"")+Math.abs(v/1000).toFixed(2);
+  const INFO={
+    wgs:{d:`<b>WGS 84 (EPSG:4326)</b> is how data is held and served. Its units are degrees, and a degree is not a fixed distance: one degree of longitude shrinks by ${(kmAt(17.788)-kmAt(24.106)).toFixed(1)} km between the south and north of the state. Nothing is measured in this system.`,s:[["4.1%","change in a degree of longitude, south to north"],["none","valid distance or area units"]]},
+    u44:{d:`<b>UTM 44N (EPSG:32644)</b> covers the state up to 84° E. East of that line, ${fmt(F.areaEast)} km² of ${F.eastDistricts.join(" and ")} lies in zone 45N. Extended across the edge, 44N stays within about 1 m per km, up to +${(F.u44.max/1000).toFixed(2)} at the eastern tip.`,s:[[`${mk(F.u44.min)} to +${mk(F.u44.max)}`,"m per km, range across the state"],[`${fmt(F.areaEast)} km²`,`${(F.areaEast/F.areaState*100).toFixed(1)}% of the state beyond 84° E`]]},
+    u45:{d:`<b>UTM 45N (EPSG:32645)</b> is the correct zone for the eastern sliver only. Across the whole state, error climbs to ${mk(F.u45.max)} m per km in the far west. This is why a layer is never measured in a zone chosen for its neighbour.`,s:[[`+${mk(F.u45.min)} to +${mk(F.u45.max)}`,"m per km, range across the state"],[`${Math.round(F.u45.max/F.u44.max)}×`,"worst error compared with 44N"]]},
+    lcc:{d:`<b>State Lambert Conformal Conic</b> is one grid for the whole state, with no zone edge and error balanced north and south of centre. The accuracy gain over extended 44N is modest. The real gain is that no layer is ever split or re-projected at 84° E.`,s:[[`${mk(F.lcc.min)} to +${mk(F.lcc.max)}`,"m per km, range across the state"],["0","zone edges crossed"]]}};
+  $("#defTxt").textContent=F.lccDef;
+  $("#copyDef").onclick=async()=>{try{await navigator.clipboard.writeText(F.lccDef);$("#copyDef").textContent="Copied"}catch(e){$("#copyDef").textContent="Select and copy the text above"}};
+  let cur="u44";
+  setCrs=k=>{if(!INFO[k])return;cur=k;setPressed("[data-crs]",$(`[data-crs=${k}]`));
+    cells.forEach(p=>{const c=k==="wgs"?"#EEF2EA":color(p._c[k]);p.setAttribute("fill",c);p.setAttribute("stroke",c)});
+    eastG.setAttribute("opacity",k==="u44"||k==="u45"?1:0);wgsG.setAttribute("opacity",k==="wgs"?1:0);
+    $("#pjDesc").innerHTML=INFO[k].d;
+    $("#pjStats").innerHTML=INFO[k].s.map(([n,l])=>`<div class="stat"><span class="n">${n}</span><span class="note">${l}</span></div>`).join("");
+    $("#pjLegend").style.display=k==="wgs"?"none":"grid";$("#pjDef").style.display=k==="lcc"?"grid":"none"};
+  $$("[data-crs]").forEach(b=>b.onclick=()=>setCrs(b.dataset.crs));
+  heat.addEventListener("mousemove",e=>{const p=e.target._c;if(!p||cur==="wgs")return hideTip();const v=p[cur];
+    showTip(e,`<b style="color:#fff">${p.la.toFixed(2)}° N, ${p.lo.toFixed(2)}° E</b><br>${v>0?"+":""}${fmt(v)} ppm · ${v>0?"+":""}${(v/1000).toFixed(2)} m per km`)});
+  heat.addEventListener("mouseleave",hideTip);
+  setCrs("u44");
+  const tour=["u44","u45","lcc","wgs"];Auto("projection",5500,()=>setCrs(tour[(tour.indexOf(cur)+1)%tour.length]),{first:false});
+};
+
+/* ------------------------------------------------ STORAGE */
+INIT.storage=()=>{
+  const S=$("#stackSvg");
+  const sc=.62, CX=236, GAP=112, TOP=92;
+  const iso=(x,y,i)=>{const X=(x-G.W/2)*sc,Y=(y-G.H/2)*sc;const c=Math.SQRT1_2;const rx=(X-Y)*c,ry=(X+Y)*c;return[CX+rx,TOP+i*GAP+ry*.42]};
+  const tf=i=>`translate(${CX} ${TOP+i*GAP}) scale(1 .42) rotate(45) scale(${sc}) translate(${-G.W/2} ${-G.H/2})`;
+  const L=[
+    {k:"ref",t:"Reference · Revenue boundaries",s:"reference.admin_village_poly",sw:"var(--ink)",draw:g=>{G.districts.forEach(d=>el("path",{d:d.d,fill:"none",stroke:"var(--teal)","stroke-width":1.4},g))}},
+    {k:"min",t:"Mining leases",s:"mining.mining_lease_poly_5k",sw:"var(--accent)",draw:g=>{el("path",{d:G.stack.mines,fill:"var(--accent)","fill-opacity":.85,stroke:"#8A3C00","stroke-width":1},g)}},
+    {k:"awc",t:"Anganwadi centres",s:"wcd.wcd_anganwadi_pt_10k",sw:"#E08A3C",draw:g=>{G.stack.aw.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:4.2,fill:"var(--accent)"},g))}},
+    {k:"bn",t:"BharatNet · fibre and GP nodes",s:"bharatnet.bn_fibre_line_10k",sw:"var(--teal-2)",draw:g=>{el("path",{d:G.stack.fibre,fill:"none",stroke:"var(--teal)","stroke-width":3},g);G.stack.gp.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:6,fill:"#fff",stroke:"var(--teal)","stroke-width":2.5},g))}}];
+  const stack=el("g",{class:"stack"},S);
+  const order=[3,2,1,0];// draw bottom (ref, index 3 position) first
+  const nodes=[];
+  // Visual stacking: layer 0 (ref) at the bottom slot 3
+  L.forEach((l,i)=>l.slot=3-i);
+  [...L].sort((a,b)=>b.slot-a.slot).forEach(l=>{
+    const g=el("g",{class:"layer","data-k":l.k},stack);
+    el("path",{d:G.state,transform:"translate(0 7) "+tf(l.slot),fill:"rgba(27,39,39,.10)",stroke:"none"},g);
+    const inner=el("g",{transform:tf(l.slot)},g);
+    el("path",{d:G.state,class:"plate",fill:l.k==="ref"?"#EEF2EA":"rgba(251,252,249,.92)",stroke:"#9AA79A","stroke-width":1.4/sc,"vector-effect":"non-scaling-stroke"},inner);
+    l.draw(inner);l.g=g;nodes.push(g);
+    // label
+    const [lx,ly]=iso(G.W*0.92,G.H*0.12,l.slot);
+    txt("text",{x:520,y:TOP+l.slot*GAP-22,"text-anchor":"end","font-size":12,"font-weight":700,fill:"var(--ink)"},g,l.t.split(" · ")[0]);
+    txt("text",{x:520,y:TOP+l.slot*GAP-8,"text-anchor":"end","font-size":10.5,fill:"var(--teal)","font-family":"var(--mono)"},g,l.s.split(".")[0]+".*");
+  });
+  // pin through the same village on every layer
+  const top=iso(...G.stack.pin,0),bot=iso(...G.stack.pin,3);
+  const pin=el("g",{},S);
+  el("line",{x1:top[0],y1:top[1]-26,x2:bot[0],y2:bot[1],stroke:"var(--accent)","stroke-width":2,"stroke-dasharray":"5 4"},pin);
+  for(let i=0;i<4;i++){const p=iso(...G.stack.pin,i);el("ellipse",{cx:p[0],cy:p[1],rx:7,ry:3.2,fill:"var(--accent)",stroke:"#fff","stroke-width":1.5},pin)}
+  el("circle",{cx:top[0],cy:top[1]-30,r:5,fill:"var(--accent)"},pin);
+  txt("text",{x:top[0]-10,y:top[1]-38,"text-anchor":"end","font-size":11.5,"font-weight":700,fill:"var(--accent-ink)"},pin,"one village · one LGD code");
+  // list
+  const list=$("#llist");
+  const focus=k=>{stack.classList.toggle("focus",!!k);L.forEach(l=>{l.g.classList.toggle("on",l.k===k);l.btn.setAttribute("aria-pressed",String(l.k===k))})};
+  L.forEach(l=>{const b=document.createElement("button");b.setAttribute("aria-pressed","false");b.innerHTML=`<span class="sw" style="background:${l.sw}"></span><span class="t">${l.t}</span><span class="s">${l.s}</span>`;
+    b.onmouseenter=b.onfocus=()=>focus(l.k);b.onmouseleave=()=>focus(null);b.onclick=()=>focus(l.k);l.btn=b;list.appendChild(b);
+    l.g.addEventListener("mouseenter",()=>focus(l.k));l.g.addEventListener("mouseleave",()=>focus(null))});
+  // enter: layers start collapsed into one plate, then separate
+  const collapse=on=>L.forEach(l=>{l.g.style.transform=on?`translateY(${(1.5-l.slot)*GAP}px)`:"";});
+  if(!REDUCE)collapse(true);
+  let li=-1;
+  // name decoder
+  const P=[["wcd","department","The custodian department. It is also the PostGIS schema the table lives in."],["anganwadi","theme","What the layer holds, in one word."],["pt","geometry","pt · line · poly. It matches the table's enforced geometry-type constraint."],["10k","scale","Source scale (1:10,000). It tells a user how far to trust positional accuracy."]];
+  const np=$("#nameParts");
+  P.forEach((p,i)=>{if(i)np.insertAdjacentHTML("beforeend",'<span class="sep">_</span>');const s=document.createElement("span");s.className="part";s.tabIndex=0;s.textContent=p[0];
+    const show=()=>{$$(".name .part").forEach(x=>x.classList.toggle("on",x===s));$("#nameInfo").innerHTML=`<b>${p[1]}</b> · ${p[2]}`};s.onmouseenter=s.onfocus=s.onclick=show;np.appendChild(s)});
+  $("#nameInfo").innerHTML='<span class="mono">department_theme_geometry_scale</span>: lowercase, underscored, and never renamed after load.';
+  const parts=$$(".name .part");
+  Auto("storage",2600,()=>{li=(li+1)%(L.length+1);focus(li<L.length?L[li].k:null);const p=parts[li%parts.length];if(li<L.length)p.dispatchEvent(new Event("mouseenter"))},{enter:()=>setTimeout(()=>collapse(false),120)});
+};
+
+/* ------------------------------------------------ PUBLICATION */
+INIT.publication=()=>{
+  const S=$("#pubSvg");
+  const defs=el("defs",{},S);
+  const N={
+    db:{x:22,y:150,w:120,h:80,t:"PostGIS",s:"source of truth"},
+    s1:{x:250,y:28,w:170,h:56,t:"Map service · WMS",s:"rendered images"},
+    s2:{x:250,y:112,w:170,h:56,t:"Feature service · WFS",s:"geometry + attributes"},
+    s3:{x:250,y:196,w:170,h:56,t:"Vector tiles · WMTS",s:"state-wide, fast"},
+    s4:{x:250,y:280,w:170,h:56,t:"Image service",s:"imagery · elevation"},
+    c1:{x:540,y:20,w:200,h:52,t:"State Geoportal"},
+    c2:{x:540,y:88,w:200,h:52,t:"Mining app"},
+    c3:{x:540,y:156,w:200,h:52,t:"Anganwadi app"},
+    c4:{x:540,y:224,w:200,h:52,t:"BharatNet app"},
+    c5:{x:540,y:292,w:200,h:52,t:"External agencies"}};
+  const E=[["db","s1"],["db","s2"],["db","s3"],["db","s4"],["s1","c1"],["s3","c1"],["s4","c1"],["s2","c2"],["s1","c2"],["s2","c3"],["s1","c3"],["s2","c4"],["s3","c4"],["s1","c5"],["s2","c5"]];
+  const eg=el("g",{},S),ng=el("g",{},S),pg=el("g",{},S),mg=el("g",{},S);
+  const R=n=>[n.x+n.w,n.y+n.h/2],Lf=n=>[n.x,n.y+n.h/2];
+  const paths=E.map(([a,b])=>{const A=R(N[a]),B=Lf(N[b]),m=(A[0]+B[0])/2;const d=`M${A[0]} ${A[1]}C${m} ${A[1]} ${m} ${B[1]} ${B[0]} ${B[1]}`;return{a,b,d,el:el("path",{d,class:"pub-edge"},eg)}});
+  const ver={};
+  for(const k in N){const n=N[k],g=el("g",{class:"pub-node"+(k[0]==="s"?" svc":""),id:"pn-"+k},ng);
+    if(k==="db"){const cx=n.x+n.w/2,rx=n.w/2,ry=12;
+      el("path",{d:`M${n.x} ${n.y+ry} v${n.h-2*ry} a${rx} ${ry} 0 0 0 ${n.w} 0 v${-(n.h-2*ry)}`,fill:"var(--teal)"},g);
+      el("ellipse",{cx,cy:n.y+ry,rx,ry,fill:"#1C6563",stroke:"#004D4C"},g);
+      txt("text",{x:cx,y:n.y+n.h/2+10,"text-anchor":"middle","font-size":14,"font-weight":700,fill:"#fff"},g,n.t);
+      txt("text",{x:cx,y:n.y+n.h/2+25,"text-anchor":"middle","font-size":10.5,fill:"#CFE4E1"},g,n.s);continue}
+    el("rect",{x:n.x,y:n.y,width:n.w,height:n.h,rx:10,class:"box",fill:"#fff",stroke:k[0]==="s"?"var(--teal-2)":"var(--line)","stroke-width":1.5},g);
+    if(n.s){txt("text",{x:n.x+14,y:n.y+24,"font-size":13,"font-weight":700,fill:"var(--ink)"},g,n.t);txt("text",{x:n.x+14,y:n.y+41,"font-size":11,fill:"var(--muted)"},g,n.s)}
+    else{txt("text",{x:n.x+14,y:n.y+22,"font-size":13,"font-weight":700,fill:"var(--ink)"},g,n.t);
+      ver[k]=txt("text",{x:n.x+14,y:n.y+39,"font-size":10.5,fill:"var(--muted)",class:"badge"},g,"status: Functional")}}
+  // files-mode: envelopes with drifting versions
+  const vt={};const V={c1:"v5 · 2 Aug",c2:"v3 · 11 Mar",c3:"v5 · 2 Aug",c4:"v2 · 19 Jan",c5:"v4 · 30 Jun"};
+  for(const k in V){const n=N[k];const g=el("g",{class:"mail"},mg);const x=n.x-66,y=n.y+n.h/2-11;
+    el("rect",{x,y,width:30,height:22,rx:3,fill:"#fff",stroke:"var(--muted)","stroke-width":1.4},g);el("path",{d:`M${x} ${y} l15 12 l15 -12`,fill:"none",stroke:"var(--muted)","stroke-width":1.4},g);
+    el("path",{d:`M142 190 C 320 190 360 ${n.y+n.h/2} ${x-4} ${n.y+n.h/2}`,fill:"none",stroke:"#C9D1C6","stroke-dasharray":"2 4"},g);
+    vt[k]=txt("text",{x:n.x+14,y:n.y+39,"font-size":10.5,"font-weight":700,fill:"var(--bad)"},g,"file "+V[k]);}
+  let mode="svc";
+  const setMode=m=>{mode=m;setPressed("[data-pm]",$(`[data-pm=${m}]`));S.classList.toggle("mode-files",m==="files");
+    $("#pushBtn").textContent=m==="files"?"Email the new file":"Update one record";
+    paths.forEach(p=>p.el.classList.toggle("flow",m==="svc"));
+    $$(".pub-node").forEach(n=>n.classList.remove("hit"));
+    for(const k in ver){ver[k].textContent=m==="files"?"":"status: Functional";ver[k].setAttribute("fill","var(--muted)")}for(const k in vt){vt[k].textContent="file "+V[k];vt[k].setAttribute("fill","var(--bad)")}
+    $("#pbCap").innerHTML=m==="files"?"Before services: each consumer holds its own copy. Versions drift, and nobody knows which one is current.":"Record <span class=\"mono\">AWC-RPR-00412</span> changes status once in PostGIS."};
+  $$("[data-pm]").forEach(b=>b.onclick=()=>setMode(b.dataset.pm));
+  const now=()=>new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  let st="Functional";
+  const push=()=>{
+    if(mode==="files"){const got=["c1","c3"];for(const k in V){const g=got.includes(k);$("#pn-"+k).classList.toggle("hit",g);vt[k].textContent="file "+(g?"v6 · today":V[k]);vt[k].setAttribute("fill",g?"var(--ok)":"var(--bad)")}
+      $("#pbCap").textContent="The new file reached 2 of 5 consumers. The Mining app, BharatNet and external agencies are still working from older copies.";return}
+    st=st==="Functional"?"Under repair":"Functional";
+    $$(".pub-node").forEach(n=>n.classList.remove("hit"));pg.innerHTML="";const t0=performance.now();
+    const hit=(k)=>{const n=$("#pn-"+k);n.classList.add("hit");if(ver[k]){ver[k].textContent=`status: ${st} · ${now()}`;ver[k].setAttribute("fill","var(--accent-ink)")}};
+    const fire=(filter,delay)=>paths.filter(filter).forEach(p=>{
+      if(REDUCE){hit(p.b);return}
+      setTimeout(()=>{const c=el("circle",{r:5.5,fill:"var(--accent)",stroke:"#fff","stroke-width":1.5,class:"pulse"},pg);c.style.offsetPath=`path("${p.d}")`;c.getBoundingClientRect();c.classList.add("go");
+        c.addEventListener("animationend",()=>{c.remove();hit(p.b)},{once:true})},delay)});
+    fire(p=>p.a==="db",0);fire(p=>p.a!=="db",REDUCE?0:1000);
+    setTimeout(()=>{$("#pbCap").innerHTML=`Changed once at ${now()}. The portal, all three apps and external agencies now show <b>${st}</b>. No file was emailed.`},REDUCE?0:2100)};
+  $("#pushBtn").onclick=push;
+  setMode("svc");
+  Auto("publication",5200,()=>{if(mode==="svc")push();else setMode("svc")});
+};
+
+/* ------------------------------------------------ CARTOGRAPHY */
+let setScale=()=>{};
+INIT.cartography=()=>{
+  const S=$("#cartoSvg");
+  const SC=[4000000,1000000,250000,100000,25000,10000];
+  const b=G.carto.bbox,cx=b[0]+b[2]/2,cy=b[1]+b[3]/2;
+  // viewBox per step: square frames, zooming toward Raipur
+  const full=Math.max(G.W,G.H);
+  const sizes=[full,b[3]*2.1,b[3]*1.15,b[3]*.62,b[3]*.26,b[3]*.13];
+  const centers=[[G.W/2,G.H/2],[cx,cy],[cx,cy],[cx-2,cy-4],[cx-4,cy-6],[cx-5,cy-7]];
+  const VB=sizes.map((s,i)=>[centers[i][0]-s/2,centers[i][1]-s/2,s,s]);
+  el("rect",{x:-2000,y:-2000,width:5000,height:5000,fill:"var(--paper)"},S);
+  const gState=el("g",{},S);
+  el("path",{d:G.state,fill:"#EEF2EA"},gState);
+  const gVill=el("g",{class:"cg",fill:"none",stroke:"#A9B8AE","stroke-width":.7,"vector-effect":"non-scaling-stroke"},S);G.carto.village.forEach(d=>el("path",{d,"vector-effect":"non-scaling-stroke"},gVill));
+  const gTeh=el("g",{class:"cg",fill:"none",stroke:"var(--teal-2)","stroke-width":1.3,"stroke-dasharray":"6 3"},S);G.carto.tehsil.forEach(d=>el("path",{d,"vector-effect":"non-scaling-stroke"},gTeh));
+  const gDist=el("g",{fill:"none",stroke:"#8E9D90","stroke-width":1},S);G.districts.forEach(d=>el("path",{d:d.d,"vector-effect":"non-scaling-stroke"},gDist));
+  el("path",{d:G.state,fill:"none",stroke:"var(--ink)","stroke-width":1.8,"vector-effect":"non-scaling-stroke"},S);
+  const gClut=el("g",{class:"cg",fill:"var(--accent)"},S);G.clutter.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:1},gClut));
+  const gPts=el("g",{class:"cg"},S);
+  const aw=G.carto.aw.map(p=>el("circle",{cx:p[0],cy:p[1],r:1,fill:"var(--accent)",stroke:"#fff"},gPts));
+  const gp=G.carto.gp.map(p=>el("rect",{x:p[0],y:p[1],width:1,height:1,fill:"var(--teal)",stroke:"#fff"},gPts));
+  const gLbl=el("g",{class:"cg","font-weight":700,fill:"var(--ink)","text-anchor":"middle"},S);
+  const lblR=txt("text",{x:cx,y:cy},gLbl,"Raipur");
+  const gLblD=el("g",{class:"cg","font-size":9,fill:"var(--muted)","text-anchor":"middle"},S);
+  G.districts.forEach(d=>txt("text",{x:d.c[0],y:d.c[1]+3},gLblD,d.n.replace("Dakshin Bastar ","").replace("Uttar Bastar ","")));
+  const LY=[
+    ["State & district boundaries",Infinity,'<rect x="2" y="3" width="14" height="12" fill="none" stroke="#1B2727" stroke-width="2"/>'],
+    ["Tehsil boundaries",1000000,'<path d="M2 9h14" stroke="#2B7A75" stroke-width="2" stroke-dasharray="4 2"/>'],
+    ["Village boundaries",100000,'<path d="M2 5l6 2 8-3M3 13l7-1 6 3M8 7l2 5" fill="none" stroke="#A9B8AE" stroke-width="1.5"/>'],
+    ["Anganwadi centres · GP nodes",25000,'<circle cx="6" cy="9" r="4" fill="#CA5900"/><rect x="11" y="6" width="5" height="5" fill="#004D4C" transform="rotate(45 13.5 8.5)"/>']];
+  const ll=$("#layerList");const lrows=LY.map(l=>{const d=document.createElement("div");d.innerHTML=`<svg viewBox="0 0 18 18" aria-hidden="true">${l[2]}</svg><span>${l[0]}</span><span class="st"></span>`;ll.appendChild(d);return d});
+  let lim=true,cur=0,anim=null,vb=VB[0].slice();
+  const apply=(v)=>{S.setAttribute("viewBox",v.map(n=>n.toFixed(2)).join(" "));const k=v[2]/G.W; // svg units per ~px
+    aw.forEach(c=>{c.setAttribute("r",4.6*k);c.setAttribute("stroke-width",1.2*k)});
+    gp.forEach((r,i)=>{const p=G.carto.gp[i],s=8*k;r.setAttribute("x",p[0]-s/2);r.setAttribute("y",p[1]-s/2);r.setAttribute("width",s);r.setAttribute("height",s);r.setAttribute("stroke-width",1.2*k);r.setAttribute("transform",`rotate(45 ${p[0]} ${p[1]})`)});
+    gClut.querySelectorAll("circle").forEach(c=>c.setAttribute("r",1.4*k));
+    lblR.setAttribute("font-size",13*k);gLblD.setAttribute("font-size",9*k)};
+  const inView=(p,v)=>p[0]>=v[0]&&p[0]<=v[0]+v[2]&&p[1]>=v[1]&&p[1]<=v[1]+v[3];
+  function update(i){const s=SC[i],v=VB[i];
+    const on=LY.map(l=>!lim||s<=l[1]);
+    gTeh.style.opacity=on[1]?1:0;gVill.style.opacity=on[2]?1:0;gPts.style.opacity=on[3]?1:0;
+    gClut.style.opacity=!lim&&i<3?1:0;if(!lim&&i<3)gPts.style.opacity=0;
+    gLbl.style.opacity=i>=1&&i<=3?1:0;gLblD.style.opacity=i===0&&lim?1:0;
+    lrows.forEach((d,j)=>{d.classList.toggle("off",!on[j]);const st=d.querySelector(".st");st.textContent=on[j]?"drawing":"from 1:"+fmt(LY[j][1]);st.style.color=on[j]?"var(--ok)":"var(--muted)"});
+    // features requested in frame
+    let n=G.districts.length;
+    if(on[1])n+=G.carto.tehsil.length*(i<1?22:1);
+    if(on[2])n+=i<3?(lim?0:20000):Math.round(G.carto.village.length*Math.min(1,(v[2]*v[3])/(b[2]*b[3])));
+    if(on[3])n+=i<3?(lim?0:G.clutter.length*20):[...G.carto.aw,...G.carto.gp].filter(p=>inView(p,v)).length;
+    $("#featN").textContent=(i<3&&!lim?"≈ ":"")+fmt(n);
+    $("#caCap").textContent=!lim&&i<3?"With limits off, the full-state frame requests every village polygon and every point asset at once: unreadable, and slow to draw.":
+      i===0?"State view: district boundaries only. Nothing smaller would be legible at this scale.":
+      i<3?"Tehsil boundaries draw at 1:1,000,000 and closer. Villages and assets are still held back.":
+      i===3?"Village boundaries draw at 1:100,000 and closer.":"Individual assets draw at 1:25,000 and closer, where each one can be read and clicked."}
+  setScale=i=>{cur=i;$("#scaleRead").textContent="1:"+fmt(SC[i]);$("#scale").setAttribute("aria-valuetext","1:"+fmt(SC[i]));update(i);
+    const from=vb.slice(),to=VB[i];if(anim)cancelAnimationFrame(anim);
+    if(REDUCE){vb=to.slice();apply(vb);return}
+    const t0=performance.now(),D=700,ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+    // interpolate in log-space for size so zoom feels even
+    const step=now=>{const t=Math.min(1,(now-t0)/D),e=ease(t);const size=Math.exp(Math.log(from[2])+(Math.log(to[2])-Math.log(from[2]))*e);
+      const fc=[from[0]+from[2]/2,from[1]+from[3]/2],tc=[to[0]+to[2]/2,to[1]+to[3]/2];const c=[fc[0]+(tc[0]-fc[0])*e,fc[1]+(tc[1]-fc[1])*e];
+      vb=[c[0]-size/2,c[1]-size/2,size,size];apply(vb);if(t<1)anim=requestAnimationFrame(step)};anim=requestAnimationFrame(step)};
+  $("#scale").oninput=e=>setScale(+e.target.value);
+  $$("[data-lim]").forEach(bt=>bt.onclick=()=>{setPressed("[data-lim]",bt);lim=bt.dataset.lim==="on";update(cur)});
+  // hover a district for its name
+  const hot=el("g",{},S);G.districts.forEach(d=>{const p=el("path",{d:d.d,class:"dist-hot"},hot);p.addEventListener("pointermove",e=>showTip(e,`<b style="color:#fff">${d.n}</b> district`));p.addEventListener("pointerleave",hideTip)});
+  S.insertBefore(hot,gClut);
+  apply(vb);setScale(0);
+  let dir=1;Auto("cartography",2100,()=>{let n=cur+dir;if(n>5||n<0){dir=-dir;n=cur+dir}$("#scale").value=n;setScale(n)},{first:false});
+};
+
+addEventListener("hashchange",route);route();
+})();
+</script>
+</body>
+</html>
