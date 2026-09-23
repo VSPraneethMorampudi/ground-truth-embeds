@@ -20,206 +20,256 @@
   Village cells, points, leases and fibre routes are ILLUSTRATIVE, not real assets.
 -->
 <style>
+/* =====================================================================
+   Pajamas (GitLab) design language — tokens from @gitlab/ui 137.x
+   Neutral UI chrome · status colours for meaning · data-viz ramps for data
+   ===================================================================== */
+@font-face{font-family:"GitLab Sans";src:url("fonts/GitLabSans-sub.woff2") format("woff2");font-weight:100 900;font-display:swap}
+@font-face{font-family:"GitLab Mono";src:url("fonts/GitLabMono-sub.woff2") format("woff2");font-weight:400;font-display:swap}
 :root{
-  /* Story theme tokens (sampled from the StoryMap) + AA-safe text variants */
-  --accent:#CA5900;        /* fills, rules, large display only */
-  --accent-ink:#A34700;    /* orange text on light: 5.6:1 on #FFF */
-  --accent-soft:#F8E6D6;
-  --teal:#004D4C;          /* 10.0:1 on #FFF */
-  --teal-2:#2B7A75;
-  --teal-soft:#D8E9E6;
-  --ink:#1B2727;           /* headings */
-  --text:#3F4A50;          /* body 9.0:1 */
-  --muted:#5C676C;         /* captions 5.8:1 */
-  --bg:#F4F7F1;            /* story background */
-  --paper:#FBFCF9;         /* map paper */
-  --card:#FFFFFF;
-  --line:#D6DCD3;
-  --bad:#B3261E; --bad-soft:#FBE3E0;
-  --ok:#23704F;  --ok-soft:#DDF0E6;
-  --font:"Avenir Next World","Avenir Next",Avenir,"Segoe UI",system-ui,-apple-system,sans-serif;
-  --mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;
-  --r:12px;
-  --shadow:0 1px 2px rgba(27,39,39,.06),0 4px 16px rgba(27,39,39,.06);
+  /* neutral */
+  --n0:#fff;--n10:#f7f7f5;--n50:#ecebea;--n100:#dcdbd9;--n200:#c1bfbe;--n300:#a5a3a3;--n400:#8a8888;
+  --n500:#747273;--n600:#646163;--n700:#4d4b4e;--n800:#3a383d;--n900:#28272d;--n950:#18171d;--n1000:#050408;
+  /* status */
+  --blue-50:#e9f3fc;--blue-100:#cbe2f9;--blue-500:#1f75cb;--blue-700:#2f5ca0;
+  --green-50:#ecf4ee;--green-100:#c3e6cd;--green-500:#108548;--green-700:#306440;
+  --red-50:#fcf1ef;--red-100:#fdd4cd;--red-500:#dd2b0e;--red-600:#c02f12;--red-700:#a32c12;
+  --orange-50:#fdf1dd;--orange-100:#f5d9a8;--orange-500:#ab6100;--orange-700:#894b16;
+  /* data visualisation */
+  --dv-blue-100:#d2dcff;--dv-blue-300:#97acff;--dv-blue-500:#617ae2;--dv-blue-700:#3f51ae;
+  --dv-orange-100:#f5d6b3;--dv-orange-300:#e99b60;--dv-orange-500:#c95d2e;--dv-orange-700:#92430a;
+  --dv-aqua-100:#93f2ef;--dv-aqua-500:#0090b1;--dv-aqua-600:#007b9b;--dv-aqua-700:#006381;
+  --dv-magenta-100:#ffccdb;--dv-magenta-500:#cf4d81;--dv-magenta-700:#9a2e5d;
+  --dv-green-500:#619025;
+
+  /* semantic aliases used throughout the views */
+  --ink:var(--n950);--text:var(--n800);--muted:var(--n600);
+  --bg:var(--n0);--card:var(--n0);--paper:var(--n10);--line:var(--n100);--line-strong:var(--n200);
+  --accent:var(--blue-500);--accent-ink:var(--blue-700);--accent-soft:var(--blue-50);
+  --teal:var(--dv-aqua-700);--teal-2:var(--dv-aqua-500);--teal-soft:var(--n50);
+  --bad:var(--red-600);--bad-soft:var(--red-100);--ok:var(--green-700);--ok-soft:var(--green-100);
+  --map-land:#f3f2f0;--map-line:var(--n200);--map-outline:var(--n900);
+  --font:"GitLab Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans",Ubuntu,"Helvetica Neue",sans-serif;
+  --mono:"GitLab Mono","JetBrains Mono",Menlo,"DejaVu Sans Mono",Consolas,monospace;
+  --r:12px;          /* card radius (xl) */
+  --r-ctl:8px;       /* controls, buttons, alerts (lg) */
+  --shadow:0 0 1px 0 rgba(5,5,6,.16),0 0 2px 0 rgba(5,5,6,.16),0 2px 8px 0 rgba(5,5,6,.16); /* shadow-md */
+  --focus:0 0 0 1px var(--n0),0 0 0 3px var(--blue-500);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
-body{background:var(--bg);color:var(--text);font:15px/1.55 var(--font);-webkit-font-smoothing:antialiased;overflow-x:hidden}
-.view{display:none;min-height:100vh;min-height:100svh;padding:clamp(14px,3.2vw,36px);flex-direction:column;gap:14px;max-width:1080px;margin:0 auto;justify-content:center}
+body{background:var(--bg);color:var(--text);font:400 14px/20px var(--font);-webkit-font-smoothing:antialiased;overflow-x:hidden;font-feature-settings:"cv05" 1}
+.view{display:none;min-height:100vh;min-height:100svh;padding:clamp(16px,3vw,32px);flex-direction:column;gap:16px;max-width:1080px;margin:0 auto;justify-content:center;position:relative}
 .view.on{display:flex}
-.view{position:relative}
-/* framed (inside StoryMaps): fit the whole view into the iframe, no inner scrolling */
 body.framed{overflow:hidden}
 body.framed.scroll{overflow:auto}
-body.framed .view.on{min-height:calc(100vh / var(--z,1));padding:clamp(12px,2.2vw,26px)}
-body.framed .auto{top:auto;bottom:8px;right:10px}
-body.framed .view.on{padding-bottom:44px}
-.auto{position:absolute;top:10px;right:12px;z-index:5;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:rgba(255,255,255,.92);backdrop-filter:blur(4px);border-radius:999px;padding:4px 11px 4px 9px;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.02em;box-shadow:var(--shadow);min-height:28px}
-.auto .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
-.auto.run .dot{background:var(--accent);animation:blink 1.6s ease-in-out infinite}
-.auto.run{color:var(--accent-ink)}
-.auto .bar{position:absolute;left:10px;right:10px;bottom:2px;height:2px;border-radius:2px;background:var(--accent);transform-origin:left;transform:scaleX(0);opacity:.55}
-.auto.run .bar{animation:fill var(--ms) linear}
-@keyframes blink{50%{opacity:.35}}
-@keyframes fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-.layer{transition:transform .9s cubic-bezier(.2,.8,.2,1),opacity .3s}
-.dist-hot{fill:transparent;pointer-events:all;cursor:default}
-.dist-hot:hover{fill:rgba(202,89,0,.10)}
+body.framed .view.on{min-height:calc(100vh / var(--z,1));padding:clamp(12px,2.2vw,24px);padding-bottom:48px}
 .bare .hd{display:none}
 .hd{display:grid;gap:4px}
-.eyebrow{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);font-weight:700}
-h1{font-size:clamp(19px,2.6vw,27px);color:var(--ink);font-weight:700;line-height:1.2;letter-spacing:-.01em}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
-.pad{padding:14px 16px}
+.eyebrow{font-size:12px;line-height:16px;color:var(--muted);font-weight:600}
+h1{font-size:clamp(21px,2.4vw,25px);line-height:1.25;color:var(--ink);font-weight:600;letter-spacing:-.01em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
+.pad{padding:16px}
 .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 .between{justify-content:space-between}
-.cap{font-size:12.5px;color:var(--muted);line-height:1.5}
-.note{font-size:11.5px;color:var(--muted)}
-.mono{font-family:var(--mono);font-size:12.5px}
-b,strong{color:var(--ink);font-weight:700}
+.cap{font-size:14px;line-height:20px;color:var(--muted)}
+.note{font-size:12px;line-height:16px;color:var(--muted)}
+.mono{font-family:var(--mono);font-size:12px}
+b,strong{color:var(--ink);font-weight:600}
 button{font:inherit;cursor:pointer;color:inherit}
-:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+:focus{outline:none}
+:focus-visible{outline:none;box-shadow:var(--focus)}
 svg{display:block;width:100%;height:auto;overflow:visible}
 svg text{font-family:var(--font)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.ic{width:16px;height:16px;fill:currentColor;flex:none;display:inline-block;vertical-align:-3px}
+.ic.sm{width:12px;height:12px;vertical-align:-1px}
 
-/* controls */
-.seg{display:inline-flex;border:1px solid var(--teal);border-radius:999px;background:var(--card);padding:2px;gap:2px;flex-wrap:wrap}
-.seg button{border:0;background:none;padding:6px 13px;border-radius:999px;color:var(--teal);font-weight:600;font-size:12.5px;min-height:34px;transition:background .2s,color .2s}
-.seg button:hover{background:var(--teal-soft)}
-.seg button[aria-pressed=true]{background:var(--teal);color:#fff}
-.btn{border:0;background:#AE4C00;color:#fff;border-radius:999px;padding:8px 18px;font-weight:700;font-size:13px;min-height:38px;box-shadow:0 2px 6px rgba(202,89,0,.25);transition:transform .15s,background .2s}
-.btn:hover{background:#933F00}
-.btn:active{transform:translateY(1px)}
-.btn:disabled{opacity:.55;cursor:default}
-.chip{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;line-height:1.4}
-.chip.ok{background:var(--ok-soft);color:var(--ok)}
-.chip.bad{background:var(--bad-soft);color:var(--bad)}
-.chip.wait{background:#ECEFEA;color:var(--muted)}
-.chip.teal{background:var(--teal-soft);color:var(--teal)}
-.chip.acc{background:var(--accent-soft);color:var(--accent-ink)}
-.stat{display:grid;gap:0}
-.stat .n{font-size:clamp(20px,2.6vw,26px);font-weight:700;color:var(--ink);line-height:1.15;font-variant-numeric:tabular-nums}
-.stat .l{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
-.tip{position:fixed;pointer-events:none;background:var(--ink);color:#fff;font-size:12px;padding:6px 9px;border-radius:8px;box-shadow:var(--shadow);opacity:0;transition:opacity .12s;z-index:9;max-width:240px;line-height:1.4}
+/* ---- Button group (options) · GlButtonGroup ---- */
+.seg{display:inline-flex;flex-wrap:wrap;background:none;border:0;padding:0;gap:0}
+.seg button{height:32px;padding:0 12px;border:1px solid var(--n200);background:var(--n0);color:var(--n800);font-size:14px;font-weight:400;margin-left:-1px;border-radius:0;position:relative;transition:background .15s,border-color .15s}
+.seg button:first-child{margin-left:0;border-radius:var(--r-ctl) 0 0 var(--r-ctl)}
+.seg button:last-child{border-radius:0 var(--r-ctl) var(--r-ctl) 0}
+.seg button:hover{background:rgba(5,5,6,.06);border-color:var(--n400);z-index:1}
+.seg button[aria-pressed=true]{background:var(--n50);border-color:var(--n300);color:var(--n950);font-weight:600;box-shadow:inset 0 0 0 1px var(--n300);z-index:2}
+.seg button:focus-visible{z-index:3}
+/* ---- Tabs · GlTabs ---- */
+.tabs{display:flex;flex-wrap:wrap;gap:0;border-bottom:1px solid var(--line);width:100%}
+.tabs button{border:0;background:none;padding:8px 12px 10px;color:var(--n600);font-size:14px;line-height:20px;font-weight:400;border-radius:var(--r-ctl) var(--r-ctl) 0 0;transition:color .15s,background .15s}
+.tabs button:hover{color:var(--n950);background:rgba(5,5,6,.04);box-shadow:inset 0 -2px 0 var(--n200)}
+.tabs button[aria-pressed=true]{color:var(--n950);font-weight:600;box-shadow:inset 0 -2px 0 var(--n1000)}
+/* ---- Buttons · GlButton ---- */
+.btn{height:32px;border:1px solid transparent;background:var(--n800);color:var(--n0);border-radius:var(--r-ctl);padding:0 12px;font-weight:500;font-size:14px;display:inline-flex;align-items:center;gap:6px;transition:background .15s}
+.btn:hover{background:var(--n950)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.default{background:var(--n0);color:var(--n800);border-color:var(--n200)}
+.btn.default:hover{background:rgba(5,5,6,.06);border-color:var(--n400)}
+.linkbtn{border:0;background:none;color:var(--blue-700);font-weight:400;font-size:14px;padding:0;text-decoration:underline;text-underline-offset:2px}
+/* ---- Badges · GlBadge ---- */
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;line-height:16px;font-weight:400;padding:2px 6px;border-radius:9999px;white-space:nowrap}
+.chip.ok{background:var(--green-100);color:var(--green-700)}
+.chip.bad{background:var(--red-100);color:var(--red-700)}
+.chip.wait{background:var(--n100);color:var(--n700)}
+.chip.teal{background:var(--blue-100);color:var(--blue-700)}
+.chip.acc{background:var(--orange-100);color:var(--orange-700)}
+/* ---- Toggle · GlToggle ---- */
+.toggle{display:inline-flex;align-items:center;gap:8px;border:0;background:none;padding:0;font-size:14px;color:var(--n800)}
+.toggle .track{width:40px;height:24px;border-radius:9999px;background:var(--n0);border:1px solid var(--n400);position:relative;transition:background .15s,border-color .15s;flex:none}
+.toggle .knob{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--n800);transition:transform .15s,background .15s;display:grid;place-items:center}
+.toggle[aria-checked=true] .track{background:var(--n800);border-color:var(--n800)}
+.toggle[aria-checked=true] .knob{transform:translateX(16px);background:var(--n0)}
+.toggle .knob .ic{width:10px;height:10px;fill:var(--n800);opacity:0}
+.toggle[aria-checked=true] .knob .ic{opacity:1}
+/* ---- Single stat · GlSingleStat ---- */
+.stat{display:grid;gap:2px}
+.stat .n{font-size:clamp(21px,2.4vw,25px);font-weight:600;color:var(--ink);line-height:1.2;font-variant-numeric:tabular-nums}
+.stat .l{font-size:12px;line-height:16px;color:var(--muted);font-weight:400}
+/* ---- Tooltip · GlTooltip ---- */
+.tip{position:fixed;pointer-events:none;background:var(--n900);color:var(--n0);font-size:12px;line-height:16px;padding:6px 8px;border-radius:4px;opacity:0;transition:opacity .12s;z-index:9;max-width:240px}
+.tip b{color:var(--n0)}
 .tip.on{opacity:1}
 .fade{transition:opacity .35s ease}
+/* ---- Alert · GlAlert (inline captions) ---- */
+.alert{display:block;position:relative;padding:10px 12px 10px 36px;border-radius:var(--r-ctl);background:var(--n50);color:var(--n800);font-size:14px;line-height:20px}
+.alert>.ic{position:absolute;left:12px;top:12px;color:var(--n600)}
+.alert.info{background:var(--blue-50)}.alert.info .ic{color:var(--blue-500)}
+.alert.success{background:var(--green-50)}.alert.success .ic{color:var(--green-500)}
+.alert.danger{background:var(--red-50)}.alert.danger .ic{color:var(--red-500)}
+/* ---- Auto-play status (neutral badge) ---- */
+.auto{position:absolute;top:12px;right:12px;z-index:5;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--n0);border-radius:9999px;padding:3px 10px 3px 8px;font-size:12px;line-height:16px;font-weight:400;color:var(--n700);box-shadow:0 0 2px 0 rgba(5,5,6,.16),0 1px 4px 0 rgba(5,5,6,.16);min-height:26px}
+body.framed .auto{top:auto;bottom:10px;right:12px}
+.auto .dot{width:8px;height:8px;border-radius:50%;background:var(--n400);flex:none}
+.auto.run .dot{background:var(--blue-500);animation:blink 1.6s ease-in-out infinite}
+.auto.run{color:var(--n900)}
+.auto .bar{position:absolute;left:10px;right:10px;bottom:1px;height:2px;border-radius:2px;background:var(--blue-500);transform-origin:left;transform:scaleX(0);opacity:.6}
+.auto.run .bar{animation:fill var(--ms) linear}
+@keyframes blink{50%{opacity:.35}}
+@keyframes fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 
 /* ---------- index ---------- */
 .idx{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
-.idx a{text-decoration:none;color:inherit;display:grid;gap:4px}
-.idx a:hover{border-color:var(--accent)}
-.idx .mono{color:var(--teal);word-break:break-all}
+.idx a{text-decoration:none;color:inherit;display:grid;gap:4px;transition:border-color .15s}
+.idx a:hover{border-color:var(--n400)}
+.idx .mono{color:var(--blue-700);word-break:break-all}
 
 /* ---------- intake ---------- */
-.intake-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:14px;align-items:start}
+.intake-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:16px;align-items:start}
 @media (max-width:560px){.intake-grid{grid-template-columns:1fr}}
 .checks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 @media (max-width:560px){.checks{grid-template-columns:repeat(2,1fr)}}
-.check{border-top:3px solid var(--accent);padding:6px 2px 0;font-size:12px;line-height:1.4}
-.check b{display:block;font-size:12.5px}
-table{width:100%;border-collapse:collapse;font-size:12.5px}
-th{text-align:left;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:8px 10px;border-bottom:1px solid var(--line)}
-td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
-tbody tr{cursor:pointer;transition:background .2s}
-tbody tr:hover,tbody tr.sel{background:#F3F6F0}
+.check{border:1px solid var(--line);border-radius:var(--r-ctl);padding:8px 10px;font-size:12px;line-height:16px;color:var(--muted);background:var(--n0)}
+.check b{display:flex;gap:6px;align-items:center;font-size:14px;line-height:20px;color:var(--ink)}
+.check b .ic{color:var(--n500)}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:14px;line-height:20px}
+th{text-align:left;font-size:14px;color:var(--ink);font-weight:600;padding:8px 12px;background:var(--n10);border-bottom:1px solid var(--line)}
+th:first-child{border-top-left-radius:var(--r)}th:last-child{border-top-right-radius:var(--r)}
+td{padding:8px 12px;border-bottom:1px solid var(--n50);vertical-align:top}
+tbody tr{cursor:pointer;transition:background .15s}
+tbody tr:hover,tbody tr.sel{background:var(--n10)}
 tbody tr:last-child td{border-bottom:0}
-td.mono{white-space:nowrap}
-td .why{display:block;font-size:11.5px;color:var(--bad);margin-top:3px;font-weight:600}
+td.mono{white-space:nowrap;font-size:12px;color:var(--n700)}
+td .why{display:block;font-size:12px;line-height:16px;color:var(--red-700);margin-top:4px}
 .tablewrap{overflow-x:auto}
-.mapstack{display:grid;gap:10px}
+.mapstack{display:grid;gap:12px}
 .mapcard{position:relative;overflow:hidden}
-.maplbl{position:absolute;left:10px;top:8px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--muted);background:rgba(251,252,249,.85);padding:2px 6px;border-radius:4px}
+.maplbl{position:absolute;left:12px;top:10px;font-size:12px;line-height:16px;font-weight:600;color:var(--n700);background:rgba(255,255,255,.9);padding:2px 6px;border-radius:4px}
 .pin{transition:opacity .35s,transform .35s}
 .pin.hide{opacity:0}
-.pin.hl circle.core{stroke:var(--ink);stroke-width:2}
+.pin.hl circle.core{stroke:var(--n950);stroke-width:2.5}
 .ring{animation:ring 1.8s ease-out infinite;transform-box:fill-box;transform-origin:center}
 @keyframes ring{from{transform:scale(.6);opacity:.9}to{transform:scale(2.4);opacity:0}}
 
 /* ---------- conversion ---------- */
 .conv-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 @media (max-width:560px){.conv-grid{grid-template-columns:1fr}}
-.conv-grid figure{padding:10px;display:grid;gap:8px}
-.conv-grid figcaption{font-size:12.5px;line-height:1.45}
-.conv-grid figcaption b{font-size:13.5px}
+.conv-grid figure{padding:8px 8px 12px;display:grid;gap:8px;transition:border-color .15s}
+.conv-grid figure:hover{border-color:var(--n400)}
+.conv-grid figure svg{border-radius:8px}
+.conv-grid figcaption{font-size:12px;line-height:16px;padding:0 4px;color:var(--muted)}
+.conv-grid figcaption b{font-size:14px;line-height:20px}
+.conv-grid figcaption .cap{font-size:12px;line-height:16px}
 .geo .fx{transition:opacity .45s}
 .geo[data-s=raw] .qa,.geo[data-s=qa] .raw{opacity:0}
-.issue{font-size:11px;font-weight:700}
-.map-tbl{display:grid;grid-template-columns:1fr auto 1fr;gap:6px 12px;align-items:center;font-size:12.5px}
-.map-tbl .arrow{color:var(--muted)}
-.map-tbl .v{font-family:var(--mono);font-size:12px;padding:3px 8px;border-radius:6px;background:#F1F4EF;transition:background .3s,color .3s}
-.geo[data-s=qa] .map-tbl .v.to{background:var(--teal-soft);color:var(--teal)}
-.geo[data-s=raw] .map-tbl .v.to{background:var(--bad-soft);color:var(--bad)}
+.issue{font-size:11px;font-weight:600}
+.map-tbl{display:grid;grid-template-columns:1fr auto 1fr;gap:6px 12px;align-items:center;font-size:12px}
+.map-tbl .arrow{color:var(--n400)}
+.map-tbl .v{font-family:var(--mono);font-size:12px;line-height:16px;padding:4px 8px;border-radius:4px;background:var(--n10);border:1px solid var(--n50);transition:background .3s,color .3s,border-color .3s}
+.geo[data-s=qa] .map-tbl .v.to{background:var(--green-50);border-color:var(--green-100);color:var(--green-700)}
+.geo[data-s=raw] .map-tbl .v.to{background:var(--red-50);border-color:var(--red-100);color:var(--red-700)}
 
 /* ---------- projection ---------- */
-.proj-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(250px,.9fr);gap:14px;align-items:stretch}
+.proj-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(250px,.9fr);gap:16px;align-items:stretch}
 @media (max-width:560px){.proj-grid{grid-template-columns:1fr}}
-.proj-map{padding:8px;display:flex;align-items:center;justify-content:center}
+.proj-map{padding:8px;display:flex;align-items:center;justify-content:center;background:var(--paper)}
 .proj-map svg{max-height:72vh;width:auto;max-width:100%}
-.cell{transition:fill .5s}
+.cell{transition:fill .5s,stroke .5s}
 .side{display:grid;gap:12px;align-content:start}
-.legend-bar{height:10px;border-radius:5px;background:linear-gradient(90deg,#0E5F5B,#7FB0A9 30%,#F4F2EC 50%,#E7A676 70%,#B24E00)}
-.legend-ticks{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:3px}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.proj4{font-family:var(--mono);font-size:11px;background:#F1F4EF;border-radius:8px;padding:8px 10px;word-break:break-all;color:var(--teal);line-height:1.5}
-.linkbtn{border:0;background:none;color:var(--accent-ink);font-weight:700;font-size:12px;padding:2px 0;text-decoration:underline;text-underline-offset:3px}
+.legend-bar{height:8px;border-radius:9999px;background:linear-gradient(90deg,#3f51ae,#97acff 30%,#f7f7f5 50%,#e99b60 70%,#92430a)}
+.legend-ticks{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:4px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.proj4{font-family:var(--mono);font-size:12px;line-height:16px;background:var(--n10);border:1px solid var(--n50);border-radius:4px;padding:8px 10px;word-break:break-all;color:var(--n800)}
 
 /* ---------- storage ---------- */
-.stor-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(240px,.8fr);gap:14px;align-items:center}
+.stor-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(240px,.8fr);gap:16px;align-items:center}
 @media (max-width:560px){.stor-grid{grid-template-columns:1fr}}
-.layer{cursor:pointer;transition:transform .35s cubic-bezier(.2,.8,.2,1),opacity .3s}
+.layer{cursor:pointer;transition:transform .9s cubic-bezier(.2,.8,.2,1),opacity .3s}
 .layer .plate{transition:fill .25s,stroke .25s}
-.stack.focus .layer{opacity:.35}
+.stack.focus .layer{opacity:.3}
 .stack.focus .layer.on{opacity:1}
-.layer.on .plate{stroke:var(--accent);stroke-width:2.2}
+.layer.on .plate{stroke:var(--n950);stroke-width:2.2}
 .llist{display:grid;gap:8px}
-.llist button{display:grid;grid-template-columns:14px 1fr;gap:4px 10px;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:9px 12px;transition:border-color .2s,background .2s}
-.llist button[aria-pressed=true]{border-color:var(--accent);background:#FFF9F3}
-.llist .sw{width:14px;height:14px;border-radius:4px;margin-top:3px}
-.llist .t{font-weight:700;color:var(--ink);font-size:13px}
-.llist .s{grid-column:2;font-family:var(--mono);font-size:11.5px;color:var(--teal)}
-.name{display:flex;flex-wrap:wrap;gap:0;font-family:var(--mono);font-size:clamp(15px,2.2vw,20px);color:var(--ink)}
-.name .part{padding:3px 6px;border-radius:6px;border-bottom:3px solid transparent;cursor:default;transition:background .2s,border-color .2s}
-.name .part:hover,.name .part.on{background:var(--accent-soft);border-color:var(--accent)}
-.name .sep{color:var(--muted);padding:3px 0}
+.llist button{display:grid;grid-template-columns:12px 1fr;gap:2px 10px;text-align:left;border:1px solid var(--line);background:var(--n0);border-radius:var(--r-ctl);padding:8px 12px;transition:border-color .15s,background .15s}
+.llist button:hover{border-color:var(--n400)}
+.llist button[aria-pressed=true]{border-color:var(--n800);background:var(--n10);box-shadow:inset 0 0 0 1px var(--n800)}
+.llist .sw{width:12px;height:12px;border-radius:3px;margin-top:4px}
+.llist .t{font-weight:600;color:var(--ink);font-size:14px;line-height:20px}
+.llist .s{grid-column:2;font-family:var(--mono);font-size:12px;line-height:16px;color:var(--n600)}
+.name{display:flex;flex-wrap:wrap;gap:0;font-family:var(--mono);font-size:clamp(15px,2vw,18px);color:var(--ink)}
+.name .part{padding:2px 6px;border-radius:4px;box-shadow:inset 0 -2px 0 transparent;cursor:default;transition:background .15s,box-shadow .15s}
+.name .part:hover,.name .part.on{background:var(--blue-50);box-shadow:inset 0 -2px 0 var(--blue-500)}
+.name .sep{color:var(--n400);padding:2px 0}
 
 /* ---------- publication ---------- */
 .pub-node rect,.pub-node path{transition:fill .3s,stroke .3s}
-.pub-node.hit .box{fill:#FFF3E8;stroke:var(--accent)}
-.pub-edge{fill:none;stroke:#C4CEC2;stroke-width:1.4;transition:opacity .3s}
-.pub-edge.flow{stroke:var(--teal-2);stroke-dasharray:4 7;animation:dash 1.2s linear infinite}
-@keyframes dash{to{stroke-dashoffset:-22}}
+.pub-node.hit .box{fill:var(--blue-50);stroke:var(--blue-500)}
+.pub-edge{fill:none;stroke:var(--n100);stroke-width:1.5;transition:opacity .3s}
+.pub-edge.flow{stroke:var(--n300);stroke-dasharray:3 6;animation:dash 1.2s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-18}}
 .pulse{offset-rotate:0deg}
 .pulse.go{animation:mv 1s cubic-bezier(.4,0,.2,1) forwards}
 @keyframes mv{from{offset-distance:0%}to{offset-distance:100%}}
-.badge{font-size:10.5px;font-weight:700}
+.badge{font-size:11px}
 .mode-files .svc,.mode-files .pub-edge{opacity:.12}
 .mail{opacity:0;transition:opacity .3s}
 .mode-files .mail{opacity:1}
 
 /* ---------- cartography ---------- */
-.carto-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(250px,.85fr);gap:14px;align-items:stretch}
+.carto-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(250px,.85fr);gap:16px;align-items:stretch}
 @media (max-width:560px){.carto-grid{grid-template-columns:1fr}}
-.carto-map{padding:8px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.carto-map{padding:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--paper)}
 .carto-map svg{max-height:70vh;width:auto;max-width:100%;aspect-ratio:1/1}
-input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:30px;background:transparent}
-input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--teal-soft),var(--accent-soft))}
-input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--teal-soft),var(--accent-soft))}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3);margin-top:-8px}
-input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)}
-.scaleRead{font-family:var(--mono);font-size:clamp(22px,3.4vw,30px);color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.1}
-.ticks{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);font-family:var(--mono)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent;border-radius:9999px}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:9999px;background:var(--n200)}
+input[type=range]::-moz-range-track{height:4px;border-radius:9999px;background:var(--n200)}
+input[type=range]::-moz-range-progress{height:4px;border-radius:9999px;background:var(--n800)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--n800);border:2px solid var(--n0);box-shadow:0 0 2px 0 rgba(5,5,6,.3),0 1px 4px 0 rgba(5,5,6,.3);margin-top:-7px}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--n800);border:2px solid var(--n0);box-shadow:0 1px 4px rgba(5,5,6,.3)}
+.scaleRead{font-family:var(--mono);font-size:clamp(21px,3vw,28px);color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.15}
+.ticks{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-family:var(--mono)}
 .layers{display:grid;gap:6px}
-.layers div{display:grid;grid-template-columns:18px 1fr auto;align-items:center;gap:8px;padding:7px 10px;border-radius:9px;border:1px solid var(--line);background:var(--card);font-size:12.5px;transition:opacity .25s,border-color .25s}
-.layers div.off{opacity:.45}
-.layers .st{font-size:11px;font-weight:700}
+.layers div{display:grid;grid-template-columns:18px 1fr auto;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--r-ctl);border:1px solid var(--line);background:var(--n0);font-size:14px;line-height:20px;transition:opacity .25s}
+.layers div.off{opacity:.5}
+.layers .st{font-size:12px}
 .layers svg{width:18px;height:18px}
 .cg{transition:opacity .4s}
 .counter{font-variant-numeric:tabular-nums}
+.dist-hot{fill:transparent;pointer-events:all;cursor:default}
+.dist-hot:hover{fill:rgba(31,117,203,.10)}
 </style>
 </head>
 <body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none"><symbol id="i-status-success" viewBox="0 0 12 12"><path fill-rule="evenodd" clip-rule="evenodd" d="M6 12A6 6 0 106 0a6 6 0 000 12zm2.576-7.02a.75.75 0 00-1.152-.96L5.45 6.389l-.92-.92A.75.75 0 003.47 6.53l1.5 1.5a.75.75 0 001.106-.05l2.5-3z"/></symbol><symbol id="i-status-failed" viewBox="0 0 12 12"><path fill-rule="evenodd" clip-rule="evenodd" d="M6 12A6 6 0 106 0a6 6 0 000 12zM3 5a1 1 0 000 2h6a1 1 0 100-2H3z"/></symbol><symbol id="i-status_warning" viewBox="0 0 14 14"><path d="M7 0a7 7 0 110 14A7 7 0 017 0zm0 1a6 6 0 100 12A6 6 0 007 1z"/><path d="M6 3.5c0-.3.2-.5.5-.5h1c.3 0 .5.2.5.5v4c0 .3-.2.5-.5.5h-1c-.3 0-.5-.2-.5-.5v-4m0 6c0-.3.2-.5.5-.5h1c.3 0 .5.2.5.5v1c0 .3-.2.5-.5.5h-1c-.3 0-.5-.2-.5-.5v-1"/></symbol><symbol id="i-information-o" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.5 8a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0zM16 8A8 8 0 110 8a8 8 0 0116 0zm-9.75 2.5a.75.75 0 000 1.5h3.5a.75.75 0 000-1.5h-1V7H7a.75.75 0 000 1.5h.25v2h-1zM8 6a1 1 0 100-2 1 1 0 000 2z"/></symbol><symbol id="i-pause" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M5 3a1 1 0 00-1 1v8a1 1 0 001 1h1a1 1 0 001-1V4a1 1 0 00-1-1H5zm5 0a1 1 0 00-1 1v8a1 1 0 001 1h1a1 1 0 001-1V4a1 1 0 00-1-1h-1z"/></symbol><symbol id="i-play" viewBox="0 0 16 16"><path d="M11.629 7.306a.835.835 0 010 1.388l-6.401 4.177C4.695 13.218 4 12.825 4 12.176V3.824c0-.649.695-1.042 1.228-.695l6.4 4.177z"/></symbol><symbol id="i-mail" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M2 3.5h12a.5.5 0 01.5.5v.572L8 8.286 1.5 4.572V4a.5.5 0 01.5-.5zm-.5 2.8V12a.5.5 0 00.5.5h12a.5.5 0 00.5-.5V6.3L8.372 9.8 8 10.014 7.628 9.8 1.5 6.3zM0 4a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H2a2 2 0 01-2-2V4z"/></symbol><symbol id="i-earth" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M8 14.5c.23 0 .843-.226 1.487-1.514.306-.612.563-1.37.742-2.236H5.771c.179.866.436 1.624.742 2.236C7.157 14.274 7.77 14.5 8 14.5zM5.554 9.25a14.444 14.444 0 010-2.5h4.892a14.452 14.452 0 010 2.5H5.554zm6.203 1.5c-.224 1.224-.593 2.308-1.066 3.168a6.525 6.525 0 003.2-3.168h-2.134zm2.623-1.5h-2.43a16.019 16.019 0 000-2.5h2.429a6.533 6.533 0 010 2.5zm-10.331 0H1.62a6.533 6.533 0 010-2.5h2.43a15.994 15.994 0 000 2.5zm-1.94 1.5h2.134c.224 1.224.593 2.308 1.066 3.168a6.525 6.525 0 01-3.2-3.168zm3.662-5.5h4.458c-.179-.866-.436-1.624-.742-2.236C8.843 1.726 8.23 1.5 8 1.5c-.23 0-.843.226-1.487 1.514-.306.612-.563 1.37-.742 2.236zm5.986 0h2.134a6.526 6.526 0 00-3.2-3.168c.473.86.842 1.944 1.066 3.168zM5.31 2.082c-.473.86-.842 1.944-1.066 3.168H2.109a6.525 6.525 0 013.2-3.168zM8 0a8 8 0 110 16A8 8 0 018 0z"/></symbol><symbol id="i-retry" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.32.029a8 8 0 017.18 3.307V1.75a.75.75 0 011.5 0V6h-4.25a.75.75 0 010-1.5h1.727A6.5 6.5 0 001.694 6.424.75.75 0 11.239 6.06 8 8 0 017.319.03zm-3.4 14.852A8 8 0 0015.76 9.94a.75.75 0 00-1.455-.364A6.5 6.5 0 012.523 11.5H4.25a.75.75 0 000-1.5H0v4.25a.75.75 0 001.5 0v-1.586a8 8 0 002.42 2.217z"/></symbol><symbol id="i-check" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.78 4.62a.75.75 0 010 1.06l-6.097 6.097a.75.75 0 01-1.069-.009L3.211 9.284a.75.75 0 111.078-1.043l1.873 1.936L11.72 4.62a.75.75 0 011.06 0z"/></symbol><symbol id="i-location" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.5 6a4.47 4.47 0 01-.883 2.677L8 13.5 4.383 8.677A4.5 4.5 0 1112.5 6zM14 6c0 1.34-.439 2.576-1.18 3.574L8.937 14.75 8 16l-.938-1.25L3.18 9.574A6 6 0 1114 6zM8 8a2 2 0 100-4 2 2 0 000 4z"/></symbol><symbol id="i-table" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M2.5 4.5v-2h11v2h-11zm0 1.5v3h4.75V6H2.5zm6.25 0v3h4.75V6H8.75zM2.5 10.5h4.75v3H2.5v-3zm6.25 0v3h4.75v-3H8.75zM1 2a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 01-1 1H2a1 1 0 01-1-1V2z" clip-rule="evenodd"/></symbol><symbol id="i-hourglass" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M2.75 0a.75.75 0 000 1.5H3v.593c0 1.26.5 2.468 1.391 3.359L6.94 8l-2.548 2.548A4.75 4.75 0 003 13.907v.593h-.25a.75.75 0 000 1.5h10.5a.75.75 0 000-1.5H13v-.593c0-1.26-.5-2.468-1.391-3.359L9.06 8l2.548-2.548A4.75 4.75 0 0013 2.093V1.5h.25a.75.75 0 000-1.5H2.75zm8.75 1.5h-7v.593c0 .69.219 1.356.618 1.907h5.764a3.25 3.25 0 00.618-1.907V1.5zM8 6.94L6.56 5.5h2.88L8 6.94zm3.5 7.56v-.593a3.25 3.25 0 00-.952-2.298L8 9.06l-2.548 2.548a3.25 3.25 0 00-.952 2.298v.593h7z"/></symbol></svg>
 <div class="tip" id="tip" role="tooltip"></div>
 
 <!-- ================================================================ INDEX -->
@@ -233,10 +283,10 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 <section class="view" id="intake" aria-labelledby="in-h">
   <div class="hd"><p class="eyebrow">Intake · automated validation</p><h1 id="in-h">Every record is checked before it becomes geometry</h1></div>
   <div class="checks">
-    <div class="check"><b>Envelope</b>17.78–24.11° N · 80.25–84.40° E</div>
-    <div class="check"><b>Null island</b>Rejects 0, 0</div>
-    <div class="check"><b>Precision</b>Six decimal places (±0.1 m)</div>
-    <div class="check"><b>Unique ID</b>One asset, one ID</div>
+    <div class="check"><b><svg class="ic" aria-hidden="true"><use href="#i-location"/></svg>Envelope</b>17.78–24.11° N · 80.25–84.40° E</div>
+    <div class="check"><b><svg class="ic" aria-hidden="true"><use href="#i-earth"/></svg>Null island</b>Rejects 0, 0</div>
+    <div class="check"><b><svg class="ic" aria-hidden="true"><use href="#i-hourglass"/></svg>Precision</b>Six decimal places (±0.1 m)</div>
+    <div class="check"><b><svg class="ic" aria-hidden="true"><use href="#i-duplicate"/></svg>Unique ID</b>One asset, one ID</div>
   </div>
   <div class="intake-grid">
     <div class="card tablewrap">
@@ -258,7 +308,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
   <div class="row between">
     <div class="row"><button class="btn" id="runIn">Run validation</button>
       <span class="chip ok" id="inOk">0 accepted</span><span class="chip bad" id="inBad">0 returned</span></div>
-    <p class="cap" id="inCap" aria-live="polite">Illustrative records. Rejected rows go back with a record-level error report. Nothing is silently corrected.</p>
+    <p class="alert info" id="inCap" aria-live="polite" style="flex:1;min-width:240px"><svg class="ic" aria-hidden="true"><use href="#i-information-o"/></svg>Illustrative records. Rejected rows go back with a record-level error report. Nothing is silently corrected.</p>
   </div>
 </section>
 
@@ -288,7 +338,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 <!-- ================================================================ PROJECTION -->
 <section class="view" id="projection" aria-labelledby="pj-h">
   <div class="hd"><p class="eyebrow">Projection · measuring a state that crosses a zone edge</p><h1 id="pj-h">How far is a kilometre off, anywhere in Chhattisgarh?</h1></div>
-  <div class="seg" role="group" aria-label="Coordinate reference system">
+  <div class="tabs" role="group" aria-label="Coordinate reference system">
     <button data-crs="wgs" aria-pressed="false">WGS 84 · 4326</button>
     <button data-crs="u44" aria-pressed="true">UTM 44N · 32644</button>
     <button data-crs="u45" aria-pressed="false">UTM 45N · 32645</button>
@@ -344,7 +394,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
     <button class="btn" id="pushBtn">Update one record</button>
   </div>
   <div class="card" style="padding:8px"><svg id="pubSvg" viewBox="0 0 760 380" role="img" aria-label="PostGIS publishes map, feature, tile and image services. The State Geoportal, the Mining, Anganwadi and BharatNet applications, and external agencies all read the same services."></svg></div>
-  <p class="cap" id="pbCap" aria-live="polite">Record <span class="mono">AWC-RPR-00412</span> changes status once in PostGIS.</p>
+  <p class="alert info" id="pbCap" aria-live="polite"><svg class="ic" aria-hidden="true"><use href="#i-information-o"/></svg>Record <span class="mono">AWC-RPR-00412</span> changes status once in PostGIS.</p>
 </section>
 
 <!-- ================================================================ CARTOGRAPHY -->
@@ -362,12 +412,12 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
       <div class="layers" id="layerList"></div>
       <div class="card pad" style="display:grid;gap:8px">
         <div class="row between"><b style="font-size:12.5px">Scale limits</b>
-          <div class="seg" role="group" aria-label="Scale limits"><button data-lim="on" aria-pressed="true">On</button><button data-lim="off" aria-pressed="false">Off</button></div></div>
+          <button class="toggle" role="switch" aria-checked="true" id="limTog" aria-label="Scale limits"><span class="track"><span class="knob"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span></span><span id="limTxt">On</span></button></div>
         <div class="stat"><span class="n counter" id="featN">0</span><span class="l">features requested in this frame · illustrative</span></div>
       </div>
     </div>
   </div>
-  <p class="cap" id="caCap" aria-live="polite"></p>
+  <p class="alert" id="caCap" aria-live="polite"></p>
   <p class="note">District lines are real (2011 vintage, simplified). Sub-district cells and assets are illustrative.</p>
 </section>
 
@@ -380,6 +430,7 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const NS="http://www.w3.org/2000/svg";
 function el(t,a,p){const e=document.createElementNS(NS,t);if(a)for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
 function txt(t,a,p,s){const e=el(t,a,p);e.textContent=s;return e}
+const ICON=(n,c="ic")=>`<svg class="${c}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
 const REDUCE=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const fmt=n=>Math.round(n).toLocaleString("en-US");
 const tip=$("#tip");
@@ -420,7 +471,7 @@ function Auto(id,ms,tick,{first=true,enter}={}){
   let timer=null,idle=null,visible=false,active=false,off=REDUCE||OPT.auto==="off",started=false;
   const running=()=>visible&&!active&&!off&&document.visibilityState==="visible";
   function render(){const r=running();pill.classList.toggle("run",r);
-    pill.innerHTML=`<i class="dot"></i>${off?"Auto-play off · tap to play":r?"Playing · move to explore":"Paused while you explore"}<i class="bar"></i>`;
+    pill.innerHTML=`${ICON(off?"play":r?"pause":"pause","ic sm")}${off?"Auto-play off":r?"Playing · move to explore":"Paused while you explore"}<i class="bar"></i>`;
     pill.setAttribute("aria-label",off?"Start auto-play":"Stop auto-play")}
   function sched(){clearTimeout(timer);render();if(running())timer=setTimeout(()=>{tick();sched()},ms)}
   function poke(){if(pillHit)return;active=true;clearTimeout(idle);idle=setTimeout(()=>{active=false;sched()},3500);sched()}
@@ -438,7 +489,7 @@ INIT.index=()=>{const base=location.href.split("#")[0];const L=$("#idxList");
     a.innerHTML=`<b>${VIEWS[k][0]}</b><span class="cap">${VIEWS[k][1]}</span><span class="note">${VIEWS[k][2]}</span><span class="mono">${base.replace(/^https?:\/\//,"")}#${k}&amp;bare</span>`;L.appendChild(a)}};
 
 /* ------------------------------------------------ shared: base state map */
-function baseMap(svg,{districts=true,fill="#EEF2EA",stroke="var(--ink)",dstroke="#B9C4B6"}={}){
+function baseMap(svg,{districts=true,fill="var(--map-land)",stroke="var(--map-outline)",dstroke="var(--map-line)"}={}){
   svg.setAttribute("viewBox",`0 0 ${G.W} ${G.H}`);
   const g=el("g",{},svg);
   el("path",{d:G.state,fill,stroke:"none"},g);
@@ -458,32 +509,32 @@ INIT.intake=()=>{
    {id:"MIN-KRB-L-0071",lat:"22.357046",lon:"82.682119",ok:true,at:"c"}];
   // world
   const W=$("#worldSvg");
-  el("rect",{width:640,height:320,fill:"#E6EEF0"},W);
-  for(let x=0;x<=640;x+=640/12)el("line",{x1:x,x2:x,y1:0,y2:320,stroke:"#D5E0E3","stroke-width":.6},W);
-  for(let y=0;y<=320;y+=320/6)el("line",{x1:0,x2:640,y1:y,y2:y,stroke:"#D5E0E3","stroke-width":.6},W);
-  el("path",{d:G.world.land,fill:"#FBFCF9",stroke:"#C9D2C6","stroke-width":.5},W);
+  el("rect",{width:640,height:320,fill:"var(--n10)"},W);
+  for(let x=0;x<=640;x+=640/12)el("line",{x1:x,x2:x,y1:0,y2:320,stroke:"var(--n50)","stroke-width":.6},W);
+  for(let y=0;y<=320;y+=320/6)el("line",{x1:0,x2:640,y1:y,y2:y,stroke:"var(--n50)","stroke-width":.6},W);
+  el("path",{d:G.world.land,fill:"var(--n0)",stroke:"var(--n200)","stroke-width":.5},W);
   const ex=l=>(l+180)/360*640, ey=l=>(90-l)/180*320;
-  el("rect",{x:ex(80.25),y:ey(24.11),width:ex(84.40)-ex(80.25),height:ey(17.78)-ey(24.11),fill:"none",stroke:"var(--teal)","stroke-width":1.2},W);
-  el("path",{d:G.world.cg,fill:"var(--teal)"},W);
-  txt("text",{x:ex(84.4)+6,y:ey(21)+4,"font-size":13,fill:"var(--teal)","font-weight":700},W,"Chhattisgarh");
-  el("line",{x1:0,x2:640,y1:160,y2:160,stroke:"#C3D0D4","stroke-dasharray":"3 3"},W);
-  el("line",{x1:320,x2:320,y1:0,y2:320,stroke:"#C3D0D4","stroke-dasharray":"3 3"},W);
+  el("rect",{x:ex(80.25),y:ey(24.11),width:ex(84.40)-ex(80.25),height:ey(17.78)-ey(24.11),fill:"none",stroke:"var(--blue-500)","stroke-width":1.2},W);
+  el("path",{d:G.world.cg,fill:"var(--blue-500)"},W);
+  txt("text",{x:ex(84.4)+6,y:ey(21)+4,"font-size":13,fill:"var(--blue-700)","font-weight":600},W,"Chhattisgarh");
+  el("line",{x1:0,x2:640,y1:160,y2:160,stroke:"var(--n100)","stroke-dasharray":"3 3"},W);
+  el("line",{x1:320,x2:320,y1:0,y2:320,stroke:"var(--n100)","stroke-dasharray":"3 3"},W);
   const wpins={};
-  const wp=(key,[x,y],label,anchor)=>{const g=el("g",{class:"pin hide"},W);const r=el("circle",{cx:x,cy:y,r:5,fill:"none",stroke:"var(--bad)","stroke-width":2,class:"ring"},g);
-    el("circle",{cx:x,cy:y,r:4.5,fill:"var(--bad)",stroke:"#fff","stroke-width":1.5,class:"core"},g);
-    const t=txt("text",{x:x+(anchor==="end"?-9:9),y:y+4,"font-size":13,"font-weight":700,fill:"var(--bad)","text-anchor":anchor||"start"},g,label);
-    el("path",{d:`M${G.worldPts.cg[0]} ${G.worldPts.cg[1]} Q ${(x+G.worldPts.cg[0])/2} ${Math.min(y,G.worldPts.cg[1])-40} ${x} ${y}`,fill:"none",stroke:"var(--bad)","stroke-width":1,"stroke-dasharray":"3 3",opacity:.7},g);
+  const wp=(key,[x,y],label,anchor)=>{const g=el("g",{class:"pin hide"},W);const r=el("circle",{cx:x,cy:y,r:5,fill:"none",stroke:"var(--red-500)","stroke-width":2,class:"ring"},g);
+    el("circle",{cx:x,cy:y,r:4.5,fill:"var(--red-500)",stroke:"#fff","stroke-width":1.5,class:"core"},g);
+    const t=txt("text",{x:x+(anchor==="end"?-9:9),y:y+4,"font-size":13,"font-weight":600,fill:"var(--red-700)","text-anchor":anchor||"start"},g,label);
+    el("path",{d:`M${G.worldPts.cg[0]} ${G.worldPts.cg[1]} Q ${(x+G.worldPts.cg[0])/2} ${Math.min(y,G.worldPts.cg[1])-40} ${x} ${y}`,fill:"none",stroke:"var(--red-500)","stroke-width":1,"stroke-dasharray":"3 3",opacity:.6},g);
     wpins[key]=g};
   wp("transposed",G.worldPts.transposed,"81.7° N, 22.1° E · Arctic Ocean");
   wp("nullisl",G.worldPts.nullisl,"0, 0 · Gulf of Guinea");
   // state
-  const S=$("#cgInSvg");baseMap(S,{fill:"#EEF2EA"});
+  const S=$("#cgInSvg");baseMap(S);
   S.setAttribute("viewBox",`20 20 ${G.W-40} ${G.H-40}`);S.style.maxHeight="40vh";S.style.width="100%";
   const cpins={};
   const cp=(key,[x,y],kind)=>{const g=el("g",{class:"pin hide"},S);
-    if(kind==="ok"){el("circle",{cx:x,cy:y,r:7,fill:"var(--teal)",stroke:"#fff","stroke-width":2,class:"core"},g)}
-    else if(kind==="prec"){el("rect",{x:x-14,y:y-14,width:28,height:28,fill:"rgba(179,38,30,.10)",stroke:"var(--bad)","stroke-width":1.5,"stroke-dasharray":"3 2"},g);el("circle",{cx:x,cy:y,r:4,fill:"var(--bad)",class:"core"},g);txt("text",{x:x+20,y:y+4,"font-size":17,"font-weight":700,fill:"var(--bad)"},g,"somewhere in a 1.1 km cell")}
-    else if(kind==="dup"){el("circle",{cx:x+5,cy:y-5,r:7,fill:"var(--bad)",stroke:"#fff","stroke-width":2,class:"core"},g);txt("text",{x:x+16,y:y-8,"font-size":17,"font-weight":700,fill:"var(--bad)"},g,"same asset, two records")}
+    if(kind==="ok"){el("circle",{cx:x,cy:y,r:7,fill:"var(--green-500)",stroke:"#fff","stroke-width":2,class:"core"},g)}
+    else if(kind==="prec"){el("rect",{x:x-14,y:y-14,width:28,height:28,fill:"rgba(221,43,14,.10)",stroke:"var(--red-500)","stroke-width":1.5,"stroke-dasharray":"3 2"},g);el("circle",{cx:x,cy:y,r:4,fill:"var(--red-500)",class:"core"},g);txt("text",{x:x+20,y:y+4,"font-size":17,"font-weight":600,fill:"var(--red-700)"},g,"somewhere in a 1.1 km cell")}
+    else if(kind==="dup"){el("circle",{cx:x+5,cy:y-5,r:7,fill:"var(--red-500)",stroke:"#fff","stroke-width":2,class:"core"},g);txt("text",{x:x+16,y:y-8,"font-size":17,"font-weight":600,fill:"var(--red-700)"},g,"same asset, two records")}
     cpins[key]=g};
   cp("a",G.intakePts.a,"ok");cp("b",G.intakePts.b,"ok");cp("c",G.intakePts.c,"ok");cp("p",G.intakePts.p,"prec");cp("dup",G.intakePts.a,"dup");
   const pinOf=r=>wpins[r.at]||cpins[r.at];
@@ -497,9 +548,9 @@ INIT.intake=()=>{
   rows.forEach((tr,i)=>tr.querySelector(".res").innerHTML=pend(R[i]));
   function reset(){rows.forEach((tr,i)=>tr.querySelector(".res").innerHTML=pend(R[i]));Object.values({...wpins,...cpins}).forEach(p=>p.classList.add("hide"));$("#inOk").textContent="0 accepted";$("#inBad").textContent="0 returned"}
   const run=()=>{if(busy)return;busy=true;reset();let i=0,ok=0,bad=0;$("#runIn").disabled=true;
-    const step=()=>{const r=R[i],tr=rows[i];tr.querySelector(".res").innerHTML=r.ok?'<span class="chip ok">Accepted</span>':`<span class="chip bad">Returned</span><span class="why">${r.why}</span>`;
+    const step=()=>{const r=R[i],tr=rows[i];tr.querySelector(".res").innerHTML=r.ok?'<span class="chip ok">'+ICON("status-success","ic sm")+'Accepted</span>':`<span class="chip bad">${ICON("status-failed","ic sm")}Returned</span><span class="why">${r.why}</span>`;
       r.ok?ok++:bad++;$("#inOk").textContent=ok+" accepted";$("#inBad").textContent=bad+" returned";pinOf(r).classList.remove("hide");
-      i++;if(i<R.length)setTimeout(step,REDUCE?0:520);else{busy=false;$("#runIn").disabled=false;$("#runIn").textContent="Run again";$("#inCap").textContent=`${bad} of ${R.length} records returned with a record-level error report. Nothing is silently corrected.`}};
+      i++;if(i<R.length)setTimeout(step,REDUCE?0:520);else{busy=false;$("#runIn").disabled=false;$("#runIn").textContent="Run again";$("#inCap").innerHTML=ICON("information-o")+`<span>${bad} of ${R.length} records returned with a record-level error report. Nothing is silently corrected.</span>`}};
     step()};
   $("#runIn").onclick=run;Auto("intake",9000,run);
 };
@@ -508,31 +559,31 @@ INIT.intake=()=>{
 INIT.conversion=()=>{
   const cards=[
   {t:"Points",s:"Discrete assets",c:"Anganwadi centres ● and BharatNet GP nodes ◆. One coordinate each.",svg:`
-    <rect width="260" height="190" rx="8" fill="var(--paper)"/>
-    <g fill="none" stroke="#D6DDD2" stroke-width="1"><path d="M0 60 L70 48 L120 70 L180 40 L260 55"/><path d="M0 130 L60 120 L110 140 L170 118 L260 132"/><path d="M70 48 L60 120 L50 190"/><path d="M120 70 L110 140 L120 190"/><path d="M180 40 L170 118 L190 190"/><path d="M70 0 L70 48"/><path d="M180 0 L180 40"/></g>
-    <g fill="var(--accent)" stroke="#fff" stroke-width="1.5"><circle cx="38" cy="90" r="6"/><circle cx="95" cy="98" r="6"/><circle cx="140" cy="100" r="6"/><circle cx="82" cy="160" r="6"/><circle cx="215" cy="92" r="6"/><circle cx="150" cy="160" r="6"/></g>
-    <g fill="var(--teal)" stroke="#fff" stroke-width="1.5"><rect x="118" y="26" width="11" height="11" transform="rotate(45 123.5 31.5)"/><rect x="218" y="150" width="11" height="11" transform="rotate(45 223.5 155.5)"/></g>
-    <g class="fx raw"><circle cx="146" cy="96" r="6" fill="var(--bad)" stroke="#fff" stroke-width="1.5"/><circle cx="143" cy="98" r="15" fill="none" stroke="var(--bad)" stroke-width="1.5" stroke-dasharray="3 2"/><text x="163" y="80" class="issue" fill="var(--bad)">duplicate</text></g>
-    <g class="fx qa"><circle cx="140" cy="100" r="15" fill="none" stroke="var(--ok)" stroke-width="1.5"/><text x="163" y="80" class="issue" fill="var(--ok)">merged</text></g>`},
+    <rect width="260" height="190" rx="8" fill="var(--n10)"/>
+    <g fill="none" stroke="var(--n100)" stroke-width="1"><path d="M0 60 L70 48 L120 70 L180 40 L260 55"/><path d="M0 130 L60 120 L110 140 L170 118 L260 132"/><path d="M70 48 L60 120 L50 190"/><path d="M120 70 L110 140 L120 190"/><path d="M180 40 L170 118 L190 190"/><path d="M70 0 L70 48"/><path d="M180 0 L180 40"/></g>
+    <g fill="var(--dv-blue-500)" stroke="#fff" stroke-width="1.5"><circle cx="38" cy="90" r="6"/><circle cx="95" cy="98" r="6"/><circle cx="140" cy="100" r="6"/><circle cx="82" cy="160" r="6"/><circle cx="215" cy="92" r="6"/><circle cx="150" cy="160" r="6"/></g>
+    <g fill="var(--dv-aqua-600)" stroke="#fff" stroke-width="1.5"><rect x="118" y="26" width="11" height="11" transform="rotate(45 123.5 31.5)"/><rect x="218" y="150" width="11" height="11" transform="rotate(45 223.5 155.5)"/></g>
+    <g class="fx raw"><circle cx="146" cy="96" r="6" fill="var(--red-500)" stroke="#fff" stroke-width="1.5"/><circle cx="143" cy="98" r="15" fill="none" stroke="var(--red-500)" stroke-width="1.5" stroke-dasharray="3 2"/><text x="163" y="80" class="issue" fill="var(--red-700)">duplicate</text></g>
+    <g class="fx qa"><circle cx="140" cy="100" r="15" fill="none" stroke="var(--green-500)" stroke-width="1.5"/><text x="163" y="80" class="issue" fill="var(--green-700)">merged</text></g>`},
   {t:"Lines",s:"Networks",c:"BharatNet fibre. Vertex order carries direction and chainage from the block node.",svg:`
-    <rect width="260" height="190" rx="8" fill="var(--paper)"/>
-    <defs><marker id="ar" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto"><path d="M0 1L9 5L0 9z" fill="var(--teal)"/></marker></defs>
-    <path d="M28 160 L70 138 L104 110 L130 104 L168 76 L205 60 L236 34" fill="none" stroke="var(--teal)" stroke-width="3.2" stroke-linejoin="round" marker-mid="url(#ar)"/>
-    <path class="fx qa" d="M130 104 L150 150 L176 168" fill="none" stroke="var(--teal)" stroke-width="3.2" stroke-linejoin="round"/>
-    <g class="fx raw"><path d="M138 116 L154 152 L176 168" fill="none" stroke="var(--teal)" stroke-width="3.2" stroke-linejoin="round"/><circle cx="133" cy="109" r="11" fill="none" stroke="var(--bad)" stroke-width="1.5" stroke-dasharray="3 2"/><text x="150" y="124" class="issue" fill="var(--bad)">dangle · 11 m gap</text></g>
-    <g class="fx qa"><circle cx="130" cy="104" r="11" fill="none" stroke="var(--ok)" stroke-width="1.5"/><text x="150" y="124" class="issue" fill="var(--ok)">snapped</text></g>
+    <rect width="260" height="190" rx="8" fill="var(--n10)"/>
+    <defs><marker id="ar" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto"><path d="M0 1L9 5L0 9z" fill="var(--dv-aqua-600)"/></marker></defs>
+    <path d="M28 160 L70 138 L104 110 L130 104 L168 76 L205 60 L236 34" fill="none" stroke="var(--dv-aqua-600)" stroke-width="3.2" stroke-linejoin="round" marker-mid="url(#ar)"/>
+    <path class="fx qa" d="M130 104 L150 150 L176 168" fill="none" stroke="var(--dv-aqua-600)" stroke-width="3.2" stroke-linejoin="round"/>
+    <g class="fx raw"><path d="M138 116 L154 152 L176 168" fill="none" stroke="var(--dv-aqua-600)" stroke-width="3.2" stroke-linejoin="round"/><circle cx="133" cy="109" r="11" fill="none" stroke="var(--red-500)" stroke-width="1.5" stroke-dasharray="3 2"/><text x="150" y="124" class="issue" fill="var(--red-700)">dangle · 11 m gap</text></g>
+    <g class="fx qa"><circle cx="130" cy="104" r="11" fill="none" stroke="var(--green-500)" stroke-width="1.5"/><text x="150" y="124" class="issue" fill="var(--green-700)">snapped</text></g>
     <g font-size="10" fill="var(--muted)" font-family="var(--mono)"><text x="40" y="172">0.0 km</text><text x="80" y="100">3.1</text><text x="198" y="30">8.7 km</text></g>
-    <g fill="var(--teal)" stroke="#fff" stroke-width="1.5"><rect x="21" y="153" width="14" height="14" rx="2"/><rect x="229" y="27" width="13" height="13" transform="rotate(45 235.5 33.5)"/><rect x="170" y="162" width="12" height="12" transform="rotate(45 176 168)"/></g>
-    <text x="14" y="186" font-size="10" font-weight="700" fill="var(--teal)">Block node</text>`},
+    <g fill="var(--dv-aqua-600)" stroke="#fff" stroke-width="1.5"><rect x="21" y="153" width="14" height="14" rx="2"/><rect x="229" y="27" width="13" height="13" transform="rotate(45 235.5 33.5)"/><rect x="170" y="162" width="12" height="12" transform="rotate(45 176 168)"/></g>
+    <text x="14" y="186" font-size="10" font-weight="600" fill="var(--dv-aqua-700)">Block node</text>`},
   {t:"Polygons",s:"Bounded areas",c:"Mining leases. Rings must close and share edges with neighbours, with no gaps or overlaps.",svg:`
-    <rect width="260" height="190" rx="8" fill="var(--paper)"/>
-    <defs><pattern id="hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#FBE3E0"/><line x1="0" y1="0" x2="0" y2="5" stroke="var(--bad)" stroke-width="2"/></pattern></defs>
-    <path d="M26 44 L126 30 L132 150 L36 164 Z" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2"/>
-    <path class="fx qa" d="M126 30 L228 48 L222 146 L132 150 Z" fill="var(--teal-soft)" stroke="var(--teal)" stroke-width="2"/>
-    <g class="fx raw"><path d="M134 33 L228 48 L222 146 L140 149 Z" fill="var(--teal-soft)" stroke="var(--teal)" stroke-width="2"/><path d="M126 30 L134 33 L140 149 L132 150 Z" fill="url(#hatch)"/><text x="142" y="176" class="issue" fill="var(--bad)">sliver · 0.4 ha gap</text></g>
-    <g class="fx qa"><text x="142" y="176" class="issue" fill="var(--ok)">shared edge</text></g>
-    <g fill="#fff" stroke="var(--ink)" stroke-width="1.2"><circle cx="26" cy="44" r="3"/><circle cx="126" cy="30" r="3"/><circle cx="132" cy="150" r="3"/><circle cx="36" cy="164" r="3"/><circle cx="228" cy="48" r="3"/><circle cx="222" cy="146" r="3"/></g>
-    <g font-size="11.5" font-weight="700" fill="var(--ink)"><text x="56" y="100">Lease A</text><text x="152" y="100">Lease B</text></g>`}];
+    <rect width="260" height="190" rx="8" fill="var(--n10)"/>
+    <defs><pattern id="hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="var(--red-50)"/><line x1="0" y1="0" x2="0" y2="5" stroke="var(--red-500)" stroke-width="2"/></pattern></defs>
+    <path d="M26 44 L126 30 L132 150 L36 164 Z" fill="var(--dv-orange-100)" stroke="var(--dv-orange-500)" stroke-width="2"/>
+    <path class="fx qa" d="M126 30 L228 48 L222 146 L132 150 Z" fill="var(--dv-blue-100)" stroke="var(--dv-blue-500)" stroke-width="2"/>
+    <g class="fx raw"><path d="M134 33 L228 48 L222 146 L140 149 Z" fill="var(--dv-blue-100)" stroke="var(--dv-blue-500)" stroke-width="2"/><path d="M126 30 L134 33 L140 149 L132 150 Z" fill="url(#hatch)"/><text x="142" y="176" class="issue" fill="var(--red-700)">sliver · 0.4 ha gap</text></g>
+    <g class="fx qa"><text x="142" y="176" class="issue" fill="var(--green-700)">shared edge</text></g>
+    <g fill="#fff" stroke="var(--n800)" stroke-width="1.2"><circle cx="26" cy="44" r="3"/><circle cx="126" cy="30" r="3"/><circle cx="132" cy="150" r="3"/><circle cx="36" cy="164" r="3"/><circle cx="228" cy="48" r="3"/><circle cx="222" cy="146" r="3"/></g>
+    <g font-size="12" font-weight="600" fill="var(--ink)"><text x="56" y="100">Lease A</text><text x="152" y="100">Lease B</text></g>`}];
   const box=$("#convCards");
   cards.forEach(c=>{const f=document.createElement("figure");f.className="card";f.innerHTML=`<svg viewBox="0 0 260 190" role="img" aria-label="${c.t}: ${c.c}">${c.svg}</svg><figcaption><b>${c.t}</b> · ${c.s}<br><span class="cap">${c.c}</span></figcaption>`;box.appendChild(f)});
   const M=[["AWC_NAME","awc_name"],["Status: “Functional” / “functional” / “F”","status_cd = 1"],["LAT, LONG (text)","geom · Point, SRID 4326"],["Dist: “Raipur” / “RAIPUR” / “Rpr”","lgd_dist_cd · from LGD master"]];
@@ -549,29 +600,29 @@ INIT.projection=()=>{
   const S=$("#projSvg");S.setAttribute("viewBox",`0 0 ${G.W} ${G.H}`);
   const defs=el("defs",{},S);const cp=el("clipPath",{id:"stClip"},defs);el("path",{d:G.state},cp);
   el("rect",{width:G.W,height:G.H,fill:"var(--paper)"},S);
-  const grat=el("g",{fill:"none",stroke:"#DDE3D9","stroke-width":1},S);
+  const grat=el("g",{fill:"none",stroke:"var(--n50)","stroke-width":1},S);
   G.grat.forEach(g=>el("path",{d:g.d},grat));
   const gl=el("g",{"font-size":10.5,fill:"var(--muted)","font-family":"var(--mono)"},S);
   G.grat.forEach(g=>{if(g.ax==="x")txt("text",{x:g.lab[0],y:G.H-6,"text-anchor":"middle"},gl,g.t);else txt("text",{x:6,y:g.lab[1]-3},gl,g.t)});
   const heat=el("g",{"clip-path":"url(#stClip)"},S);
-  const base=el("path",{d:G.state,fill:"#EEF2EA"},heat);
-  const cells=G.cells.map(c=>{const p=el("path",{d:c.d,class:"cell",fill:"#EEF2EA","stroke-width":.7},heat);p._c=c;return p});
-  const dl=el("g",{fill:"none",stroke:"rgba(27,39,39,.28)","stroke-width":.8},S);G.districts.forEach(d=>el("path",{d:d.d},dl));
-  el("path",{d:G.state,fill:"none",stroke:"var(--ink)","stroke-width":1.6,"stroke-linejoin":"round"},S);
+  const base=el("path",{d:G.state,fill:"var(--map-land)"},heat);
+  const cells=G.cells.map(c=>{const p=el("path",{d:c.d,class:"cell",fill:"#f3f2f0","stroke-width":.7},heat);p._c=c;return p});
+  const dl=el("g",{fill:"none",stroke:"rgba(40,39,45,.22)","stroke-width":.8},S);G.districts.forEach(d=>el("path",{d:d.d},dl));
+  el("path",{d:G.state,fill:"none",stroke:"var(--map-outline)","stroke-width":1.6,"stroke-linejoin":"round"},S);
   const eastG=el("g",{class:"fade",opacity:0},S);
-  el("path",{d:G.east,fill:"none",stroke:"var(--accent)","stroke-width":2.5},eastG);
-  el("path",{d:G.m84,stroke:"var(--accent)","stroke-width":2,"stroke-dasharray":"7 5",fill:"none"},eastG);
+  el("path",{d:G.east,fill:"none",stroke:"var(--dv-magenta-500)","stroke-width":2.5},eastG);
+  el("path",{d:G.m84,stroke:"var(--dv-magenta-500)","stroke-width":2,"stroke-dasharray":"7 5",fill:"none"},eastG);
   const m84pts=G.m84.slice(1).split("L").map(s=>s.split(",").map(Number));
-  const mTop=m84pts[m84pts.length-1];txt("text",{x:mTop[0]-6,y:mTop[1]+40,"text-anchor":"end","font-size":12,"font-weight":700,fill:"var(--accent-ink)"},eastG,"84° E · zone edge");
+  const mTop=m84pts[m84pts.length-1];txt("text",{x:mTop[0]-6,y:mTop[1]+40,"text-anchor":"end","font-size":12,"font-weight":600,fill:"var(--dv-magenta-700)"},eastG,"84° E · zone edge");
   // district name on hover
   const hov=txt("text",{x:G.W-12,y:22,"text-anchor":"end","font-size":12,"font-weight":700,fill:"var(--ink)"},S,"");
-  const wgsG=el("g",{class:"fade",opacity:0,"font-size":11,"font-weight":700,fill:"var(--teal)"},S);
+  const wgsG=el("g",{class:"fade",opacity:0,"font-size":12,"font-weight":600,fill:"var(--n800)"},S);
   const kmAt=lat=>{const a=6378137,e2=0.00669437999,p=lat*Math.PI/180;return Math.PI/180*a*Math.cos(p)/Math.sqrt(1-e2*Math.sin(p)**2)/1000};
   const gy=l=>G.grat.find(g=>g.t===l+"°N").lab[1];
   txt("text",{x:G.W-14,y:gy(24)-8,"text-anchor":"end"},wgsG,`1° of longitude = ${kmAt(24.106).toFixed(1)} km`);
   txt("text",{x:G.W-14,y:gy(18)-8,"text-anchor":"end"},wgsG,`1° of longitude = ${kmAt(17.788).toFixed(1)} km`);
   const color=v=>{const t=Math.max(-1,Math.min(1,v/1000));const lerp=(a,b,t)=>a.map((x,i)=>Math.round(x+(b[i]-x)*t));
-    const P0=[244,242,236],N=[14,95,91],Pz=[178,78,0],N2=[127,176,169],P2=[231,166,118];
+    const P0=[247,247,245],N=[63,81,174],Pz=[146,67,10],N2=[151,172,255],P2=[233,155,96];
     let c;if(t<0){const u=-t;c=u<.6?lerp(P0,N2,u/.6):lerp(N2,N,(u-.6)/.4)}else{c=t<.6?lerp(P0,P2,t/.6):lerp(P2,Pz,(t-.6)/.4)}return`rgb(${c})`};
   const mk=v=>(v<0?"−":"")+Math.abs(v/1000).toFixed(2);
   const INFO={
@@ -583,7 +634,7 @@ INIT.projection=()=>{
   $("#copyDef").onclick=async()=>{try{await navigator.clipboard.writeText(F.lccDef);$("#copyDef").textContent="Copied"}catch(e){$("#copyDef").textContent="Select and copy the text above"}};
   let cur="u44";
   setCrs=k=>{if(!INFO[k])return;cur=k;setPressed("[data-crs]",$(`[data-crs=${k}]`));
-    cells.forEach(p=>{const c=k==="wgs"?"#EEF2EA":color(p._c[k]);p.setAttribute("fill",c);p.setAttribute("stroke",c)});
+    cells.forEach(p=>{const c=k==="wgs"?"#f3f2f0":color(p._c[k]);p.setAttribute("fill",c);p.setAttribute("stroke",c)});
     eastG.setAttribute("opacity",k==="u44"||k==="u45"?1:0);wgsG.setAttribute("opacity",k==="wgs"?1:0);
     $("#pjDesc").innerHTML=INFO[k].d;
     $("#pjStats").innerHTML=INFO[k].s.map(([n,l])=>`<div class="stat"><span class="n">${n}</span><span class="note">${l}</span></div>`).join("");
@@ -603,10 +654,10 @@ INIT.storage=()=>{
   const iso=(x,y,i)=>{const X=(x-G.W/2)*sc,Y=(y-G.H/2)*sc;const c=Math.SQRT1_2;const rx=(X-Y)*c,ry=(X+Y)*c;return[CX+rx,TOP+i*GAP+ry*.42]};
   const tf=i=>`translate(${CX} ${TOP+i*GAP}) scale(1 .42) rotate(45) scale(${sc}) translate(${-G.W/2} ${-G.H/2})`;
   const L=[
-    {k:"ref",t:"Reference · Revenue boundaries",s:"reference.admin_village_poly",sw:"var(--ink)",draw:g=>{G.districts.forEach(d=>el("path",{d:d.d,fill:"none",stroke:"var(--teal)","stroke-width":1.4},g))}},
-    {k:"min",t:"Mining leases",s:"mining.mining_lease_poly_5k",sw:"var(--accent)",draw:g=>{el("path",{d:G.stack.mines,fill:"var(--accent)","fill-opacity":.85,stroke:"#8A3C00","stroke-width":1},g)}},
-    {k:"awc",t:"Anganwadi centres",s:"wcd.wcd_anganwadi_pt_10k",sw:"#E08A3C",draw:g=>{G.stack.aw.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:4.2,fill:"var(--accent)"},g))}},
-    {k:"bn",t:"BharatNet · fibre and GP nodes",s:"bharatnet.bn_fibre_line_10k",sw:"var(--teal-2)",draw:g=>{el("path",{d:G.stack.fibre,fill:"none",stroke:"var(--teal)","stroke-width":3},g);G.stack.gp.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:6,fill:"#fff",stroke:"var(--teal)","stroke-width":2.5},g))}}];
+    {k:"ref",t:"Reference · Revenue boundaries",s:"reference.admin_village_poly",sw:"var(--n700)",draw:g=>{G.districts.forEach(d=>el("path",{d:d.d,fill:"none",stroke:"var(--n500)","stroke-width":1.4},g))}},
+    {k:"min",t:"Mining leases",s:"mining.mining_lease_poly_5k",sw:"var(--dv-orange-500)",draw:g=>{el("path",{d:G.stack.mines,fill:"var(--dv-orange-500)","fill-opacity":.9,stroke:"var(--dv-orange-700)","stroke-width":1},g)}},
+    {k:"awc",t:"Anganwadi centres",s:"wcd.wcd_anganwadi_pt_10k",sw:"var(--dv-blue-500)",draw:g=>{G.stack.aw.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:4.2,fill:"var(--dv-blue-500)"},g))}},
+    {k:"bn",t:"BharatNet · fibre and GP nodes",s:"bharatnet.bn_fibre_line_10k",sw:"var(--dv-aqua-600)",draw:g=>{el("path",{d:G.stack.fibre,fill:"none",stroke:"var(--dv-aqua-600)","stroke-width":3},g);G.stack.gp.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:6,fill:"#fff",stroke:"var(--dv-aqua-600)","stroke-width":2.5},g))}}];
   const stack=el("g",{class:"stack"},S);
   const order=[3,2,1,0];// draw bottom (ref, index 3 position) first
   const nodes=[];
@@ -614,22 +665,22 @@ INIT.storage=()=>{
   L.forEach((l,i)=>l.slot=3-i);
   [...L].sort((a,b)=>b.slot-a.slot).forEach(l=>{
     const g=el("g",{class:"layer","data-k":l.k},stack);
-    el("path",{d:G.state,transform:"translate(0 7) "+tf(l.slot),fill:"rgba(27,39,39,.10)",stroke:"none"},g);
+    el("path",{d:G.state,transform:"translate(0 7) "+tf(l.slot),fill:"rgba(5,5,6,.07)",stroke:"none"},g);
     const inner=el("g",{transform:tf(l.slot)},g);
-    el("path",{d:G.state,class:"plate",fill:l.k==="ref"?"#EEF2EA":"rgba(251,252,249,.92)",stroke:"#9AA79A","stroke-width":1.4/sc,"vector-effect":"non-scaling-stroke"},inner);
+    el("path",{d:G.state,class:"plate",fill:l.k==="ref"?"#f3f2f0":"rgba(255,255,255,.94)",stroke:"var(--n300)","stroke-width":1.4/sc,"vector-effect":"non-scaling-stroke"},inner);
     l.draw(inner);l.g=g;nodes.push(g);
     // label
     const [lx,ly]=iso(G.W*0.92,G.H*0.12,l.slot);
-    txt("text",{x:520,y:TOP+l.slot*GAP-22,"text-anchor":"end","font-size":12,"font-weight":700,fill:"var(--ink)"},g,l.t.split(" · ")[0]);
-    txt("text",{x:520,y:TOP+l.slot*GAP-8,"text-anchor":"end","font-size":10.5,fill:"var(--teal)","font-family":"var(--mono)"},g,l.s.split(".")[0]+".*");
+    txt("text",{x:520,y:TOP+l.slot*GAP-22,"text-anchor":"end","font-size":12,"font-weight":600,fill:"var(--ink)"},g,l.t.split(" · ")[0]);
+    txt("text",{x:520,y:TOP+l.slot*GAP-8,"text-anchor":"end","font-size":10.5,fill:"var(--n600)","font-family":"var(--mono)"},g,l.s.split(".")[0]+".*");
   });
   // pin through the same village on every layer
   const top=iso(...G.stack.pin,0),bot=iso(...G.stack.pin,3);
   const pin=el("g",{},S);
-  el("line",{x1:top[0],y1:top[1]-26,x2:bot[0],y2:bot[1],stroke:"var(--accent)","stroke-width":2,"stroke-dasharray":"5 4"},pin);
-  for(let i=0;i<4;i++){const p=iso(...G.stack.pin,i);el("ellipse",{cx:p[0],cy:p[1],rx:7,ry:3.2,fill:"var(--accent)",stroke:"#fff","stroke-width":1.5},pin)}
-  el("circle",{cx:top[0],cy:top[1]-30,r:5,fill:"var(--accent)"},pin);
-  txt("text",{x:top[0]-10,y:top[1]-38,"text-anchor":"end","font-size":11.5,"font-weight":700,fill:"var(--accent-ink)"},pin,"one village · one LGD code");
+  el("line",{x1:top[0],y1:top[1]-26,x2:bot[0],y2:bot[1],stroke:"var(--blue-500)","stroke-width":2,"stroke-dasharray":"5 4"},pin);
+  for(let i=0;i<4;i++){const p=iso(...G.stack.pin,i);el("ellipse",{cx:p[0],cy:p[1],rx:7,ry:3.2,fill:"var(--blue-500)",stroke:"#fff","stroke-width":1.5},pin)}
+  el("circle",{cx:top[0],cy:top[1]-30,r:5,fill:"var(--blue-500)"},pin);
+  txt("text",{x:top[0]-10,y:top[1]-38,"text-anchor":"end","font-size":12,"font-weight":600,fill:"var(--blue-700)"},pin,"one village · one LGD code");
   // list
   const list=$("#llist");
   const focus=k=>{stack.classList.toggle("focus",!!k);L.forEach(l=>{l.g.classList.toggle("on",l.k===k);l.btn.setAttribute("aria-pressed",String(l.k===k))})};
@@ -672,42 +723,42 @@ INIT.publication=()=>{
   const ver={};
   for(const k in N){const n=N[k],g=el("g",{class:"pub-node"+(k[0]==="s"?" svc":""),id:"pn-"+k},ng);
     if(k==="db"){const cx=n.x+n.w/2,rx=n.w/2,ry=12;
-      el("path",{d:`M${n.x} ${n.y+ry} v${n.h-2*ry} a${rx} ${ry} 0 0 0 ${n.w} 0 v${-(n.h-2*ry)}`,fill:"var(--teal)"},g);
-      el("ellipse",{cx,cy:n.y+ry,rx,ry,fill:"#1C6563",stroke:"#004D4C"},g);
-      txt("text",{x:cx,y:n.y+n.h/2+10,"text-anchor":"middle","font-size":14,"font-weight":700,fill:"#fff"},g,n.t);
-      txt("text",{x:cx,y:n.y+n.h/2+25,"text-anchor":"middle","font-size":10.5,fill:"#CFE4E1"},g,n.s);continue}
-    el("rect",{x:n.x,y:n.y,width:n.w,height:n.h,rx:10,class:"box",fill:"#fff",stroke:k[0]==="s"?"var(--teal-2)":"var(--line)","stroke-width":1.5},g);
-    if(n.s){txt("text",{x:n.x+14,y:n.y+24,"font-size":13,"font-weight":700,fill:"var(--ink)"},g,n.t);txt("text",{x:n.x+14,y:n.y+41,"font-size":11,fill:"var(--muted)"},g,n.s)}
-    else{txt("text",{x:n.x+14,y:n.y+22,"font-size":13,"font-weight":700,fill:"var(--ink)"},g,n.t);
+      el("path",{d:`M${n.x} ${n.y+ry} v${n.h-2*ry} a${rx} ${ry} 0 0 0 ${n.w} 0 v${-(n.h-2*ry)}`,fill:"var(--n800)"},g);
+      el("ellipse",{cx,cy:n.y+ry,rx,ry,fill:"var(--n700)",stroke:"var(--n800)"},g);
+      txt("text",{x:cx,y:n.y+n.h/2+10,"text-anchor":"middle","font-size":14,"font-weight":600,fill:"#fff"},g,n.t);
+      txt("text",{x:cx,y:n.y+n.h/2+25,"text-anchor":"middle","font-size":11,fill:"var(--n200)"},g,n.s);continue}
+    el("rect",{x:n.x,y:n.y,width:n.w,height:n.h,rx:8,class:"box",fill:"#fff",stroke:k[0]==="s"?"var(--n200)":"var(--n100)","stroke-width":1.2},g);
+    if(n.s){txt("text",{x:n.x+14,y:n.y+24,"font-size":13,"font-weight":600,fill:"var(--ink)"},g,n.t);txt("text",{x:n.x+14,y:n.y+41,"font-size":11,fill:"var(--muted)"},g,n.s)}
+    else{txt("text",{x:n.x+14,y:n.y+22,"font-size":13,"font-weight":600,fill:"var(--ink)"},g,n.t);
       ver[k]=txt("text",{x:n.x+14,y:n.y+39,"font-size":10.5,fill:"var(--muted)",class:"badge"},g,"status: Functional")}}
   // files-mode: envelopes with drifting versions
   const vt={};const V={c1:"v5 · 2 Aug",c2:"v3 · 11 Mar",c3:"v5 · 2 Aug",c4:"v2 · 19 Jan",c5:"v4 · 30 Jun"};
   for(const k in V){const n=N[k];const g=el("g",{class:"mail"},mg);const x=n.x-66,y=n.y+n.h/2-11;
     el("rect",{x,y,width:30,height:22,rx:3,fill:"#fff",stroke:"var(--muted)","stroke-width":1.4},g);el("path",{d:`M${x} ${y} l15 12 l15 -12`,fill:"none",stroke:"var(--muted)","stroke-width":1.4},g);
-    el("path",{d:`M142 190 C 320 190 360 ${n.y+n.h/2} ${x-4} ${n.y+n.h/2}`,fill:"none",stroke:"#C9D1C6","stroke-dasharray":"2 4"},g);
-    vt[k]=txt("text",{x:n.x+14,y:n.y+39,"font-size":10.5,"font-weight":700,fill:"var(--bad)"},g,"file "+V[k]);}
+    el("path",{d:`M142 190 C 320 190 360 ${n.y+n.h/2} ${x-4} ${n.y+n.h/2}`,fill:"none",stroke:"var(--n200)","stroke-dasharray":"2 4"},g);
+    vt[k]=txt("text",{x:n.x+14,y:n.y+39,"font-size":11,"font-weight":600,fill:"var(--red-700)"},g,"file "+V[k]);}
   let mode="svc";
   const setMode=m=>{mode=m;setPressed("[data-pm]",$(`[data-pm=${m}]`));S.classList.toggle("mode-files",m==="files");
     $("#pushBtn").textContent=m==="files"?"Email the new file":"Update one record";
     paths.forEach(p=>p.el.classList.toggle("flow",m==="svc"));
     $$(".pub-node").forEach(n=>n.classList.remove("hit"));
-    for(const k in ver){ver[k].textContent=m==="files"?"":"status: Functional";ver[k].setAttribute("fill","var(--muted)")}for(const k in vt){vt[k].textContent="file "+V[k];vt[k].setAttribute("fill","var(--bad)")}
-    $("#pbCap").innerHTML=m==="files"?"Before services: each consumer holds its own copy. Versions drift, and nobody knows which one is current.":"Record <span class=\"mono\">AWC-RPR-00412</span> changes status once in PostGIS."};
+    for(const k in ver){ver[k].textContent=m==="files"?"":"status: Functional";ver[k].setAttribute("fill","var(--muted)")}for(const k in vt){vt[k].textContent="file "+V[k];vt[k].setAttribute("fill","var(--red-700)")}
+    $("#pbCap").className="alert "+(m==="files"?"danger":"info");$("#pbCap").innerHTML=ICON(m==="files"?"status_warning":"information-o")+(m==="files"?"Before services: each consumer holds its own copy. Versions drift, and nobody knows which one is current.":"Record <span class=\"mono\">AWC-RPR-00412</span> changes status once in PostGIS.")};
   $$("[data-pm]").forEach(b=>b.onclick=()=>setMode(b.dataset.pm));
   const now=()=>new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
   let st="Functional";
   const push=()=>{
-    if(mode==="files"){const got=["c1","c3"];for(const k in V){const g=got.includes(k);$("#pn-"+k).classList.toggle("hit",g);vt[k].textContent="file "+(g?"v6 · today":V[k]);vt[k].setAttribute("fill",g?"var(--ok)":"var(--bad)")}
-      $("#pbCap").textContent="The new file reached 2 of 5 consumers. The Mining app, BharatNet and external agencies are still working from older copies.";return}
+    if(mode==="files"){const got=["c1","c3"];for(const k in V){const g=got.includes(k);$("#pn-"+k).classList.toggle("hit",g);vt[k].textContent="file "+(g?"v6 · today":V[k]);vt[k].setAttribute("fill",g?"var(--green-700)":"var(--red-700)")}
+      $("#pbCap").innerHTML=ICON("status_warning")+"The new file reached 2 of 5 consumers. The Mining app, BharatNet and external agencies are still working from older copies.";return}
     st=st==="Functional"?"Under repair":"Functional";
     $$(".pub-node").forEach(n=>n.classList.remove("hit"));pg.innerHTML="";const t0=performance.now();
-    const hit=(k)=>{const n=$("#pn-"+k);n.classList.add("hit");if(ver[k]){ver[k].textContent=`status: ${st} · ${now()}`;ver[k].setAttribute("fill","var(--accent-ink)")}};
+    const hit=(k)=>{const n=$("#pn-"+k);n.classList.add("hit");if(ver[k]){ver[k].textContent=`status: ${st} · ${now()}`;ver[k].setAttribute("fill","var(--blue-700)")}};
     const fire=(filter,delay)=>paths.filter(filter).forEach(p=>{
       if(REDUCE){hit(p.b);return}
-      setTimeout(()=>{const c=el("circle",{r:5.5,fill:"var(--accent)",stroke:"#fff","stroke-width":1.5,class:"pulse"},pg);c.style.offsetPath=`path("${p.d}")`;c.getBoundingClientRect();c.classList.add("go");
+      setTimeout(()=>{const c=el("circle",{r:5.5,fill:"var(--blue-500)",stroke:"#fff","stroke-width":1.5,class:"pulse"},pg);c.style.offsetPath=`path("${p.d}")`;c.getBoundingClientRect();c.classList.add("go");
         c.addEventListener("animationend",()=>{c.remove();hit(p.b)},{once:true})},delay)});
     fire(p=>p.a==="db",0);fire(p=>p.a!=="db",REDUCE?0:1000);
-    setTimeout(()=>{$("#pbCap").innerHTML=`Changed once at ${now()}. The portal, all three apps and external agencies now show <b>${st}</b>. No file was emailed.`},REDUCE?0:2100)};
+    setTimeout(()=>{$("#pbCap").className="alert success";$("#pbCap").innerHTML=ICON("status-success")+`Changed once at ${now()}. The portal, all three apps and external agencies now show <b>${st}</b>. No file was emailed.`},REDUCE?0:2100)};
   $("#pushBtn").onclick=push;
   setMode("svc");
   Auto("publication",5200,()=>{if(mode==="svc")push();else setMode("svc")});
@@ -726,24 +777,24 @@ INIT.cartography=()=>{
   const VB=sizes.map((s,i)=>[centers[i][0]-s/2,centers[i][1]-s/2,s,s]);
   el("rect",{x:-2000,y:-2000,width:5000,height:5000,fill:"var(--paper)"},S);
   const gState=el("g",{},S);
-  el("path",{d:G.state,fill:"#EEF2EA"},gState);
-  const gVill=el("g",{class:"cg",fill:"none",stroke:"#A9B8AE","stroke-width":.7,"vector-effect":"non-scaling-stroke"},S);G.carto.village.forEach(d=>el("path",{d,"vector-effect":"non-scaling-stroke"},gVill));
-  const gTeh=el("g",{class:"cg",fill:"none",stroke:"var(--teal-2)","stroke-width":1.3,"stroke-dasharray":"6 3"},S);G.carto.tehsil.forEach(d=>el("path",{d,"vector-effect":"non-scaling-stroke"},gTeh));
-  const gDist=el("g",{fill:"none",stroke:"#8E9D90","stroke-width":1},S);G.districts.forEach(d=>el("path",{d:d.d,"vector-effect":"non-scaling-stroke"},gDist));
-  el("path",{d:G.state,fill:"none",stroke:"var(--ink)","stroke-width":1.8,"vector-effect":"non-scaling-stroke"},S);
-  const gClut=el("g",{class:"cg",fill:"var(--accent)"},S);G.clutter.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:1},gClut));
+  el("path",{d:G.state,fill:"var(--map-land)"},gState);
+  const gVill=el("g",{class:"cg",fill:"none",stroke:"var(--n200)","stroke-width":.7,"vector-effect":"non-scaling-stroke"},S);G.carto.village.forEach(d=>el("path",{d,"vector-effect":"non-scaling-stroke"},gVill));
+  const gTeh=el("g",{class:"cg",fill:"none",stroke:"var(--dv-aqua-500)","stroke-width":1.3,"stroke-dasharray":"6 3"},S);G.carto.tehsil.forEach(d=>el("path",{d,"vector-effect":"non-scaling-stroke"},gTeh));
+  const gDist=el("g",{fill:"none",stroke:"var(--n400)","stroke-width":1},S);G.districts.forEach(d=>el("path",{d:d.d,"vector-effect":"non-scaling-stroke"},gDist));
+  el("path",{d:G.state,fill:"none",stroke:"var(--map-outline)","stroke-width":1.8,"vector-effect":"non-scaling-stroke"},S);
+  const gClut=el("g",{class:"cg",fill:"var(--dv-blue-500)"},S);G.clutter.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:1},gClut));
   const gPts=el("g",{class:"cg"},S);
-  const aw=G.carto.aw.map(p=>el("circle",{cx:p[0],cy:p[1],r:1,fill:"var(--accent)",stroke:"#fff"},gPts));
-  const gp=G.carto.gp.map(p=>el("rect",{x:p[0],y:p[1],width:1,height:1,fill:"var(--teal)",stroke:"#fff"},gPts));
-  const gLbl=el("g",{class:"cg","font-weight":700,fill:"var(--ink)","text-anchor":"middle"},S);
+  const aw=G.carto.aw.map(p=>el("circle",{cx:p[0],cy:p[1],r:1,fill:"var(--dv-blue-500)",stroke:"#fff"},gPts));
+  const gp=G.carto.gp.map(p=>el("rect",{x:p[0],y:p[1],width:1,height:1,fill:"var(--dv-aqua-600)",stroke:"#fff"},gPts));
+  const gLbl=el("g",{class:"cg","font-weight":600,fill:"var(--ink)","text-anchor":"middle"},S);
   const lblR=txt("text",{x:cx,y:cy},gLbl,"Raipur");
   const gLblD=el("g",{class:"cg","font-size":9,fill:"var(--muted)","text-anchor":"middle"},S);
   G.districts.forEach(d=>txt("text",{x:d.c[0],y:d.c[1]+3},gLblD,d.n.replace("Dakshin Bastar ","").replace("Uttar Bastar ","")));
   const LY=[
-    ["State & district boundaries",Infinity,'<rect x="2" y="3" width="14" height="12" fill="none" stroke="#1B2727" stroke-width="2"/>'],
-    ["Tehsil boundaries",1000000,'<path d="M2 9h14" stroke="#2B7A75" stroke-width="2" stroke-dasharray="4 2"/>'],
-    ["Village boundaries",100000,'<path d="M2 5l6 2 8-3M3 13l7-1 6 3M8 7l2 5" fill="none" stroke="#A9B8AE" stroke-width="1.5"/>'],
-    ["Anganwadi centres · GP nodes",25000,'<circle cx="6" cy="9" r="4" fill="#CA5900"/><rect x="11" y="6" width="5" height="5" fill="#004D4C" transform="rotate(45 13.5 8.5)"/>']];
+    ["State & district boundaries",Infinity,'<rect x="2" y="3" width="14" height="12" fill="none" stroke="#28272d" stroke-width="2"/>'],
+    ["Tehsil boundaries",1000000,'<path d="M2 9h14" stroke="#0090b1" stroke-width="2" stroke-dasharray="4 2"/>'],
+    ["Village boundaries",100000,'<path d="M2 5l6 2 8-3M3 13l7-1 6 3M8 7l2 5" fill="none" stroke="#a5a3a3" stroke-width="1.5"/>'],
+    ["Anganwadi centres · GP nodes",25000,'<circle cx="6" cy="9" r="4" fill="#617ae2"/><rect x="11" y="6" width="5" height="5" fill="#007b9b" transform="rotate(45 13.5 8.5)"/>']];
   const ll=$("#layerList");const lrows=LY.map(l=>{const d=document.createElement("div");d.innerHTML=`<svg viewBox="0 0 18 18" aria-hidden="true">${l[2]}</svg><span>${l[0]}</span><span class="st"></span>`;ll.appendChild(d);return d});
   let lim=true,cur=0,anim=null,vb=VB[0].slice();
   const apply=(v)=>{S.setAttribute("viewBox",v.map(n=>n.toFixed(2)).join(" "));const k=v[2]/G.W; // svg units per ~px
@@ -757,17 +808,17 @@ INIT.cartography=()=>{
     gTeh.style.opacity=on[1]?1:0;gVill.style.opacity=on[2]?1:0;gPts.style.opacity=on[3]?1:0;
     gClut.style.opacity=!lim&&i<3?1:0;if(!lim&&i<3)gPts.style.opacity=0;
     gLbl.style.opacity=i>=1&&i<=3?1:0;gLblD.style.opacity=i===0&&lim?1:0;
-    lrows.forEach((d,j)=>{d.classList.toggle("off",!on[j]);const st=d.querySelector(".st");st.textContent=on[j]?"drawing":"from 1:"+fmt(LY[j][1]);st.style.color=on[j]?"var(--ok)":"var(--muted)"});
+    lrows.forEach((d,j)=>{d.classList.toggle("off",!on[j]);const st=d.querySelector(".st");st.textContent=on[j]?"drawing":"from 1:"+fmt(LY[j][1]);st.style.color=on[j]?"var(--green-700)":"var(--muted)"});
     // features requested in frame
     let n=G.districts.length;
     if(on[1])n+=G.carto.tehsil.length*(i<1?22:1);
     if(on[2])n+=i<3?(lim?0:20000):Math.round(G.carto.village.length*Math.min(1,(v[2]*v[3])/(b[2]*b[3])));
     if(on[3])n+=i<3?(lim?0:G.clutter.length*20):[...G.carto.aw,...G.carto.gp].filter(p=>inView(p,v)).length;
     $("#featN").textContent=(i<3&&!lim?"≈ ":"")+fmt(n);
-    $("#caCap").textContent=!lim&&i<3?"With limits off, the full-state frame requests every village polygon and every point asset at once: unreadable, and slow to draw.":
+    $("#caCap").innerHTML=ICON("information-o")+"<span>"+(!lim&&i<3?"With limits off, the full-state frame requests every village polygon and every point asset at once: unreadable, and slow to draw.":
       i===0?"State view: district boundaries only. Nothing smaller would be legible at this scale.":
       i<3?"Tehsil boundaries draw at 1:1,000,000 and closer. Villages and assets are still held back.":
-      i===3?"Village boundaries draw at 1:100,000 and closer.":"Individual assets draw at 1:25,000 and closer, where each one can be read and clicked."}
+      i===3?"Village boundaries draw at 1:100,000 and closer.":"Individual assets draw at 1:25,000 and closer, where each one can be read and clicked.")+"</span>";$("#caCap").className="alert"+(!lim&&i<3?" danger":"")}
   setScale=i=>{cur=i;$("#scaleRead").textContent="1:"+fmt(SC[i]);$("#scale").setAttribute("aria-valuetext","1:"+fmt(SC[i]));update(i);
     const from=vb.slice(),to=VB[i];if(anim)cancelAnimationFrame(anim);
     if(REDUCE){vb=to.slice();apply(vb);return}
@@ -777,7 +828,7 @@ INIT.cartography=()=>{
       const fc=[from[0]+from[2]/2,from[1]+from[3]/2],tc=[to[0]+to[2]/2,to[1]+to[3]/2];const c=[fc[0]+(tc[0]-fc[0])*e,fc[1]+(tc[1]-fc[1])*e];
       vb=[c[0]-size/2,c[1]-size/2,size,size];apply(vb);if(t<1)anim=requestAnimationFrame(step)};anim=requestAnimationFrame(step)};
   $("#scale").oninput=e=>setScale(+e.target.value);
-  $$("[data-lim]").forEach(bt=>bt.onclick=()=>{setPressed("[data-lim]",bt);lim=bt.dataset.lim==="on";update(cur)});
+  $("#limTog").onclick=()=>{lim=!lim;$("#limTog").setAttribute("aria-checked",String(lim));$("#limTxt").textContent=lim?"On":"Off";update(cur)};
   // hover a district for its name
   const hot=el("g",{},S);G.districts.forEach(d=>{const p=el("path",{d:d.d,class:"dist-hot"},hot);p.addEventListener("pointermove",e=>showTip(e,`<b style="color:#fff">${d.n}</b> district`));p.addEventListener("pointerleave",hideTip)});
   S.insertBefore(hot,gClut);

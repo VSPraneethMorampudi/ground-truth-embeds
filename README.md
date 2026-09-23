@@ -1,6 +1,8 @@
-GROUND TRUTH · StoryMap embeds (v2)
+GROUND TRUTH · StoryMap embeds (v3 · Pajamas design language)
 
-index.html              everything, self-contained (~310 KB, no external requests)
+Styled with GitLab Pajamas tokens (@gitlab/ui 137.x), GitLab Sans / GitLab Mono (OFL-1.1, subset in fonts/) and GitLab SVG icons (MIT).
+
+index.html              all six views (~320 KB); loads fonts/ from the same folder
 cover-ground-truth.jpg  2400x1350 cover image (map sits right of centre, clear of the title card)
 
 EMBED URLS  (add &bare inside sidecars)
