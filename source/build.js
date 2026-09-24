@@ -57,7 +57,9 @@ const facts = {
 // ---------- SVG projection for all map views (the state LCC itself) ----------
 const W = 520, H = 640;
 const P = d3.geoConicConformal().parallels([SP1, SP2]).rotate([-CM, 0]).fitExtent([[24, 24], [W - 24, H - 24]], turf.rewind(stFeat, { reverse: true }));
-const path0 = d3.geoPath(P).digits(1);
+const path0 = d3.geoPath(P).digits(2);
+const pathHi0 = d3.geoPath(P).digits(3);
+const pathHi = g => pathHi0(g.type === "LineString" ? g : turf.rewind(g.type==="Feature"?g:turf.feature(g), { reverse: true }));
 const path = g => path0(g.type === "LineString" ? g : turf.rewind(g.type==="Feature"?g:turf.feature(g), { reverse: true }));
 const out = {
   W, H, facts,
@@ -155,11 +157,11 @@ out.ctx.rivers.forEach(r => { r.d = r.d; });
   const feat = target, b = turf.bbox(feat);
   // Poisson-disk seeds (Bridson), deterministic
   let s2 = 7; const R = () => (s2 = (s2 * 16807) % 2147483647) / 2147483647;
-  const r0 = 0.04, pts = [], active = [];
+  const r0 = 0.019, pts = [], active = [];
   const inF = p => turf.booleanPointInPolygon(turf.point(p), feat);
   let first; for (let g = 0; g < 500 && !first; g++) { const p = [b[0] + R() * (b[2] - b[0]), b[1] + R() * (b[3] - b[1])]; if (inF(p)) first = p; }
   pts.push(first); active.push(first);
-  while (active.length && pts.length < 400) {
+  while (active.length && pts.length < 2500) {
     const i = Math.floor(R() * active.length), a = active[i]; let ok = false;
     for (let k = 0; k < 24; k++) { const ang = R() * 2 * Math.PI, d = r0 * (1 + R() * .9); const p = [a[0] + Math.cos(ang) * d, a[1] + Math.sin(ang) * d * .93];
       if (p[0] < b[0] - .05 || p[0] > b[2] + .05 || p[1] < b[1] - .05 || p[1] > b[3] + .05) continue;
@@ -183,26 +185,61 @@ out.ctx.rivers.forEach(r => { r.d = r.d; });
     const poly = vor.cellPolygon(i); if (!poly) return;
     const ring = []; for (let j = 0; j < poly.length - 1; j++) { ring.push(poly[j], ...edge(poly[j], poly[j + 1])); } ring.push(ring[0]);
     let clip; try { clip = turf.intersect(turf.featureCollection([turf.polygon([ring]), feat])); } catch (e) { clip = null; }
-    if (clip && turf.area(clip) > 2e6) cells.push({ seed: sd, f: clip });
+    if (clip && turf.area(clip) > 4e5) cells.push({ seed: sd, f: clip });
   });
   // tehsils = unions of villages grouped around 5 seeds (so tehsil and village lines coincide)
   const tseeds = [[81.63, 21.25], [81.95, 21.35], [81.75, 20.95], [81.45, 21.05], [82.05, 21.05]];
   const groups = tseeds.map(() => []);
   cells.forEach(c => { let bi = 0, bd = 1e9; tseeds.forEach((t, k) => { const d = (t[0] - c.seed[0]) ** 2 + (t[1] - c.seed[1]) ** 2; if (d < bd) { bd = d; bi = k; } }); groups[bi].push(c.f); });
-  const teh = groups.filter(g => g.length).map(g => { let u = g[0]; for (let k = 1; k < g.length; k++) { try { u = turf.union(turf.featureCollection([u, g[k]])) || u; } catch (e) {} } return path(u); });
+  const teh = groups.filter(g => g.length).map(g => { let u = g[0]; for (let k = 1; k < g.length; k++) { try { u = turf.union(turf.featureCollection([u, g[k]])) || u; } catch (e) {} } return pathHi(u); });
   // settlements: one Anganwadi near most village centres, GP nodes every ~7 villages, fibre from Raipur outward (MST)
-  const vill = cells.map(c => path(c.f));
+  const vill = cells.map(c => pathHi(c.f));
   const cen = cells.map(c => { const p = turf.pointOnFeature(c.f).geometry.coordinates; return [p[0] + (R() - .5) * .006, p[1] + (R() - .5) * .006]; });
-  const aw = cen.filter((_, i) => i % 5 !== 3).map(p => P(p).map(v => +v.toFixed(1)));
+  const aw = cen.filter((_, i) => i % 5 !== 3).map(p => P(p).map(v => +v.toFixed(3)));
   const gpIdx = cen.map((_, i) => i).filter(i => i % 7 === 0); const gp = gpIdx.map(i => cen[i]);
   const hub = [81.63, 21.25]; const nodes = [hub, ...gp]; const inT = [0], rest = new Set(nodes.map((_, i) => i).slice(1)), edges = [];
   while (rest.size) { let best = null; for (const i of inT) for (const j of rest) { const d = (nodes[i][0] - nodes[j][0]) ** 2 + (nodes[i][1] - nodes[j][1]) ** 2; if (!best || d < best[2]) best = [i, j, d]; } edges.push([best[0], best[1]]); inT.push(best[1]); rest.delete(best[1]); }
   out.carto.village = vill;
   out.carto.tehsil = teh;
+  { const names = ["Raipur", "Kharora", "Abhanpur", "Dharsiwa", "Arang"];
+    out.carto.tehN = groups.map((g, k) => g.length ? { n: names[k], xy: P(tseeds[k]).map(v => +v.toFixed(2)) } : null).filter(Boolean); }
   out.carto.aw = aw;
-  out.carto.gp = gp.map(p => P(p).map(v => +v.toFixed(1)));
+  out.carto.gp = gp.map(p => P(p).map(v => +v.toFixed(3)));
   out.carto.fibre = edges.map(([i, j]) => path0({ type: "LineString", coordinates: [nodes[i], nodes[j]] })).join("");
-  out.carto.hub = P(hub).map(v => +v.toFixed(1));
+  out.carto.hub = P(hub).map(v => +v.toFixed(3));
+  // ---- a connected village road network (Gabriel graph on settlements + the block HQ), and fibre routed along it ----
+  {
+    const N = [hub, ...cen]; const del = Delaunay.from(N); const E = new Set();
+    for (let t = 0; t < del.triangles.length; t += 3) { const tri = [del.triangles[t], del.triangles[t + 1], del.triangles[t + 2]];
+      for (let k = 0; k < 3; k++) { const a = tri[k], b = tri[(k + 1) % 3]; E.add(a < b ? a + "_" + b : b + "_" + a); } }
+    const d2 = (p, q) => (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2;
+    const edges2 = [...E].map(k => k.split("_").map(Number)).filter(([a, b]) => {
+      const m = [(N[a][0] + N[b][0]) / 2, (N[a][1] + N[b][1]) / 2], r2 = d2(N[a], N[b]) / 4;
+      if (d2(N[a], N[b]) > (0.075) ** 2) return false; // no long straight tracks across the district
+      for (let i = 0; i < N.length; i++) if (i !== a && i !== b && d2(N[i], m) < r2) return false; // Gabriel rule
+      const mid = turf.point(m); return turf.booleanPointInPolygon(mid, target); });
+    // gentle, deterministic curve on each road so it reads as a track, not a ruler line
+    const curve = (a, b) => { const p = N[a], q = N[b], m = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2], L = Math.sqrt(d2(p, q)), nx = -(q[1] - p[1]) / L, ny = (q[0] - p[0]) / L;
+      const h = (((a * 928371 + b * 12979) % 1000) / 1000 - .5) * L * .22; const c = [m[0] + nx * h, m[1] + ny * h];
+      const pts = []; for (let t = 0; t <= 1.0001; t += .125) { const u = 1 - t; pts.push([u * u * p[0] + 2 * u * t * c[0] + t * t * q[0], u * u * p[1] + 2 * u * t * c[1] + t * t * q[1]]); } return pts; };
+    // make sure every village is reachable: join disconnected pieces with their shortest Delaunay link
+    { const par = N.map((_, i) => i), f = i => par[i] === i ? i : (par[i] = f(par[i])); edges2.forEach(([a, b]) => { par[f(a)] = f(b); });
+      const cand = [...E].map(k => k.split("_").map(Number)).map(([a, b]) => [a, b, d2(N[a], N[b])]).sort((x, y) => x[2] - y[2]);
+      let added = 0; cand.forEach(([a, b]) => { if (f(a) !== f(b)) { par[f(a)] = f(b); edges2.push([a, b]); added++; } });
+      console.log("bridging links", added); }
+    const roadPts = edges2.map(([a, b]) => ({ a, b, pts: curve(a, b) }));
+    out.carto.roads = roadPts.map(r => pathHi0({ type: "LineString", coordinates: r.pts })).join("");
+    // Dijkstra from the hub along roads to every GP village; fibre = union of those paths
+    const adj = N.map(() => []); roadPts.forEach((r, i) => { const w = Math.sqrt(d2(N[r.a], N[r.b])); adj[r.a].push([r.b, w, i]); adj[r.b].push([r.a, w, i]); });
+    const dist = N.map(() => Infinity), prev = N.map(() => null); dist[0] = 0; const done = new Set();
+    while (done.size < N.length) { let u = -1, best = Infinity; dist.forEach((d, i) => { if (!done.has(i) && d < best) { best = d; u = i; } }); if (u < 0) break; done.add(u);
+      adj[u].forEach(([v, w, ei]) => { if (dist[u] + w < dist[v]) { dist[v] = dist[u] + w; prev[v] = [u, ei]; } }); }
+    const used = new Set(); gpIdx.forEach(gi => { let v = gi + 1; while (prev[v]) { used.add(prev[v][1]); v = prev[v][0]; } });
+    out.carto.fibre = [...used].map(i => pathHi0({ type: "LineString", coordinates: roadPts[i].pts })).join("");
+    out.carto.gp = gpIdx.filter(gi => Number.isFinite(dist[gi + 1])).map(gi => P(cen[gi]).map(v => +v.toFixed(3)));
+    out.carto.vill_c = cen.map(p => P(p).map(v => +v.toFixed(3)));
+    console.log("roads", roadPts.length, "fibre edges", used.size);
+  }
   console.log("villages", vill.length, "tehsils", teh.length, "aw", aw.length, "gp", gp.length);
 })();
 // km scale: SVG units per km at the state centre

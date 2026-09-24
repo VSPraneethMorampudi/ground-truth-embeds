@@ -211,7 +211,9 @@ body.framed #publication>.ctrls{padding-right:48px}
 
 /* ---------------- CARTOGRAPHY ---------------- */
 .mapbox{position:relative;border-radius:10px;overflow:hidden;background:var(--land-out);box-shadow:0 0 0 1px var(--line)}
-#cartoSvg{width:100%;height:auto;aspect-ratio:1/1;max-height:74vh;display:block;touch-action:manipulation}
+#cartoSvg{width:100%;height:auto;aspect-ratio:1/1;max-height:74vh;display:block;touch-action:none;cursor:grab;user-select:none}
+#cartoSvg.drag{cursor:grabbing}
+#cartoSvg:focus-visible{box-shadow:inset 0 0 0 3px var(--blue-500)}
 .mapui{position:absolute;left:10px;top:10px;display:grid;gap:0;border-radius:var(--r);overflow:hidden;box-shadow:0 0 1px rgba(5,5,6,.3),0 1px 4px rgba(5,5,6,.2)}
 .mapui button{width:32px;height:32px;border:0;background:#fff;font-size:18px;color:var(--n800);display:grid;place-items:center}
 .mapui button+button{border-top:1px solid var(--n100)}
@@ -328,8 +330,9 @@ body.framed #publication>.ctrls{padding-right:48px}
   <div class="fig" style="grid-template-columns:minmax(0,1.35fr) minmax(250px,1fr)">
     <div class="stage">
       <div class="mapbox">
-        <svg id="cartoSvg" viewBox="0 0 520 520" role="img" aria-label="Map of Chhattisgarh that zooms to Raipur district; layers switch on at their scale"></svg>
-        <div class="mapui"><button id="zIn" aria-label="Zoom in">+</button><button id="zOut" aria-label="Zoom out">−</button></div>
+        <svg id="cartoSvg" viewBox="0 0 520 520" tabindex="0" role="application" aria-label="Map of Chhattisgarh. Scroll or pinch to zoom, drag to pan; layers switch on at their scale."></svg>
+        <div class="mapui"><button id="zIn" aria-label="Zoom in">+</button><button id="zOut" aria-label="Zoom out">−</button><button id="zHome" aria-label="Whole state"><svg class="ic sm" viewBox="0 0 16 16"><path d="M8 1.5 1.5 7h2v7h3.5v-4h2v4H12.5V7h2z" fill="currentColor"/></svg></button></div>
+        <div class="hint" id="caHint" style="left:auto;right:10px;bottom:10px"><svg class="ic sm"><use href="#i-location"/></svg>Scroll to zoom · drag to pan</div>
         <div class="scalebar" aria-hidden="true"><span id="sbT">50 km</span><i id="sbI" style="width:60px"></i></div>
       </div>
     </div>
@@ -393,7 +396,7 @@ function fit(){const v=$(".view.on");if(!v||!framed)return;v.style.zoom=1;docume
 let fitT;addEventListener("resize",()=>{clearTimeout(fitT);fitT=setTimeout(fit,120)});
 
 /* ---------------- autoplay: runs on screen while the reader is idle ---------------- */
-function Auto(id,ms,tick,{host,first=true,enter,hint}={}){
+function Auto(id,ms,tick,{host,first=true,enter,hint,hold=false}={}){
   const view=$("#"+id),h=host?$(host):view,b=document.createElement("button");b.className="auto";b.type="button";h.appendChild(b);b.style.setProperty("--ms",ms+"ms");
   let timer=null,idle=null,visible=false,active=false,off=REDUCE||OPT.auto==="off",started=false,touched=false;
   const running=()=>visible&&!active&&!off&&document.visibilityState==="visible";
@@ -401,8 +404,8 @@ function Auto(id,ms,tick,{host,first=true,enter,hint}={}){
     b.innerHTML=`<svg class="ring" viewBox="0 0 30 30"><circle class="trk" cx="15" cy="15" r="14"/><circle class="prog" cx="15" cy="15" r="14"/></svg>${ICON(r?"pause":"play","ic sm")}`;
     b.setAttribute("aria-label",off?"Play demonstration":"Pause demonstration");b.title=off?"Play":"Pause"}
   function sched(){clearTimeout(timer);render();if(running())timer=setTimeout(()=>{Promise.resolve(tick()).then(sched)},ms)}
-  function poke(){if(!touched&&hint){touched=true;$(hint)?.classList.add("gone")}active=true;clearTimeout(idle);idle=setTimeout(()=>{active=false;sched()},4000);sched()}
-  ["pointerdown","keydown","wheel"].forEach(ev=>view.addEventListener(ev,e=>{if(b.contains(e.target))return;poke()},{passive:true}));
+  function poke(strong){if(!touched&&hint){touched=true;$(hint)?.classList.add("gone")}if(hold&&strong){off=true;active=false;sched();return}active=true;clearTimeout(idle);idle=setTimeout(()=>{active=false;sched()},4000);sched()}
+  ["pointerdown","keydown","wheel"].forEach(ev=>view.addEventListener(ev,e=>{if(b.contains(e.target))return;poke(true)},{passive:true}));
   view.addEventListener("pointermove",e=>{if(e.pointerType==="mouse"&&!b.contains(e.target)&&e.target.closest(".stage,.rail,.panels,.ctrls,.tabs"))poke()},{passive:true});
   b.onclick=e=>{e.stopPropagation();off=!off;active=false;if(!off)Promise.resolve(tick()).then(sched);else sched()};
   new IntersectionObserver(es=>{visible=es[0].isIntersecting;if(visible&&!started){started=true;enter&&enter();if(first&&!off)setTimeout(()=>{if(running())Promise.resolve(tick()).then(sched)},enter?800:300)}sched()},{threshold:.3}).observe(view);
@@ -821,67 +824,103 @@ INIT.publication=()=>{
 /* ============================================================ CARTOGRAPHY */
 let setScale=()=>{};
 INIT.cartography=()=>{
-  const S=$("#cartoSvg"),SC=[4000000,1000000,250000,100000,25000,10000];
-  const b=G.carto.bbox,cx=b[0]+b[2]/2,cy=b[1]+b[3]/2,hub=G.carto.hub;
-  const full=650,sizes=[full,b[3]*2.4,b[3]*1.2,b[3]*.62,b[3]*.3,b[3]*.17];
-  const ctr=[[G.W/2,G.H/2-6],[cx,cy],[cx,cy],[hub[0]+4,hub[1]+4],[hub[0]+2,hub[1]+3],[hub[0]+1,hub[1]+2]];
-  const VB=sizes.map((s,i)=>[ctr[i][0]-s/2,ctr[i][1]-s/2,s,s]);
+  const S=$("#cartoSvg"),box=S.parentNode;
+  // ---- scale model: square view of width w (map units) centred at (cx, cy) ----
+  const FULL=660,HOME={cx:G.W/2,cy:G.H/2-4,w:FULL},HUB=G.carto.hub;
+  let V={...HOME};
+  const pxW=()=>S.getBoundingClientRect().width||520;
+  const denom=v=>(v.w/pxW())/G.kmPx*1000/0.000264583; // ground metres per screen metre at 96 dpi
+  const minW=()=>5000*0.000264583/1000*G.kmPx*pxW();
+  const TH={rail:250000,teh:1000000,vil:250000,rd:150000,pts:50000};
+  // ---- layers, drawn in cartographic order ----
   const L=drawContext(S,{labels:true,rivers:true,rail:true,roads:true,cities:false,riverLabels:false});
-  // sub-district layers inserted under the outline
-  const under=L.dist;
-  const gVill=el("g",{class:"cg",fill:"none",stroke:"#d9d3ca","stroke-width":.8},S);G.carto.village.forEach(d=>el("path",{d,"vector-effect":"non-scaling-stroke"},gVill));
-  const gTeh=el("g",{class:"cg",fill:"none",stroke:"#9d8f7e","stroke-width":1.3,"stroke-dasharray":"5 2 1 2"},S);G.carto.tehsil.forEach(d=>el("path",{d,"vector-effect":"non-scaling-stroke"},gTeh));
-  under.parentNode.insertBefore(gVill,under);under.parentNode.insertBefore(gTeh,under);
-  const gFib=el("path",{d:G.carto.fibre,fill:"none",stroke:"var(--dv-aqua-600)","stroke-width":1.6,"vector-effect":"non-scaling-stroke",class:"cg"},S);
+  const under=L.dist.parentNode;
+  const gVill=el("g",{class:"cg"},S);G.carto.village.forEach((d,i)=>el("path",{d,fill:i%3===0?"#faf8f4":i%3===1?"#f6f3ee":"#fdfcfa",stroke:"#d6cfc4","stroke-width":.8,"vector-effect":"non-scaling-stroke"},gVill));
+  const gRoad=el("g",{class:"cg"},S);const rCase=el("path",{d:G.carto.roads,fill:"none",stroke:"#c3baad","stroke-width":3.2,"stroke-linecap":"round","stroke-linejoin":"round","vector-effect":"non-scaling-stroke"},gRoad),rFill=el("path",{d:G.carto.roads,fill:"none",stroke:"#fff","stroke-width":1.6,"stroke-linecap":"round","stroke-linejoin":"round","vector-effect":"non-scaling-stroke"},gRoad);
+  const gTeh=el("g",{class:"cg",fill:"none",stroke:"#8f8172","stroke-width":1.4,"stroke-dasharray":"6 2 1.5 2"},S);G.carto.tehsil.forEach(d=>el("path",{d,"vector-effect":"non-scaling-stroke"},gTeh));
+  under.insertBefore(gVill,L.dist);under.insertBefore(gRoad,L.dist);under.insertBefore(gTeh,L.dist);
+  const gFib=el("path",{d:G.carto.fibre,fill:"none",stroke:"var(--dv-aqua-600)","stroke-width":2.4,"stroke-linecap":"round","stroke-linejoin":"round","vector-effect":"non-scaling-stroke",class:"cg"},S);
   const gPts=el("g",{class:"cg"},S);
   const aw=G.carto.aw.map(p=>el("circle",{cx:p[0],cy:p[1],r:1,fill:"var(--dv-blue-500)",stroke:"#fff"},gPts));
   const gp=G.carto.gp.map(p=>el("rect",{fill:"#fff",stroke:"var(--dv-aqua-600)"},gPts));
+  const hubM=el("rect",{fill:"var(--dv-aqua-700)",stroke:"#fff"},gPts);
   const gClut=el("g",{class:"cg",fill:"var(--dv-blue-500)","fill-opacity":.8},S);const clut=G.clutter.map(p=>el("circle",{cx:p[0],cy:p[1],r:1},gClut));
-  // labels (constant screen size)
-  const gLab=el("g",{},S);
+  const gLab=el("g",{"pointer-events":"none"},S);
+  const tlab=(G.carto.tehN||[]).map(t=>txt({x:t.xy[0],y:t.xy[1],"text-anchor":"middle",fill:"#6f6356",class:"halo","font-weight":500},gLab,t.n.toUpperCase()));
   const cities=G.ctx.cities.filter(c=>c.cg||["Nagpur","Sambalpur","Raurkela","Jabalpur"].includes(c.n)).map(c=>{const g=el("g",{},gLab);const d=el("circle",{cx:c.xy[0],cy:c.xy[1],fill:c.cg?"var(--n900)":"#9d978e",stroke:"#fff"},g);const t=txt({x:c.xy[0],y:c.xy[1],"font-weight":c.cg?700:400,fill:c.cg?"var(--n900)":"#8a857d",class:"halo"},g,c.n);return{c,d,t}});
-  const dlab=G.districts.map(d=>{const t=txt({x:d.c[0],y:d.c[1],"text-anchor":"middle",fill:"#8f877c","font-size":8,class:"halo","letter-spacing":.3},gLab,d.n.replace("Dakshin Bastar ","").replace("Uttar Bastar ",""));return t});
-  const rlab=[];L.rivers.querySelectorAll("path").forEach(p=>{if(!["Mahanadi","Indravati","Son","Wainganga"].includes(p._n))return;if(rlab.find(r=>r.n===p._n))return;const len=p.getTotalLength();if(len<60)return;rlab.push({n:p._n,p,len,t:txt({"font-style":"italic",fill:"var(--water-ink)",class:"halo","text-anchor":"middle"},gLab,p._n)})});
-  const LY=[["Districts and rivers",Infinity,'<rect x="3" y="2" width="16" height="10" fill="none" stroke="#3a383d" stroke-width="1.6"/><path d="M2 10 C8 6 12 12 20 6" stroke="#6f9bc8" fill="none" stroke-width="1.6"/>'],
-            ["State rail and highways",-250000,'<path d="M1 5h20" stroke="#8a8888" stroke-width="2"/><path d="M1 5h20" stroke="#fff" stroke-width="1" stroke-dasharray="3 3"/><path d="M1 11h20" stroke="#e3b98f" stroke-width="1.6"/>'],
-            ["Tehsils",1000000,'<path d="M1 7h20" stroke="#9d8f7e" stroke-width="1.6" stroke-dasharray="5 2 1 2"/>'],
-            ["Villages",100000,'<path d="M2 3l7 2 11-2M3 12l8-2 9 3M9 5l2 5" fill="none" stroke="#bdb3a6" stroke-width="1.3"/>'],
-            ["Anganwadi centres, GP nodes, fibre",25000,'<circle cx="6" cy="7" r="3.5" fill="#617ae2" stroke="#fff"/><path d="M10 7h9" stroke="#007b9b" stroke-width="1.6"/><rect x="15" y="4" width="6" height="6" fill="#fff" stroke="#007b9b" stroke-width="1.4"/>']];
-  $("#lyr").innerHTML=LY.map(l=>`<li><svg viewBox="0 0 22 14">${l[2]}</svg><span>${l[0]}</span><span class="th">${l[1]===Infinity?"always":l[1]<0?"≥ 1:"+fmt(-l[1]):"≤ 1:"+fmt(l[1])}</span></li>`).join("");
+  const dlab=G.districts.map(d=>txt({x:d.c[0],y:d.c[1],"text-anchor":"middle",fill:"#8f877c",class:"halo","letter-spacing":.3},gLab,d.n.replace("Dakshin Bastar ","").replace("Uttar Bastar ","")));
+  const rlab=[];L.rivers.querySelectorAll("path").forEach(p=>{if(!["Mahanadi","Indravati","Son","Wainganga"].includes(p._n)||rlab.find(r=>r.n===p._n))return;const len=p.getTotalLength();if(len<60)return;rlab.push({n:p._n,p,len,t:txt({"font-style":"italic",fill:"var(--water-ink)",class:"halo","text-anchor":"middle"},gLab,p._n)})});
+  const LY=[["Districts and rivers",null,'<rect x="3" y="2" width="16" height="10" fill="none" stroke="#3a383d" stroke-width="1.6"/><path d="M2 10 C8 6 12 12 20 6" stroke="#6f9bc8" fill="none" stroke-width="1.6"/>',"always"],
+    ["State rail and highways","rail",'<path d="M1 5h20" stroke="#8a8888" stroke-width="2"/><path d="M1 5h20" stroke="#fff" stroke-width="1" stroke-dasharray="3 3"/><path d="M1 11h20" stroke="#e3b98f" stroke-width="1.6"/>',"≥ 1:250,000"],
+    ["Tehsils","teh",'<path d="M1 7h20" stroke="#8f8172" stroke-width="1.6" stroke-dasharray="6 2 1.5 2"/>',"≤ 1:1,000,000"],
+    ["Villages and village roads","vil",'<rect x="1" y="1" width="20" height="12" fill="#f6f3ee" stroke="#d6cfc4"/><path d="M1 9 C7 7 12 10 21 5" stroke="#c9c1b5" stroke-width="3" fill="none"/><path d="M1 9 C7 7 12 10 21 5" stroke="#fff" stroke-width="1.4" fill="none"/>',"≤ 1:250,000"],
+    ["Anganwadi centres, GP nodes, fibre","pts",'<path d="M2 11 L20 3" stroke="#007b9b" stroke-width="2"/><circle cx="7" cy="8" r="3.5" fill="#617ae2" stroke="#fff"/><rect x="14" y="3" width="6" height="6" fill="#fff" stroke="#007b9b" stroke-width="1.4"/>',"≤ 1:50,000"]];
+  $("#lyr").innerHTML=LY.map(l=>`<li><svg viewBox="0 0 22 14">${l[2]}</svg><span>${l[0]}</span><span class="th">${l[3]}</span></li>`).join("");
   const rows=$$("#lyr li");
-  let lim=true,cur=0,vb=VB[0].slice(),anim=null;
-  function apply(v){S.setAttribute("viewBox",v.map(n=>n.toFixed(2)).join(" "));const k=v[2]/520;
-    aw.forEach(c=>{c.setAttribute("r",4.4*k);c.setAttribute("stroke-width",1.2*k)});
-    gp.forEach((r,i)=>{const p=G.carto.gp[i],s=8*k;r.setAttribute("x",p[0]-s/2);r.setAttribute("y",p[1]-s/2);r.setAttribute("width",s);r.setAttribute("height",s);r.setAttribute("stroke-width",1.8*k)});
-    clut.forEach(c=>c.setAttribute("r",1.3*k));
-    cities.forEach(({c,d,t})=>{d.setAttribute("r",(c.cg?3:2.2)*k);d.setAttribute("stroke-width",k);const L=c.n==="Bhilai";t.setAttribute("x",c.xy[0]+(L?-5:5)*k);t.setAttribute("y",c.xy[1]+(L?10:-4)*k);t.setAttribute("text-anchor",L?"end":"start");t.setAttribute("font-size",(c.cg?12:10)*k);t.style.strokeWidth=3*k+"px"});
-    dlab.forEach(t=>{t.setAttribute("font-size",9*k);t.style.strokeWidth=2.5*k+"px"});
+  let lim=true;
+  const fade=(el2,on)=>{el2.style.opacity=on?1:0;el2.style.pointerEvents="none"};
+  const inView=(p,v)=>Math.abs(p[0]-v.cx)<=v.w/2&&Math.abs(p[1]-v.cy)<=v.w/2;
+  function render(){const v=V,k=v.w/520,N=denom(v);S.setAttribute("viewBox",[v.cx-v.w/2,v.cy-v.w/2,v.w,v.w].map(n=>n.toFixed(3)).join(" "));
+    const on={rail:!lim||N>=TH.rail,teh:!lim||N<=TH.teh,vil:!lim||N<=TH.vil,pts:!lim||N<=TH.pts};
+    fade(L.rail,on.rail);fade(L.roads,on.rail);fade(gTeh,on.teh);fade(gVill,on.vil);fade(gRoad,!lim||N<=TH.rd);gVill.style.opacity=on.vil?clamp(1.25-Math.log2(N/40000)*.25,.55,1):0;
+    const ptsOn=on.pts&&(lim||N<=TH.vil);fade(gPts,ptsOn);fade(gFib,ptsOn);fade(gClut,!lim&&N>TH.vil);
+    rows.forEach((r,j)=>r.classList.toggle("off",j>0&&!on[LY[j][1]]));
+    // village roads widen as you zoom in, like a printed series; fibre sits on top of its road
+    const rw=clamp(2.2+Math.log2(100000/N)*1.6,1.4,9);rCase.setAttribute("stroke-width",rw);rFill.setAttribute("stroke-width",rw*.55);gFib.setAttribute("stroke-width",clamp(rw*.42,1.8,4));
+    // constant on-screen sizes
+    aw.forEach(c=>{c.setAttribute("r",4.6*k);c.setAttribute("stroke-width",1.3*k)});
+    gp.forEach((r,i)=>{const p=G.carto.gp[i],s2=9*k;r.setAttribute("x",p[0]-s2/2);r.setAttribute("y",p[1]-s2/2);r.setAttribute("width",s2);r.setAttribute("height",s2);r.setAttribute("stroke-width",2*k);r.setAttribute("transform",`rotate(45 ${p[0]} ${p[1]})`)});
+    {const s2=11*k;hubM.setAttribute("x",HUB[0]-s2/2);hubM.setAttribute("y",HUB[1]-s2/2);hubM.setAttribute("width",s2);hubM.setAttribute("height",s2);hubM.setAttribute("stroke-width",1.5*k)}
+    if(!lim&&N>TH.vil)clut.forEach(c=>c.setAttribute("r",1.4*k));
+    cities.forEach(({c,d,t})=>{const vis=c.n!=="Bhilai"||N<2500000;d.style.opacity=t.style.opacity=vis?1:0;d.setAttribute("r",(c.cg?3.2:2.2)*k);d.setAttribute("stroke-width",1.2*k);const Lf=c.n==="Bhilai";t.setAttribute("x",c.xy[0]+(Lf?-6:6)*k);t.setAttribute("y",c.xy[1]+(Lf?11:-5)*k);t.setAttribute("text-anchor",Lf?"end":"start");t.setAttribute("font-size",(c.cg?12.5:10)*k);t.style.strokeWidth=3.2*k+"px"});
+    tlab.forEach((t,i)=>{const q=G.carto.tehN[i];t.setAttribute("y",q.xy[1]+(q.n==="Raipur"?20*k:0));t.setAttribute("font-size",10*k);t.setAttribute("letter-spacing",1.6*k);t.style.strokeWidth=3*k+"px";t.style.opacity=N>=40000&&N<=1200000?1:0});
+    dlab.forEach(t=>{t.setAttribute("font-size",9.5*k);t.style.strokeWidth=2.6*k+"px";t.style.opacity=N>1200000&&N<5000000?1:0});
     rlab.forEach(r=>{const a=r.p.getPointAtLength(r.len*.42),bb=r.p.getPointAtLength(r.len*.42+6);let ang=Math.atan2(bb.y-a.y,bb.x-a.x)*180/Math.PI;if(ang>90)ang-=180;if(ang<-90)ang+=180;
-      r.t.setAttribute("x",a.x);r.t.setAttribute("y",a.y-3*k);r.t.setAttribute("transform",`rotate(${ang.toFixed(1)} ${a.x} ${a.y})`);r.t.setAttribute("font-size",10.5*k);r.t.style.strokeWidth=3*k+"px"});
-    if(L.slab){L.slab.setAttribute("font-size",9.5*k);L.slab.setAttribute("letter-spacing",2*k)}
-    // scale bar: pick a round distance near 70 px
-    const kmPerPx=v[2]/520/G.kmPx*(520/S.getBoundingClientRect().width||1);const want=70*kmPerPx;const nice=[.5,1,2,5,10,20,50,100,200];const d=nice.find(n=>n>=want*.7)||200;
-    $("#sbT").textContent=d<1?d*1000+" m":d+" km";$("#sbI").style.width=(d/kmPerPx).toFixed(0)+"px"}
-  const inView=(p,v)=>p[0]>=v[0]&&p[0]<=v[0]+v[2]&&p[1]>=v[1]&&p[1]<=v[1]+v[3];
-  function update(i){const s=SC[i],v=VB[i],on=LY.map(l=>l[1]<0?(!lim||s>=-l[1]):(!lim||s<=l[1]));
-    L.rail.classList.add("cg");L.roads.classList.add("cg");L.rail.style.opacity=on[1]?1:0;L.roads.style.opacity=on[1]?1:0;gTeh.style.opacity=on[2]?1:0;gVill.style.opacity=on[3]?1:0;gPts.style.opacity=on[4]&&(lim||i>=3)?1:0;gFib.style.opacity=on[4]&&(lim||i>=3)?1:0;gClut.style.opacity=!lim&&i<3?1:0;
-    dlab.forEach(t=>t.style.opacity=i<=1?1:0);if(L.slab)L.slab.style.opacity=i===0?1:0;
-    rows.forEach((r,j)=>r.classList.toggle("off",!on[j]));
-    let n=G.districts.length+G.ctx.rivers.length+1;if(on[1])n+=44+17;if(on[2])n+=i<1?146:G.carto.tehsil.length;
-    if(on[3])n+=i<3?(lim?0:20000):Math.round(G.carto.village.length*Math.min(1,(v[2]*v[3])/(b[2]*b[3])));
-    if(on[4])n+=i<3?(lim?0:G.clutter.length*20):[...G.carto.aw,...G.carto.gp].filter(p=>inView(p,v)).length;
-    $("#featN").textContent=(!lim&&i<3?"≈ ":"")+fmt(n);$("#zIn").disabled=i>=5;$("#zOut").disabled=i<=0}
-  setScale=i=>{i=clamp(i,0,5);cur=i;$("#scaleRead").textContent="1:"+fmt(SC[i]);update(i);const from=vb.slice(),to=VB[i];if(anim)anim();
-    anim=tween(750,t=>{const size=Math.exp(lerp(Math.log(from[2]),Math.log(to[2]),t));const fc=[from[0]+from[2]/2,from[1]+from[3]/2],tc=[to[0]+to[2]/2,to[1]+to[3]/2];vb=[lerp(fc[0],tc[0],t)-size/2,lerp(fc[1],tc[1],t)-size/2,size,size];apply(vb)})};
-  $("#zIn").onclick=()=>setScale(cur+1);$("#zOut").onclick=()=>setScale(cur-1);
-  S.addEventListener("dblclick",e=>{e.preventDefault();setScale(cur+1)});
-  $("#limTog").onclick=()=>{lim=!lim;$("#limTog").setAttribute("aria-checked",String(lim));$("#limTxt").textContent=lim?"Scale limits on":"Scale limits off";update(cur)};
-  // district names on hover
-  const hot=el("g",{},S);G.districts.forEach(d=>{const p=el("path",{d:d.d,fill:"transparent"},hot);p.addEventListener("pointermove",e=>showTip(e,`<b>${d.n}</b> district`));p.addEventListener("pointerleave",hideTip)});
-  S.insertBefore(hot,gLab);
-  apply(vb);setScale(OPT.scale!==undefined?+OPT.scale:0);
-  let dir=1;Auto("cartography",1900,()=>{let n=cur+dir;if(n>5||n<0){dir=-dir;n=cur+dir}setScale(n)},{host:"#cartography .stage",first:false});
-  addEventListener("resize",()=>apply(vb));
+      r.t.setAttribute("x",a.x);r.t.setAttribute("y",a.y-3*k);r.t.setAttribute("transform",`rotate(${ang.toFixed(1)} ${a.x} ${a.y})`);r.t.setAttribute("font-size",10.5*k);r.t.style.strokeWidth=3*k+"px";r.t.style.opacity=N>150000?1:0});
+    if(L.slab){L.slab.setAttribute("font-size",9.5*k);L.slab.setAttribute("letter-spacing",2*k);L.slab.style.opacity=N>1500000?1:0}
+    // scale readout rounded the way print maps are labelled
+    const nice=[5000,10000,25000,50000,100000,250000,500000,1000000,2000000,4000000,8000000];const nr=nice.reduce((a2,b2)=>Math.abs(Math.log(b2/N))<Math.abs(Math.log(a2/N))?b2:a2);
+    $("#scaleRead").textContent="1:"+fmt(Math.abs(N-nr)/nr<.12?nr:Math.round(N/1000)*1000);
+    const kmPerPx=v.w/pxW()/G.kmPx,want=80*kmPerPx,steps=[.1,.2,.5,1,2,5,10,20,50,100,200],d=steps.find(n=>n>=want*.6)||200;
+    $("#sbT").textContent=d<1?d*1000+" m":d+" km";$("#sbI").style.width=(d/kmPerPx).toFixed(0)+"px";
+    // what this view asks the server for
+    let n=27+G.ctx.rivers.length;if(on.rail)n+=61;if(on.teh)n+=N>1e6?146:G.carto.tehsil.length;
+    if(on.vil)n+=N>TH.vil?20000:G.carto.vill_c.filter(p=>inView(p,v)).length*2;
+    if(on.pts)n+=N>TH.vil?G.clutter.length*20:[...G.carto.aw,...G.carto.gp].filter(p=>inView(p,v)).length;
+    $("#featN").textContent=(!lim&&N>TH.vil?"≈ ":"")+fmt(n);
+    $("#zIn").disabled=v.w<=minW()*1.01;$("#zOut").disabled=v.w>=FULL*.99}
+  const clampV=v=>{const w=clamp(v.w,minW(),FULL),m=w/2;return{w,cx:clamp(v.cx,Math.min(40+m*.2,G.W/2),Math.max(G.W-40-m*.2,G.W/2)),cy:clamp(v.cy,Math.min(24+m*.2,G.H/2),Math.max(G.H-24-m*.2,G.H/2))}};
+  let stop=null;
+  function fly(to,ms=650){to=clampV(to);if(stop)stop();const f={...V};
+    stop=tween(ms,t=>{const w=Math.exp(lerp(Math.log(f.w),Math.log(to.w),t));V={w,cx:lerp(f.cx,to.cx,t),cy:lerp(f.cy,to.cy,t)};render()})}
+  // zoom about a map point so that point stays under the pointer
+  function zoomAt(px,py,f,anim){const n=clampV({...V,w:V.w*f});const r=n.w/V.w;const t={w:n.w,cx:px-(px-V.cx)*r,cy:py-(py-V.cy)*r};anim?fly(t,280):(V=clampV(t),render())}
+  const toMap=e=>{const r=S.getBoundingClientRect();return[V.cx-V.w/2+(e.clientX-r.left)/r.width*V.w,V.cy-V.w/2+(e.clientY-r.top)/r.height*V.w]};
+  S.addEventListener("wheel",e=>{e.preventDefault();if(stop){stop();stop=null}const[x,y]=toMap(e);const dy=e.deltaMode===1?e.deltaY*16:e.deltaY;zoomAt(x,y,Math.exp(clamp(dy,-240,240)*.0022),false)},{passive:false});
+  // drag to pan, two-finger pinch to zoom
+  const ptrs=new Map();let pinch0=null;
+  S.addEventListener("pointerdown",e=>{S.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,[e.clientX,e.clientY]);S.classList.add("drag");if(stop){stop();stop=null}
+    if(ptrs.size===2){const[a2,b2]=[...ptrs.values()];pinch0={d:Math.hypot(a2[0]-b2[0],a2[1]-b2[1]),w:V.w}}});
+  S.addEventListener("pointermove",e=>{if(!ptrs.has(e.pointerId))return;const prev=ptrs.get(e.pointerId);ptrs.set(e.pointerId,[e.clientX,e.clientY]);const r=S.getBoundingClientRect();
+    if(ptrs.size===2&&pinch0){const[a2,b2]=[...ptrs.values()];const d=Math.hypot(a2[0]-b2[0],a2[1]-b2[1]);const mx=(a2[0]+b2[0])/2,my=(a2[1]+b2[1])/2;
+      const px=V.cx-V.w/2+(mx-r.left)/r.width*V.w,py=V.cy-V.w/2+(my-r.top)/r.height*V.w;zoomAt(px,py,(pinch0.w*pinch0.d/d)/V.w,false);return}
+    const s2=V.w/r.width;V=clampV({...V,cx:V.cx-(e.clientX-prev[0])*s2,cy:V.cy-(e.clientY-prev[1])*s2});render()});
+  const up=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch0=null;if(!ptrs.size)S.classList.remove("drag")};
+  S.addEventListener("pointerup",up);S.addEventListener("pointercancel",up);
+  S.addEventListener("dblclick",e=>{e.preventDefault();const[x,y]=toMap(e);zoomAt(x,y,e.shiftKey?2.5:.4,true)});
+  S.addEventListener("keydown",e=>{const m={"+":.5,"=":.5,"-":2,"_":2}[e.key];if(m){e.preventDefault();zoomAt(V.cx,V.cy,m,true);return}
+    const d={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];if(d){e.preventDefault();fly({...V,cx:V.cx+d[0]*V.w*.2,cy:V.cy+d[1]*V.w*.2},220)}});
+  $("#zIn").onclick=()=>zoomAt(V.cx,V.cy,.5,true);$("#zOut").onclick=()=>zoomAt(V.cx,V.cy,2,true);$("#zHome").onclick=()=>fly(HOME,700);
+  $("#limTog").onclick=()=>{lim=!lim;$("#limTog").setAttribute("aria-checked",String(lim));$("#limTxt").textContent=lim?"Scale limits on":"Scale limits off";render()};
+  // district name on hover (only when not dragging)
+  const hot=el("g",{},S);G.districts.forEach(d=>{const p=el("path",{d:d.d,fill:"transparent"},hot);p.addEventListener("pointermove",e=>{if(!ptrs.size)showTip(e,`<b>${d.n}</b> district`)});p.addEventListener("pointerleave",hideTip)});
+  S.insertBefore(hot,gLab);S.addEventListener("pointerdown",hideTip);
+  addEventListener("resize",render);render();
+  // demonstration: fly from the state to a GP village and back, stopping at each layer threshold
+  const target=G.carto.gp[3]||HUB;
+  const STOPS=[HOME,{cx:G.carto.bbox[0]+G.carto.bbox[2]/2,cy:G.carto.bbox[1]+G.carto.bbox[3]/2,w:150},{cx:HUB[0],cy:HUB[1],w:48},{cx:(HUB[0]+target[0])/2,cy:(HUB[1]+target[1])/2,w:14},{cx:target[0],cy:target[1],w:5},{cx:target[0],cy:target[1],w:1.6}];
+  let si=0,dir=1;
+  Auto("cartography",2300,()=>{let n=si+dir;if(n>=STOPS.length||n<0){dir=-dir;n=si+dir}si=n;fly(STOPS[si],1100)},{host:"#cartography .stage",first:false,hint:"#caHint",hold:true});
 };
 
 addEventListener("hashchange",route);route();
