@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-build="1790234867">
+<html lang="en" data-build="1790235117">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -303,8 +303,8 @@ body.framed #publication>.ctrls{padding-right:48px}
 <section class="view" id="storage" aria-labelledby="st-h">
   <div class="hd"><h1 id="st-h">One spot, every layer</h1></div>
   <div class="stage" id="stStage">
-    <svg id="stackSvg" viewBox="0 14 1080 532" role="img" aria-label="Four map layers of Chhattisgarh stacked like sheets. Pointing at any layer marks the same spot on every layer and shows what that layer holds there."></svg>
-    <div class="card" id="stCard" role="status" aria-live="polite"></div>
+    <svg id="stackSvg" viewBox="0 14 1080 572" role="img" aria-label="Four map layers of Chhattisgarh stacked like sheets. Pointing at any layer marks the same spot on every layer and shows what that layer holds there."></svg>
+    <div class="card" id="stCard" hidden></div>
     <div class="hint" id="stHint"><svg class="ic sm"><use href="#i-location"/></svg>Point at the map to separate its layers</div>
   </div>
   <p class="tiny muted" style="text-align:center">Tables are named <span class="mono">department_theme_geometry_scale</span>. District names are real; leases, centres and GP nodes are illustrative.</p>
@@ -698,6 +698,8 @@ INIT.storage=()=>{
     l.nm=txt({x:7,y:0,"font-size":15,"font-weight":700,fill:"var(--n900)","text-anchor":"middle"},l.lbl,l.n);
     txt({x:0,y:18,"font-size":11.5,fill:"var(--n500)","font-family":"var(--mono)","text-anchor":"middle"},l.lbl,l.t);
     l.sq=el("g",{},l.lbl);l.sq.innerHTML=SYM[l.k];
+    l.val=txt({x:0,y:46,"font-size":15.5,"font-weight":700,fill:"var(--n900)","text-anchor":"middle"},l.lbl,"");
+    l.sub=txt({x:0,y:65,"font-size":12,fill:"var(--n600)","text-anchor":"middle"},l.lbl,"");
   });
   const restLbl=txt({x:VBW/2,y:REST_OY+S0*REST_SC*616+26,"text-anchor":"middle","font-size":13,fill:"var(--n600)"},S,"Four layers, one map");
   const mat=(x,y,sc)=>`matrix(${S0*sc} ${SK*S0*sc} 0 ${S0*sc} ${x} ${y})`;
@@ -706,16 +708,16 @@ INIT.storage=()=>{
       l.shadow.setAttribute("transform",mat(l.ox+(up?10:5),l.oy+(up?24:8),l.sc));
       // upper layers are see-through while merged, solid sheets once apart
       l.plate.setAttribute("fill-opacity",l.i===0?1:sep);l.plate.setAttribute("stroke-opacity",l.i===0?1:sep);l.shadow.style.opacity=l.i===0?1:sep;
-      l.lbl.setAttribute("transform",`translate(${l.ox+S0*l.sc*(FX0+FW/2)} ${OY+S0*616+46})`);l.lbl.style.opacity=sep*(!active||l===active?1:.5)});
+      l.lbl.setAttribute("transform",`translate(${l.ox+S0*l.sc*(FX0+FW/2)} ${OY+S0*616+46})`);l.lbl.style.opacity=sep*(!active||l===active?1:.72)});
     restLbl.style.opacity=1-sep}
   L.forEach(l=>{const w=l.nm.getComputedTextLength();l.sq.setAttribute("transform",`translate(${7-w/2-22} -13)`)});
   function go(to,ms=520){const from=L.map(l=>[l.ox,l.oy,l.sc]),s0=sep,s1=mode==="rest"?0:1;if(stopT)stopT();
-    stopT=tween(ms,t=>{L.forEach((l,i)=>{l.ox=lerp(from[i][0],to[i][0],t);l.oy=lerp(from[i][1],to[i][1],t);l.sc=lerp(from[i][2],to[i][2],t)});sep=lerp(s0,s1,t);layout();if(cur)place(cur.l,cur.x,cur.y,false)})}
+    stopT=tween(ms,t=>{L.forEach((l,i)=>{l.ox=lerp(from[i][0],to[i][0],t);l.oy=lerp(from[i][1],to[i][1],t);l.sc=lerp(from[i][2],to[i][2],t)});sep=lerp(s0,s1,t);layout();})}
   function order(){if(active){root.appendChild(active.g)}else L.forEach(x=>root.appendChild(x.g))}
   function spread(l){mode="spread";active=l||null;order();
     L.forEach(x=>{x.g.classList.toggle("on",x===active);x.g.style.opacity=!active||x===active?1:.55});
     go(L.map(x=>[x.sx+(!active||x===active?0:x.i<active.i?-NUDGE:NUDGE),x.sy-(x===active?LIFT:0),x.ssc*(x===active?1.04:1)]),mode==="spread"&&sep>.5?380:620)}
-  function merge(){mode="rest";active=null;pinned=null;cur=null;order();card.classList.remove("on");
+  function merge(){mode="rest";active=null;pinned=null;cur=null;order();L.forEach(q=>{q.val.textContent="";q.sub.textContent=""});
     L.forEach(x=>{x.g.classList.remove("on");x.g.style.opacity=1;x.mk.setAttribute("opacity",0)});go(L.map(()=>[restX,REST_OY,REST_SC]),620)}
   // pointer → the sheet under it, by geometry (front-most first)
   const local=(l,e)=>{const q=S.createSVGPoint();q.x=e.clientX;q.y=e.clientY;return q.matrixTransform(l.inner.getScreenCTM().inverse())};
@@ -731,7 +733,8 @@ INIT.storage=()=>{
     if(!h){merge();return}pinned=pinned===h.l?null:h.l;spread(h.l);mark(h.l,h.p.x,h.p.y)});
   S.addEventListener("pointerleave",()=>{if(!pinned)merge()});
   function mark(l,x,y){const inf=info(l.k,x,y);if(!inf)return;cur={l,x,y};
-    L.forEach(q=>{q.mk.setAttribute("transform",`translate(${x} ${y})`);q.mk.setAttribute("opacity",q===l?1:.6);q.mk.querySelector(".ring").style.display=q===l?"":"none"});place(l,x,y,true)}
+    L.forEach(q=>{q.mk.setAttribute("transform",`translate(${x} ${y})`);q.mk.setAttribute("opacity",q===l?1:.6);q.mk.querySelector(".ring").style.display=q===l?"":"none"});
+    const [lo,la]=xy2ll(x,y);L.forEach(q=>{const r=info(q.k,x,y);q.val.textContent=r?r.v:"";q.sub.textContent=q.k==="ref"?`${la.toFixed(3)}° N, ${lo.toFixed(3)}° E`:(q.k==="min"?"illustrative leases":q.k==="awc"?"illustrative centres":"illustrative GP nodes")})}
   function place(l,x,y,rebuild){const m=l.inner.getCTM(),sp=S.createSVGPoint();sp.x=x;sp.y=y;const q=sp.matrixTransform(m);
     const vb=S.viewBox.baseVal,r=S.getBoundingClientRect(),sr=stage.getBoundingClientRect(),k=r.width/vb.width;
     const want=r.left-sr.left+(q.x-vb.x)*k,top=r.top-sr.top+(q.y-vb.y)*k;card.style.top=top+"px";
