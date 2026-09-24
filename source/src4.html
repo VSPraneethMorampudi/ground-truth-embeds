@@ -300,9 +300,9 @@ body.framed #publication>.ctrls{padding-right:48px}
 <section class="view" id="storage" aria-labelledby="st-h">
   <div class="hd"><h1 id="st-h">One spot, every layer</h1></div>
   <div class="stage" id="stStage">
-    <svg id="stackSvg" viewBox="0 22 1080 500" role="img" aria-label="Four map layers of Chhattisgarh stacked like sheets. Pointing at any layer marks the same spot on every layer and shows what that layer holds there."></svg>
+    <svg id="stackSvg" viewBox="0 14 1080 532" role="img" aria-label="Four map layers of Chhattisgarh stacked like sheets. Pointing at any layer marks the same spot on every layer and shows what that layer holds there."></svg>
     <div class="card" id="stCard" role="status" aria-live="polite"></div>
-    <div class="hint" id="stHint"><svg class="ic sm"><use href="#i-location"/></svg>Point at a layer · click to lift it</div>
+    <div class="hint" id="stHint"><svg class="ic sm"><use href="#i-location"/></svg>Point at the map to separate its layers</div>
   </div>
   <p class="tiny muted" style="text-align:center">Tables are named <span class="mono">department_theme_geometry_scale</span>. District names are real; leases, centres and GP nodes are illustrative.</p>
 </section>
@@ -649,8 +649,10 @@ INIT.projection=()=>{
 /* ============================================================ STORAGE */
 INIT.storage=()=>{
   const S=$("#stackSvg"),stage=$("#stStage"),card=$("#stCard");
-  /* four upright sheets (north up) laid side by side, each with a slight skew so they read as layers */
-  const S0=.6,SK=-.07,W0=(441-79)*S0,GAPX=46,X0=34,OY=70,LIFT=18,NUDGE=16;
+  /* At rest the four layers sit exactly on top of each other and read as one map.
+     On interaction they deal out sideways, each layer standing behind the next with clear space between. */
+  const S0=.6,SK=-.07,FX0=79,FX1=441,FW=FX1-FX0,VBW=1080;
+  const REST_SC=1.3,REST_OY=22,OY=74,LIFT=18,NUDGE=14;
   const L=[
     {k:"ref",n:"Revenue boundaries",t:"reference.admin_village_poly",sw:"var(--n700)",draw:g=>{G.districts.forEach(d=>el("path",{d:d.d,fill:"none",stroke:"#b9b2a8","stroke-width":1.6},g))}},
     {k:"min",n:"Mining leases",t:"mining.mining_lease_poly_5k",sw:"var(--dv-orange-500)",draw:g=>{el("path",{d:G.stack.mines,fill:"var(--dv-orange-500)",stroke:"var(--dv-orange-700)","stroke-width":1.2},g)}},
@@ -666,67 +668,77 @@ INIT.storage=()=>{
     if(k==="min"){const n=Math.min(...mines.map(m=>dist(m,[x,y])));return{v:n<3?"Inside a lease":`Nearest lease ${fmt(n)} km`,s:dn+" district"}}
     if(k==="awc"){const n=G.stack.aw.filter(p=>dist(p,[x,y])<=25).length;return{v:`${n} centre${n===1?"":"s"} within 25 km`,s:dn+" district"}}
     const n=Math.min(...G.stack.gp.map(p=>dist(p,[x,y])));return{v:n<1.5?"At a GP node":`Nearest GP node ${fmt(n)} km`,s:dn+" district"}};
-  // build sheets bottom -> top (upper sheets overlap the back of lower ones)
   const df=el("defs",{},S),fl=el("filter",{id:"soft",x:"-10%",y:"-10%",width:"120%",height:"130%"},df);el("feGaussianBlur",{stdDeviation:"5"},fl);
   const root=el("g",{},S);
-  L.forEach((l,i)=>{l.i=i;l.bx=X0+i*(W0+GAPX)-79*S0;l.ox=l.bx;l.oy=OY;
+  // spread positions: back (Revenue, left) to front (BharatNet, right); back sheets slightly smaller and higher
+  const SPREAD_SC=[.9,.94,.97,1],GAPX=40;
+  let xcur=34;L.forEach((l,i)=>{const w=FW*S0*SPREAD_SC[i];l.sx=xcur-FX0*S0*SPREAD_SC[i];l.sy=OY-(3-i)*10;l.ssc=SPREAD_SC[i];xcur+=w+GAPX});
+  const shift=(VBW-(xcur-GAPX))/2-34;L.forEach(l=>l.sx+=shift);
+  const restX=VBW/2-S0*REST_SC*(FX0+FW/2);
+  L.forEach((l,i)=>{l.i=i;l.ox=restX;l.oy=REST_OY;l.sc=REST_SC;
     const g=el("g",{class:"sheet"},root);l.g=g;
     l.shadow=el("path",{d:G.state,fill:"rgba(60,50,40,.13)",class:"shd",filter:"url(#soft)"},g);
     l.inner=el("g",{},g);
-    l.plate=el("path",{d:G.state,class:"plate",fill:i===0?"#fbfaf8":"rgba(255,255,255,.97)",stroke:"#bdb6ac","stroke-width":1.4,"vector-effect":"non-scaling-stroke"},l.inner);
+    l.plate=el("path",{d:G.state,class:"plate",fill:"#fbfaf8",stroke:"#bdb6ac","stroke-width":1.4,"vector-effect":"non-scaling-stroke"},l.inner);
     l.draw(l.inner);
     l.mk=el("g",{opacity:0,"pointer-events":"none"},l.inner);
     el("circle",{r:22,fill:"none",stroke:"var(--n900)","stroke-width":2,class:"ring","vector-effect":"non-scaling-stroke"},l.mk);
     el("circle",{r:9,fill:"var(--n900)",stroke:"#fff","stroke-width":2.5,"vector-effect":"non-scaling-stroke"},l.mk);
     l.lbl=el("g",{class:"lbl"},g);
-    const nm=txt({x:7,y:0,"font-size":15,"font-weight":700,fill:"var(--n900)","text-anchor":"middle"},l.lbl,l.n);
+    l.nm=txt({x:7,y:0,"font-size":15,"font-weight":700,fill:"var(--n900)","text-anchor":"middle"},l.lbl,l.n);
     txt({x:0,y:18,"font-size":11.5,fill:"var(--n500)","font-family":"var(--mono)","text-anchor":"middle"},l.lbl,l.t);
-    l.sq=el("rect",{x:-60,y:-10,width:10,height:10,rx:2,fill:l.sw},l.lbl);l.nm=nm;
+    l.sq=el("rect",{x:-60,y:-10,width:10,height:10,rx:2,fill:l.sw},l.lbl);
   });
-  const mat=(x,y)=>`matrix(${S0} ${SK*S0} 0 ${S0} ${x} ${y})`;
-  function layout(){L.forEach(l=>{l.inner.setAttribute("transform",mat(l.ox,l.oy));const up=l===active;l.shadow.setAttribute("transform",mat(l.ox+(up?10:5),l.oy+(up?24:8)));
-    l.lbl.setAttribute("transform",`translate(${l.ox+S0*260} ${OY+418})`)})}
-  // lift: selected sheet rises, sheets above move up, below move down, so the chosen plane has clear air on both sides
-  let active=null,pinned=null,stopT=null;
-  function lift(l){active=l;if(l)root.appendChild(l.g);else L.forEach(x=>root.appendChild(x.g));const from=L.map(x=>[x.ox,x.oy]);
-    const to=L.map(x=>[x.bx+(!l||x===l?0:x.i<l.i?-NUDGE:NUDGE),OY-(x===l?LIFT:0)]);
-    L.forEach(x=>{x.g.classList.toggle("on",x===l);x.g.style.opacity=!l||x===l?1:.5;x.lbl.style.opacity=!l||x===l?1:.55});
-    if(stopT)stopT();stopT=tween(420,t=>{L.forEach((x,i)=>{x.ox=lerp(from[i][0],to[i][0],t);x.oy=lerp(from[i][1],to[i][1],t)});layout();if(cur)showCard(cur.l,cur.x,cur.y,false)})}
-  // point → local flat coordinates on the sheet under the pointer
-  let cur=null;
+  const restLbl=txt({x:VBW/2,y:REST_OY+S0*REST_SC*616+26,"text-anchor":"middle","font-size":13,fill:"var(--n600)"},S,"Four layers, one map");
+  const mat=(x,y,sc)=>`matrix(${S0*sc} ${SK*S0*sc} 0 ${S0*sc} ${x} ${y})`;
+  let mode="rest",active=null,pinned=null,stopT=null,cur=null,sep=0; /* sep: 0 = one map, 1 = dealt out */
+  function layout(){L.forEach(l=>{l.inner.setAttribute("transform",mat(l.ox,l.oy,l.sc));const up=l===active;
+      l.shadow.setAttribute("transform",mat(l.ox+(up?10:5),l.oy+(up?24:8),l.sc));
+      // upper layers are see-through while merged, solid sheets once apart
+      l.plate.setAttribute("fill-opacity",l.i===0?1:sep);l.plate.setAttribute("stroke-opacity",l.i===0?1:sep);l.shadow.style.opacity=l.i===0?1:sep;
+      l.lbl.setAttribute("transform",`translate(${l.ox+S0*l.sc*(FX0+FW/2)} ${OY+S0*616+46})`);l.lbl.style.opacity=sep*(!active||l===active?1:.5)});
+    restLbl.style.opacity=1-sep}
+  L.forEach(l=>{const w=l.nm.getComputedTextLength();l.sq.setAttribute("x",7-w/2-16)});
+  function go(to,ms=520){const from=L.map(l=>[l.ox,l.oy,l.sc]),s0=sep,s1=mode==="rest"?0:1;if(stopT)stopT();
+    stopT=tween(ms,t=>{L.forEach((l,i)=>{l.ox=lerp(from[i][0],to[i][0],t);l.oy=lerp(from[i][1],to[i][1],t);l.sc=lerp(from[i][2],to[i][2],t)});sep=lerp(s0,s1,t);layout();if(cur)place(cur.l,cur.x,cur.y,false)})}
+  function order(){if(active){root.appendChild(active.g)}else L.forEach(x=>root.appendChild(x.g))}
+  function spread(l){mode="spread";active=l||null;order();
+    L.forEach(x=>{x.g.classList.toggle("on",x===active);x.g.style.opacity=!active||x===active?1:.55});
+    go(L.map(x=>[x.sx+(!active||x===active?0:x.i<active.i?-NUDGE:NUDGE),x.sy-(x===active?LIFT:0),x.ssc*(x===active?1.04:1)]),mode==="spread"&&sep>.5?380:620)}
+  function merge(){mode="rest";active=null;pinned=null;cur=null;order();card.classList.remove("on");
+    L.forEach(x=>{x.g.classList.remove("on");x.g.style.opacity=1;x.mk.setAttribute("opacity",0)});go(L.map(()=>[restX,REST_OY,REST_SC]),620)}
+  // pointer → the sheet under it, by geometry (front-most first)
   const local=(l,e)=>{const q=S.createSVGPoint();q.x=e.clientX;q.y=e.clientY;return q.matrixTransform(l.inner.getScreenCTM().inverse())};
-  /* pick the sheet under the pointer by geometry, front-most first (the lifted sheet is in front) */
-  function pick(e){const order=[...(active?[active]:[]),...L.slice().reverse().filter(x=>x!==active)];
-    for(const l of order){const p=local(l,e);if(l.plate.isPointInFill(p))return{l,p}}return null}
+  function pick(e){const ord=[...(active?[active]:[]),...L.slice().reverse().filter(x=>x!==active)];for(const l of ord){const p=local(l,e);if(l.plate.isPointInFill(p))return{l,p}}return null}
   let lastXY="";
-  S.addEventListener("pointermove",e=>{const xy=e.clientX+","+e.clientY;if(xy===lastXY)return;lastXY=xy;const h=pick(e);if(!h)return;
+  S.addEventListener("pointermove",e=>{const xy=e.clientX+","+e.clientY;if(xy===lastXY)return;lastXY=xy;
+    if(mode==="rest"){if(pick(e))spread(null);return}
+    if(sep<.9)return; /* wait until the layers have separated */
+    const h=pick(e);if(!h)return;
     if(pinned&&h.l!==pinned){const p=local(pinned,e);if(pinned.plate.isPointInFill(p))mark(pinned,p.x,p.y);return}
-    if(active!==h.l)lift(h.l);mark(h.l,h.p.x,h.p.y)});
-  S.addEventListener("click",e=>{const h=pick(e);if(!h){pinned=null;lift(null);card.classList.remove("on");L.forEach(q=>q.mk.setAttribute("opacity",0));cur=null;return}
-    pinned=pinned===h.l?null:h.l;lift(h.l);mark(h.l,h.p.x,h.p.y)});
-  function mark(l,x,y){const inf=info(l.k,x,y);if(!inf)return; /* off the state outline: keep the last reading */
-    cur={l,x,y};L.forEach(q=>{q.mk.setAttribute("transform",`translate(${x} ${y})`);q.mk.setAttribute("opacity",q===l?1:.55);q.mk.querySelector(".ring").style.display=q===l?"":"none"});
-    showCard(l,x,y,true)}
-  function showCard(l,x,y,rebuild){const m=l.inner.getCTM(),sp=S.createSVGPoint();sp.x=x;sp.y=y;const q=sp.matrixTransform(m);
+    if(active!==h.l)spread(h.l);mark(h.l,h.p.x,h.p.y)});
+  S.addEventListener("click",e=>{const h=pick(e);if(mode==="rest"){if(h)spread(null);return}
+    if(!h){merge();return}pinned=pinned===h.l?null:h.l;spread(h.l);mark(h.l,h.p.x,h.p.y)});
+  S.addEventListener("pointerleave",()=>{if(!pinned)merge()});
+  function mark(l,x,y){const inf=info(l.k,x,y);if(!inf)return;cur={l,x,y};
+    L.forEach(q=>{q.mk.setAttribute("transform",`translate(${x} ${y})`);q.mk.setAttribute("opacity",q===l?1:.6);q.mk.querySelector(".ring").style.display=q===l?"":"none"});place(l,x,y,true)}
+  function place(l,x,y,rebuild){const m=l.inner.getCTM(),sp=S.createSVGPoint();sp.x=x;sp.y=y;const q=sp.matrixTransform(m);
     const vb=S.viewBox.baseVal,r=S.getBoundingClientRect(),sr=stage.getBoundingClientRect(),k=r.width/vb.width;
-    card.style.left=(r.left-sr.left+(q.x-vb.x)*k)+"px";card.style.top=(r.top-sr.top+(q.y-vb.y)*k)+"px";
+    const want=r.left-sr.left+(q.x-vb.x)*k,top=r.top-sr.top+(q.y-vb.y)*k;card.style.top=top+"px";
     if(rebuild){const inf=info(l.k,x,y),[lo,la]=xy2ll(x,y);
       card.innerHTML=`<div class="k"><i style="background:${l.sw}"></i>${l.n}</div><div class="v">${inf.v}</div><div class="t">${l.t}</div><div class="at">${inf.s}<br><span style="white-space:nowrap">${la.toFixed(3)}° N, ${lo.toFixed(3)}° E · marked on all four layers</span></div>`}
-    const want=parseFloat(card.style.left),cw=card.offsetWidth,sw=stage.clientWidth,cl=clamp(want,cw/2+6,sw-cw/2-6);card.style.left=cl+"px";card.style.setProperty("--caret",clamp(want-cl,-cw/2+14,cw/2-14)+"px");
-    const top=parseFloat(card.style.top);card.classList.toggle("below",top-card.offsetHeight-20<0);card.classList.add("on")}
-  S.addEventListener("pointerleave",()=>{if(pinned)return;lift(null);card.classList.remove("on");L.forEach(q=>q.mk.setAttribute("opacity",0));cur=null});
-  // entrance: sheets drop in from a single pile
-  // entrance: sheets start as one pile in the middle, then deal out left to right
-  const mid=(L[1].bx+L[2].bx)/2;L.forEach(l=>{l.ox=mid+(l.i-1.5)*8;l.oy=OY+(l.i-1.5)*-6});layout();
-  L.forEach(l=>{const w=l.nm.getComputedTextLength();l.sq.setAttribute("x",7-w/2-16)});
-  const enter=()=>{const from=L.map(l=>[l.ox,l.oy]);tween(1000,t=>{L.forEach((l,i)=>{l.ox=lerp(from[i][0],l.bx,t);l.oy=lerp(from[i][1],OY,t)});layout()})};
-  if(REDUCE){L.forEach(l=>{l.ox=l.bx;l.oy=OY});layout()}
-  // demonstration: visit a layer and a place, as a reader would
-  const spots=G.stack.aw.filter((_,i)=>i%19===4);let di=0;
+    const cw=card.offsetWidth,sw=stage.clientWidth,cl=clamp(want,cw/2+6,sw-cw/2-6);card.style.left=cl+"px";card.style.setProperty("--caret",clamp(want-cl,-cw/2+14,cw/2-14)+"px");
+    card.classList.toggle("below",top-card.offsetHeight-20<0);card.classList.add("on")}
+  layout();
+  // demonstration: one map → deal out → visit each layer at one place → gather back into one map
+  const spots=G.stack.aw.filter((_,i)=>i%19===4);let step=0,spot=null;
   let AU=null;const user=()=>AU&&AU.busy();
-  async function demo(){if(user()||pinned)return;const l=L[di%4],sp=spots[di%spots.length];di++;lift(l);await wait(460);if(user())return;
-    const from=cur&&cur.l===l?[cur.x,cur.y]:sp;await new Promise(r=>tween(700,t=>{if(!user())mark(l,lerp(from[0],sp[0],t)+Math.sin(t*Math.PI)*6,lerp(from[1],sp[1],t))},r));}
-  AU=Auto("storage",2600,demo,{host:"#stStage",hint:"#stHint",enter});
+  async function demo(){if(user()||pinned)return;const ph=step++%6;
+    if(ph===0){spot=spots[(step/6|0)%spots.length];spread(null);await wait(700);return}
+    if(ph===5){merge();await wait(700);return}
+    const l=L[ph-1];spread(l);await wait(440);if(user())return;
+    const from=cur?[cur.x,cur.y]:[spot[0]+30,spot[1]-40];await new Promise(r=>tween(560,t=>{if(!user())mark(l,lerp(from[0],spot[0],t),lerp(from[1],spot[1],t))},r))}
+  AU=Auto("storage",2000,demo,{host:"#stStage",hint:"#stHint"});
 };
 
 /* ============================================================ PUBLICATION */
