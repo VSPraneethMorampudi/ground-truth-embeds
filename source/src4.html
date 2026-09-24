@@ -177,17 +177,24 @@ body.framed #publication>.ctrls{padding-right:48px}
 .legend .g{height:6px;flex:1;border-radius:3px;background:linear-gradient(90deg,#3f51ae,#97acff 30%,#f7f7f5 50%,#e99b60 70%,#92430a)}
 
 /* ---------------- STORAGE ---------------- */
-#stackSvg{width:100%;height:auto;touch-action:none;cursor:crosshair}
-.layer{transition:transform .9s cubic-bezier(.2,.8,.2,1),opacity .3s}
-.stack.focus .layer{opacity:.28}.stack.focus .layer.on{opacity:1}
-.here{display:grid;gap:0}
-.here .row{display:grid;grid-template-columns:10px 1fr;gap:4px 12px;padding:9px 0;border-bottom:1px solid var(--n50);cursor:default}
-.here .row:last-child{border-bottom:0}
-.here .sw{width:10px;height:10px;border-radius:2px;margin-top:6px}
-.here .t{font-size:12px;color:var(--muted);font-family:var(--mono)}
-.here .v{grid-column:2;font-size:15px;color:var(--ink);font-weight:500;transition:opacity .2s}
-.here .row:hover .t{color:var(--ink)}
-
+#stStage{max-width:900px;width:100%;margin:0 auto}
+#stackSvg{width:100%;height:auto;max-height:84vh;touch-action:none;display:block;overflow:visible}
+.sheet{cursor:pointer}
+.sheet .plate{transition:stroke .2s,stroke-width .2s}
+.sheet.on .plate{stroke:var(--n900);stroke-width:2}
+.sheet .shd{transition:fill .25s}.sheet.on .shd{fill:rgba(40,30,20,.2)}
+.sheet .lbl{transition:opacity .25s}
+.card{position:absolute;left:0;top:0;z-index:8;pointer-events:none;min-width:220px;max-width:300px;background:#fff;border-radius:8px;padding:9px 12px 10px;
+  box-shadow:0 0 1px rgba(5,5,6,.25),0 2px 4px rgba(5,5,6,.08),0 8px 24px rgba(5,5,6,.14);transform:translate(-50%,calc(-100% - 16px)) scale(.96);opacity:0;transition:opacity .15s,transform .15s}
+.card.on{opacity:1;transform:translate(-50%,calc(-100% - 16px)) scale(1)}
+.card.below{transform:translate(-50%,18px) scale(.96)}.card.below.on{transform:translate(-50%,18px) scale(1)}
+.card.below::after{bottom:auto;top:-6px;box-shadow:-2px -2px 3px rgba(5,5,6,.06)}
+.card::after{content:"";position:absolute;left:50%;bottom:-6px;width:12px;height:12px;background:#fff;transform:translateX(-50%) rotate(45deg);box-shadow:2px 2px 3px rgba(5,5,6,.06)}
+.card .k{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);font-weight:500}
+.card .k i{width:9px;height:9px;border-radius:2px;flex:none}
+.card .v{font-size:16px;line-height:1.3;font-weight:700;color:var(--ink);margin:3px 0 2px}
+.card .t{font-family:var(--mono);font-size:11px;color:var(--n500)}
+.card .at{font-size:11.5px;color:var(--n600);margin-top:6px;padding-top:6px;border-top:1px solid var(--n50);font-variant-numeric:tabular-nums}
 /* ---------------- PUBLICATION ---------------- */
 #pubSvg{width:100%;height:auto}
 .pub-edge{fill:none;stroke:var(--n200);stroke-width:1.4}
@@ -271,7 +278,7 @@ body.framed #publication>.ctrls{padding-right:48px}
 <section class="view" id="projection" aria-labelledby="pj-h">
   <div class="hd"><h1 id="pj-h">How long is a kilometre here?</h1></div>
   <div class="tabs" role="group" aria-label="Map shows error in">
-    <button data-crs="u44" aria-pressed="true">UTM 44N</button><button data-crs="u45" aria-pressed="false">UTM 45N</button><button data-crs="lcc" aria-pressed="false">State LCC</button><button data-crs="wgs" aria-pressed="false">WGS 84</button>
+    <button data-crs="u44" aria-pressed="true">UTM 44N · metres</button><button data-crs="wgs" aria-pressed="false">WGS 84 · degrees</button>
   </div>
   <div class="fig">
     <div class="stage">
@@ -280,7 +287,7 @@ body.framed #publication>.ctrls{padding-right:48px}
     </div>
     <div class="rail">
       <div><div class="label">At</div><div class="mono" id="pjAt" style="font-size:15px;color:var(--ink)">—</div><div class="small muted" id="pjDist">—</div></div>
-      <div><div class="label" style="margin-bottom:8px">A 1 km line measures</div><div class="bars" id="bars"></div></div>
+      <div><div class="label" style="margin-bottom:8px">A 1 km line measures, in UTM 44N</div><div class="bars" id="bars"></div></div>
       <div class="rule"></div>
       <p class="small" id="pjNote"></p>
       <div class="legend" id="pjLeg"><span>−1 m</span><span class="g"></span><span>+1 m per km</span></div>
@@ -291,17 +298,12 @@ body.framed #publication>.ctrls{padding-right:48px}
 <!-- ============================================================ STORAGE -->
 <section class="view" id="storage" aria-labelledby="st-h">
   <div class="hd"><h1 id="st-h">One spot, every layer</h1></div>
-  <div class="fig">
-    <div class="stage">
-      <svg id="stackSvg" viewBox="0 0 560 560" role="img" aria-label="Four layers stacked on the same Chhattisgarh outline. A pin passes through every layer at the same location."></svg>
-      <div class="hint" id="stHint"><svg class="ic sm"><use href="#i-location"/></svg>Point anywhere on the stack</div>
-    </div>
-    <div class="rail">
-      <div><div class="label">Same coordinates, four schemas</div><div class="mono" id="stAt" style="font-size:14px;color:var(--ink);margin-top:2px">—</div></div>
-      <div class="here" id="here"></div>
-      <p class="tiny muted">Tables are named <span class="mono">department_theme_geometry_scale</span>. District names are real; leases, centres and GP nodes are illustrative.</p>
-    </div>
+  <div class="stage" id="stStage">
+    <svg id="stackSvg" viewBox="0 10 840 820" role="img" aria-label="Four map layers of Chhattisgarh stacked like sheets. Pointing at any layer marks the same spot on every layer and shows what that layer holds there."></svg>
+    <div class="card" id="stCard" role="status" aria-live="polite"></div>
+    <div class="hint" id="stHint"><svg class="ic sm"><use href="#i-location"/></svg>Point at a layer · click to lift it</div>
   </div>
+  <p class="tiny muted" style="text-align:center">Tables are named <span class="mono">department_theme_geometry_scale</span>. District names are real; leases, centres and GP nodes are illustrative.</p>
 </section>
 
 <!-- ============================================================ PUBLICATION -->
@@ -609,7 +611,7 @@ INIT.projection=()=>{
   const prT=txt({x:22,y:-20,"font-size":12,"font-weight":700,fill:"var(--n900)",class:"halo"},pr,"");
   const km=el("g",{},pr);const kmL=el("line",{x1:-G.kmPx/2,x2:G.kmPx/2,y1:30,y2:30,stroke:"var(--n900)","stroke-width":2},km);
   const NM={u44:"UTM 44N",u45:"UTM 45N",lcc:"State LCC"};
-  $("#bars").innerHTML=["u44","u45","lcc"].map(k=>`<div class="row" id="br-${k}"><span>${NM[k]}</span><span class="trk"><span class="fill"></span></span><span class="v">—</span></div>`).join("");
+  $("#bars").innerHTML=["u44"].map(k=>`<div class="row" id="br-${k}"><span>${NM[k]}</span><span class="trk"><span class="fill"></span></span><span class="v">—</span></div>`).join("");
   const col=v=>v>0?"var(--dv-orange-500)":"var(--dv-blue-500)";
   const kmAt=lat=>{const a=6378137,e2=0.00669437999,p=lat*Math.PI/180;return Math.PI/180*a*Math.cos(p)/Math.sqrt(1-e2*Math.sin(p)**2)/1000};
   let cur="u44",lastC=null;
@@ -623,7 +625,7 @@ INIT.projection=()=>{
     const onE=c.lo>84;$("#pjDist").textContent=onE?"East of 84° E, in UTM zone 45N":"West of 84° E, in UTM zone 44N";
     if(cur==="wgs"){prT.textContent=`1° long = ${kmAt(c.la).toFixed(2)} km`;kmL.setAttribute("stroke","var(--n900)")}
     else{const v=c[cur];prT.textContent=`1 km → ${(1000+v/1000).toFixed(2)} m`;kmL.setAttribute("stroke",col(v))}
-    ["u44","u45","lcc"].forEach(k=>{const v=c[k]/1000,r=$("#br-"+k),f=r.querySelector(".fill"),w=clamp(Math.abs(v)/1.5,0,1)*50;
+    ["u44"].forEach(k=>{const v=c[k]/1000,r=$("#br-"+k),f=r.querySelector(".fill"),w=clamp(Math.abs(v)/1.5,0,1)*50;
       f.style.left=(v<0?50-w:50)+"%";f.style.width=w+"%";f.style.background=col(v);r.querySelector(".v").textContent=(v>0?"+":v<0?"−":"")+Math.abs(v).toFixed(2)+(Math.abs(v)>1.5?" ▸":"");
       r.classList.toggle("on",k===cur);r.classList.toggle("dim",cur!=="wgs"&&k!==cur)})}
   const color=v=>{const t=clamp(v/1000,-1,1),L2=(a,b,t)=>a.map((x,i)=>Math.round(x+(b[i]-x)*t));const P0=[247,247,245],N=[63,81,174],N2=[151,172,255],P2=[233,155,96],PZ=[146,67,10];
@@ -635,55 +637,92 @@ INIT.projection=()=>{
   S.addEventListener("pointerleave",()=>{});
   // demonstration: sweep west→east across the zone edge, then down the state; switch system each loop
   const path=[[80.7,21.05],[81.6,21.25],[82.5,21.8],[83.4,22.4],[84.2,22.85]],path2=[[82.9,23.6],[82.2,21.4],[81.6,19.6],[81.4,18.3]];
-  const order=["u44","lcc","u45","wgs"];let loop=0;
+  const order=["u44","wgs"];let loop=0;
   const cellAt=(lo,la)=>{const cx=80.2+Math.floor((lo-80.2)/.1+1e-9)*.1+.05,cy=17.75+Math.floor((la-17.75)/.1+1e-9)*.1+.05;const k=cx.toFixed(2)+"_"+cy.toFixed(2);return byKey[k]?byKey[k]._c:null};
   async function sweep(pts,ms){for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1];await new Promise(r=>tween(ms,t=>{const c=cellAt(lerp(a[0],b[0],t),lerp(a[1],b[1],t));if(c)probe(c)},r))}}
   async function demo(){setCrs(order[loop++%order.length]);await sweep(loop%2?path:path2,650)}
-  setCrs(OPT.crs||"u44");probe(cellAt(81.63,21.25));
+  setCrs(OPT.crs==="wgs"?"wgs":"u44");probe(cellAt(81.63,21.25));
   Auto("projection",1400,demo,{host:"#projection .stage",hint:"#pjHint"});
 };
 
 /* ============================================================ STORAGE */
 INIT.storage=()=>{
-  const S=$("#stackSvg"),sc=.6,CX=250,GAP=112,TOP=100,c=Math.SQRT1_2;
-  const iso=(x,y,i)=>{const X=(x-G.W/2)*sc,Y=(y-G.H/2)*sc;return[CX+(X-Y)*c,TOP+i*GAP+(X+Y)*c*.42]};
-  const uniso=(px,py,i)=>{const a=(px-CX)/c,b=(py-TOP-i*GAP)/(c*.42);const X=(a+b)/2,Y=(b-a)/2;return[X/sc+G.W/2,Y/sc+G.H/2]};
-  const tf=i=>`translate(${CX} ${TOP+i*GAP}) scale(1 .42) rotate(45) scale(${sc}) translate(${-G.W/2} ${-G.H/2})`;
+  const S=$("#stackSvg"),stage=$("#stStage"),card=$("#stCard");
+  /* each sheet: the state, north up, on a tilted plane.  x' = A*x + C*y + e ,  y' = D*y + B*x + f */
+  const A=1.15,B=-.08,C=.30,D=.34,CX=-70,BASE=520,GAP0=118,SPREAD=86,LIFT=18;
   const L=[
-    {k:"bn",t:"bharatnet.bn_fibre_line_10k",n:"BharatNet",sw:"var(--dv-aqua-600)",draw:g=>{el("path",{d:G.stack.fibre,fill:"none",stroke:"var(--dv-aqua-600)","stroke-width":3},g);G.stack.gp.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:6,fill:"#fff",stroke:"var(--dv-aqua-600)","stroke-width":2.5},g))}},
-    {k:"awc",t:"wcd.wcd_anganwadi_pt_10k",n:"Anganwadi",sw:"var(--dv-blue-500)",draw:g=>{G.stack.aw.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:4.4,fill:"var(--dv-blue-500)"},g))}},
-    {k:"min",t:"mining.mining_lease_poly_5k",n:"Mining",sw:"var(--dv-orange-500)",draw:g=>{el("path",{d:G.stack.mines,fill:"var(--dv-orange-500)",stroke:"var(--dv-orange-700)","stroke-width":1},g)}},
-    {k:"ref",t:"reference.admin_village_poly",n:"Revenue",sw:"var(--n700)",draw:g=>{G.districts.forEach(d=>el("path",{d:d.d,fill:"none",stroke:"var(--n400)","stroke-width":1.3},g))}}];
-  const stack=el("g",{class:"stack"},S);
-  [...L].reverse().forEach((l,ri)=>{const i=3-ri;l.slot=i;const g=el("g",{class:"layer"},stack);
-    el("path",{d:G.state,transform:"translate(0 8) "+tf(i),fill:"rgba(60,50,40,.07)"},g);
-    const inner=el("g",{transform:tf(i)},g);el("path",{d:G.state,fill:i===3?"#fbfaf8":"rgba(255,255,255,.95)",stroke:"#bdb7ae","stroke-width":1.6},inner);l.draw(inner);
-    txt({x:446,y:TOP+i*GAP+4,"font-size":12.5,"font-weight":700,fill:"var(--n800)"},g,l.n);l.g=g});
-  // pin
-  const pin=el("g",{},S);const pl=el("line",{stroke:"var(--n900)","stroke-width":1.3},pin);const pe=[0,1,2,3].map(()=>el("ellipse",{rx:8,ry:3.4,fill:"var(--n900)",stroke:"#fff","stroke-width":1.5},pin));const ph=el("circle",{r:4.5,fill:"var(--n900)"},pin);
-  // lookup helpers (flat SVG space)
+    {k:"ref",n:"Revenue boundaries",t:"reference.admin_village_poly",sw:"var(--n700)",draw:g=>{G.districts.forEach(d=>el("path",{d:d.d,fill:"none",stroke:"#b9b2a8","stroke-width":1.6},g))}},
+    {k:"min",n:"Mining leases",t:"mining.mining_lease_poly_5k",sw:"var(--dv-orange-500)",draw:g=>{el("path",{d:G.stack.mines,fill:"var(--dv-orange-500)",stroke:"var(--dv-orange-700)","stroke-width":1.2},g)}},
+    {k:"awc",n:"Anganwadi centres",t:"wcd.wcd_anganwadi_pt_10k",sw:"var(--dv-blue-500)",draw:g=>{G.stack.aw.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:4.6,fill:"var(--dv-blue-500)"},g))}},
+    {k:"bn",n:"BharatNet",t:"bharatnet.bn_fibre_line_10k",sw:"var(--dv-aqua-600)",draw:g=>{el("path",{d:G.stack.fibre,fill:"none",stroke:"var(--dv-aqua-600)","stroke-width":3.2},g);G.stack.gp.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:6.5,fill:"#fff",stroke:"var(--dv-aqua-600)","stroke-width":2.6},g))}}];
+  // lookups in flat state space
   const hid=el("g",{opacity:0,"pointer-events":"none"},S);const dp=G.districts.map(d=>{const p=el("path",{d:d.d},hid);p._n=d.n;return p});
   const K=1/G.kmPx,dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1])*K;
   const mines=[[82.68,22.35],[83.45,22.2],[82.6,22.8],[81.25,18.65],[81.08,20.58],[83.35,21.95],[82.85,23.05]].map(p=>ll2xy(...p));
-  const here=$("#here");here.innerHTML=[...L].reverse().map(l=>`<div class="row" data-k="${l.k}"><span class="sw" style="background:${l.sw}"></span><span class="t">${l.t}</span><span class="v" id="hv-${l.k}">—</span></div>`).join("");
-  const focus=k=>{stack.classList.toggle("focus",!!k);L.forEach(l=>l.g.classList.toggle("on",l.k===k))};
-  $$("#here .row").forEach(r=>{r.onmouseenter=()=>focus(r.dataset.k);r.onmouseleave=()=>focus(null)});
-  let at=[G.W/2,G.H/2];
-  function place(x,y){at=[x,y];const d=dp.find(p=>p.isPointInFill(new DOMPoint(x,y)));
-    const pts=[0,1,2,3].map(i=>iso(x,y,i));pl.setAttribute("x1",pts[0][0]);pl.setAttribute("y1",pts[0][1]-30);pl.setAttribute("x2",pts[3][0]);pl.setAttribute("y2",pts[3][1]);
-    pts.forEach((p,i)=>{pe[i].setAttribute("cx",p[0]);pe[i].setAttribute("cy",p[1])});ph.setAttribute("cx",pts[0][0]);ph.setAttribute("cy",pts[0][1]-30);pin.style.opacity=d?1:.35;
-    const [lo,la]=xy2ll(x,y);$("#stAt").textContent=`${la.toFixed(4)}° N  ${lo.toFixed(4)}° E`;
-    if(!d){["ref","min","awc","bn"].forEach(k=>$("#hv-"+k).textContent="outside the state");return}
-    $("#hv-ref").textContent=d._n+" district";
-    const nm=Math.min(...mines.map(m=>dist(m,[x,y])));$("#hv-min").textContent=nm<3?"inside a lease":`nearest lease ${fmt(nm)} km`;
-    const n10=G.stack.aw.filter(p=>dist(p,[x,y])<=25).length;$("#hv-awc").textContent=`${n10} centre${n10===1?"":"s"} within 25 km`;
-    const ng=Math.min(...G.stack.gp.map(p=>dist(p,[x,y])));$("#hv-bn").textContent=ng<1?"at a GP node":`nearest GP node ${fmt(ng)} km`}
-  S.addEventListener("pointermove",e=>{const p=svgPt(S,e);let best=null;for(let i=0;i<4;i++){const q=uniso(p.x,p.y,i);if(dp.some(d=>d.isPointInFill(new DOMPoint(q[0],q[1])))){best=q;break}}if(best)place(...best)});
-  const collapse=on=>L.forEach(l=>l.g.style.transform=on?`translateY(${(1.5-l.slot)*GAP}px)`:"");if(!REDUCE)collapse(true);
-  const tour=G.stack.aw.filter((_,i)=>i%23===5);let ti=0;
-  async function demo(){const from=at.slice(),to=tour[ti++%tour.length];const L2=L[ti%4];focus(L2.k);await new Promise(r=>tween(900,t=>place(lerp(from[0],to[0],t),lerp(from[1],to[1],t)),r));await wait(500);focus(null)}
-  place(...G.stack.pin);
-  Auto("storage",2000,demo,{host:"#storage .stage",hint:"#stHint",enter:()=>setTimeout(()=>collapse(false),120)});
+  const districtAt=(x,y)=>{const d=dp.find(p=>p.isPointInFill(new DOMPoint(x,y)));return d?d._n:null};
+  const info=(k,x,y)=>{const dn=districtAt(x,y);if(!dn)return null;
+    if(k==="ref")return{v:dn+" district",s:"Village polygon from the Revenue master"};
+    if(k==="min"){const n=Math.min(...mines.map(m=>dist(m,[x,y])));return{v:n<3?"Inside a lease":`Nearest lease ${fmt(n)} km`,s:dn+" district"}}
+    if(k==="awc"){const n=G.stack.aw.filter(p=>dist(p,[x,y])<=25).length;return{v:`${n} centre${n===1?"":"s"} within 25 km`,s:dn+" district"}}
+    const n=Math.min(...G.stack.gp.map(p=>dist(p,[x,y])));return{v:n<1.5?"At a GP node":`Nearest GP node ${fmt(n)} km`,s:dn+" district"}};
+  // build sheets bottom -> top (upper sheets overlap the back of lower ones)
+  const df=el("defs",{},S),fl=el("filter",{id:"soft",x:"-10%",y:"-10%",width:"120%",height:"130%"},df);el("feGaussianBlur",{stdDeviation:"5"},fl);
+  const root=el("g",{},S);
+  L.forEach((l,i)=>{l.i=i;l.y=BASE-i*GAP0;l.ty=l.y;
+    const g=el("g",{class:"sheet"},root);l.g=g;
+    l.shadow=el("path",{d:G.state,fill:"rgba(60,50,40,.13)",class:"shd",filter:"url(#soft)"},g);
+    l.inner=el("g",{},g);
+    l.plate=el("path",{d:G.state,class:"plate",fill:i===0?"#fbfaf8":"rgba(255,255,255,.97)",stroke:"#bdb6ac","stroke-width":1.4,"vector-effect":"non-scaling-stroke"},l.inner);
+    l.draw(l.inner);
+    l.mk=el("g",{opacity:0,"pointer-events":"none"},l.inner);
+    el("circle",{r:22,fill:"none",stroke:"var(--n900)","stroke-width":2,class:"ring","vector-effect":"non-scaling-stroke"},l.mk);
+    el("circle",{r:9,fill:"var(--n900)",stroke:"#fff","stroke-width":2.5,"vector-effect":"non-scaling-stroke"},l.mk);
+    l.lbl=el("g",{class:"lbl"},g);
+    txt({x:0,y:0,"font-size":14,"font-weight":700,fill:"var(--n900)"},l.lbl,l.n);
+    txt({x:0,y:17,"font-size":11,fill:"var(--n500)","font-family":"var(--mono)"},l.lbl,l.t);
+    el("rect",{x:-18,y:-10,width:10,height:10,rx:2,fill:l.sw},l.lbl);
+  });
+  const mat=y=>`matrix(${A} ${B} ${C} ${D} ${CX} ${y})`;
+  function layout(){L.forEach(l=>{l.inner.setAttribute("transform",mat(l.ty));l.shadow.setAttribute("transform",mat(l.ty+(l===active?20:9)));
+    // label sits just right of the sheet's east edge at mid-latitude
+    const ey=l.ty+D*G.H*.5+B*G.W*.5;l.lbl.setAttribute("transform",`translate(668 ${ey})`)})}
+  // lift: selected sheet rises, sheets above move up, below move down, so the chosen plane has clear air on both sides
+  let active=null,pinned=null,stopT=null;
+  function lift(l){active=l;if(l)root.appendChild(l.g);else L.forEach(x=>root.appendChild(x.g));const from=L.map(x=>x.ty);const to=L.map(x=>{if(!l)return x.y;if(x===l)return x.y-LIFT;return x.i>l.i?x.y-SPREAD-(x.i-l.i-1)*8:x.y+SPREAD*.8+(l.i-x.i-1)*8});
+    L.forEach(x=>{x.g.classList.toggle("on",x===l);x.g.style.opacity=!l||x===l?1:.5;x.lbl.style.opacity=!l||x===l?1:.55});
+    if(stopT)stopT();stopT=tween(420,t=>{L.forEach((x,i)=>x.ty=lerp(from[i],to[i],t));layout();if(cur)showCard(cur.l,cur.x,cur.y,false)})}
+  // point → local flat coordinates on the sheet under the pointer
+  let cur=null;
+  const local=(l,e)=>{const q=S.createSVGPoint();q.x=e.clientX;q.y=e.clientY;return q.matrixTransform(l.inner.getScreenCTM().inverse())};
+  /* pick the sheet under the pointer by geometry, front-most first (the lifted sheet is in front) */
+  function pick(e){const order=[...(active?[active]:[]),...L.slice().reverse().filter(x=>x!==active)];
+    for(const l of order){const p=local(l,e);if(l.plate.isPointInFill(p))return{l,p}}return null}
+  let lastXY="";
+  S.addEventListener("pointermove",e=>{const xy=e.clientX+","+e.clientY;if(xy===lastXY)return;lastXY=xy;const h=pick(e);if(!h)return;
+    if(pinned&&h.l!==pinned){const p=local(pinned,e);if(pinned.plate.isPointInFill(p))mark(pinned,p.x,p.y);return}
+    if(active!==h.l)lift(h.l);mark(h.l,h.p.x,h.p.y)});
+  S.addEventListener("click",e=>{const h=pick(e);if(!h){pinned=null;lift(null);card.classList.remove("on");L.forEach(q=>q.mk.setAttribute("opacity",0));cur=null;return}
+    pinned=pinned===h.l?null:h.l;lift(h.l);mark(h.l,h.p.x,h.p.y)});
+  function mark(l,x,y){const inf=info(l.k,x,y);if(!inf)return; /* off the state outline: keep the last reading */
+    cur={l,x,y};L.forEach(q=>{q.mk.setAttribute("transform",`translate(${x} ${y})`);q.mk.setAttribute("opacity",q===l?1:.55);q.mk.querySelector(".ring").style.display=q===l?"":"none"});
+    showCard(l,x,y,true)}
+  function showCard(l,x,y,rebuild){const m=l.inner.getCTM(),sp=S.createSVGPoint();sp.x=x;sp.y=y;const q=sp.matrixTransform(m);
+    const vb=S.viewBox.baseVal,r=S.getBoundingClientRect(),sr=stage.getBoundingClientRect(),k=r.width/vb.width;
+    card.style.left=(r.left-sr.left+(q.x-vb.x)*k)+"px";card.style.top=(r.top-sr.top+(q.y-vb.y)*k)+"px";
+    if(rebuild){const inf=info(l.k,x,y),[lo,la]=xy2ll(x,y);
+      card.innerHTML=`<div class="k"><i style="background:${l.sw}"></i>${l.n}</div><div class="v">${inf.v}</div><div class="t">${l.t}</div><div class="at">${inf.s}<br><span style="white-space:nowrap">${la.toFixed(3)}° N, ${lo.toFixed(3)}° E · marked on all four layers</span></div>`}
+    const top=parseFloat(card.style.top);card.classList.toggle("below",top-card.offsetHeight-20<0);card.classList.add("on")}
+  S.addEventListener("pointerleave",()=>{if(pinned)return;lift(null);card.classList.remove("on");L.forEach(q=>q.mk.setAttribute("opacity",0));cur=null});
+  // entrance: sheets drop in from a single pile
+  L.forEach(l=>l.ty=BASE-60);layout();
+  const enter=()=>{const from=L.map(l=>l.ty);tween(900,t=>{L.forEach((l,i)=>l.ty=lerp(from[i],l.y,t));layout()})};
+  if(REDUCE){L.forEach(l=>l.ty=l.y);layout()}
+  // demonstration: visit a layer and a place, as a reader would
+  const spots=G.stack.aw.filter((_,i)=>i%19===4);let di=0;
+  let AU=null;const user=()=>AU&&AU.busy();
+  async function demo(){if(user()||pinned)return;const l=L[di%4],sp=spots[di%spots.length];di++;lift(l);await wait(460);if(user())return;
+    const from=cur&&cur.l===l?[cur.x,cur.y]:sp;await new Promise(r=>tween(700,t=>{if(!user())mark(l,lerp(from[0],sp[0],t)+Math.sin(t*Math.PI)*6,lerp(from[1],sp[1],t))},r));}
+  AU=Auto("storage",2600,demo,{host:"#stStage",hint:"#stHint",enter});
 };
 
 /* ============================================================ PUBLICATION */
