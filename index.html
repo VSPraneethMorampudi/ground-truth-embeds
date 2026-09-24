@@ -188,6 +188,9 @@ body.framed #publication>.ctrls{padding-right:48px}
 .card{position:absolute;left:0;top:0;z-index:8;pointer-events:none;min-width:220px;max-width:300px;background:#fff;border-radius:8px;padding:9px 12px 10px;
   box-shadow:0 0 1px rgba(5,5,6,.25),0 2px 4px rgba(5,5,6,.08),0 8px 24px rgba(5,5,6,.14);transform:translate(-50%,calc(-100% - 16px)) scale(.96);opacity:0;transition:opacity .15s,transform .15s}
 .card.on{opacity:1;transform:translate(-50%,calc(-100% - 16px)) scale(1)}
+.card.side{transform:scale(.97)}.card.side.on{transform:none}
+.card.side::after{left:auto;bottom:auto;top:calc(var(--cy,40px) - 6px);box-shadow:none}
+.card.side.r::after{left:-6px;box-shadow:-2px 2px 3px rgba(5,5,6,.05)}.card.side.l::after{right:-6px;box-shadow:2px -2px 3px rgba(5,5,6,.05)}
 .card.below{transform:translate(-50%,18px) scale(.96)}.card.below.on{transform:translate(-50%,18px) scale(1)}
 .card.below::after{bottom:auto;top:-6px;box-shadow:-2px -2px 3px rgba(5,5,6,.06)}
 .card::after{content:"";position:absolute;left:calc(50% + var(--caret,0px));bottom:-6px;width:12px;height:12px;background:#fff;transform:translateX(-50%) rotate(45deg);box-shadow:2px 2px 3px rgba(5,5,6,.06)}
@@ -727,8 +730,12 @@ INIT.storage=()=>{
     const want=r.left-sr.left+(q.x-vb.x)*k,top=r.top-sr.top+(q.y-vb.y)*k;card.style.top=top+"px";
     if(rebuild){const inf=info(l.k,x,y),[lo,la]=xy2ll(x,y);
       card.innerHTML=`<div class="k"><i style="background:${l.sw}"></i>${l.n}</div><div class="v">${inf.v}</div><div class="t">${l.t}</div><div class="at">${inf.s}<br><span style="white-space:nowrap">${la.toFixed(3)}° N, ${lo.toFixed(3)}° E · marked on all four layers</span></div>`}
-    const cw=card.offsetWidth,sw=stage.clientWidth,cl=clamp(want,cw/2+6,sw-cw/2-6);card.style.left=cl+"px";card.style.setProperty("--caret",clamp(want-cl,-cw/2+14,cw/2-14)+"px");
-    card.classList.toggle("below",top-card.offsetHeight-20<0);card.classList.add("on")}
+    /* sit beside the lifted sheet, never on it: right of sheets in the left half, left of the others */
+    const cw=card.offsetWidth,ch=card.offsetHeight,sw=stage.clientWidth,shH=stage.clientHeight,bb=l.plate.getBoundingClientRect();
+    const bl=bb.left-sr.left,br=bb.right-sr.left,right=(bl+br)/2<sw/2;
+    let cx=right?br+16:bl-16-cw;cx=clamp(cx,4,sw-cw-4);const cy=clamp(top-ch/2,4,Math.max(4,shH-ch-4));
+    card.classList.remove("below");card.classList.add("side");card.classList.toggle("r",right);card.classList.toggle("l",!right);
+    card.style.left=cx+"px";card.style.top=cy+"px";card.style.setProperty("--cy",clamp(top-cy,14,ch-14)+"px");card.classList.add("on")}
   layout();
   // demonstration: one map → deal out → visit each layer at one place → gather back into one map
   const spots=G.stack.aw.filter((_,i)=>i%19===4);let step=0,spot=null;
