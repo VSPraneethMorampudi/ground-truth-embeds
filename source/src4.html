@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-build="__BUILD__">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -349,6 +349,7 @@ body.framed #publication>.ctrls{padding-right:48px}
 <script>
 (function(){
 "use strict";
+const BUILD=document.documentElement.dataset.build;
 const G=window.GT,F=G.facts;
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const NS="http://www.w3.org/2000/svg";
@@ -656,6 +657,12 @@ INIT.storage=()=>{
      On interaction they deal out sideways, each layer standing behind the next with clear space between. */
   const S0=.6,SK=-.07,FX0=79,FX1=441,FW=FX1-FX0,VBW=1080;
   const REST_SC=1.3,REST_OY=22,OY=74,LIFT=18,NUDGE=14;
+  const SYM={
+    ref:'<path d="M2 4 L8 1.5 L14 3.5 L13.5 12 L7.5 14.5 L2.5 12.5 Z" fill="#fbfaf8" stroke="#8f887e" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 1.5 L7 8 L2.5 9 M7 8 L13.8 8.5 M7 8 L7.5 14.5" fill="none" stroke="#b9b2a8" stroke-width="1"/>',
+    min:'<rect x="3" y="4.5" width="10" height="7" fill="#c95d2e" stroke="#92430a" stroke-width="1.2" transform="rotate(-18 8 8)"/>',
+    awc:'<circle cx="8" cy="8" r="4.6" fill="#617ae2"/>',
+    bn:'<path d="M1.5 12.5 L8 8 L14.5 3.5" fill="none" stroke="#007b9b" stroke-width="2.2" stroke-linecap="round"/><circle cx="8" cy="8" r="3.4" fill="#fff" stroke="#007b9b" stroke-width="1.8"/>'};
+  const symSvg=k=>`<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" style="flex:none;overflow:visible">${SYM[k]}</svg>`;
   const L=[
     {k:"ref",n:"Revenue boundaries",t:"reference.admin_village_poly",sw:"var(--n700)",draw:g=>{G.districts.forEach(d=>el("path",{d:d.d,fill:"none",stroke:"#b9b2a8","stroke-width":1.6},g))}},
     {k:"min",n:"Mining leases",t:"mining.mining_lease_poly_5k",sw:"var(--dv-orange-500)",draw:g=>{el("path",{d:G.stack.mines,fill:"var(--dv-orange-500)",stroke:"var(--dv-orange-700)","stroke-width":1.2},g)}},
@@ -690,7 +697,7 @@ INIT.storage=()=>{
     l.lbl=el("g",{class:"lbl"},g);
     l.nm=txt({x:7,y:0,"font-size":15,"font-weight":700,fill:"var(--n900)","text-anchor":"middle"},l.lbl,l.n);
     txt({x:0,y:18,"font-size":11.5,fill:"var(--n500)","font-family":"var(--mono)","text-anchor":"middle"},l.lbl,l.t);
-    l.sq=el("rect",{x:-60,y:-10,width:10,height:10,rx:2,fill:l.sw},l.lbl);
+    l.sq=el("g",{},l.lbl);l.sq.innerHTML=SYM[l.k];
   });
   const restLbl=txt({x:VBW/2,y:REST_OY+S0*REST_SC*616+26,"text-anchor":"middle","font-size":13,fill:"var(--n600)"},S,"Four layers, one map");
   const mat=(x,y,sc)=>`matrix(${S0*sc} ${SK*S0*sc} 0 ${S0*sc} ${x} ${y})`;
@@ -701,7 +708,7 @@ INIT.storage=()=>{
       l.plate.setAttribute("fill-opacity",l.i===0?1:sep);l.plate.setAttribute("stroke-opacity",l.i===0?1:sep);l.shadow.style.opacity=l.i===0?1:sep;
       l.lbl.setAttribute("transform",`translate(${l.ox+S0*l.sc*(FX0+FW/2)} ${OY+S0*616+46})`);l.lbl.style.opacity=sep*(!active||l===active?1:.5)});
     restLbl.style.opacity=1-sep}
-  L.forEach(l=>{const w=l.nm.getComputedTextLength();l.sq.setAttribute("x",7-w/2-16)});
+  L.forEach(l=>{const w=l.nm.getComputedTextLength();l.sq.setAttribute("transform",`translate(${7-w/2-22} -13)`)});
   function go(to,ms=520){const from=L.map(l=>[l.ox,l.oy,l.sc]),s0=sep,s1=mode==="rest"?0:1;if(stopT)stopT();
     stopT=tween(ms,t=>{L.forEach((l,i)=>{l.ox=lerp(from[i][0],to[i][0],t);l.oy=lerp(from[i][1],to[i][1],t);l.sc=lerp(from[i][2],to[i][2],t)});sep=lerp(s0,s1,t);layout();if(cur)place(cur.l,cur.x,cur.y,false)})}
   function order(){if(active){root.appendChild(active.g)}else L.forEach(x=>root.appendChild(x.g))}
@@ -729,7 +736,7 @@ INIT.storage=()=>{
     const vb=S.viewBox.baseVal,r=S.getBoundingClientRect(),sr=stage.getBoundingClientRect(),k=r.width/vb.width;
     const want=r.left-sr.left+(q.x-vb.x)*k,top=r.top-sr.top+(q.y-vb.y)*k;card.style.top=top+"px";
     if(rebuild){const inf=info(l.k,x,y),[lo,la]=xy2ll(x,y);
-      card.innerHTML=`<div class="k"><i style="background:${l.sw}"></i>${l.n}</div><div class="v">${inf.v}</div><div class="t">${l.t}</div><div class="at">${inf.s}<br><span style="white-space:nowrap">${la.toFixed(3)}° N, ${lo.toFixed(3)}° E · marked on all four layers</span></div>`}
+      card.innerHTML=`<div class="k">${symSvg(l.k)}${l.n}</div><div class="v">${inf.v}</div><div class="t">${l.t}</div><div class="at">${inf.s}<br><span style="white-space:nowrap">${la.toFixed(3)}° N, ${lo.toFixed(3)}° E · marked on all four layers</span></div>`}
     /* sit beside the lifted sheet, never on it: right of sheets in the left half, left of the others */
     const cw=card.offsetWidth,ch=card.offsetHeight,sw=stage.clientWidth,shH=stage.clientHeight,bb=l.plate.getBoundingClientRect();
     const bl=bb.left-sr.left,br=bb.right-sr.left,right=(bl+br)/2<sw/2;
@@ -875,6 +882,9 @@ INIT.cartography=()=>{
 };
 
 addEventListener("hashchange",route);route();
+/* stale-cache guard: if a newer build is published, load it (GitHub Pages caches pages for ~10 minutes) */
+(async()=>{try{if(location.protocol==="file:")return;const r=await fetch(location.pathname+"?b="+Date.now(),{cache:"no-store"});const t=await r.text();const m=t.match(/data-build="(\d+)"/);
+  if(m&&m[1]!==BUILD){const u=new URL(location.href);u.searchParams.set("b",m[1]);location.replace(u.toString())}}catch(e){}})();
 })();
 </script>
 </body>
