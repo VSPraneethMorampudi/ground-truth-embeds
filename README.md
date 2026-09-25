@@ -2,10 +2,11 @@ GROUND TRUTH · StoryMap embeds (v3 · Pajamas design language)
 
 Styled with GitLab Pajamas tokens (@gitlab/ui 137.x), GitLab Sans / GitLab Mono (OFL-1.1, subset in fonts/) and GitLab SVG icons (MIT).
 
-index.html              all six views (~320 KB); loads fonts/ from the same folder
+index.html              overview + six views (~320 KB); loads fonts/ from the same folder
 cover-ground-truth.jpg  2400x1350 cover image (map sits right of centre, clear of the title card)
 
 EMBED URLS  (add &bare inside sidecars)
+  index.html#overview        (full-width intro: base map with handwritten notes)
   index.html#intake&bare
   index.html#conversion&bare
   index.html#projection&bare&crs=lcc
@@ -22,3 +23,5 @@ REBUILD WITH OFFICIAL BOUNDARIES (source/)
   npx mapshaper data/cg.geojson -simplify 10% keep-shapes -clean -dissolve -o data/state.json format=geojson precision=0.0001
   edit the LCC parameters at the top of build.js if yours differ
   node build.js && mkdir -p dist && python3 assemble.py
+
+Handwritten notes: Caveat (OFL-1.1), fonts/Caveat-*.woff2

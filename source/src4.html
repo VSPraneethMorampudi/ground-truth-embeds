@@ -6,7 +6,7 @@
 <title>Ground Truth · Figures</title>
 <!--
   GROUND TRUTH · interactive figures for the StoryMap (State Geoportal, CHiPS)          v4
-  Views (URL hash):  #intake  #conversion  #projection  #storage  #publication  #cartography
+  Views (URL hash):  #overview  #intake  #conversion  #projection  #storage  #publication  #cartography
   Options: &head (show the heading when framed)  &auto=off  &crs=u44|u45|lcc|wgs  &scale=0..5
 
   Type: Avenir Next World, loaded from the story's own ArcGIS portal so the figures match the story.
@@ -107,6 +107,25 @@ b,strong{font-weight:700;color:var(--ink)}
 .tip b{color:#fff}.tip.on{opacity:1}
 .fade{transition:opacity .4s ease}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* ---------------- OVERVIEW ---------------- */
+@font-face{font-family:"Caveat";src:url("fonts/Caveat-400.woff2") format("woff2");font-weight:400;font-display:block}
+@font-face{font-family:"Caveat";src:url("fonts/Caveat-700.woff2") format("woff2");font-weight:700;font-display:block}
+#overview{max-width:1320px;gap:4px}
+#ovSvg{width:100%;height:auto;max-height:calc(100vh - 74px);display:block;margin:0 auto}
+#ovSvg text.h{font-family:"Caveat","Segoe Print","Bradley Hand",cursive;fill:var(--n800)}
+#ovSvg text.h.t{font-weight:700;fill:var(--n950)}
+#ovSvg .note{cursor:default;transition:opacity .25s;outline:none}
+#ovSvg .lay,#ovSvg .arw{transition:opacity .25s}
+#ovSvg[data-f] .note,#ovSvg[data-f] .lay,#ovSvg[data-f] .arw{opacity:.16}
+#ovSvg[data-f=ref] .f-ref,#ovSvg[data-f=min] .f-min,#ovSvg[data-f=awc] .f-awc,#ovSvg[data-f=bn] .f-bn,#ovSvg[data-f=vil] .f-vil,#ovSvg[data-f=num] .f-num{opacity:1}
+#ovSvg[data-f=ref] .base .dist{stroke:var(--n700)}
+.base .dist{transition:stroke .25s}
+.ovcap{display:flex;align-items:center;justify-content:center;gap:14px;color:var(--muted);font-size:15px;line-height:1.45;text-align:center;max-width:1100px;margin:0 auto;padding:0 12px}
+.ovcap .hand{font-family:"Caveat",cursive;font-size:25px;color:var(--n800);white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.ovrep{position:absolute;right:clamp(10px,2vw,22px);top:clamp(10px,2vw,18px);height:30px;padding:0 10px;border:1px solid var(--n200);border-radius:var(--r);background:#fff;color:var(--n700);font-size:13px;display:inline-flex;align-items:center;gap:6px;opacity:0;pointer-events:none;transition:opacity .3s}
+.ovrep.on{opacity:1;pointer-events:auto}.ovrep:hover{border-color:var(--n400);color:var(--n950)}
+@media (max-width:700px){.ovcap{flex-direction:column;gap:2px;font-size:15px}.ovrep{position:static;margin:6px auto 0}}
 
 /* ---------------- INTAKE ---------------- */
 #inSvg{width:100%;height:auto;touch-action:none;border-radius:10px}
@@ -239,6 +258,15 @@ body.framed #publication>.ctrls{padding-right:48px}
 <section class="view" id="index">
   <div class="hd" style="display:grid"><h1>Ground Truth · figures</h1><p>Six interactive figures for the story. Each URL below is one embed.</p></div>
   <ul id="idx" style="list-style:none;display:grid;gap:0;max-width:720px"></ul>
+</section>
+
+<!-- ============================================================ OVERVIEW -->
+<section class="view" id="overview" aria-labelledby="ov-h">
+  <div class="hd"><h1 id="ov-h">One base, many departments</h1></div>
+  <svg id="ovSvg" role="img" aria-labelledby="ov-h ov-d"></svg>
+  <div class="sr" id="ov-d">Spatial data reaches the State Geoportal from departments across Chhattisgarh. The Revenue Department supplies the base: district, tehsil, block and village boundaries for the whole state. Every other department's data arrives on top of that base, each source in its own format and to its own schedule. Mining, Anganwadi and BharatNet are three of them. The work is to merge those submissions onto one set of boundaries and one coordinate system, so that a village means the same village in every layer. Today that merge holds 162 layers from 42 departments, published to one standard. Three applications already run on it: Mining, Anganwadi and BharatNet.</div>
+  <p class="ovcap"><span>This is the pipeline that brings them together, and the checks that keep what reaches the map dependable.</span><span class="hand" aria-hidden="true">starts at Intake<svg width="24" height="30" viewBox="0 0 24 30" style="overflow:visible"><path d="M8 2 C 14 9, 4 16, 12 26 M6.5 20.5 L12.2 26.4 L15.6 19.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></p>
+  <button class="ovrep" id="ovRep" type="button"><svg class="ic sm"><use href="#i-retry"/></svg>Replay</button>
 </section>
 
 <!-- ============================================================ INTAKE -->
@@ -380,7 +408,7 @@ function xy2ll(x,y){let lon=82.3,lat=21;for(let k=0;k<12;k++){const p=ll2xy(lon,
   const a=(q[0]-p[0])/.01,b=(r[0]-p[0])/.01,c=(q[1]-p[1])/.01,d=(r[1]-p[1])/.01,det=a*d-b*c;const dx=x-p[0],dy=y-p[1];lon+=(d*dx-b*dy)/det;lat+=(-c*dx+a*dy)/det}return[lon,lat]}
 
 /* ---------------- router ---------------- */
-const VIEWS={intake:"Drag a pin; the four intake checks run live",conversion:"Drag to fix a duplicate, a dangle and a sliver",projection:"Measure a kilometre anywhere in four coordinate systems",storage:"Point at the stack; every layer answers for the same spot",publication:"Change one record; every consumer updates",cartography:"Zoom from state to village; layers switch on at their scale"};
+const VIEWS={overview:"The base map and the departments that build on it",intake:"Drag a pin; the four intake checks run live",conversion:"Drag to fix a duplicate, a dangle and a sliver",projection:"Measure a kilometre anywhere in four coordinate systems",storage:"Point at the stack; every layer answers for the same spot",publication:"Change one record; every consumer updates",cartography:"Zoom from state to village; layers switch on at their scale"};
 const OPT={};
 function parse(){const p=location.hash.slice(1).split("&");const v=p.shift();for(const k in OPT)delete OPT[k];p.forEach(x=>{const[a,b]=x.split("=");OPT[a]=b===undefined?true:decodeURIComponent(b)});return v}
 const INIT={},inited={};
@@ -439,6 +467,105 @@ function drawContext(svg,{labels=true,rivers=true,rail=false,roads=false,cities=
     el("circle",{cx:c.xy[0],cy:c.xy[1],r:(c.cg?2.8:2.2)*k,fill:c.cg?"var(--n900)":"#9d978e",stroke:"#fff","stroke-width":1*k},L.city);
     txt({x:c.xy[0]+(c.n==="Bhilai"?-5:5)*k,y:c.xy[1]+(c.n==="Bhilai"?9:-4)*k,"text-anchor":c.n==="Bhilai"?"end":"start","font-size":(c.cg?11:9.5)*k,"font-weight":c.cg?700:400,fill:c.cg?"var(--n900)":"#8a857d",class:"halo"},L.city,c.n)})}
   return L}
+
+/* ============================================================ OVERVIEW */
+INIT.overview=()=>{
+  const S=$("#ovSvg"),rep=$("#ovRep"),ST=G.stack;
+  const NOTES=[
+    {k:"ref",c:"var(--n900)",t:"Revenue Department",b:["sends the base: district, tehsil,","block and village boundaries","for the whole state"]},
+    {k:"min",c:"var(--dv-orange-700)",t:"Mining",b:["lease boundaries, arriving","in its own format,","on its own schedule"]},
+    {k:"awc",c:"var(--dv-blue-700)",t:"Anganwadi",b:["centres arrive as points,","laid on the same base"]},
+    {k:"bn",c:"var(--dv-aqua-700)",t:"BharatNet",b:["fibre routes and GP nodes,","one more source on top"]},
+    {k:"vil",c:"var(--n950)",t:"The work: merge it all",b:["onto one set of boundaries","and one coordinate system,","so a village means the","same village in every layer"],hl:3},
+    {k:"num",c:"var(--n950)",big:"162 layers",b:["from 42 departments,","published to one standard.","Already running on it:","Mining · Anganwadi · BharatNet"]}];
+  const L={
+    land:{vb:[0,0,1280,720],k:1.1,tx:354,ty:8,fs:26,ts:34,lh:28,
+      at:{ref:[44,96,"s"],vil:[44,290,"s"],min:[44,520,"s"],awc:[1236,100,"e"],bn:[1236,330,"e"],num:[1236,490,"e"]},
+      q:{ref:[20,215],min:[100,420],awc:[420,170],bn:[420,400]}},
+    port:{vb:[0,0,640,1600],k:.92,tx:80,ty:360,fs:30,ts:38,lh:32,
+      at:{ref:[18,56,"s"],awc:[340,56,"s"],min:[18,1010,"s"],bn:[340,1010,"s"],vil:[18,1195,"s"],num:[18,1395,"s"]},
+      q:{ref:[140,40],min:[150,560],awc:[330,60],bn:[330,560]},noArrow:["vil"]}};
+  const P=(m,x,y)=>[m.tx+x*m.k,m.ty+y*m.k];
+  const D=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+  const near=(arr,q)=>arr.reduce((a,b)=>D(b,q)<D(a,q)?b:a);
+  const mines=ST.mines.split("M").filter(Boolean).map(p=>{const n=p.replace(/Z/g,"").split("L").map(v=>v.split(",").map(Number));return[n.reduce((a,v)=>a+v[0],0)/n.length,n.reduce((a,v)=>a+v[1],0)/n.length]});
+  const cell=G.cells.find(c=>{const n=c.d.match(/-?[\d.]+/g).map(Number),xs=n.filter((_,i)=>!(i%2)),ys=n.filter((_,i)=>i%2);return ST.pin[0]>=Math.min(...xs)&&ST.pin[0]<=Math.max(...xs)&&ST.pin[1]>=Math.min(...ys)&&ST.pin[1]<=Math.max(...ys)});
+  let seed=7;const R=()=>(seed=seed*16807%2147483647)/2147483647;
+  let mode=null,parts=null,played=false,cancel=[],run=0;
+
+  // a pen stroke: one relaxed curve, an open two-stroke head
+  function arrow(g,a,b,bend){
+    const dx=b[0]-a[0],dy=b[1]-a[1],d=Math.hypot(dx,dy),nx=-dy/d,ny=dx/d,w=bend*d;
+    const c1=[a[0]+dx*.28+nx*w*(.9+R()*.2),a[1]+dy*.28+ny*w*(.9+R()*.2)],c2=[a[0]+dx*.74+nx*w*.4,a[1]+dy*.74+ny*w*.4];
+    const ex=b[0]-c2[0],ey=b[1]-c2[1],l=Math.hypot(ex,ey),ux=ex/l,uy=ey/l;
+    const h=(t,s)=>[b[0]-s*(ux*Math.cos(t)-uy*Math.sin(t)),b[1]-s*(uy*Math.cos(t)+ux*Math.sin(t))].map(v=>v.toFixed(1));
+    const f=p=>p.map(v=>(+v).toFixed(1)).join(",");
+    const sh=el("path",{d:`M${f(a)} C${f(c1)} ${f(c2)} ${f(b)}`,fill:"none",stroke:"var(--n800)","stroke-width":2,"stroke-linecap":"round",pathLength:1,"stroke-dasharray":1,"stroke-dashoffset":1},g);
+    const hd=el("path",{d:`M${h(.5,14)} L${f(b)} L${h(-.45,11.5)}`,fill:"none",stroke:"var(--n800)","stroke-width":2,"stroke-linecap":"round","stroke-linejoin":"round",opacity:0},g);
+    return{sh,hd}}
+  // a loose ring drawn round the village, ends overlapping
+  function ring(g,c,r){let d="";for(let i=0;i<=48;i++){const a=-2.3+i/48*(Math.PI*2+.75),rr=r*(1+.07*Math.sin(a*3+.6)+i*.0024);d+=(i?"L":"M")+(c[0]+Math.cos(a)*rr*1.2).toFixed(1)+","+(c[1]+Math.sin(a)*rr).toFixed(1)}
+    return el("path",{d,fill:"none",stroke:"var(--n900)","stroke-width":2.1,"stroke-linecap":"round","stroke-linejoin":"round",pathLength:1,"stroke-dasharray":1,"stroke-dashoffset":1},g)}
+
+  function build(){
+    const m=L[mode=innerWidth<700?"port":"land"];seed=7;S.innerHTML="";S.setAttribute("viewBox",m.vb.join(" "));
+    const defs=el("defs",{},S);defs.innerHTML='<filter id="ovSoft" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="7"/></filter>';
+    const map=el("g",{transform:`translate(${m.tx} ${m.ty}) scale(${m.k})`},S),base=el("g",{class:"base"},map);
+    el("path",{d:G.state,fill:"rgba(60,50,40,.12)",transform:"translate(4 7)",filter:"url(#ovSoft)"},base);
+    el("path",{d:G.state,fill:"#fbfaf8"},base);
+    const dists=G.districts.map(d=>el("path",{d:d.d,class:"dist",fill:"none",stroke:"#b9b2a8","stroke-width":1.2,pathLength:1,"stroke-dasharray":1,"stroke-dashoffset":1},base));
+    const edge=el("path",{d:G.state,fill:"none",stroke:"#8f887e","stroke-width":1.6,"stroke-linejoin":"round",pathLength:1,"stroke-dasharray":1,"stroke-dashoffset":1},base);
+    const lay={},LG=k=>lay[k]=el("g",{class:"lay f-"+k,opacity:0},map);
+    el("path",{d:ST.mines,fill:"var(--dv-orange-500)",stroke:"var(--dv-orange-700)","stroke-width":1.1},LG("min"));
+    const ga=LG("awc");ST.aw.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:2.9,fill:"var(--dv-blue-500)"},ga));
+    el("path",{d:ST.fibre,fill:"none",stroke:"var(--dv-aqua-600)","stroke-width":2.4,"stroke-linecap":"round"},LG("bn"));
+    ST.gp.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:4.4,fill:"#fff",stroke:"var(--dv-aqua-600)","stroke-width":1.8},lay.bn));
+    if(cell)el("path",{d:cell.d,fill:"rgba(247,214,90,.7)",stroke:"var(--n950)","stroke-width":1.5},LG("vil"));
+    const notes={},arrows={},hand=el("g",{},S);
+    NOTES.forEach(n=>{const[x,y,an]=m.at[n.k],ta=an==="e"?"end":"start";
+      const g=el("g",{class:"note f-"+n.k,tabindex:0,"aria-label":(n.t||n.big)+". "+n.b.join(" ")},S),lines=[];let yy=y;
+      if(n.big){lines.push(txt({x,y:yy,class:"h t","font-size":m.ts*1.55,"text-anchor":ta},g,n.big));yy+=m.lh*1.3}
+      if(n.t){lines.push(txt({x,y:yy,class:"h t","font-size":m.ts,"text-anchor":ta,style:`fill:${n.c}`},g,n.t));yy+=m.lh+4}
+      n.b.forEach((t,i)=>{const e=txt({x,y:yy,class:"h","font-size":m.fs,"text-anchor":ta},g,t);if(n.hl===i)e.dataset.hl=1;lines.push(e);yy+=m.lh});
+      notes[n.k]={g,lines}});
+    const tgt={
+      ref:()=>{let best,bd=1e9;const T=edge.getTotalLength();for(let i=0;i<500;i++){const p=edge.getPointAtLength(i/500*T),d=D([p.x,p.y],m.q.ref);if(d<bd){bd=d;best=[p.x,p.y]}}return best},
+      min:()=>near(mines,m.q.min),awc:()=>near(ST.aw,m.q.awc),bn:()=>near(ST.gp,m.q.bn),vil:()=>ST.pin};
+    for(const k in notes){const n=notes[k];
+      n.lines.forEach(e=>{if(!e.dataset.hl)return;const b=e.getBBox();n.g.insertBefore(el("path",{d:`M${b.x-4},${b.y+b.height*.64} L${b.x+b.width+5},${b.y+b.height*.56}`,stroke:"rgba(247,214,90,.8)","stroke-width":b.height*.44,"stroke-linecap":"round",fill:"none"}),n.g.firstChild)});
+      const cp=el("clipPath",{id:"ovc-"+k},defs);
+      n.rects=n.lines.map(e=>{const b=e.getBBox(),r=el("rect",{x:b.x-8,y:b.y-8,width:0,height:b.height+16},cp);r.dataset.w=b.width+18;return r});
+      n.g.setAttribute("clip-path",`url(#ovc-${k})`);
+      if(!tgt[k])continue;
+      if((m.noArrow||[]).includes(k)){arrows[k]={sh:el("path",{}),hd:el("path",{}),ring:ring(el("g",{class:"arw f-"+k},hand),P(m,...tgt[k]()),21)};continue}
+      const gb=n.g.getBBox(),t=P(m,...tgt[k]());
+      const sides=[[gb.x+gb.width+16,gb.y+gb.height*.42],[gb.x-16,gb.y+gb.height*.42],[gb.x+gb.width*.5,gb.y+gb.height+12],[gb.x+gb.width*.5,gb.y-12]];
+      const a=sides.reduce((p,q)=>D(q,t)<D(p,t)?q:p),stop=k==="vil"?30:k==="ref"?5:9,d=D(a,t),b=[t[0]-(t[0]-a[0])/d*stop,t[1]-(t[1]-a[1])/d*stop];
+      const ag=el("g",{class:"arw f-"+k},hand);arrows[k]=arrow(ag,a,b,(a[0]<t[0]?-1:1)*(a[1]<t[1]?1:-1)*.17);
+      if(k==="vil")arrows[k].ring=ring(ag,t,21)}
+    S.appendChild(hand);
+    for(const k in notes){const g=notes[k].g,on=()=>S.dataset.f=k,off=()=>delete S.dataset.f;
+      g.addEventListener("pointerenter",on);g.addEventListener("pointerleave",off);g.addEventListener("focus",on);g.addEventListener("blur",off)}
+    parts={dists,edge,lay,notes,arrows};set(played?1:0)}
+
+  function set(v){const p=parts;p.dists.concat(p.edge).forEach(e=>e.setAttribute("stroke-dashoffset",1-v));for(const k in p.lay)p.lay[k].setAttribute("opacity",v);
+    for(const k in p.notes)p.notes[k].rects.forEach(r=>r.setAttribute("width",v*r.dataset.w));
+    for(const k in p.arrows){const a=p.arrows[k];a.sh.setAttribute("stroke-dashoffset",1-v);a.hd.setAttribute("opacity",v);a.ring&&a.ring.setAttribute("stroke-dashoffset",1-v)}}
+  const tw=(ms,fn)=>new Promise(r=>{cancel.push(tween(ms,fn,r))});
+  async function play(){cancel.forEach(c=>c());cancel=[];const me=++run,p=parts,alive=()=>run===me&&parts===p;played=true;rep.classList.remove("on");
+    if(REDUCE){set(1);rep.classList.add("on");return}
+    set(0);
+    const write=async k=>{for(const r of p.notes[k].rects){const w=+r.dataset.w;await tw(Math.min(380,w*1.3),t=>r.setAttribute("width",Math.max(0,w*t)));if(!alive())return}};
+    const draw=async k=>{const a=p.arrows[k];if(!a||!alive())return;await tw(440,t=>a.sh.setAttribute("stroke-dashoffset",1-t));a.hd.setAttribute("opacity",1);if(a.ring&&alive())await tw(460,t=>a.ring.setAttribute("stroke-dashoffset",1-t))};
+    await Promise.all([tw(950,t=>p.dists.forEach(e=>e.setAttribute("stroke-dashoffset",1-t))),tw(1100,t=>p.edge.setAttribute("stroke-dashoffset",1-t)),write("ref")]);
+    if(!alive())return;draw("ref");
+    for(const k of["min","awc","bn"]){await wait(160);if(!alive())return;await write(k);if(!alive())return;tw(450,t=>p.lay[k].setAttribute("opacity",t));draw(k)}
+    await wait(300);if(!alive())return;await write("vil");if(!alive())return;tw(400,t=>p.lay.vil.setAttribute("opacity",t));draw("vil");
+    await wait(500);if(!alive())return;await write("num");await wait(400);if(alive())rep.classList.add("on")}
+  rep.onclick=()=>play();
+  document.fonts.load('700 30px "Caveat"').then(()=>document.fonts.load('400 26px "Caveat"')).catch(()=>{}).then(()=>{build();
+    new IntersectionObserver((es,o)=>{if(es[0].isIntersecting){o.disconnect();setTimeout(play,250)}},{threshold:.35}).observe(S)});
+  let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if((innerWidth<700?"port":"land")!==mode){build()}},150)})};
 
 /* ============================================================ INTAKE */
 INIT.intake=()=>{
