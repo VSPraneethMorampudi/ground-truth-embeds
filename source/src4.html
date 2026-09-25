@@ -485,6 +485,10 @@ INIT.overview=()=>{
     port:{vb:[0,0,640,1600],k:.92,tx:80,ty:360,fs:30,ts:38,lh:32,
       at:{ref:[18,56,"s"],awc:[340,56,"s"],min:[18,1010,"s"],bn:[340,1010,"s"],vil:[18,1195,"s"],num:[18,1395,"s"]},
       q:{ref:[140,40],min:[150,560],awc:[330,60],bn:[330,560]},noArrow:["vil"]}};
+  L.wide={vb:[0,0,1400,610],k:.95,tx:453,ty:-10,fs:31,ts:39,lh:33,
+      at:{ref:[60,66,"s"],vil:[60,250,"s"],min:[60,448,"s"],awc:[1340,66,"e"],bn:[1340,262,"e"],num:[1340,410,"e"]},
+      q:{ref:[20,215],min:[100,420],awc:[420,170],bn:[420,400]}};
+  const pick=()=>innerWidth<700?"port":innerWidth/innerHeight>1.9?"wide":"land";
   const P=(m,x,y)=>[m.tx+x*m.k,m.ty+y*m.k];
   const D=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
   const near=(arr,q)=>arr.reduce((a,b)=>D(b,q)<D(a,q)?b:a);
@@ -508,7 +512,7 @@ INIT.overview=()=>{
     return el("path",{d,fill:"none",stroke:"var(--n900)","stroke-width":2.1,"stroke-linecap":"round","stroke-linejoin":"round",pathLength:1,"stroke-dasharray":1,"stroke-dashoffset":1},g)}
 
   function build(){
-    const m=L[mode=innerWidth<700?"port":"land"];seed=7;S.innerHTML="";S.setAttribute("viewBox",m.vb.join(" "));
+    const m=L[mode=pick()];seed=7;S.innerHTML="";S.setAttribute("viewBox",m.vb.join(" "));
     const defs=el("defs",{},S);defs.innerHTML='<filter id="ovSoft" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="7"/></filter>';
     const map=el("g",{transform:`translate(${m.tx} ${m.ty}) scale(${m.k})`},S),base=el("g",{class:"base"},map);
     el("path",{d:G.state,fill:"rgba(60,50,40,.12)",transform:"translate(4 7)",filter:"url(#ovSoft)"},base);
@@ -565,7 +569,7 @@ INIT.overview=()=>{
   rep.onclick=()=>play();
   document.fonts.load('700 30px "Caveat"').then(()=>document.fonts.load('400 26px "Caveat"')).catch(()=>{}).then(()=>{build();
     new IntersectionObserver((es,o)=>{if(es[0].isIntersecting){o.disconnect();setTimeout(play,250)}},{threshold:.35}).observe(S)});
-  let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if((innerWidth<700?"port":"land")!==mode){build()}},150)})};
+  let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(pick()!==mode){build()}},150)})};
 
 /* ============================================================ INTAKE */
 INIT.intake=()=>{
