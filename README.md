@@ -25,3 +25,16 @@ REBUILD WITH OFFICIAL BOUNDARIES (source/)
   node build.js && mkdir -p dist && python3 assemble.py
 
 Handwritten notes: Caveat (OFL-1.1), fonts/Caveat-*.woff2
+
+JOURNEY (one record, AWC-RPR-00412, followed through the pipeline; scroll inside the frame)
+  index.html#j-intro&bare
+  index.html#j-intake&bare
+  index.html#j-conversion&bare
+  index.html#j-projection&bare
+  index.html#j-storage&bare
+  index.html#j-publication&bare
+  index.html#j-cartography&bare
+  index.html#j-provenance&bare
+  index.html#j-inuse&bare
+  index.html#j-update&bare
+  Sources: source/journey.js, source/journey.css (inlined by assemble4.py)

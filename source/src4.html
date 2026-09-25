@@ -6,7 +6,7 @@
 <title>Ground Truth · Figures</title>
 <!--
   GROUND TRUTH · interactive figures for the StoryMap (State Geoportal, CHiPS)          v4
-  Views (URL hash):  #flow  #overview  #intake  #conversion  #projection  #storage  #publication  #cartography
+  Views (URL hash):  #j-intro #j-intake #j-conversion #j-projection #j-storage #j-publication #j-cartography #j-provenance #j-inuse #j-update  #flow  #overview  #intake  #conversion  #projection  #storage  #publication  #cartography
   Options: &head (show the heading when framed)  &auto=off  &crs=u44|u45|lcc|wgs  &scale=0..5
 
   Type: Avenir Next World, loaded from the story's own ArcGIS portal so the figures match the story.
@@ -167,6 +167,7 @@ b,strong{font-weight:700;color:var(--ink)}
   .fl-intro br{display:none}.fl-sheet svg{height:280px}.fl-merge .fl-big svg{height:440px}
 }
 
+/*JOURNEY_CSS*/
 /* ---------------- INTAKE ---------------- */
 #inSvg{width:100%;height:auto;touch-action:none;border-radius:10px}
 body.framed #publication>.ctrls{padding-right:48px}
@@ -318,6 +319,18 @@ body.framed #publication>.ctrls{padding-right:48px}
   <svg class="fl-wires" id="flWires" aria-hidden="true"></svg>
 </section>
 
+<!-- ============================================================ JOURNEY (filled by script) -->
+<section class="view jv" id="j-intro"></section>
+<section class="view jv" id="j-intake"></section>
+<section class="view jv" id="j-conversion"></section>
+<section class="view jv" id="j-projection"></section>
+<section class="view jv" id="j-storage"></section>
+<section class="view jv" id="j-publication"></section>
+<section class="view jv" id="j-cartography"></section>
+<section class="view jv" id="j-provenance"></section>
+<section class="view jv" id="j-inuse"></section>
+<section class="view jv" id="j-update"></section>
+
 <!-- ============================================================ INTAKE -->
 <section class="view" id="intake" aria-labelledby="in-h">
   <div class="hd"><h1 id="in-h">Where does a record land?</h1></div>
@@ -467,7 +480,7 @@ function route(){const v=parse(),id=VIEWS[v]?v:"index";
   $$(".view").forEach(s=>s.classList.toggle("on",s.id===id));document.title="Ground Truth · "+(VIEWS[id]?id:"figures");
   if(!inited[id]&&INIT[id]){INIT[id]();inited[id]=true}
   requestAnimationFrame(fit)}
-function fit(){const v=$(".view.on");if(!v||!framed)return;if(v.id==="flow"){v.style.zoom=1;document.body.style.setProperty("--z",1);document.body.classList.add("scroll");return}v.style.zoom=1;document.body.style.setProperty("--z",1);
+function fit(){const v=$(".view.on");if(!v||!framed)return;if(v.id==="flow"||v.classList.contains("jv")){v.style.zoom=1;document.body.style.setProperty("--z",1);document.body.classList.add("scroll");return}v.style.zoom=1;document.body.style.setProperty("--z",1);
   if(innerWidth<560){document.body.classList.add("scroll");return}
   const z=Math.min(1,innerHeight/v.scrollHeight),zz=Math.max(.62,z);v.style.zoom=zz;document.body.style.setProperty("--z",zz);document.body.classList.toggle("scroll",z<.62)}
 let fitT;addEventListener("resize",()=>{clearTimeout(fitT);fitT=setTimeout(fit,120)});
@@ -731,6 +744,7 @@ INIT.flow=()=>{
   document.fonts.load('700 30px "Caveat"').then(()=>document.fonts.load('400 26px "Caveat"')).catch(()=>{}).then(()=>requestAnimationFrame(layout));
   addEventListener("resize",relayout);new ResizeObserver(relayout).observe(host)};
 
+/*JOURNEY_JS*/
 /* ============================================================ INTAKE */
 INIT.intake=()=>{
   const S=$("#inSvg");S.setAttribute("viewBox","262 -14 332 206");
