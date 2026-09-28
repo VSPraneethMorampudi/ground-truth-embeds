@@ -45,7 +45,7 @@ function Sketch(id,spec){
       tw:(ms,fn)=>new Promise(r=>{cancels.push(tween(A.fast?0:ms,fn,r))}),
       wait:ms=>A.fast?Promise.resolve():new Promise(r=>setTimeout(r,REDUCE?0:ms)),
       // tween numeric attributes (or opacity) from where they are now
-      to(e,attrs,ms=500){if(!e)return Promise.resolve();const f={};for(const k in attrs)f[k]=k==="opacity"?+(e.style.opacity===""?1:e.style.opacity):+(e.getAttribute(k)||0);
+      to(e,attrs,ms=500){if(!e)return Promise.resolve();const f={};for(const k in attrs)f[k]=k==="opacity"?+getComputedStyle(e).opacity:+(e.getAttribute(k)||0);
         return A.tw(ms,t=>{for(const k in attrs){const v=lerp(f[k],attrs[k],t);if(k==="opacity")e.style.opacity=v;else e.setAttribute(k,v)}})},
       op:(e,v,ms=450)=>Array.isArray(e)?Promise.all(e.map(x=>A.to(x,{opacity:v},ms))):A.to(e,{opacity:v},ms),
       // a pen line that draws itself
