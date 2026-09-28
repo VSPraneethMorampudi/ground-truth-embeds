@@ -276,7 +276,7 @@ journey("j-publication",{title:"Publication: services, not files",next:"next: Ca
 journey("j-cartography",{title:"Cartography: drawn once, at the service",next:"next: Provenance and access",end:"Our record draws the same everywhere it appears.",
   rec:recHTML("the record",[...REC_BASE,["symbol","state palette"]]),
   beats:[
-  {t:"Scale dependency, per layer",b:["village boundaries draw at 1:100,000","and larger; point assets at 1:25,000.","Without it, a full-state zoom would","request [N] symbols in a single frame"],build(g,ctx){J.paper(g,30,22,540,476,ctx);const cid=ctx.id+"-cz";const cp=el("clipPath",{id:cid},ctx.defs);el("rect",{x:30,y:22,width:540,height:476,rx:10},cp);
+  {t:"Scale dependency, per layer",b:["village boundaries appear from 1:100,000;","centres and fibre from 1:25,000.","Without it, a whole-state view would try","to draw every village and asset at once"],build(g,ctx){J.paper(g,30,22,540,476,ctx);const cid=ctx.id+"-cz";const cp=el("clipPath",{id:cid},ctx.defs);el("rect",{x:30,y:22,width:540,height:476,rx:10},cp);
     const o=el("g",{"clip-path":`url(#${cid})`},g),m=el("g",{},o);el("path",{d:G.state,fill:"#fff",stroke:"#8f887e","stroke-width":1.6,...NSS},m);const dg=el("g",{},m);G.districts.forEach(d=>el("path",{d:d.d,fill:"none",stroke:"#cfc8bd","stroke-width":1,...NSS},dg));
     const tg=el("g",{},m);G.carto.tehsil.forEach(d=>el("path",{d,fill:"none",stroke:"#a39c92","stroke-width":1.2,"stroke-dasharray":"5 3",...NSS},tg));
     const vg=el("g",{opacity:0},m);G.carto.village.forEach((d,i)=>el("path",{d,fill:i%2?"#f8f5f0":"#fcfbf8",stroke:"#d6cfc4","stroke-width":.7,...NSS},vg));el("path",{d:G.carto.fibre,fill:"none",stroke:"var(--dv-aqua-600)","stroke-width":1.6,...NSS},vg);

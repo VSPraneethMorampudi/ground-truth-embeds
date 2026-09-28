@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-build="1790317939">
+<html lang="en" data-build="1790579300">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -331,6 +331,36 @@ body.framed #publication>.ctrls{padding-right:48px}
 .lyr svg{width:22px;height:14px}
 .lyr .th{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
 .cg{transition:opacity .45s}
+.ca-rail{gap:12px}
+#caFig{grid-template-columns:minmax(0,1.3fr) minmax(270px,1fr)}
+@media (max-width:640px){#caFig{grid-template-columns:1fr}}
+.ca-lvl{font-size:22px;line-height:1.2;font-weight:700;color:var(--ink)}
+.ca-ladder button{flex:1 1 0;padding:0 8px}
+.ca-ladder{display:flex}
+#cartography .lyr li{padding:6px 0;font-size:13.5px;line-height:1.3}
+#cartography .lyr .th{font-family:var(--font);font-size:12px;text-align:right}
+#cartography .lyr li:not(.off) .th{color:var(--green-700);font-weight:500}
+#cartography .lyr li.off{opacity:.55}
+.meter{display:grid;gap:6px}
+.mrow{display:grid;grid-template-columns:82px 1fr 64px;gap:8px;align-items:center;font-size:13px;opacity:.6;transition:opacity .2s}
+.mrow.cur{opacity:1;font-weight:500}
+.mrow i{display:block;height:10px;border-radius:5px;background:var(--n50);overflow:hidden}
+.mrow b{display:block;height:100%;width:0;border-radius:5px;background:var(--green-500);transition:width .35s}
+#mOff b{background:var(--red-500)}
+.mrow .n{text-align:right;font-size:12.5px}
+#mNote{color:var(--text);min-height:32px}
+#mNote.warn{color:var(--red-700)}
+#limTog{align-self:start}
+#limTog b{font-weight:500;color:var(--ink)}
+.nodata{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(82%,300px);background:#fff;border-radius:var(--r);box-shadow:0 0 1px rgba(5,5,6,.3),0 2px 10px rgba(5,5,6,.18);padding:12px 14px;display:grid;gap:10px;font-size:13.5px;text-align:center;z-index:5}
+.nodata[hidden]{display:none}
+.nodata button{justify-self:center;height:32px;padding:0 14px;border-radius:var(--r);border:0;background:var(--n800);color:#fff;font-weight:500}
+.ca-key{margin-top:8px;display:flex;gap:6px;align-items:center}
+.ca-key .sw{width:16px;height:10px;border-radius:2px;background:#e4e1db;flex:none}
+#cartography .auto{width:auto;height:30px;border-radius:15px;padding:0 11px 0 8px;display:flex;gap:5px;align-items:center;font-size:12.5px;font-weight:500;top:10px;right:10px}
+#cartography .auto svg.ring{display:none}
+#cartography .auto[aria-label^=Play]::after{content:"Play tour"}
+#cartography .auto[aria-label^=Pause]::after{content:"Pause tour"}
 </style>
 </head>
 <body>
@@ -458,24 +488,34 @@ body.framed #publication>.ctrls{padding-right:48px}
 
 <!-- ============================================================ CARTOGRAPHY -->
 <section class="view" id="cartography" aria-labelledby="ca-h">
-  <div class="hd"><h1 id="ca-h">What draws at each scale</h1></div>
-  <div class="fig" style="grid-template-columns:minmax(0,1.35fr) minmax(250px,1fr)">
+  <div class="hd"><h1 id="ca-h">Zoom in and the map adds detail</h1><p>Each layer waits until you are close enough for it to be useful.</p></div>
+  <div class="fig" id="caFig">
     <div class="stage">
       <div class="mapbox">
-        <svg id="cartoSvg" viewBox="0 0 520 520" tabindex="0" role="application" aria-label="Map of Chhattisgarh. Scroll or pinch to zoom, drag to pan; layers switch on at their scale."></svg>
+        <svg id="cartoSvg" viewBox="0 0 520 520" tabindex="0" role="application" aria-label="Map of Chhattisgarh. Scroll or pinch to zoom, drag to pan; layers switch on as you zoom in."></svg>
         <div class="mapui"><button id="zIn" aria-label="Zoom in">+</button><button id="zOut" aria-label="Zoom out">−</button><button id="zHome" aria-label="Whole state"><svg class="ic sm" viewBox="0 0 16 16"><path d="M8 1.5 1.5 7h2v7h3.5v-4h2v4H12.5V7h2z" fill="currentColor"/></svg></button></div>
-        <div class="hint" id="caHint" style="left:auto;right:10px;bottom:10px"><svg class="ic sm"><use href="#i-location"/></svg>Scroll to zoom · drag to pan</div>
+        <div class="hint" id="caHint" style="left:auto;right:10px;bottom:10px"><svg class="ic sm"><use href="#i-location"/></svg>Scroll or pinch to zoom · drag to pan</div>
+        <div class="nodata" id="caNo" hidden><span>This demo has village-level data only for a sample area near Raipur.</span><button type="button" id="caGo">Take me there</button></div>
         <div class="scalebar" aria-hidden="true"><span id="sbT">50 km</span><i id="sbI" style="width:60px"></i></div>
       </div>
+      <p class="tiny muted ca-key"><span class="sw" aria-hidden="true"></span>Grey: neighbouring states. Villages, centres and fibre are illustrative and drawn around Raipur only.</p>
     </div>
-    <div class="rail">
-      <div><div class="label">Map scale</div><div class="scaleread" id="scaleRead">1:4,000,000</div></div>
+    <div class="rail ca-rail">
+      <div>
+        <div class="label">You are looking at</div>
+        <div class="ca-lvl"><span id="lvlName">State</span> view</div>
+        <div class="tiny muted"><span id="scaleCm">1 cm ≈ 40 km</span> · scale <span class="mono" id="scaleRead">1:4,000,000</span></div>
+      </div>
+      <div class="seg ca-ladder" role="group" aria-label="Jump to a zoom level"><button type="button" data-l="0">State</button><button type="button" data-l="1">District</button><button type="button" data-l="2">Village</button><button type="button" data-l="3">Street</button></div>
       <ul class="lyr" id="lyr"></ul>
       <div class="rule"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
-        <div><div class="scaleread" style="font-size:18px" id="featN">27</div><div class="tiny muted">features requested for this view</div></div>
-        <button class="toggle" role="switch" aria-checked="true" id="limTog"><span class="track"><span class="knob"></span></span><span id="limTxt">Scale limits on</span></button>
+      <div class="meter">
+        <div class="label">Map features loaded for this view</div>
+        <div class="mrow" id="mOn"><span>Smart zoom</span><i><b></b></i><span class="mono n"></span></div>
+        <div class="mrow" id="mOff"><span>Everything</span><i><b></b></i><span class="mono n"></span></div>
+        <p class="tiny" id="mNote" aria-live="polite"></p>
       </div>
+      <button class="toggle" type="button" role="switch" aria-checked="true" id="limTog"><span class="track"><span class="knob"></span></span><span><b>Smart zoom</b> <span id="limTxt">on</span></span></button>
     </div>
   </div>
 </section>
@@ -512,7 +552,7 @@ function xy2ll(x,y){let lon=82.3,lat=21;for(let k=0;k<12;k++){const p=ll2xy(lon,
   const a=(q[0]-p[0])/.01,b=(r[0]-p[0])/.01,c=(q[1]-p[1])/.01,d=(r[1]-p[1])/.01,det=a*d-b*c;const dx=x-p[0],dy=y-p[1];lon+=(d*dx-b*dy)/det;lat+=(-c*dx+a*dy)/det}return[lon,lat]}
 
 /* ---------------- router ---------------- */
-const VIEWS={flow:"The intro told top to bottom; arrows draw as the reader scrolls",overview:"The base map and the departments that build on it",intake:"Drag a pin; the four intake checks run live",conversion:"Drag to fix a duplicate, a dangle and a sliver",projection:"Measure a kilometre anywhere in four coordinate systems",storage:"Point at the stack; every layer answers for the same spot",publication:"Change one record; every consumer updates",cartography:"Zoom from state to village; layers switch on at their scale"};
+const VIEWS={flow:"The intro told top to bottom; arrows draw as the reader scrolls",overview:"The base map and the departments that build on it",intake:"Drag a pin; the four intake checks run live",conversion:"Drag to fix a duplicate, a dangle and a sliver",projection:"Measure a kilometre anywhere in four coordinate systems",storage:"Point at the stack; every layer answers for the same spot",publication:"Change one record; every consumer updates",cartography:"Zoom from state to street; each layer switches on when it becomes useful"};
 const OPT={};
 function parse(){const p=location.hash.slice(1).split("&");const v=p.shift();for(const k in OPT)delete OPT[k];p.forEach(x=>{const[a,b]=x.split("=");OPT[a]=b===undefined?true:decodeURIComponent(b)});return v}
 const INIT={},inited={};
@@ -1064,7 +1104,7 @@ journey("j-publication",{title:"Publication: services, not files",next:"next: Ca
 journey("j-cartography",{title:"Cartography: drawn once, at the service",next:"next: Provenance and access",end:"Our record draws the same everywhere it appears.",
   rec:recHTML("the record",[...REC_BASE,["symbol","state palette"]]),
   beats:[
-  {t:"Scale dependency, per layer",b:["village boundaries draw at 1:100,000","and larger; point assets at 1:25,000.","Without it, a full-state zoom would","request [N] symbols in a single frame"],build(g,ctx){J.paper(g,30,22,540,476,ctx);const cid=ctx.id+"-cz";const cp=el("clipPath",{id:cid},ctx.defs);el("rect",{x:30,y:22,width:540,height:476,rx:10},cp);
+  {t:"Scale dependency, per layer",b:["village boundaries appear from 1:100,000;","centres and fibre from 1:25,000.","Without it, a whole-state view would try","to draw every village and asset at once"],build(g,ctx){J.paper(g,30,22,540,476,ctx);const cid=ctx.id+"-cz";const cp=el("clipPath",{id:cid},ctx.defs);el("rect",{x:30,y:22,width:540,height:476,rx:10},cp);
     const o=el("g",{"clip-path":`url(#${cid})`},g),m=el("g",{},o);el("path",{d:G.state,fill:"#fff",stroke:"#8f887e","stroke-width":1.6,...NSS},m);const dg=el("g",{},m);G.districts.forEach(d=>el("path",{d:d.d,fill:"none",stroke:"#cfc8bd","stroke-width":1,...NSS},dg));
     const tg=el("g",{},m);G.carto.tehsil.forEach(d=>el("path",{d,fill:"none",stroke:"#a39c92","stroke-width":1.2,"stroke-dasharray":"5 3",...NSS},tg));
     const vg=el("g",{opacity:0},m);G.carto.village.forEach((d,i)=>el("path",{d,fill:i%2?"#f8f5f0":"#fcfbf8",stroke:"#d6cfc4","stroke-width":.7,...NSS},vg));el("path",{d:G.carto.fibre,fill:"none",stroke:"var(--dv-aqua-600)","stroke-width":1.6,...NSS},vg);
@@ -1543,8 +1583,13 @@ INIT.cartography=()=>{
   let V={...HOME};
   const pxW=()=>S.getBoundingClientRect().width||520;
   const denom=v=>(v.w/pxW())/G.kmPx*1000/0.000264583; // ground metres per screen metre at 96 dpi
+  const wFor=N=>N/denom({w:1});
   const minW=()=>5000*0.000264583/1000*G.kmPx*pxW();
-  const TH={rail:250000,teh:1000000,vil:250000,rd:150000,pts:50000};
+  // One set of thresholds, used by the map, the legend, the zoom ladder and the story text.
+  // teh: tehsils from 1:1,000,000 · vil: villages and village roads from 1:100,000 · pts: point assets and fibre from 1:25,000
+  const TH={teh:1000000,vil:100000,pts:25000};
+  const LEVELS=["State","District","Village","Street"];
+  const levelOf=N=>N>TH.teh?0:N>TH.vil?1:N>TH.pts?2:3;
   // ---- layers, drawn in cartographic order ----
   const L=drawContext(S,{labels:true,rivers:true,rail:true,roads:true,cities:false,riverLabels:false});
   const under=L.dist.parentNode;
@@ -1557,50 +1602,71 @@ INIT.cartography=()=>{
   const aw=G.carto.aw.map(p=>el("circle",{cx:p[0],cy:p[1],r:1,fill:"var(--dv-blue-500)",stroke:"#fff"},gPts));
   const gp=G.carto.gp.map(p=>el("rect",{fill:"#fff",stroke:"var(--dv-aqua-600)"},gPts));
   const hubM=el("rect",{fill:"var(--dv-aqua-700)",stroke:"#fff"},gPts);
+  aw.forEach(c=>gPts.appendChild(c));
   const gClut=el("g",{class:"cg",fill:"var(--dv-blue-500)","fill-opacity":.8},S);const clut=G.clutter.map(p=>el("circle",{cx:p[0],cy:p[1],r:1},gClut));
   const gLab=el("g",{"pointer-events":"none"},S);
   const tlab=(G.carto.tehN||[]).map(t=>txt({x:t.xy[0],y:t.xy[1],"text-anchor":"middle",fill:"#6f6356",class:"halo","font-weight":500},gLab,t.n.toUpperCase()));
   const cities=G.ctx.cities.filter(c=>c.cg||["Nagpur","Sambalpur","Raurkela","Jabalpur"].includes(c.n)).map(c=>{const g=el("g",{},gLab);const d=el("circle",{cx:c.xy[0],cy:c.xy[1],fill:c.cg?"var(--n900)":"#9d978e",stroke:"#fff"},g);const t=txt({x:c.xy[0],y:c.xy[1],"font-weight":c.cg?700:400,fill:c.cg?"var(--n900)":"#8a857d",class:"halo"},g,c.n);return{c,d,t}});
   const dlab=G.districts.map(d=>txt({x:d.c[0],y:d.c[1],"text-anchor":"middle",fill:"#8f877c",class:"halo","letter-spacing":.3},gLab,d.n.replace("Dakshin Bastar ","").replace("Uttar Bastar ","")));
   const rlab=[];L.rivers.querySelectorAll("path").forEach(p=>{if(!["Mahanadi","Indravati","Son","Wainganga"].includes(p._n)||rlab.find(r=>r.n===p._n))return;const len=p.getTotalLength();if(len<60)return;rlab.push({n:p._n,p,len,t:txt({"font-style":"italic",fill:"var(--water-ink)",class:"halo","text-anchor":"middle"},gLab,p._n)})});
-  const LY=[["Districts and rivers",null,'<rect x="3" y="2" width="16" height="10" fill="none" stroke="#3a383d" stroke-width="1.6"/><path d="M2 10 C8 6 12 12 20 6" stroke="#6f9bc8" fill="none" stroke-width="1.6"/>',"always"],
-    ["State rail and highways","rail",'<path d="M1 5h20" stroke="#8a8888" stroke-width="2"/><path d="M1 5h20" stroke="#fff" stroke-width="1" stroke-dasharray="3 3"/><path d="M1 11h20" stroke="#e3b98f" stroke-width="1.6"/>',"≥ 1:250,000"],
-    ["Tehsils","teh",'<path d="M1 7h20" stroke="#8f8172" stroke-width="1.6" stroke-dasharray="6 2 1.5 2"/>',"≤ 1:1,000,000"],
-    ["Villages and village roads","vil",'<rect x="1" y="1" width="20" height="12" fill="#f6f3ee" stroke="#d6cfc4"/><path d="M1 9 C7 7 12 10 21 5" stroke="#c9c1b5" stroke-width="3" fill="none"/><path d="M1 9 C7 7 12 10 21 5" stroke="#fff" stroke-width="1.4" fill="none"/>',"≤ 1:250,000"],
-    ["Anganwadi centres, GP nodes, fibre","pts",'<path d="M2 11 L20 3" stroke="#007b9b" stroke-width="2"/><circle cx="7" cy="8" r="3.5" fill="#617ae2" stroke="#fff"/><rect x="14" y="3" width="6" height="6" fill="#fff" stroke="#007b9b" stroke-width="1.4"/>',"≤ 1:50,000"]];
-  $("#lyr").innerHTML=LY.map(l=>`<li><svg viewBox="0 0 22 14">${l[2]}</svg><span>${l[0]}</span><span class="th">${l[3]}</span></li>`).join("");
-  const rows=$$("#lyr li");
+  const LY=[["Districts and rivers",null,'<rect x="3" y="2" width="16" height="10" fill="none" stroke="#3a383d" stroke-width="1.6"/><path d="M2 10 C8 6 12 12 20 6" stroke="#6f9bc8" fill="none" stroke-width="1.6"/>',"Always on"],
+    ["Main rail and highways","rail",'<path d="M1 5h20" stroke="#8a8888" stroke-width="2"/><path d="M1 5h20" stroke="#fff" stroke-width="1" stroke-dasharray="3 3"/><path d="M1 11h20" stroke="#e3b98f" stroke-width="1.6"/>',"State and district views"],
+    ["Tehsil boundaries","teh",'<path d="M1 7h20" stroke="#8f8172" stroke-width="1.6" stroke-dasharray="6 2 1.5 2"/>',"From district view"],
+    ["Villages and village roads","vil",'<rect x="1" y="1" width="20" height="12" fill="#f6f3ee" stroke="#d6cfc4"/><path d="M1 9 C7 7 12 10 21 5" stroke="#c9c1b5" stroke-width="3" fill="none"/><path d="M1 9 C7 7 12 10 21 5" stroke="#fff" stroke-width="1.4" fill="none"/>',"From village view"],
+    ["Anganwadi centres","pts",'<circle cx="11" cy="7" r="4.2" fill="#617ae2" stroke="#fff" stroke-width="1.2"/>',"From street view"],
+    ["GP nodes and fibre routes","pts",'<path d="M1 11 L21 3" stroke="#007b9b" stroke-width="2"/><rect x="7.5" y="3.5" width="7" height="7" fill="#fff" stroke="#007b9b" stroke-width="1.5" transform="rotate(45 11 7)"/>',"From street view"]];
+  $("#lyr").innerHTML=LY.map(l=>`<li><svg viewBox="0 0 22 14" aria-hidden="true">${l[2]}</svg><span>${l[0]}</span><span class="th"></span></li>`).join("");
+  const rows=$$("#lyr li"),ladder=$$(".ca-ladder button");
   let lim=true;
   const fade=(el2,on)=>{el2.style.opacity=on?1:0;el2.style.pointerEvents="none"};
   const inView=(p,v)=>Math.abs(p[0]-v.cx)<=v.w/2&&Math.abs(p[1]-v.cy)<=v.w/2;
+  const vis=(limF,N)=>({rail:!limF||N>TH.vil,teh:!limF||N<=TH.teh,vil:!limF||N<=TH.vil,pts:!limF||N<=TH.pts});
+  // what a view asks the server for (illustrative model)
+  function count(limF,N,v){const on=vis(limF,N);let n=27+G.ctx.rivers.length;if(on.rail)n+=61;if(on.teh)n+=N>1e6?146:G.carto.tehsil.length;
+    if(on.vil)n+=N>TH.vil?20000:G.carto.vill_c.filter(p=>inView(p,v)).length*2;
+    if(on.pts)n+=N>TH.vil?G.clutter.length*20:[...G.carto.aw,...G.carto.gp].filter(p=>inView(p,v)).length;return n}
+  const cityUp=new Set(cities.filter(x=>x.c.cg).map(x=>x.c.n.toUpperCase()));
+  // labels that would be cut by the frame edge are dropped, as a map service's conflict rules would
+  function fitLabel(t,v,pad){if(t.style.opacity==="0")return;let bb;try{bb=t.getBBox()}catch(e){return}if(!bb.width)return;
+    if(bb.x<v.cx-v.w/2+pad||bb.x+bb.width>v.cx+v.w/2-pad||bb.y<v.cy-v.w/2+pad||bb.y+bb.height>v.cy+v.w/2-pad)t.style.opacity=0}
   function render(){const v=V,k=v.w/520,N=denom(v);S.setAttribute("viewBox",[v.cx-v.w/2,v.cy-v.w/2,v.w,v.w].map(n=>n.toFixed(3)).join(" "));
-    const on={rail:!lim||N>=TH.rail,teh:!lim||N<=TH.teh,vil:!lim||N<=TH.vil,pts:!lim||N<=TH.pts};
-    fade(L.rail,on.rail);fade(L.roads,on.rail);fade(gTeh,on.teh);fade(gVill,on.vil);fade(gRoad,!lim||N<=TH.rd);gVill.style.opacity=on.vil?clamp(1.25-Math.log2(N/40000)*.25,.55,1):0;
+    const on=vis(lim,N),lv=levelOf(N);
+    fade(L.rail,on.rail);fade(L.roads,on.rail);fade(gTeh,on.teh);fade(gVill,on.vil);fade(gRoad,on.vil);gVill.style.opacity=on.vil?clamp(1.25-Math.log2(N/40000)*.25,.55,1):0;
     const ptsOn=on.pts&&(lim||N<=TH.vil);fade(gPts,ptsOn);fade(gFib,ptsOn);fade(gClut,!lim&&N>TH.vil);
-    rows.forEach((r,j)=>r.classList.toggle("off",j>0&&!on[LY[j][1]]));
+    rows.forEach((r,j)=>{const key=LY[j][1],o=!key||on[key];r.classList.toggle("off",!o);
+      r.querySelector(".th").textContent=o?(key&&!lim&&!vis(true,N)[key]?"Forced on":"✓ Showing"):LY[j][3]});
+    ladder.forEach((b2,i)=>b2.setAttribute("aria-pressed",String(i===lv)));
+    $("#lvlName").textContent=LEVELS[lv];
     // village roads widen as you zoom in, like a printed series; fibre sits on top of its road
     const rw=clamp(2.2+Math.log2(100000/N)*1.6,1.4,9);rCase.setAttribute("stroke-width",rw);rFill.setAttribute("stroke-width",rw*.55);gFib.setAttribute("stroke-width",clamp(rw*.42,1.8,4));
     // constant on-screen sizes
     aw.forEach(c=>{c.setAttribute("r",4.6*k);c.setAttribute("stroke-width",1.3*k)});
-    gp.forEach((r,i)=>{const p=G.carto.gp[i],s2=9*k;r.setAttribute("x",p[0]-s2/2);r.setAttribute("y",p[1]-s2/2);r.setAttribute("width",s2);r.setAttribute("height",s2);r.setAttribute("stroke-width",2*k);r.setAttribute("transform",`rotate(45 ${p[0]} ${p[1]})`)});
+    gp.forEach((r,i)=>{const p=G.carto.gp[i],s2=12*k;r.setAttribute("x",p[0]-s2/2);r.setAttribute("y",p[1]-s2/2);r.setAttribute("width",s2);r.setAttribute("height",s2);r.setAttribute("stroke-width",2*k);r.setAttribute("transform",`rotate(45 ${p[0]} ${p[1]})`)});
     {const s2=11*k;hubM.setAttribute("x",HUB[0]-s2/2);hubM.setAttribute("y",HUB[1]-s2/2);hubM.setAttribute("width",s2);hubM.setAttribute("height",s2);hubM.setAttribute("stroke-width",1.5*k)}
     if(!lim&&N>TH.vil)clut.forEach(c=>c.setAttribute("r",1.4*k));
-    cities.forEach(({c,d,t})=>{const vis=c.n!=="Bhilai"||N<2500000;d.style.opacity=t.style.opacity=vis?1:0;d.setAttribute("r",(c.cg?3.2:2.2)*k);d.setAttribute("stroke-width",1.2*k);const Lf=c.n==="Bhilai";t.setAttribute("x",c.xy[0]+(Lf?-6:6)*k);t.setAttribute("y",c.xy[1]+(Lf?11:-5)*k);t.setAttribute("text-anchor",Lf?"end":"start");t.setAttribute("font-size",(c.cg?12.5:10)*k);t.style.strokeWidth=3.2*k+"px"});
-    tlab.forEach((t,i)=>{const q=G.carto.tehN[i];t.setAttribute("y",q.xy[1]+(q.n==="Raipur"?20*k:0));t.setAttribute("font-size",10*k);t.setAttribute("letter-spacing",1.6*k);t.style.strokeWidth=3*k+"px";t.style.opacity=N>=40000&&N<=1200000?1:0});
-    dlab.forEach(t=>{t.setAttribute("font-size",9.5*k);t.style.strokeWidth=2.6*k+"px";t.style.opacity=N>1200000&&N<5000000?1:0});
+    const pad=4*k;
+    cities.forEach(({c,d,t})=>{const vis2=c.n!=="Bhilai"||N<2500000;d.style.opacity=t.style.opacity=vis2?1:0;d.setAttribute("r",(c.cg?3.2:2.2)*k);d.setAttribute("stroke-width",1.2*k);const Lf=c.n==="Bhilai";t.setAttribute("x",c.xy[0]+(Lf?-6:6)*k);t.setAttribute("y",c.xy[1]+(Lf?11:-5)*k);t.setAttribute("text-anchor",Lf?"end":"start");t.setAttribute("font-size",(c.cg?12.5:10)*k);t.style.strokeWidth=3.2*k+"px";fitLabel(t,v,pad)});
+    // a tehsil that shares its name with a city on the map drops its label (conflict rule: the city wins)
+    tlab.forEach((t,i)=>{const q=G.carto.tehN[i];t.setAttribute("y",q.xy[1]);t.setAttribute("font-size",10*k);t.setAttribute("letter-spacing",1.6*k);t.style.strokeWidth=3*k+"px";t.style.opacity=on.teh&&N>=TH.pts&&N<=1200000&&!cityUp.has(q.n.toUpperCase())?1:0;fitLabel(t,v,pad)});
+    dlab.forEach(t=>{t.setAttribute("font-size",9.5*k);t.style.strokeWidth=2.6*k+"px";t.style.opacity=N>1200000&&N<5000000&&!cityUp.has(t.textContent.toUpperCase())?1:0;fitLabel(t,v,pad)});
     rlab.forEach(r=>{const a=r.p.getPointAtLength(r.len*.42),bb=r.p.getPointAtLength(r.len*.42+6);let ang=Math.atan2(bb.y-a.y,bb.x-a.x)*180/Math.PI;if(ang>90)ang-=180;if(ang<-90)ang+=180;
       r.t.setAttribute("x",a.x);r.t.setAttribute("y",a.y-3*k);r.t.setAttribute("transform",`rotate(${ang.toFixed(1)} ${a.x} ${a.y})`);r.t.setAttribute("font-size",10.5*k);r.t.style.strokeWidth=3*k+"px";r.t.style.opacity=N>150000?1:0});
     if(L.slab){L.slab.setAttribute("font-size",9.5*k);L.slab.setAttribute("letter-spacing",2*k);L.slab.style.opacity=N>1500000?1:0}
-    // scale readout rounded the way print maps are labelled
+    // scale, in plain words first; the ratio is rounded the way print maps are labelled
     const nice=[5000,10000,25000,50000,100000,250000,500000,1000000,2000000,4000000,8000000];const nr=nice.reduce((a2,b2)=>Math.abs(Math.log(b2/N))<Math.abs(Math.log(a2/N))?b2:a2);
     $("#scaleRead").textContent="1:"+fmt(Math.abs(N-nr)/nr<.12?nr:Math.round(N/1000)*1000);
+    const cmKm=N/1e5;$("#scaleCm").textContent="1 cm on screen ≈ "+(cmKm>=10?fmt(Math.round(cmKm/5)*5)+" km":cmKm>=1?cmKm.toFixed(cmKm<3?1:0)+" km":fmt(Math.round(cmKm*1000/10)*10)+" m");
     const kmPerPx=v.w/pxW()/G.kmPx,want=80*kmPerPx,steps=[.1,.2,.5,1,2,5,10,20,50,100,200],d=steps.find(n=>n>=want*.6)||200;
     $("#sbT").textContent=d<1?d*1000+" m":d+" km";$("#sbI").style.width=(d/kmPerPx).toFixed(0)+"px";
-    // what this view asks the server for
-    let n=27+G.ctx.rivers.length;if(on.rail)n+=61;if(on.teh)n+=N>1e6?146:G.carto.tehsil.length;
-    if(on.vil)n+=N>TH.vil?20000:G.carto.vill_c.filter(p=>inView(p,v)).length*2;
-    if(on.pts)n+=N>TH.vil?G.clutter.length*20:[...G.carto.aw,...G.carto.gp].filter(p=>inView(p,v)).length;
-    $("#featN").textContent=(!lim&&N>TH.vil?"≈ ":"")+fmt(n);
+    // load meter: smart zoom against drawing everything, for this exact view
+    const nOn=count(true,N,v),nOff=count(false,N,v);
+    [[$("#mOn"),nOn,lim],[$("#mOff"),nOff,!lim]].forEach(([r,n,cur])=>{r.classList.toggle("cur",cur);r.querySelector("b").style.width=Math.max(1.5,n/nOff*100)+"%";r.querySelector(".n").textContent=(n>=10000?"≈ ":"")+fmt(n)});
+    const saved=1-nOn/nOff,note=$("#mNote");
+    note.classList.toggle("warn",!lim&&saved>.5);
+    note.textContent=saved<.05?"Close up, every layer is useful, so both load about the same.":lim?`Smart zoom loads ${saved>.99?"over 99":Math.round(saved*100)}% less here. Switch it off to see the difference.`:`Everything is drawing: ${fmt(nOff)} features at once. Slow to load and hard to read.`;
+    // off the edge of the illustrative sample, say so instead of showing an empty map
+    const empty=lim&&N<=TH.vil&&!G.carto.vill_c.some(p=>inView(p,v))&&![...G.carto.aw,...G.carto.gp].some(p=>inView(p,v));
+    $("#caNo").hidden=!empty;
     $("#zIn").disabled=v.w<=minW()*1.01;$("#zOut").disabled=v.w>=FULL*.99}
   const clampV=v=>{const w=clamp(v.w,minW(),FULL),m=w/2;return{w,cx:clamp(v.cx,Math.min(40+m*.2,G.W/2),Math.max(G.W-40-m*.2,G.W/2)),cy:clamp(v.cy,Math.min(24+m*.2,G.H/2),Math.max(G.H-24-m*.2,G.H/2))}};
   let stop=null;
@@ -1624,16 +1690,22 @@ INIT.cartography=()=>{
   S.addEventListener("keydown",e=>{const m={"+":.5,"=":.5,"-":2,"_":2}[e.key];if(m){e.preventDefault();zoomAt(V.cx,V.cy,m,true);return}
     const d={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];if(d){e.preventDefault();fly({...V,cx:V.cx+d[0]*V.w*.2,cy:V.cy+d[1]*V.w*.2},220)}});
   $("#zIn").onclick=()=>zoomAt(V.cx,V.cy,.5,true);$("#zOut").onclick=()=>zoomAt(V.cx,V.cy,2,true);$("#zHome").onclick=()=>fly(HOME,700);
-  $("#limTog").onclick=()=>{lim=!lim;$("#limTog").setAttribute("aria-checked",String(lim));$("#limTxt").textContent=lim?"Scale limits on":"Scale limits off";render()};
+  // zoom ladder: named stops, each inside the illustrative sample area
+  // street stop: the GP node with the most Anganwadi centres around it, so every point symbol is on screen
+  const sw=()=>wFor(20000),near=(p,q,r)=>Math.abs(p[0]-q[0])<r&&Math.abs(p[1]-q[1])<r;
+  const target=G.carto.aw.length?G.carto.aw.map(a=>[a,G.carto.aw.filter(b=>near(a,b,sw()*.4)).length+G.carto.gp.filter(b=>near(a,b,sw()*.4)).length]).sort((x,y)=>y[1]-x[1])[0][0]:HUB;
+  const bc=[G.carto.bbox[0]+G.carto.bbox[2]/2,G.carto.bbox[1]+G.carto.bbox[3]/2];
+  const stopAt=i=>i===0?HOME:i===1?{cx:bc[0],cy:bc[1],w:wFor(400000)}:i===2?{cx:(HUB[0]+target[0])/2,cy:(HUB[1]+target[1])/2,w:wFor(50000)}:{cx:target[0],cy:target[1],w:sw()};
+  ladder.forEach((b2,i)=>b2.onclick=()=>fly(stopAt(i),900));
+  $("#caGo").onclick=()=>fly(stopAt(Math.max(2,levelOf(denom(V)))),900);
+  $("#limTog").onclick=()=>{lim=!lim;$("#limTog").setAttribute("aria-checked",String(lim));$("#limTxt").textContent=lim?"on":"off";render()};
   // district name on hover (only when not dragging)
   const hot=el("g",{},S);G.districts.forEach(d=>{const p=el("path",{d:d.d,fill:"transparent"},hot);p.addEventListener("pointermove",e=>{if(!ptrs.size)showTip(e,`<b>${d.n}</b> district`)});p.addEventListener("pointerleave",hideTip)});
   S.insertBefore(hot,gLab);S.addEventListener("pointerdown",hideTip);
   addEventListener("resize",render);render();
-  // demonstration: fly from the state to a GP village and back, stopping at each layer threshold
-  const target=G.carto.gp[3]||HUB;
-  const STOPS=[HOME,{cx:G.carto.bbox[0]+G.carto.bbox[2]/2,cy:G.carto.bbox[1]+G.carto.bbox[3]/2,w:150},{cx:HUB[0],cy:HUB[1],w:48},{cx:(HUB[0]+target[0])/2,cy:(HUB[1]+target[1])/2,w:14},{cx:target[0],cy:target[1],w:5},{cx:target[0],cy:target[1],w:1.6}];
+  // tour: state, district, village, street and back
   let si=0,dir=1;
-  Auto("cartography",2300,()=>{let n=si+dir;if(n>=STOPS.length||n<0){dir=-dir;n=si+dir}si=n;fly(STOPS[si],1100)},{host:"#cartography .stage",first:false,hint:"#caHint",hold:true});
+  Auto("cartography",2600,()=>{let n=si+dir;if(n>=LEVELS.length||n<0){dir=-dir;n=si+dir}si=n;fly(stopAt(si),1100)},{host:"#cartography .stage",first:false,hint:"#caHint",hold:true});
 };
 
 addEventListener("hashchange",route);route();
