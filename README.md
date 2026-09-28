@@ -46,3 +46,6 @@ SECTION FIGURES (v5 · hand-annotated, stepped)
   Phones (< 700 px): drawing on top, numbered notes below keyed to numbered markers, sticky step bar.
   Options: &step=N opens a step directly (no autoplay); &auto=off stops autoplay.
   Source: source/sketch.js (inlined by assemble4.py)
+  New in v5.1: #provenance, #inuse, #update (the last three sections of the story), hand-drawn
+  scale bars on map figures, a note under each figure saying what is real and what is illustrative,
+  and a "next:" cue on the last step.

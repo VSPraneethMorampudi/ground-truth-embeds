@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-build="1790581430">
+<html lang="en" data-build="1790588600">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -328,6 +328,11 @@ body.framed .sketch:not(.port) svg.sk{max-height:calc(100vh / var(--z,1) - 64px)
 .skb:hover{border-color:var(--n600)}
 .skb:disabled{opacity:.35;cursor:default}
 .skcur{display:none}
+.skfoot{display:flex;justify-content:center;align-items:center;gap:18px;flex-wrap:wrap;font-size:12.5px;color:var(--n600);text-align:center;min-height:30px}
+.skfoot .nx{font-family:"Caveat",cursive;font-size:24px;color:var(--n800);display:inline-flex;gap:4px;align-items:center;opacity:0;transition:opacity .4s}
+.skfoot.end .nx{opacity:1}
+.sketch.port .skfoot{flex-direction:column;gap:2px}
+
 .sketch.port .sknav{position:sticky;bottom:0;background:linear-gradient(rgba(244,247,241,0),var(--page) 30%);padding:10px 0 6px;justify-content:space-between}
 .sketch.port .sknav ol{display:none}
 .sketch.port .skcur{display:block;flex:1;text-align:center;font-size:25px;color:var(--n900)}
@@ -432,6 +437,9 @@ body.framed .sketch.port{min-height:0;justify-content:flex-start}
 <section class="view sketch" id="projection" aria-labelledby="projection-h"><div class="hd"><h1 id="projection-h">How long is a kilometre here?</h1></div><svg class="sk" role="img" aria-labelledby="projection-h"></svg><nav class="sknav" aria-label="Steps"></nav><p class="sr sklive" aria-live="polite"></p></section>
 <section class="view sketch" id="cartography" aria-labelledby="cartography-h"><div class="hd"><h1 id="cartography-h">Zoom in and the map adds detail</h1></div><svg class="sk" role="img" aria-labelledby="cartography-h"></svg><nav class="sknav" aria-label="Steps"></nav><p class="sr sklive" aria-live="polite"></p></section>
 
+<section class="view sketch" id="provenance" aria-labelledby="provenance-h"><div class="hd"><h1 id="provenance-h">Where a layer came from, and who may use it</h1></div><svg class="sk" role="img" aria-labelledby="provenance-h"></svg><nav class="sknav" aria-label="Steps"></nav><p class="sr sklive" aria-live="polite"></p></section>
+<section class="view sketch" id="inuse" aria-labelledby="inuse-h"><div class="hd"><h1 id="inuse-h">One question, two departments</h1></div><svg class="sk" role="img" aria-labelledby="inuse-h"></svg><nav class="sknav" aria-label="Steps"></nav><p class="sr sklive" aria-live="polite"></p></section>
+<section class="view sketch" id="update" aria-labelledby="update-h"><div class="hd"><h1 id="update-h">How the map stays current</h1></div><svg class="sk" role="img" aria-labelledby="update-h"></svg><nav class="sknav" aria-label="Steps"></nav><p class="sr sklive" aria-live="polite"></p></section>
 <!-- ============================================================ STORAGE -->
 <section class="view" id="storage" aria-labelledby="st-h">
   <div class="hd"><h1 id="st-h">One spot, every layer</h1></div>
@@ -487,7 +495,7 @@ function xy2ll(x,y){let lon=82.3,lat=21;for(let k=0;k<12;k++){const p=ll2xy(lon,
   const a=(q[0]-p[0])/.01,b=(r[0]-p[0])/.01,c=(q[1]-p[1])/.01,d=(r[1]-p[1])/.01,det=a*d-b*c;const dx=x-p[0],dy=y-p[1];lon+=(d*dx-b*dy)/det;lat+=(-c*dx+a*dy)/det}return[lon,lat]}
 
 /* ---------------- router ---------------- */
-const VIEWS={flow:"The intro told top to bottom; arrows draw as the reader scrolls",overview:"The base map and the departments that build on it",intake:"Drag a pin; the four intake checks run live",conversion:"Drag to fix a duplicate, a dangle and a sliver",projection:"Measure a kilometre anywhere in four coordinate systems",storage:"Point at the stack; every layer answers for the same spot",publication:"Change one record; every consumer updates",cartography:"Zoom from state to street; each layer switches on when it becomes useful"};
+const VIEWS={flow:"The intro told top to bottom; arrows draw as the reader scrolls",overview:"The base map and the departments that build on it",intake:"Drag a pin; the four intake checks run live",conversion:"Drag to fix a duplicate, a dangle and a sliver",projection:"Measure a kilometre anywhere in four coordinate systems",storage:"Point at the stack; every layer answers for the same spot",publication:"Change one record; every consumer updates",cartography:"Zoom from state to street; each layer switches on when it becomes useful",provenance:"The metadata card, lineage, and three tiers of access",inuse:"An example query across two departments' layers",update:"Schedules, boundary changes, revisions and what follows"};
 const OPT={};
 function parse(){const p=location.hash.slice(1).split("&");const v=p.shift();for(const k in OPT)delete OPT[k];p.forEach(x=>{const[a,b]=x.split("=");OPT[a]=b===undefined?true:decodeURIComponent(b)});return v}
 const INIT={},inited={};
@@ -1136,6 +1144,7 @@ function S0(S){const r=S.getBoundingClientRect();return Math.min(r.width/600,r.h
 const SPEC={};
 function Sketch(id,spec){
   const V=$("#"+id),S=V.querySelector("svg.sk"),nav=V.querySelector(".sknav"),live=V.querySelector(".sklive");
+  const foot=document.createElement("p");foot.className="skfoot";foot.innerHTML=`<span>${spec.foot||""}</span>`+(spec.next?`<span class="nx" aria-hidden="true">next: ${spec.next}<svg width="20" height="26" viewBox="0 0 24 30" style="overflow:visible"><path d="M8 2 C 14 9, 4 16, 12 26 M6 20 L12 27 L16 19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`:"");nav.after(foot);
   const N=spec.steps.length;
   let mode=null,api=null,cur=-1,run=0,cancels=[],auto=false,autoT=null,seed=7,uid=0,hinted=false;
   const R=()=>(seed=seed*16807%2147483647)/2147483647;
@@ -1147,7 +1156,7 @@ function Sketch(id,spec){
   const btns=[...nav.querySelectorAll("ol button")],prev=nav.querySelector(".prev"),next=nav.querySelector(".next"),curL=nav.querySelector(".skcur");
   function updNav(){btns.forEach((b,i)=>{if(i===cur)b.setAttribute("aria-current","step");else b.removeAttribute("aria-current")});
     prev.disabled=cur<=0;const last=cur>=N-1;next.textContent=last?"↺":"→";next.setAttribute("aria-label",last?"Start again":"Next step");
-    curL.innerHTML=cur<0?"":`<b>${cur+1}</b> of ${N} · ${spec.steps[cur].nav}`}
+    curL.innerHTML=cur<0?"":`<b>${cur+1}</b> of ${N} · ${spec.steps[cur].nav}`;foot.classList.toggle("end",last)}
   const stop=()=>{auto=false;clearTimeout(autoT)};
   btns.forEach((b,i)=>b.onclick=()=>{stop();go(i)});
   prev.onclick=()=>{stop();if(cur>0)go(cur-1)};
@@ -1200,6 +1209,10 @@ function Sketch(id,spec){
           set(v){L.v=v;const s=w/v.w;g.setAttribute("transform",`translate(${ox+w/2-v.cx*s} ${oy+h/2-v.cy*s}) scale(${s})`);fns.forEach(f=>f(1/s))},
           fly(to,ms=900){const f={...L.v};return A.tw(ms,t=>L.set({w:Math.exp(lerp(Math.log(f.w),Math.log(to.w),t)),cx:lerp(f.cx,to.cx,t),cy:lerp(f.cy,to.cy,t)}))},
           on(f){fns.push(f);if(L.v)f(L.v.w/w)},
+          scalebar(kmPer=G.kmPx){const sg=el("g",{class:"skbar"},outer),ln=el("path",{fill:"none",stroke:"var(--n800)","stroke-width":2,"stroke-linecap":"round"},sg),lb=A.hand(sg,ox+14,oy+h-26,"",{size:21});
+            el("rect",{x:ox+8,y:oy+h-46,width:10,height:10,fill:"none"},sg);
+            L.on(u=>{const kmPerIll=u/kmPer,want=90*kmPerIll,steps=[.1,.2,.5,1,2,5,10,20,50,100,200],d=steps.find(x=>x>=want*.7)||200,len=d/kmPerIll,x0=ox+14,y0=oy+h-16;
+              ln.setAttribute("d",`M${x0},${y0-6} L${x0},${y0} L${x0+len},${y0+.6} L${x0+len},${y0-6}`);lb.textContent=d<1?d*1000+" m":d+" km"})},
           ill(p){const s=w/L.v.w;return[ox+w/2+(p[0]-L.v.cx)*s,oy+h/2+(p[1]-L.v.cy)*s]},
           // a symbol that keeps its on-screen size at any zoom
           mark(p,drawFn){const mg=el("g",{},g);drawFn(mg);const m={g:mg,p:p.slice(),u:1,upd(){mg.setAttribute("transform",`translate(${m.p[0]} ${m.p[1]}) scale(${m.u})`)},
@@ -1212,8 +1225,9 @@ function Sketch(id,spec){
   const TYPE={land:{ts:33,fs:25.5,lh:29,gap:10},port:{ts:42,fs:34,lh:38,gap:16}};
   const SLOT={l0:[40,74,"s"],l1:[40,392,"s"],r0:[1240,74,"e"],r1:[1240,392,"e"]};
   function wrap(b,max){const w=b.join(" ").split(/\s+/),out=[];let l="";w.forEach(x=>{if((l+" "+x).trim().length>max&&l){out.push(l);l=x}else l=(l+" "+x).trim()});if(l)out.push(l);return out}
-  const lines=n=>mode==="port"?wrap(n.b,n.to?33:36):n.b;
-  function noteH(n,T){return(n.t?T.ts+6:0)+lines(n).length*T.lh}
+  const TX=n=>typeof n.t==="function"?n.t(api):n.t,BX=n=>typeof n.b==="function"?n.b(api):n.b;
+  const lines=n=>mode==="port"?wrap(BX(n),n.to?33:36):BX(n);
+  function noteH(n,T){return(n.t?T.ts+6:0)+(typeof n.b==="function"?n.bmax||4:lines(n).length)*T.lh}
   function portNotesY(){return api.box[1]+api.box[3]+40}
   function portHeight(){const T=TYPE.port;let mx=0;spec.steps.forEach(s=>{let h=0;s.notes.forEach(n=>h+=noteH(n,T)+T.gap+16);mx=Math.max(mx,h)});return Math.ceil(portNotesY()+mx+6)}
   function arrow(g,a,b,bend){
@@ -1233,8 +1247,8 @@ function Sketch(id,spec){
       const g=el("g",{class:"note"},api.notesG),lines=[];let x,y,ta;
       if(land){[x,y]=SLOT[n.at];ta=SLOT[n.at][2]==="e"?"end":"start";if(n.dy)y+=n.dy}else{x=n.to?64:24;y=py+T.ts*.8;ta="start"}
       let yy=y;
-      if(n.t){lines.push(txt({x,y:yy,class:"h t","font-size":T.ts,"text-anchor":ta,style:`fill:${n.c||"var(--n950)"}`},g,n.t));yy+=T.ts*.35+T.lh}
-      (mode==="port"?wrap(n.b,n.to?33:36):n.b).forEach(t=>{lines.push(txt({x,y:yy,class:"h","font-size":T.fs,"text-anchor":ta},g,t));yy+=T.lh});
+      if(n.t){lines.push(txt({x,y:yy,class:"h t","font-size":T.ts,"text-anchor":ta,style:`fill:${n.c||"var(--n950)"}`},g,TX(n)));yy+=T.ts*.35+T.lh}
+      (mode==="port"?wrap(BX(n),n.to?33:36):BX(n)).forEach(t=>{lines.push(txt({x,y:yy,class:"h","font-size":T.fs,"text-anchor":ta},g,t));yy+=T.lh});
       const cp=el("clipPath",{id:id+"-c"+(uid++)},api.defs);
       const rects=lines.map(e=>{const b=e.getBBox(),r=el("rect",{x:b.x-8,y:b.y-8,width:0,height:b.height+16},cp);r.dataset.w=b.width+18;return r});
       g.setAttribute("clip-path",`url(#${cp.id})`);
@@ -1257,10 +1271,10 @@ function Sketch(id,spec){
     const from=cur;cur=i;updNav();api.fast=!!instant||REDUCE;
     const old=[...api.notesG.childNodes];
     if(api.fast)old.forEach(n=>n.remove());else{old.forEach(n=>{n.style.transition="opacity .18s";n.style.opacity=0});setTimeout(()=>old.forEach(n=>n.remove()),200)}
-    const s=spec.steps[i];live.textContent=`Step ${i+1} of ${N}. `+s.notes.map(n=>(n.t?n.t+": ":"")+n.b.join(" ")).join(" ");
+    const s=spec.steps[i];const liveTxt=()=>`Step ${i+1} of ${N}. `+s.notes.map(n=>(n.t?TX(n)+": ":"")+BX(n).join(" ")).join(" ");
     await (s.go(api,from)||null);if(!alive())return;
     await api.wait(80);if(!alive())return;
-    const ns=layoutNotes(s.notes);
+    live.textContent=liveTxt();const ns=layoutNotes(s.notes);
     if(api.fast)ns.forEach(reveal);
     else for(const o of ns){
       for(const r of o.rects){const w=+r.dataset.w;await api.tw(Math.min(360,w*1.2),t=>r.setAttribute("width",w*t));if(!alive())return}
@@ -1297,10 +1311,10 @@ const WVIEW={cx:392,cy:160,w:194};
 const SVIEW={cx:260,cy:320,w:392};
 
 /* ============================================================ INTAKE */
-SPEC.intake={W:380,H:620,portH:560,steps:[],draw(A){
+SPEC.intake={W:380,H:620,portH:560,next:"Conversion",foot:"District boundaries are real. The record and its errors are illustrative.",steps:[],draw(A){
   const st=A.st;
   st.sS=el("g",{},A.ill);st.wS=el("g",{},A.ill);st.wS.style.opacity=0;
-  st.sL=A.lens(st.sS,{view:SVIEW});
+  st.sL=A.lens(st.sS,{view:SVIEW});st.sL.scalebar();
   st.vil=el("g",{opacity:0},st.sL.g);G.carto.village.forEach((d,i)=>el("path",{d,fill:i%3?"#faf8f4":"#f4f0ea",stroke:"#d6cfc4","stroke-width":.8,"vector-effect":"non-scaling-stroke"},st.vil));
   st.rd=el("path",{d:G.carto.roads,fill:"none",stroke:"#d5ccbf","stroke-width":3,"stroke-linecap":"round","vector-effect":"non-scaling-stroke",opacity:0},st.sL.g);
   st.sL.g.insertBefore(A.state(st.sL.g),st.sL.g.firstChild);
@@ -1335,7 +1349,7 @@ SPEC.intake={W:380,H:620,portH:560,steps:[],draw(A){
          {at:"r0",t:"Nothing is fixed quietly",b:["each rejected row goes back","to its department with","the reason beside it"]}]}]}
 
 /* ============================================================ CONVERSION */
-SPEC.conversion={W:540,H:540,portH:520,draw(A){const s=A.st,g=el("g",{},A.ill);
+SPEC.conversion={W:540,H:540,portH:520,next:"Projection",foot:"An illustrative sheet: centres, one fibre route and two leases.",draw(A){const s=A.st,g=el("g",{},A.ill);
   el("rect",{x:3,y:7,width:540,height:540,rx:14,fill:"rgba(60,50,40,.13)",filter:`url(#conversion-soft)`},g);
   el("rect",{x:0,y:0,width:540,height:540,rx:14,fill:"#fbfaf8",stroke:"#d9d4cc"},g);
   s.all=el("g",{},g);const bg=el("g",{fill:"none",stroke:"#e4ddd2","stroke-width":7,"stroke-linecap":"round"},s.all);
@@ -1386,9 +1400,9 @@ SPEC.conversion={W:540,H:540,portH:520,draw(A){const s=A.st,g=el("g",{},A.ill);
          {at:"r1",dy:40,t:"Kept three ways",b:["shapefile to exchange,","GeoJSON for the web,","PostGIS as the master"]}]}]};
 
 /* ============================================================ PROJECTION */
-SPEC.projection={W:380,H:620,portH:560,draw(A){const s=A.st;
+SPEC.projection={W:380,H:620,portH:560,next:"Storage",foot:"Colour shows scale error per kilometre, worked out for every 0.1° cell of the state.",draw(A){const s=A.st;
   s.sS=el("g",{},A.ill);s.wS=el("g",{},A.ill);s.wS.style.opacity=0;
-  s.L=A.lens(s.sS,{view:SVIEW});const g=s.L.g;
+  s.L=A.lens(s.sS,{view:SVIEW});s.L.scalebar();const g=s.L.g;
   el("path",{d:G.state,fill:"rgba(60,50,40,.13)",transform:"translate(4 7)",filter:"url(#projection-soft)"},g);
   el("path",{d:G.state,fill:"#fbfaf8"},g);
   const cid="projection-st";const cp=el("clipPath",{id:cid},A.defs);el("path",{d:G.state},cp);
@@ -1513,8 +1527,8 @@ SPEC.publication={W:600,H:640,portH:600,draw(A){const s=A.st,g=el("g",{},A.ill);
          {at:"r0",t:"Already out of date",c:"var(--red-700)",b:["two screens still show","the old status"],to:()=>[450,572],ring:40}]}]}
 
 /* ============================================================ CARTOGRAPHY */
-SPEC.cartography={W:540,H:540,portH:540,draw(A){const s=A.st;
-  const L=s.L=A.lens(A.ill,{paper:"#eceae5",view:{cx:258,cy:318,w:600}});const S0=L.g;
+SPEC.cartography={W:540,H:540,portH:540,next:"Provenance and access",foot:"Districts, rivers, roads and rail are real. Villages, centres and fibre are illustrative, drawn around Raipur.",draw(A){const s=A.st;
+  const L=s.L=A.lens(A.ill,{paper:"#eceae5",view:{cx:258,cy:318,w:600}});L.scalebar();const S0=L.g;
   const C=drawContext(S0,{labels:true,rivers:true,rail:true,roads:true,cities:false,riverLabels:false});s.C=C;
   const under=C.dist.parentNode;
   s.vill=el("g",{opacity:0},S0);G.carto.village.forEach((d,i)=>el("path",{d,fill:i%3===0?"#faf8f4":i%3===1?"#f6f3ee":"#fdfcfa",stroke:"#d6cfc4","stroke-width":.8,"vector-effect":"non-scaling-stroke"},s.vill));
@@ -1565,7 +1579,140 @@ SPEC.cartography={W:540,H:540,portH:540,draw(A){const s=A.st;
   notes:[{at:"l0",t:"Without scale limits",c:"var(--red-700)",b:["the whole-state view would","draw every village and","every asset at once"],to:A=>at(A,[300,200])},
          {at:"r0",t:"Slow and unreadable",b:["which is why each layer","waits for its zoom level"]}]}]}
 
+
+/* ============================================================ PROVENANCE AND ACCESS */
+const ICON_D={
+  eye:g=>{el("path",{d:"M-20,0 C-11,-13 11,-13 20,0 C11,13 -11,13 -20,0Z",fill:"#fff",stroke:"var(--n800)","stroke-width":2.2,"stroke-linejoin":"round"},g);el("circle",{r:5.5,fill:"var(--n800)"},g)},
+  query:g=>{el("circle",{cx:-4,cy:-4,r:11,fill:"#fff",stroke:"var(--n800)","stroke-width":2.4},g);el("path",{d:"M4,4 L15,15",stroke:"var(--n800)","stroke-width":3.2,"stroke-linecap":"round"},g)},
+  down:g=>{el("path",{d:"M0,-16 L0,7 M-9,-2 L0,8 L9,-2 M-14,15 L14,15",fill:"none",stroke:"var(--n800)","stroke-width":2.6,"stroke-linecap":"round","stroke-linejoin":"round"},g)},
+  edit:g=>{el("path",{d:"M-13,13 L-9,3 L7,-13 L13,-7 L-3,9 Z M-9,3 L-3,9",fill:"#fff",stroke:"var(--n800)","stroke-width":2.2,"stroke-linejoin":"round"},g)},
+  lock:g=>{el("path",{d:"M-8,-3 L-8,-10 C-8,-19 8,-19 8,-10 L8,-3",fill:"none",stroke:"var(--n800)","stroke-width":2.4},g);el("rect",{x:-12,y:-3,width:24,height:19,rx:3,fill:"var(--n800)"},g)},
+  book:g=>{el("path",{d:"M-15,-14 L-2,-11 L-2,15 L-15,12Z M15,-14 L2,-11 L2,15 L15,12Z",fill:"#fff",stroke:"var(--n800)","stroke-width":2,"stroke-linejoin":"round"},g);[-5,0,5].forEach(y=>el("path",{d:`M-12,${y-2} L-5,${y} M5,${y} L12,${y-2}`,stroke:"var(--n400)","stroke-width":1.4},g))}};
+const icon=(g,k,x,y,sc=1)=>{const i=el("g",{transform:`translate(${x} ${y}) scale(${sc})`},g);ICON_D[k](i);return i};
+const sheet=(A,g,x,y,sc,o={})=>{const t=el("g",{transform:`translate(${x-79*sc} ${y-24*sc}) scale(${sc})`},g);
+  el("path",{d:G.state,fill:"rgba(60,50,40,.12)",transform:"translate(5 9)",filter:`url(#${o.id}-soft)`},t);el("path",{d:G.state,fill:o.fill||"#fbfaf8",stroke:"#8f887e","stroke-width":1.6,"vector-effect":"non-scaling-stroke"},t);
+  if(o.aw)G.stack.aw.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:4.5,fill:"var(--dv-blue-500)"},t));
+  if(o.dist){const dg=el("g",{fill:"none",stroke:"#c9c2b8","stroke-width":1,"vector-effect":"non-scaling-stroke"},t);G.districts.forEach(d=>el("path",{d:d.d,"vector-effect":"non-scaling-stroke"},dg))}return t};
+SPEC.provenance={W:560,H:560,portH:540,next:"In use",foot:"The card shows the fields every layer carries. Names and layers are examples.",
+ draw(A){const s=A.st;
+  // scene 1 and 2: the layer and the card tied to it
+  s.card=el("g",{},A.ill);
+  sheet(A,s.card,22,90,.48,{id:"provenance",aw:1,dist:1});
+  el("path",{d:"M160,150 C200,120 220,150 262,96",fill:"none",stroke:"var(--n600)","stroke-width":1.8,"stroke-linecap":"round"},s.card);
+  A.rough(s.card,246,40,300,480,{fill:"#fffdf7",stroke:"var(--n700)"});el("circle",{cx:268,cy:64,r:7,fill:"var(--page)",stroke:"var(--n600)","stroke-width":1.6},s.card);
+  A.hand(s.card,286,72,"wcd_anganwadi_pt_10k",{size:25,bold:1});
+  const F=[["Custodian","WCD, nodal officer"],["Captured","date of survey"],["Updated","how often"],["Position","accuracy in metres"],["Attributes","how they were checked"],["Source scale","1:10,000"],["Licence","who may reuse it"],["Lineage","what was done, by whom, when"]];
+  s.rows=F.map(([k,v],i)=>{const y=124+i*48,r=el("g",{},s.card);A.hand(r,266,y,k,{size:23,bold:1,fill:"var(--n900)"});A.hand(r,388,y,v,{size:21,fill:"var(--n600)"});
+    el("path",{d:`M266,${y+12} L528,${y+11}`,stroke:"#ece6da","stroke-width":1},r);return r});
+  s.lin=el("g",{opacity:0},s.card);
+  const E=[["Received","from WCD, on the template"],["Checked","four intake tests passed"],["Converted","snapped to its village"],["Published","as a feature service"]];
+  el("path",{d:"M282,150 L282,420",stroke:"var(--n400)","stroke-width":2,"stroke-dasharray":"4 5"},s.lin);
+  E.forEach(([k,v],i)=>{const y=150+i*90;el("circle",{cx:282,cy:y,r:9,fill:i===3?"var(--green-500)":"#fff",stroke:"var(--n800)","stroke-width":2.2},s.lin);
+    A.hand(s.lin,302,y+7,k,{size:26,bold:1});A.hand(s.lin,302,y+34,v,{size:21,fill:"var(--n700)"});A.hand(s.lin,302,y+58,"by whom · when",{size:18,fill:"var(--n500)"})});
+  // scene 3 and 4: three rings of access
+  s.acc=el("g",{opacity:0},A.ill);const cx=280,cy=250;
+  [[250,215,"#f4f7f1","Public"],[170,146,"#eef2ea","Departmental"],[90,78,"#e6ebe2","Restricted"]].forEach(([rx,ry,f,n],i)=>{
+    el("ellipse",{cx,cy,rx,ry,fill:f,stroke:"var(--n600)","stroke-width":1.8,"stroke-dasharray":i?"":"6 5"},s.acc);A.hand(s.acc,cx,cy-ry+30,n,{size:24,bold:1,anchor:"middle",fill:"var(--n800)"})});
+  sheet(A,s.acc,104,214,.12,{id:"provenance"});sheet(A,s.acc,440,200,.13,{id:"provenance",aw:1});sheet(A,s.acc,150,250,.12,{id:"provenance",aw:1});sheet(A,s.acc,380,250,.12,{id:"provenance",dist:1});sheet(A,s.acc,262,232,.11,{id:"provenance",fill:"#f6e3d6"});
+  s.gate=el("g",{},s.acc);icon(s.gate,"lock",cx-250,cy+6,1.1);A.hand(s.gate,cx-250,cy+46,"state SSO",{size:22,anchor:"middle"});
+  s.keys=el("g",{opacity:0},A.ill);[["eye","view"],["query","query"],["down","download"],["edit","edit"]].forEach(([k,n],i)=>{const x=95+i*123;icon(s.keys,k,x,500,1.1);A.hand(s.keys,x,540,n,{size:23,anchor:"middle"})});
+  s.log=el("g",{opacity:0},A.ill);icon(s.log,"book",cx+48,cy+30,1.1);A.hand(s.log,cx+66,cy+38,"log",{size:22})},
+ steps:[
+ {nav:"The card",go:async A=>{const s=A.st;await Promise.all([A.op(s.acc,0,300),A.op([s.keys,s.log],0,200)]);await A.op(s.card,1,400);await Promise.all([A.op(s.lin,0,250),A.op(s.rows,1,300)])},
+  notes:[{at:"l0",t:"Every layer carries a card",b:["an ISO 19115 metadata record:","who owns it, when it was","captured, how accurate it is"],to:()=>[160,150]},
+         {at:"r0",t:"A name to call",b:["the custodian department","and its nodal officer"],to:()=>[536,120]}]},
+ {nav:"Lineage",go:async A=>{const s=A.st;await A.op(s.card,1,300);await A.op(s.rows,.0,350);await A.op(s.lin,1,500)},
+  notes:[{at:"l0",t:"Lineage",b:["what was done to the data,","by whom, and when. The field","most often left out"],to:()=>[282,150]},
+         {at:"r0",dy:220,t:"Two years later",b:["a layer disagrees with a","register. With lineage it takes","an hour; without it, a meeting"]}]},
+ {nav:"Three tiers",go:async A=>{const s=A.st;await A.op(s.card,0,350);A.op([s.keys,s.log],0,200);await A.op(s.acc,1,500)},
+  notes:[{at:"l0",t:"Three tiers",b:["public, departmental and","restricted layers"],to:()=>[100,120]},
+         {at:"r0",t:"Checked at the service",b:["state single sign-on decides","who gets in, not the app","showing the map"],to:()=>[30,248],ring:22}]},
+ {nav:"Permissions",go:async A=>{const s=A.st;await A.op(s.card,0,200);await A.op(s.acc,1,300);await A.op(s.keys,1,500);await A.op(s.log,1,400)},
+  notes:[{at:"l0",t:"Four separate permissions",b:["view, query, download, edit.","Seeing a layer doesn't mean","you can change it"],to:()=>[95,490]},
+         {at:"r0",t:"Restricted means logged",b:["every look at a restricted","layer is written down"],to:()=>[328,280],ring:20}]}]};
+
+/* ============================================================ IN USE */
+{const polys=G.stack.mines.split("M").filter(Boolean).map(p=>p.replace(/Z/g,"").split("L").map(v=>v.split(",").map(Number)));
+ const dseg=(p,a,b)=>{const dx=b[0]-a[0],dy=b[1]-a[1],t=Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/(dx*dx+dy*dy)));return Math.hypot(p[0]-a[0]-t*dx,p[1]-a[1]-t*dy)};
+ const inside=(p,P)=>{let c=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const a=P[i],b=P[j];if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])c=!c}return c};
+ const dist=(p,P)=>inside(p,P)?0:Math.min(...P.map((a,i)=>dseg(p,a,P[(i+1)%P.length])));
+ const KM=5,R=KM*G.kmPx,hits=G.stack.aw.filter(p=>polys.some(P=>dist(p,P)<=R));
+ SPEC.inuse={W:380,H:620,portH:560,next:"Update cycle",foot:"An illustrative query on sample leases and centres. The story will name a real, documented one.",
+ draw(A){const s=A.st;s.L=A.lens(A.ill,{view:SVIEW});s.L.scalebar();const g=s.L.g;
+  A.state(g);
+  s.buf=el("path",{d:G.stack.mines,fill:"rgba(201,93,46,.16)",stroke:"rgba(201,93,46,.16)","stroke-width":R*2,"stroke-linejoin":"round",opacity:0},g);
+  s.bufE=el("path",{d:G.stack.mines,fill:"none",stroke:"var(--dv-orange-500)","stroke-width":R*2,"stroke-linejoin":"round",opacity:0,"stroke-opacity":.0},g);
+  el("path",{d:G.stack.mines,fill:"var(--dv-orange-500)",stroke:"var(--dv-orange-700)","stroke-width":1.2,"vector-effect":"non-scaling-stroke"},g);
+  s.aw=G.stack.aw.map(p=>{const c=el("circle",{cx:p[0],cy:p[1],r:3.4,fill:"var(--dv-blue-500)",stroke:"#fff","stroke-width":.8},g);c._hit=hits.includes(p);return c});
+  s.L.on(u=>{s.aw.forEach(c=>{c.setAttribute("r",(c._on?6:4.2)*u);c.setAttribute("stroke-width",(c._on?2:1)*u)})});
+  s.list=el("g",{opacity:0},A.ill);A.rough(s.list,40,380,300,210,{fill:"#fffdf7"});A.hand(s.list,60,414,`${hits.length} centres within ${KM} km`,{size:27,bold:1});
+  hits.slice(0,4).forEach((p,i)=>{const[lo,la]=xy2ll(p[0],p[1]);A.hand(s.list,60,452+i*32,`AWC-${String(100+i*37).padStart(5,"0")}  ${la.toFixed(3)}° N  ${lo.toFixed(3)}° E`,{size:20,fill:"var(--n700)"})});
+  A.hand(s.list,60,578,`… and ${Math.max(0,hits.length-4)} more (sample IDs)`,{size:19,fill:"var(--n500)"});
+  s.mark=(on)=>{s.aw.forEach(c=>{c._on=on&&c._hit;c.setAttribute("fill",c._on?"var(--dv-blue-700)":on?"#b9c4ee":"var(--dv-blue-500)")});s.L.set(s.L.v)}},
+ steps:[
+ {nav:"The question",go:async A=>{const s=A.st;s.mark(false);await Promise.all([A.op([s.buf,s.list],0,300),s.L.fly(SVIEW,800)])},
+  notes:[{at:"l0",t:"A question for two departments",b:["which Anganwadi centres sit","close to a mining lease?"],to:A=>A.st.L.ill([300,190])},
+         {at:"r0",t:"Only possible on one base",b:["leases and centres snap to","the same villages, so the","two layers can be compared"],to:A=>A.st.L.ill(G.stack.aw[40])}]},
+ {nav:`${KM} km buffer`,go:async A=>{const s=A.st;s.mark(false);A.op(s.list,0,200);await s.L.fly({cx:318,cy:178,w:150},1000);await A.op(s.buf,1,700)},
+  notes:[{at:"l0",t:`A ${KM} km buffer`,c:"var(--dv-orange-700)",b:["drawn around every lease"],to:A=>A.st.L.ill([285,196])},
+         {at:"r0",t:"Measured in metres",b:["in the state's projection,","never in degrees"]}]},
+ {nav:"The answer",go:async A=>{const s=A.st;await s.L.fly({cx:318,cy:178,w:150},400);A.op(s.buf,1,200);s.mark(true);await A.wait(300)},
+  notes:[{at:"l0",t:`${hits.length} centres inside`,c:"var(--dv-blue-700)",b:["picked out in seconds from","live services, not files"],to:A=>A.st.L.ill(hits.find(p=>p[0]>290&&p[0]<350&&p[1]>150&&p[1]<210)||hits[0]),ring:12},
+         {at:"r0",t:"Re-run it any time",b:["when a lease or a centre","changes, the same question","gives the new answer"]}]},
+ {nav:"A list to act on",go:async A=>{const s=A.st;s.mark(true);await s.L.fly({cx:300,cy:250,w:330},800);await A.op(s.list,1,500)},
+  notes:[{at:"l0",t:"The output is a list",b:["IDs and locations a","department can act on"],to:()=>[340,420]},
+         {at:"r0",t:"One real case goes here",b:["the story names the query,","what it returned and the","decision it fed"]}]}]}}
+
+/* ============================================================ UPDATE CYCLE */
+SPEC.update={W:540,H:540,portH:520,foot:"Schedules and records shown are examples.",
+ draw(A){const s=A.st;const cx=270,cy=275;
+  // 1 the calendar
+  s.cal=el("g",{},A.ill);el("circle",{cx,cy,r:205,fill:"#fffdf7",stroke:"var(--n600)","stroke-width":2},s.cal);
+  "JFMAMJJASOND".split("").forEach((m,i)=>{const a=-Math.PI/2+i/12*Math.PI*2;A.hand(s.cal,cx+Math.cos(a)*232,cy+Math.sin(a)*232+8,m,{size:24,anchor:"middle",fill:"var(--n700)"});
+    el("circle",{cx:cx+Math.cos(a)*205,cy:cy+Math.sin(a)*205,r:9,fill:"var(--dv-blue-500)",stroke:"#fff","stroke-width":2},s.cal);
+    if(i%3===2)el("rect",{x:cx+Math.cos(a)*150-10,y:cy+Math.sin(a)*150-10,width:20,height:20,fill:"var(--dv-aqua-600)",stroke:"#fff","stroke-width":2,transform:`rotate(45 ${cx+Math.cos(a)*150} ${cy+Math.sin(a)*150})`},s.cal)});
+  A.hand(s.cal,cx,cy-14,"Revenue boundaries:",{size:25,bold:1,anchor:"middle"});A.hand(s.cal,cx,cy+18,"only when",{size:24,anchor:"middle"});A.hand(s.cal,cx,cy+46,"something changes",{size:24,anchor:"middle"});
+  // 2 a boundary moves
+  s.bnd=el("g",{opacity:0},A.ill);A.rough(s.bnd,10,10,520,520,{fill:"#fbfaf8",stroke:"#d9d4cc"});
+  s.vA=el("path",{fill:"#f6f1e8",stroke:"none"},s.bnd);s.vB=el("path",{fill:"#eef3ea",stroke:"none"},s.bnd);
+  s.edge=el("path",{fill:"none",stroke:"var(--n800)","stroke-width":2.6,"stroke-linejoin":"round"},s.bnd);
+  s.lA=A.hand(s.bnd,80,90,"Village A",{size:28,bold:1});s.lB=A.hand(s.bnd,360,90,"Village B",{size:28,bold:1});
+  s.pt=el("circle",{cx:236,cy:300,r:11,fill:"var(--dv-blue-500)",stroke:"#fff","stroke-width":3},s.bnd);s.tag=A.hand(s.bnd,258,308,"counted in A",{size:24,fill:"var(--n800)"});
+  s.setEdge=t=>{const xs=[300,286,lerp(290,190,t),lerp(282,176,t),lerp(296,210,t),300],ys=[20,120,220,330,430,520];const P=xs.map((x,i)=>[x,ys[i]]);
+    const d="M"+P.map(p=>p.join(",")).join(" L");s.edge.setAttribute("d",d);s.vA.setAttribute("d",`M20,20 ${P.map(p=>"L"+p).join(" ")} L20,520Z`);s.vB.setAttribute("d",`M520,20 ${P.map(p=>"L"+p).join(" ")} L520,520Z`)};
+  s.setEdge(0);
+  // 3 records revised in place
+  s.rec=el("g",{opacity:0},A.ill);
+  A.rough(s.rec,60,60,420,170,{fill:"#fff"});A.hand(s.rec,84,104,"AWC-RPR-00412",{size:28,bold:1});A.hand(s.rec,84,150,"status",{size:23,fill:"var(--n600)"});A.hand(s.rec,84,196,"version",{size:23,fill:"var(--n600)"});
+  s.st1=A.hand(s.rec,210,150,"Functional",{size:26});s.v1=A.hand(s.rec,210,196,"3",{size:26});
+  s.hl=el("path",{d:"M202,158 L420,156",stroke:"rgba(247,214,90,.85)","stroke-width":30,"stroke-linecap":"round",opacity:0},s.rec);s.rec.insertBefore(s.hl,s.st1);
+  s.old=el("g",{},s.rec);A.rough(s.old,60,300,420,150,{fill:"#fff"});A.hand(s.old,84,344,"AWC-RPR-00388",{size:28,bold:1});A.hand(s.old,84,392,"status",{size:23,fill:"var(--n600)"});A.hand(s.old,210,392,"Closed",{size:26});
+  s.stamp=el("g",{opacity:0},s.rec);el("rect",{x:300,y:350,width:160,height:52,rx:6,fill:"none",stroke:"var(--red-500)","stroke-width":3,transform:"rotate(-8 380 376)"},s.stamp);A.hand(s.stamp,380,388,"INACTIVE",{size:30,bold:1,anchor:"middle",fill:"var(--red-500)",rot:-8});
+  // 4 what follows
+  s.chain=el("g",{opacity:0},A.ill);s.ticks=[];
+  ["Services refresh","Map caches rebuild","Metadata dates move on","Subscribers are told"].forEach((t,i)=>{const y=40+i*125;A.rough(s.chain,110,y,320,76,{fill:"#fff"});A.hand(s.chain,140,y+47,t,{size:28});
+    s.ticks.push(el("path",{d:`M392,${y+38} L402,${y+50} L420,${y+24}`,fill:"none",stroke:"var(--green-500)","stroke-width":4,"stroke-linecap":"round","stroke-linejoin":"round",pathLength:1,"stroke-dasharray":1,"stroke-dashoffset":1},s.chain));
+    if(i<3)el("path",{d:`M270,${y+80} L270,${y+120} M262,${y+110} L270,${y+121} L278,${y+110}`,fill:"none",stroke:"var(--n600)","stroke-width":2,"stroke-linecap":"round"},s.chain)});
+  s.scene=k=>Promise.all(["cal","bnd","rec","chain"].map(n=>A.op(s[n],n===k?1:0,400)))},
+ steps:[
+ {nav:"On a schedule",go:async A=>{await A.st.scene("cal")},
+  notes:[{at:"l0",t:"Thematic layers resubmit",b:["on a schedule: scheme","progress every month (dots),","inventories each quarter"],to:()=>[270,70]},
+         {at:"r0",t:"Boundaries don't",b:["Revenue sends them only","when something changes:","a new tehsil, a redrawn village"],to:()=>[380,280]}]},
+ {nav:"A boundary moves",go:async A=>{const s=A.st;s.setEdge(0);s.tag.textContent="counted in A";await s.scene("bnd");await A.wait(400);await A.tw(1100,t=>s.setEdge(t));s.tag.textContent="now counted in B"},
+  notes:[{at:"l0",t:"Revenue redraws a village",b:["one boundary moves"],to:()=>[190,320]},
+         {at:"r0",t:"Every layer follows",b:["everything snapped to it moves","too: this centre now counts","in its new village"],to:()=>[236,300],ring:18}]},
+ {nav:"Revise, don't copy",go:async A=>{const s=A.st;s.st1.textContent="Functional";s.v1.textContent="3";s.hl.style.opacity=0;s.stamp.style.opacity=0;s.old.style.opacity=1;await s.scene("rec");await A.wait(400);
+   await A.op(s.hl,1,300);s.st1.textContent="Under repair";s.v1.textContent="4";await A.wait(300);await Promise.all([A.op(s.old,.45,400),A.op(s.stamp,1,400)])},
+  notes:[{at:"l0",t:"Matched on a stable ID",b:["a revision updates the row;","it never adds a second one"],to:()=>[300,150]},
+         {at:"r0",t:"Retired, not deleted",b:["a closed centre is flagged","inactive, so its history","stays on record"],to:()=>[380,378]}]},
+ {nav:"What follows",go:async A=>{const s=A.st;s.ticks.forEach(t=>t.setAttribute("stroke-dashoffset",1));await s.scene("chain");for(const t of s.ticks){await A.draw(t,1,350)}},
+  notes:[{at:"l0",t:"One update, four follow-ons",b:["all automatic, in order"],to:()=>[110,78]},
+         {at:"r0",t:"No one has to go looking",b:["apps and agencies that","subscribe hear about it"],to:()=>[430,452]}]}]};
+
 INIT.intake=()=>Sketch("intake",SPEC.intake);
+INIT.provenance=()=>Sketch("provenance",SPEC.provenance);
+INIT.inuse=()=>Sketch("inuse",SPEC.inuse);
+INIT.update=()=>Sketch("update",SPEC.update);
 INIT.conversion=()=>Sketch("conversion",SPEC.conversion);
 INIT.projection=()=>Sketch("projection",SPEC.projection);
 INIT.cartography=()=>Sketch("cartography",SPEC.cartography);
