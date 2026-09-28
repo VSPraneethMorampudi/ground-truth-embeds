@@ -38,3 +38,10 @@ JOURNEY (one record, AWC-RPR-00412, followed through the pipeline; scroll inside
   index.html#j-inuse&bare
   index.html#j-update&bare
   Sources: source/journey.js, source/journey.css (inlined by assemble4.py)
+
+SECTION FIGURES (v5 · hand-annotated, stepped)
+  #intake #conversion #projection #storage #publication #cartography follow the overview's look:
+  one drawing, handwritten notes with pen arrows, 3 to 5 steps (arrows, step list, tap or swipe the drawing).
+  Phones (< 700 px): drawing on top, numbered notes below keyed to numbered markers, sticky step bar.
+  Options: &step=N opens a step directly (no autoplay); &auto=off stops autoplay.
+  Source: source/sketch.js (inlined by assemble4.py)
