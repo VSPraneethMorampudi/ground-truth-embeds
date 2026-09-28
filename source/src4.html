@@ -388,9 +388,30 @@ body.framed .sketch.port{min-height:0;justify-content:flex-start}
 <section class="view sketch" id="intake" aria-labelledby="intake-h"><div class="hd"><h1 id="intake-h">Every record is checked first</h1></div><svg class="sk" role="img" aria-labelledby="intake-h"></svg><nav class="sknav" aria-label="Steps"></nav><p class="sr sklive" aria-live="polite"></p></section>
 <section class="view sketch" id="conversion" aria-labelledby="conversion-h"><div class="hd"><h1 id="conversion-h">Coordinates become clean geometry</h1></div><svg class="sk" role="img" aria-labelledby="conversion-h"></svg><nav class="sknav" aria-label="Steps"></nav><p class="sr sklive" aria-live="polite"></p></section>
 <section class="view sketch" id="projection" aria-labelledby="projection-h"><div class="hd"><h1 id="projection-h">How long is a kilometre here?</h1></div><svg class="sk" role="img" aria-labelledby="projection-h"></svg><nav class="sknav" aria-label="Steps"></nav><p class="sr sklive" aria-live="polite"></p></section>
-<section class="view sketch" id="storage" aria-labelledby="storage-h"><div class="hd"><h1 id="storage-h">One database, every layer</h1></div><svg class="sk" role="img" aria-labelledby="storage-h"></svg><nav class="sknav" aria-label="Steps"></nav><p class="sr sklive" aria-live="polite"></p></section>
-<section class="view sketch" id="publication" aria-labelledby="publication-h"><div class="hd"><h1 id="publication-h">Change it once</h1></div><svg class="sk" role="img" aria-labelledby="publication-h"></svg><nav class="sknav" aria-label="Steps"></nav><p class="sr sklive" aria-live="polite"></p></section>
 <section class="view sketch" id="cartography" aria-labelledby="cartography-h"><div class="hd"><h1 id="cartography-h">Zoom in and the map adds detail</h1></div><svg class="sk" role="img" aria-labelledby="cartography-h"></svg><nav class="sknav" aria-label="Steps"></nav><p class="sr sklive" aria-live="polite"></p></section>
+
+<!-- ============================================================ STORAGE -->
+<section class="view" id="storage" aria-labelledby="st-h">
+  <div class="hd"><h1 id="st-h">One spot, every layer</h1></div>
+  <div class="stage" id="stStage">
+    <svg id="stackSvg" viewBox="0 14 1080 572" role="img" aria-label="Four map layers of Chhattisgarh stacked like sheets. Pointing at any layer marks the same spot on every layer and shows what that layer holds there."></svg>
+    <div class="card" id="stCard" hidden></div>
+    <div class="hint" id="stHint"><svg class="ic sm"><use href="#i-location"/></svg>Point at the map to separate its layers</div>
+  </div>
+  <p class="tiny muted" style="text-align:center">Tables are named <span class="mono">department_theme_geometry_scale</span>. District names are real; leases, centres and GP nodes are illustrative.</p>
+</section>
+
+<!-- ============================================================ PUBLICATION -->
+<section class="view" id="publication" aria-labelledby="pb-h">
+  <div class="hd"><h1 id="pb-h">Change it once</h1></div>
+  <div class="ctrls" style="justify-content:space-between">
+    <div class="ctrls"><span class="small muted">AWC-RPR-00412 is</span>
+      <div class="seg" role="group" aria-label="Record status"><button data-st="0" aria-pressed="true">Functional</button><button data-st="1" aria-pressed="false">Under repair</button><button data-st="2" aria-pressed="false">Closed</button></div></div>
+    <div class="seg" role="group" aria-label="Distribution"><button data-pm="svc" aria-pressed="true">Services</button><button data-pm="files" aria-pressed="false">Files by email</button></div>
+  </div>
+  <div class="stage"><svg id="pubSvg" viewBox="0 0 800 420" role="img" aria-label="PostGIS publishes one set of services. Four applications show the same record."></svg></div>
+  <p class="small muted" id="pbNote" aria-live="polite"></p>
+</section>
 
 <script>/*DATA*/</script>
 <script>
@@ -700,6 +721,184 @@ INIT.flow=()=>{
 
 /*JOURNEY_JS*/
 /*SKETCH_JS*/
+
+/* ============================================================ STORAGE */
+INIT.storage=()=>{
+  const S=$("#stackSvg"),stage=$("#stStage"),card=$("#stCard");
+  /* At rest the four layers sit exactly on top of each other and read as one map.
+     On interaction they deal out sideways, each layer standing behind the next with clear space between. */
+  const PORT=innerWidth<700;
+  const S0=.6,SK=-.07,FX0=79,FX1=441,FW=FX1-FX0,VBW=PORT?560:1080;
+  const REST_SC=PORT?1.62:1.3,REST_OY=PORT?40:22,OY=74,LIFT=PORT?10:18,NUDGE=PORT?0:14;
+  if(PORT)S.setAttribute("viewBox","0 0 560 1050");
+  const SYM={
+    ref:'<path d="M2 4 L8 1.5 L14 3.5 L13.5 12 L7.5 14.5 L2.5 12.5 Z" fill="#fbfaf8" stroke="#8f887e" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 1.5 L7 8 L2.5 9 M7 8 L13.8 8.5 M7 8 L7.5 14.5" fill="none" stroke="#b9b2a8" stroke-width="1"/>',
+    min:'<rect x="3" y="4.5" width="10" height="7" fill="#c95d2e" stroke="#92430a" stroke-width="1.2" transform="rotate(-18 8 8)"/>',
+    awc:'<circle cx="8" cy="8" r="4.6" fill="#617ae2"/>',
+    bn:'<path d="M1.5 12.5 L8 8 L14.5 3.5" fill="none" stroke="#007b9b" stroke-width="2.2" stroke-linecap="round"/><circle cx="8" cy="8" r="3.4" fill="#fff" stroke="#007b9b" stroke-width="1.8"/>'};
+  const symSvg=k=>`<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" style="flex:none;overflow:visible">${SYM[k]}</svg>`;
+  const L=[
+    {k:"ref",n:"Revenue boundaries",t:"reference.admin_village_poly",sw:"var(--n700)",draw:g=>{G.districts.forEach(d=>el("path",{d:d.d,fill:"none",stroke:"#b9b2a8","stroke-width":1.6},g))}},
+    {k:"min",n:"Mining leases",t:"mining.mining_lease_poly_5k",sw:"var(--dv-orange-500)",draw:g=>{el("path",{d:G.stack.mines,fill:"var(--dv-orange-500)",stroke:"var(--dv-orange-700)","stroke-width":1.2},g)}},
+    {k:"awc",n:"Anganwadi centres",t:"wcd.wcd_anganwadi_pt_10k",sw:"var(--dv-blue-500)",draw:g=>{G.stack.aw.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:4.6,fill:"var(--dv-blue-500)"},g))}},
+    {k:"bn",n:"BharatNet",t:"bharatnet.bn_fibre_line_10k",sw:"var(--dv-aqua-600)",draw:g=>{el("path",{d:G.stack.fibre,fill:"none",stroke:"var(--dv-aqua-600)","stroke-width":3.2},g);G.stack.gp.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:6.5,fill:"#fff",stroke:"var(--dv-aqua-600)","stroke-width":2.6},g))}}];
+  // lookups in flat state space
+  const hid=el("g",{opacity:0,"pointer-events":"none"},S);const dp=G.districts.map(d=>{const p=el("path",{d:d.d},hid);p._n=d.n;return p});
+  const K=1/G.kmPx,dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1])*K;
+  const mines=[[82.68,22.35],[83.45,22.2],[82.6,22.8],[81.25,18.65],[81.08,20.58],[83.35,21.95],[82.85,23.05]].map(p=>ll2xy(...p));
+  const districtAt=(x,y)=>{const d=dp.find(p=>p.isPointInFill(new DOMPoint(x,y)));return d?d._n:null};
+  const info=(k,x,y)=>{const dn=districtAt(x,y);if(!dn)return null;
+    if(k==="ref")return{v:dn+" district",s:"Village polygon from the Revenue master"};
+    if(k==="min"){const n=Math.min(...mines.map(m=>dist(m,[x,y])));return{v:n<3?"Inside a lease":`Nearest lease ${fmt(n)} km`,s:dn+" district"}}
+    if(k==="awc"){const n=G.stack.aw.filter(p=>dist(p,[x,y])<=25).length;return{v:`${n} centre${n===1?"":"s"} within 25 km`,s:dn+" district"}}
+    const n=Math.min(...G.stack.gp.map(p=>dist(p,[x,y])));return{v:n<1.5?"At a GP node":`Nearest GP node ${fmt(n)} km`,s:dn+" district"}};
+  const df=el("defs",{},S),fl=el("filter",{id:"soft",x:"-10%",y:"-10%",width:"120%",height:"130%"},df);el("feGaussianBlur",{stdDeviation:"5"},fl);
+  const root=el("g",{},S);
+  // spread positions: back (Revenue, left) to front (BharatNet, right); back sheets slightly smaller and higher
+  const SPREAD_SC=[.9,.94,.97,1],GAPX=40;
+  let xcur=34;L.forEach((l,i)=>{const w=FW*S0*SPREAD_SC[i];l.sx=xcur-FX0*S0*SPREAD_SC[i];l.sy=OY-(3-i)*10;l.ssc=SPREAD_SC[i];xcur+=w+GAPX});
+  const shift=(VBW-(xcur-GAPX))/2-34;L.forEach(l=>l.sx+=shift);
+  // phones: two rows of two, labels under each sheet
+  if(PORT)L.forEach((l,i)=>{const sc=1.08,col=i%2,row=i>>1;l.ssc=sc;l.sx=(col?292:34)-FX0*S0*sc;l.sy=(row?530:44)-24*S0*sc+col*14});
+  const restX=VBW/2-S0*REST_SC*(FX0+FW/2);
+  L.forEach((l,i)=>{l.i=i;l.ox=restX;l.oy=REST_OY;l.sc=REST_SC;
+    const g=el("g",{class:"sheet"},root);l.g=g;
+    l.shadow=el("path",{d:G.state,fill:"rgba(60,50,40,.13)",class:"shd",filter:"url(#soft)"},g);
+    l.inner=el("g",{},g);
+    l.plate=el("path",{d:G.state,class:"plate",fill:"#fbfaf8",stroke:"#bdb6ac","stroke-width":1.4,"vector-effect":"non-scaling-stroke"},l.inner);
+    l.draw(l.inner);
+    l.mk=el("g",{opacity:0,"pointer-events":"none"},l.inner);
+    el("circle",{r:22,fill:"none",stroke:"var(--n900)","stroke-width":2,class:"ring","vector-effect":"non-scaling-stroke"},l.mk);
+    el("circle",{r:9,fill:"var(--n900)",stroke:"#fff","stroke-width":2.5,"vector-effect":"non-scaling-stroke"},l.mk);
+    l.lbl=el("g",{class:"lbl"},g);
+    l.nm=txt({x:7,y:0,"font-size":15,"font-weight":700,fill:"var(--n900)","text-anchor":"middle"},l.lbl,l.n);
+    txt({x:0,y:18,"font-size":11.5,fill:"var(--n500)","font-family":"var(--mono)","text-anchor":"middle"},l.lbl,l.t);
+    l.sq=el("g",{},l.lbl);l.sq.innerHTML=SYM[l.k];
+    l.val=txt({x:0,y:46,"font-size":15.5,"font-weight":700,fill:"var(--n900)","text-anchor":"middle"},l.lbl,"");
+    l.sub=txt({x:0,y:65,"font-size":12,fill:"var(--n600)","text-anchor":"middle"},l.lbl,"");
+  });
+  const restLbl=txt({x:VBW/2,y:REST_OY+S0*REST_SC*616+26,"text-anchor":"middle","font-size":13,fill:"var(--n600)"},S,"Four layers, one map");
+  const mat=(x,y,sc)=>`matrix(${S0*sc} ${SK*S0*sc} 0 ${S0*sc} ${x} ${y})`;
+  let mode="rest",active=null,pinned=null,stopT=null,cur=null,sep=0; /* sep: 0 = one map, 1 = dealt out */
+  function layout(){L.forEach(l=>{l.inner.setAttribute("transform",mat(l.ox,l.oy,l.sc));const up=l===active;
+      l.shadow.setAttribute("transform",mat(l.ox+(up?10:5),l.oy+(up?24:8),l.sc));
+      // upper layers are see-through while merged, solid sheets once apart
+      l.plate.setAttribute("fill-opacity",l.i===0?1:sep);l.plate.setAttribute("stroke-opacity",l.i===0?1:sep);l.shadow.style.opacity=l.i===0?1:sep;
+      l.lbl.setAttribute("transform",`translate(${l.ox+S0*l.sc*(FX0+FW/2)} ${PORT?l.oy+S0*l.sc*616+30:OY+S0*616+46})`);l.lbl.style.opacity=sep*(!active||l===active?1:.72)});
+    restLbl.style.opacity=1-sep}
+  L.forEach(l=>{const w=l.nm.getComputedTextLength();l.sq.setAttribute("transform",`translate(${7-w/2-22} -13)`)});
+  function go(to,ms=520){const from=L.map(l=>[l.ox,l.oy,l.sc]),s0=sep,s1=mode==="rest"?0:1;if(stopT)stopT();
+    stopT=tween(ms,t=>{L.forEach((l,i)=>{l.ox=lerp(from[i][0],to[i][0],t);l.oy=lerp(from[i][1],to[i][1],t);l.sc=lerp(from[i][2],to[i][2],t)});sep=lerp(s0,s1,t);layout();})}
+  function order(){if(active){root.appendChild(active.g)}else L.forEach(x=>root.appendChild(x.g))}
+  function spread(l){mode="spread";active=l||null;order();
+    L.forEach(x=>{x.g.classList.toggle("on",x===active);x.g.style.opacity=!active||x===active?1:.55});
+    go(L.map(x=>[x.sx+(!active||x===active?0:x.i<active.i?-NUDGE:NUDGE),x.sy-(x===active?LIFT:0),x.ssc*(x===active?1.04:1)]),mode==="spread"&&sep>.5?380:620)}
+  function merge(){mode="rest";active=null;pinned=null;cur=null;order();L.forEach(q=>{q.val.textContent="";q.sub.textContent=""});
+    L.forEach(x=>{x.g.classList.remove("on");x.g.style.opacity=1;x.mk.setAttribute("opacity",0)});go(L.map(()=>[restX,REST_OY,REST_SC]),620)}
+  // pointer → the sheet under it, by geometry (front-most first)
+  const local=(l,e)=>{const q=S.createSVGPoint();q.x=e.clientX;q.y=e.clientY;return q.matrixTransform(l.inner.getScreenCTM().inverse())};
+  function pick(e){const ord=[...(active?[active]:[]),...L.slice().reverse().filter(x=>x!==active)];for(const l of ord){const p=local(l,e);if(l.plate.isPointInFill(p))return{l,p}}return null}
+  let lastXY="";
+  S.addEventListener("pointermove",e=>{const xy=e.clientX+","+e.clientY;if(xy===lastXY)return;lastXY=xy;
+    if(mode==="rest"){if(pick(e))spread(null);return}
+    if(sep<.9)return; /* wait until the layers have separated */
+    const h=pick(e);if(!h)return;
+    if(pinned&&h.l!==pinned){const p=local(pinned,e);if(pinned.plate.isPointInFill(p))mark(pinned,p.x,p.y);return}
+    if(active!==h.l)spread(h.l);mark(h.l,h.p.x,h.p.y)});
+  S.addEventListener("click",e=>{const h=pick(e);if(mode==="rest"){if(h)spread(null);return}
+    if(!h){merge();return}pinned=pinned===h.l?null:h.l;spread(h.l);mark(h.l,h.p.x,h.p.y)});
+  S.addEventListener("pointerleave",()=>{if(!pinned)merge()});
+  function mark(l,x,y){const inf=info(l.k,x,y);if(!inf)return;cur={l,x,y};
+    L.forEach(q=>{q.mk.setAttribute("transform",`translate(${x} ${y})`);q.mk.setAttribute("opacity",q===l?1:.6);q.mk.querySelector(".ring").style.display=q===l?"":"none"});
+    const [lo,la]=xy2ll(x,y);L.forEach(q=>{const r=info(q.k,x,y);q.val.textContent=r?r.v:"";q.sub.textContent=q.k==="ref"?`${la.toFixed(3)}° N, ${lo.toFixed(3)}° E`:(q.k==="min"?"illustrative leases":q.k==="awc"?"illustrative centres":"illustrative GP nodes")})}
+  function place(l,x,y,rebuild){const m=l.inner.getCTM(),sp=S.createSVGPoint();sp.x=x;sp.y=y;const q=sp.matrixTransform(m);
+    const vb=S.viewBox.baseVal,r=S.getBoundingClientRect(),sr=stage.getBoundingClientRect(),k=r.width/vb.width;
+    const want=r.left-sr.left+(q.x-vb.x)*k,top=r.top-sr.top+(q.y-vb.y)*k;card.style.top=top+"px";
+    if(rebuild){const inf=info(l.k,x,y),[lo,la]=xy2ll(x,y);
+      card.innerHTML=`<div class="k">${symSvg(l.k)}${l.n}</div><div class="v">${inf.v}</div><div class="t">${l.t}</div><div class="at">${inf.s}<br><span style="white-space:nowrap">${la.toFixed(3)}° N, ${lo.toFixed(3)}° E · marked on all four layers</span></div>`}
+    /* sit beside the lifted sheet, never on it: right of sheets in the left half, left of the others */
+    const cw=card.offsetWidth,ch=card.offsetHeight,sw=stage.clientWidth,shH=stage.clientHeight,bb=l.plate.getBoundingClientRect();
+    const bl=bb.left-sr.left,br=bb.right-sr.left,right=(bl+br)/2<sw/2;
+    let cx=right?br+16:bl-16-cw;cx=clamp(cx,4,sw-cw-4);const cy=clamp(top-ch/2,4,Math.max(4,shH-ch-4));
+    card.classList.remove("below");card.classList.add("side");card.classList.toggle("r",right);card.classList.toggle("l",!right);
+    card.style.left=cx+"px";card.style.top=cy+"px";card.style.setProperty("--cy",clamp(top-cy,14,ch-14)+"px");card.classList.add("on")}
+  layout();
+  // demonstration: one map → deal out → visit each layer at one place → gather back into one map
+  const spots=G.stack.aw.filter((_,i)=>i%19===4);let step=0,spot=null;
+  let AU=null;const user=()=>AU&&AU.busy();
+  async function demo(){if(user()||pinned)return;const ph=step++%6;
+    if(ph===0){spot=spots[(step/6|0)%spots.length];spread(null);await wait(700);return}
+    if(ph===5){merge();await wait(700);return}
+    const l=L[ph-1];spread(l);await wait(440);if(user())return;
+    const from=cur?[cur.x,cur.y]:[spot[0]+30,spot[1]-40];await new Promise(r=>tween(560,t=>{if(!user())mark(l,lerp(from[0],spot[0],t),lerp(from[1],spot[1],t))},r))}
+  AU=Auto("storage",2000,demo,{host:"#stStage",hint:"#stHint"});
+  addEventListener("resize",()=>{if((innerWidth<700)!==PORT)location.reload()});
+};
+
+/* ============================================================ PUBLICATION */
+INIT.publication=()=>{
+  const S=$("#pubSvg");
+  const STC=["var(--green-500)","var(--orange-400)","var(--red-500)"],STN=["Functional","Under repair","Closed"];
+  // source
+  const PORT=innerWidth<700;if(PORT)S.setAttribute("viewBox","0 0 400 668");
+  const db=el("g",{},S);const X=PORT?152:36,Y=PORT?84:150,W=96,H=86;
+  el("path",{d:`M${X} ${Y+10} v${H-20} a${W/2} 10 0 0 0 ${W} 0 v${-(H-20)}`,fill:"var(--n800)"},db);el("ellipse",{cx:X+W/2,cy:Y+10,rx:W/2,ry:10,fill:"var(--n700)"},db);
+  el("ellipse",{cx:X+W/2,cy:Y+36,rx:W/2,ry:10,fill:"none",stroke:"var(--n700)"},db);
+  txt({x:X+W/2,y:Y+62,"text-anchor":"middle","font-size":13,"font-weight":700,fill:"#fff"},db,"PostGIS");
+  const rec=el("g",{transform:PORT?"translate(116 -62)":""},S);el("rect",{x:18,y:74,width:132,height:52,rx:8,fill:"#fff",stroke:"var(--n100)"},rec);
+  txt({x:30,y:94,"font-size":11,fill:"var(--n600)","font-family":"var(--mono)"},rec,"AWC-RPR-00412");
+  const rDot=el("circle",{cx:34,cy:111,r:4.5,fill:STC[0]},rec);const rTxt=txt({x:44,y:115,"font-size":12.5,"font-weight":700,fill:"var(--n900)"},rec,STN[0]);
+  el("path",{d:PORT?"M200 64 V84":"M84 126 V150",stroke:"var(--n300)","stroke-dasharray":"2 3"},S);
+  // endpoint
+  const ep=el("g",{class:"svc",transform:PORT?"translate(-87 34)":""},S);el("rect",{x:176,y:170,width:222,height:46,rx:8,fill:"#fff",stroke:"var(--n200)"},ep);
+  txt({x:190,y:189,"font-size":11,fill:"var(--n600)"},ep,"One service endpoint");txt({x:190,y:206,"font-size":11.5,"font-family":"var(--mono)",fill:"var(--n900)"},ep,".../rest/services/…/FeatureServer");
+  const e0=el("path",{d:PORT?`M200 ${Y+H} V204`:`M${X+W} ${Y+43} C150 193 160 193 176 193`,class:"pub-edge"},S);
+  // consumers: four small application windows, each showing the same point on the same state
+  const SCR=PORT?[{n:"State Geoportal",x:22,y:300,w:170,h:130,kind:"map"},{n:"Mining app",x:208,y:300,w:170,h:130,kind:"list"},{n:"Anganwadi app",x:57,y:462,w:100,h:150,kind:"phone"},{n:"Partner agency",x:208,y:472,w:170,h:130,kind:"map2"}]
+    :[{n:"State Geoportal",x:450,y:18,w:150,h:120,kind:"map"},{n:"Mining app",x:620,y:18,w:160,h:120,kind:"list"},{n:"Anganwadi app",x:458,y:214,w:100,h:160,kind:"phone"},{n:"Partner agency",x:620,y:236,w:160,h:120,kind:"map2"}];
+  const pRec=ll2xy(81.629641,21.251384);
+  const edges=[e0],scrs=[];
+  SCR.forEach((s,i)=>{const g=el("g",{class:"scr"},S);const cx=s.x+s.w/2,cy=s.y+s.h/2;
+    const ed=el("path",{d:PORT?(i<2?`M200 250 C 200 ${s.y-40} ${cx} ${s.y-44} ${cx} ${s.y}`:`M200 250 L200 ${cy-24} Q200 ${cy} ${s.x<200?s.x+s.w:s.x} ${cy}`):`M398 193 C 430 193 ${s.x-40} ${cy} ${s.x} ${cy}`,class:"pub-edge"},S);edges.push(ed);ed._i=i;
+    if(s.kind==="phone"){el("rect",{x:s.x,y:s.y,width:s.w,height:s.h,rx:14,fill:"var(--n900)"},g);el("rect",{x:s.x+5,y:s.y+12,width:s.w-10,height:s.h-24,rx:4,fill:"#fff"},g)}
+    else{el("rect",{x:s.x,y:s.y,width:s.w,height:s.h,rx:8,fill:"#fff",stroke:"var(--n200)"},g);el("path",{d:`M${s.x} ${s.y+16}h${s.w}`,stroke:"var(--n100)"},g);[0,1,2].forEach(k=>el("circle",{cx:s.x+10+k*8,cy:s.y+8,r:2.4,fill:"var(--n200)"},g))}
+    txt({x:s.kind==="phone"?cx:s.x+s.w-8,y:s.kind==="phone"?s.y+s.h+16:s.y+11.5,"text-anchor":s.kind==="phone"?"middle":"end","font-size":s.kind==="phone"?11.5:9.5,"font-weight":s.kind==="phone"?700:500,fill:s.kind==="phone"?"var(--n800)":"var(--n600)"},g,s.n);
+    const body=el("g",{},g);let dot,lab,ver;
+    if(s.kind==="map"||s.kind==="map2"){const mw=s.w-16,mh=s.h-26,k=Math.min(mw/G.W,mh/G.H)*1.0;const ox=s.x+8+(mw-G.W*k)/2,oy=s.y+20+(mh-G.H*k)/2;
+      el("rect",{x:s.x+1,y:s.y+17,width:s.w-2,height:s.h-18,fill:s.kind==="map2"?"#eef1f4":"#f6f4f0",rx:0},body);
+      const m=el("g",{transform:`translate(${ox} ${oy}) scale(${k})`},body);el("path",{d:G.state,fill:"#fff",stroke:"var(--n500)","stroke-width":1.2/k},m);
+      if(s.kind==="map")el("path",{d:G.districts.map(d=>d.d).join(""),fill:"none",stroke:"#ddd7cf","stroke-width":.6/k},m);
+      dot=el("circle",{cx:pRec[0],cy:pRec[1],r:4.5/k,fill:STC[0],stroke:"#fff","stroke-width":1.2/k},m)}
+    if(s.kind==="list"){for(let r=0;r<5;r++){const y=s.y+26+r*18;el("rect",{x:s.x+8,y:y,width:s.w-16,height:14,rx:3,fill:r===2?"var(--n10)":"none"},body);
+      el("rect",{x:s.x+12,y:y+5,width:r===2?46:30+((r*17)%24),height:4,rx:2,fill:r===2?"var(--n700)":"var(--n100)"},body);
+      if(r===2){dot=el("circle",{cx:s.x+s.w-62,cy:y+7,r:3.5,fill:STC[0]},body);lab=txt({x:s.x+s.w-56,y:y+10.5,"font-size":8.5,fill:"var(--n800)","font-weight":500},body,STN[0])}else el("rect",{x:s.x+s.w-44,y:y+5,width:26,height:4,rx:2,fill:"var(--n100)"},body)}}
+    if(s.kind==="phone"){const px=s.x+10,py=s.y+22;el("rect",{x:px,y:py,width:s.w-20,height:34,rx:4,fill:"var(--n10)"},body);txt({x:px+4,y:py+12,"font-size":7.5,fill:"var(--n600)","font-family":"var(--mono)"},body,"AWC-RPR-00412");
+      dot=el("circle",{cx:px+7,cy:py+24,r:3.2,fill:STC[0]},body);lab=txt({x:px+13,y:py+27,"font-size":8.5,"font-weight":700,fill:"var(--n800)"},body,STN[0]);
+      for(let r=0;r<4;r++)el("rect",{x:px,y:py+44+r*16,width:s.w-20,height:10,rx:3,fill:"var(--n10)"},body)}
+    ver=txt({x:s.kind==="phone"?cx:s.x+8,y:s.kind==="phone"?s.y+s.h+30:s.y+s.h+14,"text-anchor":s.kind==="phone"?"middle":"start","font-size":10.5,fill:"var(--n500)"},g,"");
+    scrs.push({g,dot,lab,ver,body})});
+  let st=0,mode="svc";const now=()=>new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  const VER=["file v5 · 2 Aug","file v3 · 11 Mar","file v5 · 2 Aug","file v2 · 19 Jan"],STALE=[0,1,0,3];
+  function setMode(m){mode=m;setPressed("[data-pm]",$(`[data-pm=${m}]`));edges.forEach(e=>e.classList.toggle("live",m==="svc"));ep.style.opacity=m==="svc"?1:.25;
+    scrs.forEach((s,i)=>{s.ver.textContent=m==="files"?VER[i]:"";s.ver.setAttribute("fill",m==="files"?"var(--red-700)":"var(--n500)")});
+    $("#pbNote").textContent=m==="files"?"Before services, every application kept its own copy. Emailing a new file reaches whoever opens it.":"The applications read one endpoint. The record changes in one place.";}
+  function paintScr(i,s){const c=STC[s];scrs[i].dot.setAttribute("fill",c);if(scrs[i].lab)scrs[i].lab.textContent=STN[s];scrs[i].body.classList.remove("blink");void scrs[i].body.getBBox();scrs[i].body.classList.add("blink")}
+  const pg=el("g",{},S);
+  function fire(p,delay,done){if(REDUCE){done();return}setTimeout(()=>{const c=el("circle",{r:5,fill:"var(--blue-500)",stroke:"#fff","stroke-width":1.5,class:"pulse"},pg);c.style.offsetPath=`path("${p.getAttribute("d")}")`;c.getBoundingClientRect();c.classList.add("go");c.addEventListener("animationend",()=>{c.remove();done()},{once:true})},delay)}
+  function setStatus(s){st=s;setPressed("[data-st]",$(`[data-st="${s}"]`));rDot.setAttribute("fill",STC[s]);rTxt.textContent=STN[s];
+    if(mode==="svc"){fire(e0,0,()=>{});edges.slice(1).forEach((e,i)=>fire(e,900,()=>{paintScr(e._i,s);scrs[e._i].ver.textContent="updated "+now();scrs[e._i].ver.setAttribute("fill","var(--green-700)")}));
+      setTimeout(()=>{$("#pbNote").innerHTML=`Changed once, at ${now()}. All four applications show <b>${STN[s]}</b>.`},REDUCE?0:1900)}
+    else{[0,2].forEach(i=>setTimeout(()=>{paintScr(i,s);scrs[i].ver.textContent="file v6 · today";scrs[i].ver.setAttribute("fill","var(--green-700)")},REDUCE?0:600));
+      $("#pbNote").textContent="The new file reached two of four applications. The Mining app and the partner agency still show the old status."}}
+  $$("[data-st]").forEach(b=>b.onclick=()=>setStatus(+b.dataset.st));
+  $$("[data-pm]").forEach(b=>b.onclick=()=>{setMode(b.dataset.pm);scrs.forEach((s,i)=>paintScr(i,0));setPressed("[data-st]",$('[data-st="0"]'));rDot.setAttribute("fill",STC[0]);rTxt.textContent=STN[0];st=0});
+  setMode("svc");
+  let step=0;async function demo(){if(mode!=="svc")setMode("svc");setStatus((st+1)%3);step++;await wait(300)}
+  Auto("publication",3800,demo,{host:"#publication .stage"});
+  addEventListener("resize",()=>{if((innerWidth<700)!==PORT)location.reload()});
+};
+
+
 
 addEventListener("hashchange",route);route();
 /* stale-cache guard: if a newer build is published, load it (GitHub Pages caches pages for ~10 minutes) */

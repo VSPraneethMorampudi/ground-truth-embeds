@@ -438,6 +438,4 @@ SPEC.cartography={W:540,H:540,portH:540,draw(A){const s=A.st;
 INIT.intake=()=>Sketch("intake",SPEC.intake);
 INIT.conversion=()=>Sketch("conversion",SPEC.conversion);
 INIT.projection=()=>Sketch("projection",SPEC.projection);
-INIT.storage=()=>Sketch("storage",SPEC.storage);
-INIT.publication=()=>Sketch("publication",SPEC.publication);
 INIT.cartography=()=>Sketch("cartography",SPEC.cartography);
