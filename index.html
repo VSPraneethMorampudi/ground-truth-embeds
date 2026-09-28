@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-build="1790589053">
+<html lang="en" data-build="1790589240">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -315,7 +315,8 @@ body.framed #publication>.ctrls{padding-right:48px}
 /* ---------------- SECTION FIGURES (sketch) ---------------- */
 .sketch{gap:6px}
 .sketch svg.sk{width:100%;height:auto;display:block;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
-body.framed .sketch:not(.port) svg.sk{max-height:calc(100vh / var(--z,1) - 64px)}
+body.framed .sketch:not(.port) svg.sk{max-height:calc(100vh / var(--z,1) - 108px)}
+body.framed .sketch:not(.port){padding-top:8px;padding-bottom:6px}
 .sk text.h{font-family:"Caveat","Segoe Print","Bradley Hand",cursive;fill:var(--n800)}
 .sk text.t{font-weight:700}
 .sknav{display:flex;align-items:center;justify-content:center;gap:8px;font-family:"Caveat","Segoe Print",cursive;font-size:23px;color:var(--n700)}
@@ -1291,7 +1292,7 @@ function Sketch(id,spec){
     mode=innerWidth<700?"port":"land";seed=7;api=mkApi();
     S.setAttribute("viewBox",mode==="land"?"0 0 1280 720":`0 0 640 ${portHeight()}`);
     V.classList.toggle("port",mode==="port");
-    spec.draw(api)}
+    spec.draw(api);requestAnimationFrame(()=>typeof fit==="function"&&fit())}
   document.fonts.load('700 30px "Caveat"').then(()=>document.fonts.load('400 26px "Caveat"')).catch(()=>{}).then(()=>{
     build();
     new IntersectionObserver((es,o)=>{if(es[0].isIntersecting){o.disconnect();auto=!OPT.auto||OPT.auto!=="off";if(OPT.step!==undefined){auto=false;go(clamp(+OPT.step,0,N-1),true)}else go(0)}},{threshold:.3}).observe(S)});

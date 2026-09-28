@@ -153,7 +153,7 @@ function Sketch(id,spec){
     mode=innerWidth<700?"port":"land";seed=7;api=mkApi();
     S.setAttribute("viewBox",mode==="land"?"0 0 1280 720":`0 0 640 ${portHeight()}`);
     V.classList.toggle("port",mode==="port");
-    spec.draw(api)}
+    spec.draw(api);requestAnimationFrame(()=>typeof fit==="function"&&fit())}
   document.fonts.load('700 30px "Caveat"').then(()=>document.fonts.load('400 26px "Caveat"')).catch(()=>{}).then(()=>{
     build();
     new IntersectionObserver((es,o)=>{if(es[0].isIntersecting){o.disconnect();auto=!OPT.auto||OPT.auto!=="off";if(OPT.step!==undefined){auto=false;go(clamp(+OPT.step,0,N-1),true)}else go(0)}},{threshold:.3}).observe(S)});
