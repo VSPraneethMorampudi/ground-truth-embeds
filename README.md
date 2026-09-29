@@ -52,9 +52,13 @@ SECTION FIGURES (v5 · hand-annotated, stepped)
 
 VERSIONS (frozen copies; links never change)
   versions/index.html lists every version and its embed links
+  versions/v6/   29 Sep 2026 · Your turn: hands-on sketch figures, faster (current build)
   versions/v5/   28 Sep 2026 · Hand-annotated section figures (commit 51c3791)
   versions/v4.1/   25 Sep 2026 · Overview, vertical flow and the scroll journey (commit cafc85f)
   versions/v4/   24 Sep 2026 · Hands-on figures on real geography (commit 2fd7c85)
   versions/v3/   23 Sep 2026 · GitLab Pajamas restyle (commit c6ec764)
   versions/v2/   23 Sep 2026 · First six figures (commit 63fa3a3)
   The root index.html is the current build and keeps changing. Point a story at versions/<v>/#<view> to pin it.
+
+v6 (29 Sep 2026): every sketch step ends in a "your turn" task (source/play.js); animations run at half duration
+  and a tap finishes any animation. Storage and Publication keep their v4 interactive designs.

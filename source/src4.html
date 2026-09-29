@@ -271,9 +271,35 @@ body.framed #publication>.ctrls{padding-right:48px}
 
 
 /* ---------------- SECTION FIGURES (sketch) ---------------- */
+/* v6 · your turn */
+.skplay{display:none;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 12px;min-height:40px;font-family:"Caveat","Segoe Print",cursive;font-size:23px;color:var(--n800);text-align:center;padding:0 12px}
+.skplay.on{display:flex}
+.skplay .ask b{color:var(--orange-500);font-weight:700}
+.skplay.bad .ask{color:var(--red-700)}
+.skplay.ok .ask{color:var(--green-700)}.skplay .tick{color:var(--green-500);font-size:1.15em;margin-right:2px}
+.skplay.shake{animation:skshake .35s}
+@keyframes skshake{25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+.skplay .acts{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pbtn{font:inherit;font-size:22px;color:var(--n900);background:#fff;border:1.8px solid var(--n800);border-radius:20px 16px 22px 15px;padding:1px 14px 3px;box-shadow:2px 3px 0 rgba(40,39,45,.14);cursor:pointer;transition:transform .12s}
+.pbtn:hover{transform:rotate(-1.5deg) scale(1.03)}.pbtn:active{transform:scale(.96)}
+.pbtn.sq{width:38px;padding:1px 0 3px;font-family:system-ui,sans-serif;font-weight:700;font-size:20px}
+.pval{font-size:22px;min-width:92px;display:inline-block}
+.prange{width:180px;accent-color:var(--dv-orange-500);cursor:pointer}
+.skplay .show{font:inherit;font-size:20px;background:none;border:0;color:var(--n500);text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:0 4px}
+.skplay .show:hover{color:var(--n900)}
+.skpulse{animation:skpulse 1.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center;pointer-events:none}
+@keyframes skpulse{0%,100%{opacity:.9;transform:scale(1)}50%{opacity:.35;transform:scale(1.18)}}
+.sknav ol button.done b::after{content:"✓";color:var(--green-500);margin-left:1px}
+.skb.pulse{border-color:var(--orange-500);box-shadow:0 0 0 0 rgba(193,125,16,.5);animation:skbp 1.3s infinite}
+@keyframes skbp{0%{box-shadow:0 0 0 0 rgba(193,125,16,.45)}100%{box-shadow:0 0 0 12px rgba(193,125,16,0)}}
+.sketch .plt{cursor:grab}
+@media (prefers-reduced-motion:reduce){.skpulse,.skb.pulse,.skplay.shake{animation:none}}
+.sketch.port .skplay{position:sticky;bottom:64px;z-index:3;background:var(--page);font-size:20px;padding:6px 8px 2px;gap:4px 10px;box-shadow:0 -10px 12px -6px var(--page)}
+.sketch.port .pbtn{font-size:19px}.sketch.port .skplay .show{font-size:18px}.sketch.port .prange{width:140px}
+
 .sketch{gap:6px}
 .sketch svg.sk{width:100%;height:auto;display:block;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
-body.framed .sketch:not(.port) svg.sk{max-height:calc(100vh / var(--z,1) - 108px)}
+body.framed .sketch:not(.port) svg.sk{max-height:calc(100vh / var(--z,1) - 150px)}
 body.framed .sketch:not(.port){padding-top:8px;padding-bottom:6px}
 .sk text.h{font-family:"Caveat","Segoe Print","Bradley Hand",cursive;fill:var(--n800)}
 .sk text.t{font-weight:700}

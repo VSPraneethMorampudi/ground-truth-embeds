@@ -8,6 +8,8 @@ function Sketch(id,spec){
   const V=$("#"+id),S=V.querySelector("svg.sk"),nav=V.querySelector(".sknav"),live=V.querySelector(".sklive");
   const foot=document.createElement("p");foot.className="skfoot";foot.innerHTML=`<span>${spec.foot||""}</span>`+(spec.next?`<span class="nx" aria-hidden="true">next: ${spec.next}<svg width="20" height="26" viewBox="0 0 24 30" style="overflow:visible"><path d="M8 2 C 14 9, 4 16, 12 26 M6 20 L12 27 L16 19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`:"");nav.after(foot);
   const N=spec.steps.length;
+  let animating=false,solved=[],ctl=null,cp=null,noClickUntil=0;const SP=REDUCE?0:.5;
+  const pb=document.createElement("div");pb.className="skplay";pb.setAttribute("aria-live","polite");nav.before(pb);
   let mode=null,api=null,cur=-1,run=0,cancels=[],auto=false,autoT=null,seed=7,uid=0,hinted=false;
   const R=()=>(seed=seed*16807%2147483647)/2147483647;
   const D=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
@@ -16,14 +18,15 @@ function Sketch(id,spec){
     `<ol>${spec.steps.map((s,i)=>`<li><button type="button" data-i="${i}"><b>${i+1}</b> ${s.nav}</button></li>`).join("")}</ol>`+
     `<span class="skcur" aria-hidden="true"></span><button type="button" class="skb next" aria-label="Next step">→</button>`;
   const btns=[...nav.querySelectorAll("ol button")],prev=nav.querySelector(".prev"),next=nav.querySelector(".next"),curL=nav.querySelector(".skcur");
-  function updNav(){btns.forEach((b,i)=>{if(i===cur)b.setAttribute("aria-current","step");else b.removeAttribute("aria-current")});
+  function updNav(){btns.forEach((b,i)=>{b.classList.toggle("done",!!solved[i]);if(i===cur)b.setAttribute("aria-current","step");else b.removeAttribute("aria-current")});
     prev.disabled=cur<=0;const last=cur>=N-1;next.textContent=last?"↺":"→";next.setAttribute("aria-label",last?"Start again":"Next step");
     curL.innerHTML=cur<0?"":`<b>${cur+1}</b> of ${N} · ${spec.steps[cur].nav}`;foot.classList.toggle("end",last)}
   const stop=()=>{auto=false;clearTimeout(autoT)};
   btns.forEach((b,i)=>b.onclick=()=>{stop();go(i)});
   prev.onclick=()=>{stop();if(cur>0)go(cur-1)};
   next.onclick=()=>{stop();go(cur>=N-1?0:cur+1)};
-  S.addEventListener("click",()=>{stop();go(cur>=N-1?0:cur+1)});
+  S.addEventListener("click",e=>{if(e.target.closest(".plt")||Date.now()<noClickUntil)return;stop();if(animating){go(cur,true);return}
+    const s=spec.steps[cur];if(s&&s.play&&!solved[cur]){pb.classList.remove("shake");void pb.offsetWidth;pb.classList.add("shake");return}go(cur>=N-1?0:cur+1)});
   V.addEventListener("keydown",e=>{if(e.key==="ArrowRight"){stop();go(Math.min(N-1,cur+1))}else if(e.key==="ArrowLeft"){stop();go(Math.max(0,cur-1))}});
   // swipe on phones
   let sx=null;S.addEventListener("touchstart",e=>{sx=e.touches[0].clientX},{passive:true});
@@ -42,11 +45,20 @@ function Sketch(id,spec){
     const notesG=el("g",{class:"skhand"},S);
     const A={S,defs,ill,notesG,W,H,land,sc,box:[bx,by,bw,bh],fast:false,st:{},R,D,
       P:p=>[bx+p[0]*sc,by+p[1]*sc],
-      tw:(ms,fn)=>new Promise(r=>{cancels.push(tween(A.fast?0:ms,fn,r))}),
-      wait:ms=>A.fast?Promise.resolve():new Promise(r=>setTimeout(r,REDUCE?0:ms)),
+      tw:(ms,fn)=>new Promise(r=>{cancels.push(tween(A.fast?0:ms*SP,fn,r))}),
+      wait:ms=>A.fast?Promise.resolve():new Promise(r=>setTimeout(r,ms*SP)),
+      halt:()=>stop(),
+      pt:e=>{const q=svgPt(S,e);return[(q.x-bx)/sc,(q.y-by)/sc]},
+      drag(t,h){t.classList.add("plt");t.style.cursor="grab";t.style.touchAction="none";const sig=A.sig;t.addEventListener("click",e=>e.stopPropagation(),{signal:sig});
+        t.addEventListener("pointerdown",e=>{if(e.button>0)return;e.preventDefault();e.stopPropagation();stop();try{t.setPointerCapture(e.pointerId)}catch(_){}t.style.cursor="grabbing";const p0=A.pt(e);h.start&&h.start(p0);
+          const mv=ev=>h.move&&h.move(A.pt(ev),p0),up=ev=>{t.removeEventListener("pointermove",mv);t.removeEventListener("pointerup",up);t.removeEventListener("pointercancel",up);t.style.cursor="grab";noClickUntil=Date.now()+350;h.end&&h.end(A.pt(ev),p0)};
+          t.addEventListener("pointermove",mv);t.addEventListener("pointerup",up);t.addEventListener("pointercancel",up)},{signal:sig})},
+      tap(t,fn){t.classList.add("plt");t.style.cursor="pointer";t.addEventListener("click",e=>{e.stopPropagation();stop();fn(e)},{signal:A.sig})},
+      pulse(ip,r=22){const p=A.P(ip);return el("circle",{cx:p[0],cy:p[1],r,class:"skpulse",fill:"none",stroke:"var(--orange-500)","stroke-width":2.6,"stroke-dasharray":"6 5"},A.notesG)},
       // tween numeric attributes (or opacity) from where they are now
       to(e,attrs,ms=500){if(!e)return Promise.resolve();const f={};for(const k in attrs)f[k]=k==="opacity"?+getComputedStyle(e).opacity:+(e.getAttribute(k)||0);
-        return A.tw(ms,t=>{for(const k in attrs){const v=lerp(f[k],attrs[k],t);if(k==="opacity")e.style.opacity=v;else e.setAttribute(k,v)}})},
+        if("opacity" in attrs&&attrs.opacity>=.05)e.style.pointerEvents="";
+        return A.tw(ms,t=>{for(const k in attrs){const v=lerp(f[k],attrs[k],t);if(k==="opacity")e.style.opacity=v;else e.setAttribute(k,v)}}).then(()=>{if("opacity" in attrs&&attrs.opacity<.05)e.style.pointerEvents="none"})},
       op:(e,v,ms=450)=>Array.isArray(e)?Promise.all(e.map(x=>A.to(x,{opacity:v},ms))):A.to(e,{opacity:v},ms),
       // a pen line that draws itself
       draw:(e,v=1,ms=600)=>{e.setAttribute("pathLength",1);e.setAttribute("stroke-dasharray",1);if(!e.hasAttribute("stroke-dashoffset"))e.setAttribute("stroke-dashoffset",1);return A.to(e,{"stroke-dashoffset":1-v},ms)},
@@ -76,6 +88,7 @@ function Sketch(id,spec){
             L.on(u=>{const kmPerIll=u/kmPer,want=90*kmPerIll,steps=[.1,.2,.5,1,2,5,10,20,50,100,200],d=steps.find(x=>x>=want*.7)||200,len=d/kmPerIll,x0=ox+14,y0=oy+h-16;
               ln.setAttribute("d",`M${x0},${y0-6} L${x0},${y0} L${x0+len},${y0+.6} L${x0+len},${y0-6}`);lb.textContent=d<1?d*1000+" m":d+" km"})},
           ill(p){const s=w/L.v.w;return[ox+w/2+(p[0]-L.v.cx)*s,oy+h/2+(p[1]-L.v.cy)*s]},
+          world(ip){const s=w/L.v.w;return[L.v.cx+(ip[0]-ox-w/2)/s,L.v.cy+(ip[1]-oy-h/2)/s]},
           // a symbol that keeps its on-screen size at any zoom
           mark(p,drawFn){const mg=el("g",{},g);drawFn(mg);const m={g:mg,p:p.slice(),u:1,upd(){mg.setAttribute("transform",`translate(${m.p[0]} ${m.p[1]}) scale(${m.u})`)},
             move(q,ms=700){const f=m.p.slice();return A.tw(ms,t=>{m.p=[lerp(f[0],q[0],t),lerp(f[1],q[1],t)];m.upd()})}};L.on(u=>{m.u=u;m.upd()});m.upd();return m}};
@@ -128,13 +141,31 @@ function Sketch(id,spec){
   function reveal(o){o.rects.forEach(r=>r.setAttribute("width",r.dataset.w));if(o.arrow){o.arrow.sh.setAttribute("stroke-dashoffset",0);o.arrow.hd.setAttribute("opacity",1)}
     if(o.badge)o.badge.setAttribute("opacity",1);if(o.badge2)o.badge2.setAttribute("opacity",1);if(o.ring)o.ring.setAttribute("stroke-dashoffset",0)}
 
+  function sweep(){S.querySelectorAll("g").forEach(g=>{const so=g.style.opacity,ao=g.getAttribute("opacity"),o=so!==""?+so:ao!==null?+ao:1;g.style.pointerEvents=o<.05?"none":""})}
+  function setupPlay(s,i){sweep();ctl&&ctl.abort();ctl=new AbortController();api.sig=ctl.signal;cp=null;pb.innerHTML="";pb.className="skplay";
+    const P=s.play;if(!P)return;
+    pb.innerHTML=`<span class="ask"></span><span class="acts"></span><button type="button" class="show">show me</button>`;
+    const ask=pb.querySelector(".ask"),acts=pb.querySelector(".acts"),show=pb.querySelector(".show");
+    const ui={acts,say(t,bad){ask.innerHTML=t;pb.classList.toggle("bad",!!bad);if(bad){pb.classList.remove("shake");void pb.offsetWidth;pb.classList.add("shake")}},
+      btn(label,fn,cls=""){const b=document.createElement("button");b.type="button";b.className="pbtn "+cls;b.innerHTML=label;b.onclick=e=>{e.stopPropagation();stop();fn(b)};acts.appendChild(b);return b}};
+    const done=msg=>{if(pb.classList.contains("ok"))return;solved[i]=true;updNav();pb.classList.remove("bad");pb.classList.add("ok");ask.innerHTML=`<b class="tick">✓</b> ${msg||P.ok||"Done"}`;acts.innerHTML="";show.remove();
+      api.notesG.querySelectorAll(".skpulse").forEach(n=>n.remove());if(cur<N-1)next.classList.add("pulse");live.textContent=(msg||P.ok||"Done")};
+    const rc=(P.choices||[]).find(c=>c.right);
+    const autoSolve=async()=>{if(P.solve)await P.solve(api,ui);else if(rc&&rc.then)await rc.then(api);done(rc?rc.ok:undefined)};
+    cp={done,autoSolve};ui.say(`<b>Your turn:</b> ${P.ask}`);
+    (P.choices||[]).forEach(c=>ui.btn(c.label,async()=>{if(c.right){done(c.ok);c.then&&await c.then(api)}else ui.say(c.why,true)}));
+    P.setup&&P.setup(api,m=>{stop();done(m)},ui);
+    show.onclick=async e=>{e.stopPropagation();stop();show.disabled=true;await autoSolve()};
+    pb.classList.add("on")}
+
   async function go(i,instant){
-    cancels.forEach(c=>c());cancels=[];clearTimeout(autoT);const me=++run,alive=()=>me===run;
+    cancels.forEach(c=>c());cancels=[];clearTimeout(autoT);const me=++run,alive=()=>me===run;next.classList.remove("pulse");animating=!instant&&!REDUCE;
     const from=cur;cur=i;updNav();api.fast=!!instant||REDUCE;
     const old=[...api.notesG.childNodes];
     if(api.fast)old.forEach(n=>n.remove());else{old.forEach(n=>{n.style.transition="opacity .18s";n.style.opacity=0});setTimeout(()=>old.forEach(n=>n.remove()),200)}
     const s=spec.steps[i];const liveTxt=()=>`Step ${i+1} of ${N}. `+s.notes.map(n=>(n.t?TX(n)+": ":"")+BX(n).join(" ")).join(" ");
     await (s.go(api,from)||null);if(!alive())return;
+    setupPlay(s,i);
     await api.wait(80);if(!alive())return;
     live.textContent=liveTxt();const ns=layoutNotes(s.notes);
     if(api.fast)ns.forEach(reveal);
@@ -147,7 +178,10 @@ function Sketch(id,spec){
       if(!alive())return;await api.wait(140)}
     if(!alive())return;
     if(!hinted&&!api.fast){hinted=true;V.querySelector(".skhint")?.classList.add("on")}
-    if(auto)autoT=setTimeout(()=>{if(!alive()||!auto)return;if(cur<N-1)go(cur+1);else{auto=false;updNav()}},spec.dwell||4200)}
+    animating=false;
+    const adv=()=>{if(!alive()||!auto)return;if(cur<N-1)go(cur+1);else{auto=false;updNav()}};
+    if(auto){if(s.play&&!solved[i])autoT=setTimeout(async()=>{if(!alive()||!auto)return;cp&&await cp.autoSolve();if(!alive()||!auto)return;autoT=setTimeout(adv,1800)},spec.dwell||3400);
+      else autoT=setTimeout(adv,spec.dwell||3400)}}
 
   function build(){
     mode=innerWidth<700?"port":"land";seed=7;api=mkApi();
