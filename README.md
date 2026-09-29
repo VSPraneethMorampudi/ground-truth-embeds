@@ -49,3 +49,12 @@ SECTION FIGURES (v5 · hand-annotated, stepped)
   New in v5.1: #provenance, #inuse, #update (the last three sections of the story), hand-drawn
   scale bars on map figures, a note under each figure saying what is real and what is illustrative,
   and a "next:" cue on the last step.
+
+VERSIONS (frozen copies; links never change)
+  versions/index.html lists every version and its embed links
+  versions/v5/   28 Sep 2026 · Hand-annotated section figures (commit 51c3791)
+  versions/v4.1/   25 Sep 2026 · Overview, vertical flow and the scroll journey (commit cafc85f)
+  versions/v4/   24 Sep 2026 · Hands-on figures on real geography (commit 2fd7c85)
+  versions/v3/   23 Sep 2026 · GitLab Pajamas restyle (commit c6ec764)
+  versions/v2/   23 Sep 2026 · First six figures (commit 63fa3a3)
+  The root index.html is the current build and keeps changing. Point a story at versions/<v>/#<view> to pin it.
