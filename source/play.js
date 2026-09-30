@@ -2,7 +2,7 @@
    v6 put a task on every step, which turned each figure into a quiz and competed with the story's
    own navigation. v7 keeps ONE optional task per figure, on the step where doing it teaches more
    than watching it:
-     intake       step 2  drag the swapped pin back into the state's box
+     intake       step 2  drag the stray pin back into the state's box
      conversion   step 2  snap the dangling fibre end onto its node
      projection   step 2  hunt for where UTM 44N measures worst
      cartography  step 4  zoom in until the centres appear
@@ -14,14 +14,16 @@
 const d2=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 
 /* ---------- Intake ---------- */
-{const I=SPEC.intake.steps,cg=G.worldPts.cg,ENV=[462.7,117.1,7.3,11.3];
- I[1].play={ask:"drag the pin back inside Chhattisgarh's box, or swap the numbers",ok:"Back inside 17.78–24.11° N, 80.25–84.40° E. It passes",
-  setup(A,done,ui){const s=A.st,L=s.wL;const p=L.ill(s.wpin.p);A.pulse([p[0],p[1]-20],22);
-   ui.btn("Swap lat/long",async()=>{await s.wpin.move(cg,700);done()});
-   A.drag(s.wpin.g,{move:q=>{s.wpin.p=L.world([q[0],q[1]+14]);s.wpin.upd()},
-    end:()=>{const q=s.wpin.p;if(q[0]>ENV[0]-5&&q[0]<ENV[0]+ENV[2]+5&&q[1]>ENV[1]-5&&q[1]<ENV[1]+ENV[3]+5)s.wpin.move(cg,250).then(()=>done());
-     else ui.say("Still outside. Chhattisgarh is the orange patch in India",true)}})},
-  solve:async A=>{await A.st.wpin.move(cg,800)}}}
+{const I=SPEC.intake.steps;
+ const inBox=p=>{const[lo,la]=xy2ll(p[0],p[1]);return lo>=80.25&&lo<=84.4&&la>=17.78&&la<=24.11};
+ const home=async(A,ms)=>{const s=A.st;A.op(s.offG,0,200);await s.spin.move(s.P0,ms)};
+ I[1].play={ask:"drag the red pin back inside the dashed box, or swap the numbers",ok:"Back inside 17.78–24.11° N, 80.25–84.40° E. It passes",
+  setup(A,done,ui){const s=A.st,L=s.sL;A.pulse(s.offN.head(),22);
+   ui.btn("Swap lat/long",async()=>{await home(A,700);done()});
+   A.drag(s.spin.g,{start:()=>A.op(s.offG,.25,150),move:q=>{s.spin.p=L.world([q[0],q[1]+14]);s.spin.upd()},
+    end:()=>{if(inBox(s.spin.p))home(A,300).then(()=>done());
+     else{A.op(s.offG,1,150);ui.say("Still outside. Drop it anywhere inside the dashed box",true)}}})},
+  solve:async A=>{await home(A,800)}}}
 
 /* ---------- Conversion ---------- */
 {const I=SPEC.conversion.steps;

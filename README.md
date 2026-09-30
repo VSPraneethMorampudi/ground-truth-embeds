@@ -75,5 +75,13 @@ v7 (30 Sep 2026): type and interaction cleanup after a review of the story.
   No "next:" cue under the last step: the story's own navigation says what comes next.
   Fonts: the figure waits for Avenir, Caveat and GitLab Mono before its first layout, so the
     reveal masks are measured on the real faces and no word is cut off.
+  Layout: a note with an arrow sits level with what it points at; a note alone in its column is
+    centred on the drawing. No more notes stacked at the top over empty space.
+  Home ground, no world map: Intake and Projection draw Chhattisgarh among its eight neighbouring
+    states (Natural Earth admin-1, in the state's own projection) with the state's lat/long box
+    traced through the projection. A record that lands far away (swapped lat/long, blank = 0,0, a
+    lost .prj) waits as a red pin on the map's edge, on the great-circle bearing from Raipur, with
+    its coordinates and distance: 81.63° N, 21.25° E is about 7,200 km north; 0° N, 0° E is about
+    9,100 km west. The Intake task is now: drag that pin back inside the dashed box.
   Fixes: Projection colour key no longer overlaps the scale bar; Provenance card values stay inside
     the card; Update cycle arrow no longer crosses the record ID.
