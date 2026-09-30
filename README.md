@@ -52,7 +52,8 @@ SECTION FIGURES (v5 · hand-annotated, stepped)
 
 VERSIONS (frozen copies; links never change)
   versions/index.html lists every version and its embed links
-  versions/v6/   29 Sep 2026 · Your turn: hands-on sketch figures, faster (current build)
+  versions/v7/   30 Sep 2026 · Pen only for arrowed notes, one optional Try it per figure (current build)
+  versions/v6/   29 Sep 2026 · Your turn: hands-on sketch figures, faster
   versions/v5/   28 Sep 2026 · Hand-annotated section figures (commit 51c3791)
   versions/v4.1/   25 Sep 2026 · Overview, vertical flow and the scroll journey (commit cafc85f)
   versions/v4/   24 Sep 2026 · Hands-on figures on real geography (commit 2fd7c85)
@@ -62,3 +63,25 @@ VERSIONS (frozen copies; links never change)
 
 v6 (29 Sep 2026): every sketch step ends in a "your turn" task (source/play.js); animations run at half duration
   and a tap finishes any animation. Storage and Publication keep their v4 interactive designs.
+
+v7 (30 Sep 2026): type and interaction cleanup after a review of the story.
+  Type rule: Caveat (pen) only for a note that carries a pen arrow to what it points at. Every other
+    note, every label inside a drawing, the step bar, the Try it bar and the footer are set in the
+    story's own font (Avenir Next World); IDs, table names and field values in GitLab Mono. On phones
+    all notes are typed (they sit in a numbered list under the drawing).
+  One optional Try it per figure instead of a task on every step (see the table at the top of
+    source/play.js). Tasks never block: the arrows and step list always move on, a stray tap on the
+    drawing no longer shakes the bar, "Show me" solves it. Steps without a task animate again.
+  No "next:" cue under the last step: the story's own navigation says what comes next.
+  Fonts: the figure waits for Avenir, Caveat and GitLab Mono before its first layout, so the
+    reveal masks are measured on the real faces and no word is cut off.
+  Layout: a note with an arrow sits level with what it points at; a note alone in its column is
+    centred on the drawing. No more notes stacked at the top over empty space.
+  Home ground, no world map: Intake and Projection draw Chhattisgarh among its eight neighbouring
+    states (Natural Earth admin-1, in the state's own projection) with the state's lat/long box
+    traced through the projection. A record that lands far away (swapped lat/long, blank = 0,0, a
+    lost .prj) waits as a red pin on the map's edge, on the great-circle bearing from Raipur, with
+    its coordinates and distance: 81.63° N, 21.25° E is about 7,200 km north; 0° N, 0° E is about
+    9,100 km west. The Intake task is now: drag that pin back inside the dashed box.
+  Fixes: Projection colour key no longer overlaps the scale bar; Provenance card values stay inside
+    the card; Update cycle arrow no longer crosses the record ID.

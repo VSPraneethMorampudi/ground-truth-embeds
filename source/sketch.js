@@ -6,7 +6,9 @@
 const SPEC={};
 function Sketch(id,spec){
   const V=$("#"+id),S=V.querySelector("svg.sk"),nav=V.querySelector(".sknav"),live=V.querySelector(".sklive");
-  const foot=document.createElement("p");foot.className="skfoot";foot.innerHTML=`<span>${spec.foot||""}</span>`+(spec.next?`<span class="nx" aria-hidden="true">next: ${spec.next}<svg width="20" height="26" viewBox="0 0 24 30" style="overflow:visible"><path d="M8 2 C 14 9, 4 16, 12 26 M6 20 L12 27 L16 19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`:"");nav.after(foot);
+  // v7: no "next:" cue. The story's own navigation says what comes next, and the old cues went stale
+  // whenever the story was reordered.
+  const foot=document.createElement("p");foot.className="skfoot";foot.innerHTML=`<span>${spec.foot||""}</span>`;nav.after(foot);
   const N=spec.steps.length;
   let animating=false,solved=[],ctl=null,cp=null,noClickUntil=0;const SP=REDUCE?0:.5;
   const pb=document.createElement("div");pb.className="skplay";pb.setAttribute("aria-live","polite");nav.before(pb);
@@ -26,7 +28,9 @@ function Sketch(id,spec){
   prev.onclick=()=>{stop();if(cur>0)go(cur-1)};
   next.onclick=()=>{stop();go(cur>=N-1?0:cur+1)};
   S.addEventListener("click",e=>{if(e.target.closest(".plt")||Date.now()<noClickUntil)return;stop();if(animating){go(cur,true);return}
-    const s=spec.steps[cur];if(s&&s.play&&!solved[cur]){pb.classList.remove("shake");void pb.offsetWidth;pb.classList.add("shake");return}go(cur>=N-1?0:cur+1)});
+    // v7: a try-it step is optional. A stray tap on the drawing neither skips it nor scolds; the
+    // arrows and the step list always move on.
+    const s=spec.steps[cur];if(s&&s.play&&!solved[cur])return;go(cur>=N-1?0:cur+1)});
   V.addEventListener("keydown",e=>{if(e.key==="ArrowRight"){stop();go(Math.min(N-1,cur+1))}else if(e.key==="ArrowLeft"){stop();go(Math.max(0,cur-1))}});
   // swipe on phones
   let sx=null;S.addEventListener("touchstart",e=>{sx=e.touches[0].clientX},{passive:true});
@@ -62,7 +66,11 @@ function Sketch(id,spec){
       op:(e,v,ms=450)=>Array.isArray(e)?Promise.all(e.map(x=>A.to(x,{opacity:v},ms))):A.to(e,{opacity:v},ms),
       // a pen line that draws itself
       draw:(e,v=1,ms=600)=>{e.setAttribute("pathLength",1);e.setAttribute("stroke-dasharray",1);if(!e.hasAttribute("stroke-dashoffset"))e.setAttribute("stroke-dashoffset",1);return A.to(e,{"stroke-dashoffset":1-v},ms)},
-      hand:(g,x,y,s,o={})=>{const t=txt({x,y,class:"h"+(o.bold?" t":""),"font-size":o.size||24,"text-anchor":o.anchor||"start",...(o.fill?{style:"fill:"+o.fill}:{}),...(o.rot?{transform:`rotate(${o.rot} ${x} ${y})`}:{})},g,s);return t},
+      // labels inside a drawing. v7: typed in the story's font by default (o.mono for IDs and table
+      // names); handwriting (o.hand) is kept for pen annotations only. Sizes are given in the old
+      // Caveat units, so the typed faces are scaled to the same visual weight.
+      hand:(g,x,y,s,o={})=>{const f=o.hand?"h":o.mono?"m":"u",k=o.hand?1:o.mono?.62:.7;
+        const t=txt({x,y,class:f+(o.bold?" t":""),"font-size":+((o.size||24)*k).toFixed(1),"text-anchor":o.anchor||"start",...(o.fill?{style:"fill:"+o.fill}:{}),...(o.rot?{transform:`rotate(${o.rot} ${x} ${y})`}:{})},g,s);return t},
       wob(pts,close=true){let d="";pts.forEach((p,i)=>{d+=(i?"L":"M")+(p[0]+(R()-.5)*1.6).toFixed(1)+","+(p[1]+(R()-.5)*1.6).toFixed(1)});return d+(close?"Z":"")},
       rough(g,x,y,w,h,o={}){const n=[[x,y],[x+w*.5,y+(R()-.5)*1.5],[x+w,y],[x+w+(R()-.5)*1.5,y+h*.5],[x+w,y+h],[x+w*.5,y+h+(R()-.5)*1.5],[x,y+h],[x+(R()-.5)*1.5,y+h*.5]];
         return el("path",{d:A.wob(n),fill:o.fill||"#fff",stroke:o.stroke||"var(--n700)","stroke-width":o.sw||1.6,"stroke-linejoin":"round"},g)},
@@ -97,14 +105,20 @@ function Sketch(id,spec){
     return A}
 
   /* ---------- notes: handwritten, revealed line by line ---------- */
-  const TYPE={land:{ts:33,fs:25.5,lh:29,gap:10},port:{ts:42,fs:34,lh:38,gap:16}};
+  // v7 type rule: a note written in pen (Caveat) only when it has a pen arrow to what it points at.
+  // Every other note, and every note on phones (numbered list under the drawing), is typed in the
+  // story's font: bold title, regular body.
+  const TYPE={land:{ts:33,fs:25.5,lh:29,gap:10},port:{ts:42,fs:34,lh:38,gap:16},
+    landU:{ts:22,fs:18,lh:25.5,gap:10},portU:{ts:28,fs:23,lh:33,gap:16}};
+  const penned=n=>mode==="land"&&!!n.to;
+  const typeOf=n=>penned(n)?TYPE.land:mode==="land"?TYPE.landU:TYPE.portU;
   const SLOT={l0:[40,74,"s"],l1:[40,392,"s"],r0:[1240,74,"e"],r1:[1240,392,"e"]};
   function wrap(b,max){const w=b.join(" ").split(/\s+/),out=[];let l="";w.forEach(x=>{if((l+" "+x).trim().length>max&&l){out.push(l);l=x}else l=(l+" "+x).trim()});if(l)out.push(l);return out}
   const TX=n=>typeof n.t==="function"?n.t(api):n.t,BX=n=>typeof n.b==="function"?n.b(api):n.b;
-  const lines=n=>mode==="port"?wrap(BX(n),n.to?33:36):BX(n);
-  function noteH(n,T){return(n.t?T.ts+6:0)+(typeof n.b==="function"?n.bmax||4:lines(n).length)*T.lh}
+  const lines_=n=>mode==="port"?wrap(BX(n),n.to?40:44):BX(n);
+  function noteH(n,T){return(n.t?T.ts+6:0)+(typeof n.b==="function"?n.bmax||4:lines_(n).length)*T.lh}
   function portNotesY(){return api.box[1]+api.box[3]+40}
-  function portHeight(){const T=TYPE.port;let mx=0;spec.steps.forEach(s=>{let h=0;s.notes.forEach(n=>h+=noteH(n,T)+T.gap+16);mx=Math.max(mx,h)});return Math.ceil(portNotesY()+mx+6)}
+  function portHeight(){let mx=0;spec.steps.forEach(s=>{let h=0;s.notes.forEach(n=>{const T=typeOf(n);h+=noteH(n,T)+T.gap+16});mx=Math.max(mx,h)});return Math.ceil(portNotesY()+mx+6)}
   function arrow(g,a,b,bend){
     const dx=b[0]-a[0],dy=b[1]-a[1],d=Math.hypot(dx,dy),nx=-dy/d,ny=dx/d,w=bend*d;
     const c1=[a[0]+dx*.28+nx*w*(.9+R()*.2),a[1]+dy*.28+ny*w*(.9+R()*.2)],c2=[a[0]+dx*.74+nx*w*.4,a[1]+dy*.74+ny*w*.4];
@@ -115,28 +129,43 @@ function Sketch(id,spec){
     const hd=el("path",{d:`M${h(.5,13)} L${f(b)} L${h(-.45,11)}`,fill:"none",stroke:"var(--n800)","stroke-width":2,"stroke-linecap":"round","stroke-linejoin":"round",opacity:0},g);
     return{sh,hd}}
   function badge(g,c,n,r=15){const b=el("g",{opacity:0},g);el("circle",{cx:c[0],cy:c[1],r,fill:"#fff",stroke:"var(--n900)","stroke-width":2},b);
-    txt({x:c[0],y:c[1]+r*.45,"text-anchor":"middle",class:"h t","font-size":r*1.55},b,String(n));return b}
+    txt({x:c[0],y:c[1]+r*.4,"text-anchor":"middle",class:"u t","font-size":r*1.05},b,String(n));return b}
+  // v7.1: on wide screens a note no longer sits at the top of its column by default. A note with an
+  // arrow is placed level with what it points at; a note on its own in a column is centred on the
+  // drawing; the rest keep their authored slot. Notes in a column never overlap and stay on the page.
+  const TOP=30,BOT=698,GAP=30,MID=352;
+  function place(outs){
+    ["l","r"].forEach(side=>{const col=outs.filter(o=>o.n.at&&o.n.at[0]===side);if(!col.length)return;
+      col.forEach(o=>{const b=o.g.getBBox();o.bb=b;
+        o.pref=o.t?o.t[1]-b.height*.32:col.length===1?MID-b.height/2:b.y});
+      let y=TOP;col.forEach(o=>{o.top=Math.max(o.pref,y);y=o.top+o.bb.height+GAP});
+      let lim=BOT;for(let i=col.length-1;i>=0;i--){const o=col[i];o.top=Math.min(o.top,lim-o.bb.height);lim=o.top-GAP}
+      col.forEach(o=>{o.top=Math.max(TOP,o.top);o.dy=o.top-o.bb.y;o.g.setAttribute("transform",`translate(0 ${o.dy.toFixed(1)})`)})})}
   function layoutNotes(notes){
-    const land=mode==="land",T=TYPE[mode],out=[];let py=portNotesY(),num=0;
+    const land=mode==="land",out=[];let py=portNotesY(),num=0;
     notes.forEach(n=>{
-      const g=el("g",{class:"note"},api.notesG),lines=[];let x,y,ta;
+      const T=typeOf(n),f=penned(n)?"h":"u";
+      const g=el("g",{class:"note "+(f==="h"?"pen":"typed")},api.notesG),lines=[];let x,y,ta;
       if(land){[x,y]=SLOT[n.at];ta=SLOT[n.at][2]==="e"?"end":"start";if(n.dy)y+=n.dy}else{x=n.to?64:24;y=py+T.ts*.8;ta="start"}
       let yy=y;
-      if(n.t){lines.push(txt({x,y:yy,class:"h t","font-size":T.ts,"text-anchor":ta,style:`fill:${n.c||"var(--n950)"}`},g,TX(n)));yy+=T.ts*.35+T.lh}
-      (mode==="port"?wrap(BX(n),n.to?33:36):BX(n)).forEach(t=>{lines.push(txt({x,y:yy,class:"h","font-size":T.fs,"text-anchor":ta},g,t));yy+=T.lh});
+      if(n.t){lines.push(txt({x,y:yy,class:f+" t","font-size":T.ts,"text-anchor":ta,style:`fill:${n.c||"var(--n950)"}`},g,TX(n)));yy+=T.ts*.35+T.lh}
+      lines_(n).forEach(t=>{lines.push(txt({x,y:yy,class:f+" b","font-size":T.fs,"text-anchor":ta},g,t));yy+=T.lh});
       const cp=el("clipPath",{id:id+"-c"+(uid++)},api.defs);
       const rects=lines.map(e=>{const b=e.getBBox(),r=el("rect",{x:b.x-8,y:b.y-8,width:0,height:b.height+16},cp);r.dataset.w=b.width+18;return r});
       g.setAttribute("clip-path",`url(#${cp.id})`);
-      const o={g,rects,marks:[]};
       const tgt=n.to?n.to(api):null;
-      if(tgt){const t=api.P(tgt);
-        if(land){const gb=g.getBBox();const sides=[[gb.x+gb.width+16,gb.y+gb.height*.4],[gb.x-16,gb.y+gb.height*.4],[gb.x+gb.width*.5,gb.y+gb.height+12],[gb.x+gb.width*.5,gb.y-12]];
-          const a=sides.reduce((p,q)=>D(q,t)<D(p,t)?q:p),stop=n.ring?(n.ring*api.sc*1.2+6):8,d=D(a,t),b=[t[0]-(t[0]-a[0])/d*stop,t[1]-(t[1]-a[1])/d*stop];
-          const ag=el("g",{},api.notesG);o.arrow=arrow(ag,a,b,(a[0]<t[0]?-1:1)*(a[1]<t[1]?1:-1)*.16);o.marks.push(ag)}
-        else{num++;const bg=el("g",{},api.notesG);o.badge=badge(bg,[t[0]+(n.bx||22),t[1]-(n.by||22)],num);o.badge2=badge(api.notesG,[36,y-T.ts*.3],num,14);o.marks.push(bg,o.badge2)}
-        if(n.ring){const rg=el("g",{},api.notesG);o.ring=api.ring(rg,t,n.ring*api.sc,{sx:1.15});o.marks.push(rg)}}
-      if(!land)py=yy+T.gap+(n.t?4:0);
-      out.push(o)});
+      out.push({n,T,y,g,rects,marks:[],t:tgt?api.P(tgt):null});
+      if(!land)py=yy+T.gap+(n.t?4:0)});
+    if(land)place(out);
+    out.forEach(o=>{const{n,T,t}=o;if(!t)return;
+      if(land){const b=o.g.getBBox(),gb={x:b.x,y:b.y+(o.dy||0),width:b.width,height:b.height};
+        const sides=[[gb.x+gb.width+16,gb.y+gb.height*.4],[gb.x-16,gb.y+gb.height*.4],[gb.x+gb.width*.5,gb.y+gb.height+12],[gb.x+gb.width*.5,gb.y-12]];
+        const a=sides.reduce((p,q)=>D(q,t)<D(p,t)?q:p),stop=n.ring?(n.ring*api.sc*1.2+6):8,d=D(a,t)||1,b2=[t[0]-(t[0]-a[0])/d*stop,t[1]-(t[1]-a[1])/d*stop];
+        // a near-level arrow gets a gentle bow instead of a dead-straight line
+        const bend=Math.abs(a[1]-t[1])<40?.12:.16;
+        const ag=el("g",{},api.notesG);o.arrow=arrow(ag,a,b2,(a[0]<t[0]?-1:1)*(a[1]<=t[1]?1:-1)*bend);o.marks.push(ag)}
+      else{num++;const bg=el("g",{},api.notesG);o.badge=badge(bg,[t[0]+(n.bx||22),t[1]-(n.by||22)],num);o.badge2=badge(api.notesG,[36,o.y-T.ts*.3],num,14);o.marks.push(bg,o.badge2)}
+      if(n.ring){const rg=el("g",{},api.notesG);o.ring=api.ring(rg,t,n.ring*api.sc,{sx:1.15});o.marks.push(rg)}});
     return out}
   function reveal(o){o.rects.forEach(r=>r.setAttribute("width",r.dataset.w));if(o.arrow){o.arrow.sh.setAttribute("stroke-dashoffset",0);o.arrow.hd.setAttribute("opacity",1)}
     if(o.badge)o.badge.setAttribute("opacity",1);if(o.badge2)o.badge2.setAttribute("opacity",1);if(o.ring)o.ring.setAttribute("stroke-dashoffset",0)}
@@ -144,7 +173,7 @@ function Sketch(id,spec){
   function sweep(){S.querySelectorAll("g").forEach(g=>{const so=g.style.opacity,ao=g.getAttribute("opacity"),o=so!==""?+so:ao!==null?+ao:1;g.style.pointerEvents=o<.05?"none":""})}
   function setupPlay(s,i){sweep();ctl&&ctl.abort();ctl=new AbortController();api.sig=ctl.signal;cp=null;pb.innerHTML="";pb.className="skplay";
     const P=s.play;if(!P)return;
-    pb.innerHTML=`<span class="ask"></span><span class="acts"></span><button type="button" class="show">show me</button>`;
+    pb.innerHTML=`<span class="ask"></span><span class="acts"></span><button type="button" class="show">Show me</button>`;
     const ask=pb.querySelector(".ask"),acts=pb.querySelector(".acts"),show=pb.querySelector(".show");
     const ui={acts,say(t,bad){ask.innerHTML=t;pb.classList.toggle("bad",!!bad);if(bad){pb.classList.remove("shake");void pb.offsetWidth;pb.classList.add("shake")}},
       btn(label,fn,cls=""){const b=document.createElement("button");b.type="button";b.className="pbtn "+cls;b.innerHTML=label;b.onclick=e=>{e.stopPropagation();stop();fn(b)};acts.appendChild(b);return b}};
@@ -152,7 +181,7 @@ function Sketch(id,spec){
       api.notesG.querySelectorAll(".skpulse").forEach(n=>n.remove());if(cur<N-1)next.classList.add("pulse");live.textContent=(msg||P.ok||"Done")};
     const rc=(P.choices||[]).find(c=>c.right);
     const autoSolve=async()=>{if(P.solve)await P.solve(api,ui);else if(rc&&rc.then)await rc.then(api);done(rc?rc.ok:undefined)};
-    cp={done,autoSolve};ui.say(`<b>Your turn:</b> ${P.ask}`);
+    cp={done,autoSolve};ui.say(`<b class="lbl">Try it</b> ${P.ask[0].toUpperCase()+P.ask.slice(1)}`);
     (P.choices||[]).forEach(c=>ui.btn(c.label,async()=>{if(c.right){done(c.ok);c.then&&await c.then(api)}else ui.say(c.why,true)}));
     P.setup&&P.setup(api,m=>{stop();done(m)},ui);
     show.onclick=async e=>{e.stopPropagation();stop();show.disabled=true;await autoSolve()};
@@ -188,59 +217,86 @@ function Sketch(id,spec){
     S.setAttribute("viewBox",mode==="land"?"0 0 1280 720":`0 0 640 ${portHeight()}`);
     V.classList.toggle("port",mode==="port");
     spec.draw(api);requestAnimationFrame(()=>typeof fit==="function"&&fit())}
-  document.fonts.load('700 30px "Caveat"').then(()=>document.fonts.load('400 26px "Caveat"')).catch(()=>{}).then(()=>{
+  // notes are revealed through clip rects measured from the text, so every face must be in before
+  // the first build, or a late-loading font leaves words cut off at the edge
+  const faces=['700 30px "Caveat"','400 26px "Caveat"','400 18px "Avenir Next World"','700 18px "Avenir Next World"','400 14px "GitLab Mono"'];
+  Promise.all(faces.map(f=>document.fonts.load(f).catch(()=>{}))).then(()=>{
     build();
     new IntersectionObserver((es,o)=>{if(es[0].isIntersecting){o.disconnect();auto=!OPT.auto||OPT.auto!=="off";if(OPT.step!==undefined){auto=false;go(clamp(+OPT.step,0,N-1),true)}else go(0)}},{threshold:.3}).observe(S)});
   let rt,lastW=innerWidth;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{const m=innerWidth<700?"port":"land";if(m!==mode||(m==="port"&&innerWidth!==lastW)){lastW=innerWidth;build();if(cur>=0){const c=cur;cur=-1;go(c,true)}}},160)})}
 
 /* shared scenes ------------------------------------------------------------ */
-// the world, equirectangular 640 x 320 (lon -180..180)
-function worldLens(A,parent,view){const L=A.lens(parent,{paper:"#e8eef2",view});
-  const gr=el("g",{stroke:"#d6e0e6","stroke-width":.8,fill:"none","vector-effect":"non-scaling-stroke"},L.g);
-  for(let x=0;x<=640;x+=640/24)el("line",{x1:x,x2:x,y1:0,y2:320,"vector-effect":"non-scaling-stroke"},gr);for(let y=0;y<=320;y+=320/12)el("line",{x1:0,x2:640,y1:y,y2:y,"vector-effect":"non-scaling-stroke"},gr);
-  el("line",{x1:0,x2:640,y1:160,y2:160,stroke:"#b8c7d1","stroke-width":1,"stroke-dasharray":"4 4","vector-effect":"non-scaling-stroke"},L.g);
-  el("line",{x1:320,x2:320,y1:0,y2:320,stroke:"#b8c7d1","stroke-width":1,"stroke-dasharray":"4 4","vector-effect":"non-scaling-stroke"},L.g);
-  el("path",{d:G.world.land,fill:"#fbfaf8",stroke:"#bfb9b0","stroke-width":.8,"vector-effect":"non-scaling-stroke"},L.g);
-  el("path",{d:G.world.cg,fill:"#e8c9a7",stroke:"var(--dv-orange-700)","stroke-width":1,"vector-effect":"non-scaling-stroke"},L.g);
-  return L}
-const WVIEW={cx:392,cy:160,w:194};
+// v7.1: the section figures stay on home ground. Chhattisgarh sits among the eight states around it,
+// all in the state's own projection; a record that lands far away is shown as a pin waiting at the
+// edge of the map, pointing the way it went, with how far it went written beside it.
 const SVIEW={cx:260,cy:320,w:392};
+const RVIEW={cx:267,cy:323,w:670};
+function regionLens(A,parent,view=RVIEW,o={}){const L=A.lens(parent,{paper:"#ebe8e2",view});const g=L.g;
+  const nb=el("g",{},g);G.ctx.states.forEach(s=>el("path",{d:s.d,fill:"#f4f2ed",stroke:"#fff","stroke-width":1.6,"stroke-linejoin":"round","vector-effect":"non-scaling-stroke"},nb));
+  const lab=el("g",{},g);const labs=Object.keys(LBL).map(n=>txt({x:LBL[n][0],y:LBL[n][1],"text-anchor":"middle",class:"u",style:"fill:#a39d94;font-weight:500"},lab,n.toUpperCase()));
+  L.on(u=>labs.forEach(t=>{t.setAttribute("font-size",(13*u).toFixed(3));t.setAttribute("letter-spacing",(2.2*u).toFixed(3))}));
+  L.nbl=lab;if(o.state!==false)L.st=A.state(g);return L}
+// the state's lat/long box, traced through the projection so its edges curve as they should
+function envelope(g){const P=[];for(let x=80.25;x<=84.4001;x+=.05)P.push(ll2xy(x,17.78));for(let y=17.78;y<=24.1101;y+=.05)P.push(ll2xy(84.4,y));
+  for(let x=84.4;x>=80.2499;x-=.05)P.push(ll2xy(x,24.11));for(let y=24.11;y>=17.7799;y-=.05)P.push(ll2xy(80.25,y));
+  return el("path",{d:"M"+P.map(p=>p.map(v=>v.toFixed(1)).join(",")).join("L")+"Z",fill:"none",stroke:"var(--n900)","stroke-width":1.6,"stroke-dasharray":"7 5","vector-effect":"non-scaling-stroke"},g)}
+// where a stray record waits: on the edge of the view, on the great-circle bearing from Raipur
+function offMark(A,L,brg,head,sub){const v=L.v,hw=v.w/2,hh=v.w*L.h/L.w/2,m=v.w*.075,r=brg*Math.PI/180,dx=Math.sin(r),dy=-Math.cos(r),P0=G.stack.pin;
+  let t=1e9;if(dx>1e-6)t=Math.min(t,(v.cx+hw-m-P0[0])/dx);if(dx<-1e-6)t=Math.min(t,(v.cx-hw+m-P0[0])/dx);if(dy>1e-6)t=Math.min(t,(v.cy+hh-m-P0[1])/dy);if(dy<-1e-6)t=Math.min(t,(v.cy-hh+m-P0[1])/dy);
+  const p=[P0[0]+dx*t,P0[1]+dy*t];
+  return{p,head:()=>{const q=L.ill(p);return[q[0],q[1]-20]},
+    draw(parent){const q=L.ill(p),c=[q[0],q[1]-20],g=el("g",{opacity:0},parent),f=v=>v.map(n=>n.toFixed(1)).join(",");
+      const a0=[c[0]+dx*18,c[1]+dy*18],a1=[c[0]+dx*44,c[1]+dy*44];
+      el("path",{d:`M${f(a0)} L${f(a1)}`,fill:"none",stroke:"var(--red-700)","stroke-width":2.4,"stroke-linecap":"round","stroke-dasharray":"1 6"},g);
+      const h=(k,s)=>[a1[0]-s*(dx*Math.cos(k)-dy*Math.sin(k)),a1[1]-s*(dy*Math.cos(k)+dx*Math.sin(k))];
+      el("path",{d:`M${f(h(.55,11))} L${f(a1)} L${f(h(-.55,11))}`,fill:"none",stroke:"var(--red-700)","stroke-width":2.4,"stroke-linecap":"round","stroke-linejoin":"round"},g);
+      const side=Math.abs(dx)>Math.abs(dy);let x,y,an;
+      if(side){x=q[0]+(dx<0?-14:14);y=q[1]+24;an=dx<0?"start":"end"}else{x=q[0];y=dy<0?q[1]+30:q[1]-58;an="middle"}
+      const t1=A.hand(g,x,y,head,{mono:1,bold:1,size:23,anchor:an,fill:"var(--red-700)"}),t2=A.hand(g,x,y+20,sub,{size:21,anchor:an,fill:"var(--n700)"});
+      // a paper backing so the label reads over the map
+      const bb=[t1.getBBox(),t2.getBBox()],x0=Math.min(bb[0].x,bb[1].x)-7,y0=bb[0].y-5,x1=Math.max(bb[0].x+bb[0].width,bb[1].x+bb[1].width)+7,y1=bb[1].y+bb[1].height+5;
+      g.insertBefore(el("rect",{x:x0,y:y0,width:x1-x0,height:y1-y0,rx:6,fill:"rgba(251,250,248,.92)",stroke:"#e3ddd3"}),t1);
+      return g}}}
 
 /* ============================================================ INTAKE */
-SPEC.intake={W:380,H:620,portH:560,next:"Conversion",foot:"District boundaries are real. The record and its errors are illustrative.",steps:[],draw(A){
+SPEC.intake={W:560,H:620,portH:560,foot:"District and state boundaries are real. The record and its errors are illustrative.",steps:[],draw(A){
   const st=A.st;
-  st.sS=el("g",{},A.ill);st.wS=el("g",{},A.ill);st.wS.style.opacity=0;
-  st.sL=A.lens(st.sS,{view:SVIEW});st.sL.scalebar();
+  st.sS=el("g",{},A.ill);
+  st.sL=regionLens(A,st.sS,RVIEW);st.sL.scalebar();
+  st.env=envelope(st.sL.g);st.env.style.opacity=0;
   st.vil=el("g",{opacity:0},st.sL.g);G.carto.village.forEach((d,i)=>el("path",{d,fill:i%3?"#faf8f4":"#f4f0ea",stroke:"#d6cfc4","stroke-width":.8,"vector-effect":"non-scaling-stroke"},st.vil));
   st.rd=el("path",{d:G.carto.roads,fill:"none",stroke:"#d5ccbf","stroke-width":3,"stroke-linecap":"round","vector-effect":"non-scaling-stroke",opacity:0},st.sL.g);
-  st.sL.g.insertBefore(A.state(st.sL.g),st.sL.g.firstChild);
   const P0=G.stack.pin;st.P0=P0;
   st.circ=el("circle",{cx:P0[0],cy:P0[1],r:G.precR,fill:"rgba(193,125,16,.14)",stroke:"var(--orange-500)","stroke-width":2,"stroke-dasharray":"6 5","vector-effect":"non-scaling-stroke",opacity:0},st.sL.g);
   st.pin2=st.sL.mark([P0[0]+.23,P0[1]+.12],g=>A.pin(g,"var(--red-500)"));st.pin2.g.style.opacity=0;
   st.pin=st.sL.mark(P0,g=>A.pin(g,"var(--dv-blue-700)"));
-  st.wL=worldLens(A,st.wS,WVIEW);
-  st.env=el("rect",{x:462.7,y:117.1,width:7.3,height:11.3,fill:"none",stroke:"var(--n900)","stroke-width":1.6,"stroke-dasharray":"3 2","vector-effect":"non-scaling-stroke"},st.wL.g);
-  st.wpin=st.wL.mark(G.worldPts.cg,g=>A.pin(g,"var(--red-500)"));
-  // a label on the world map, drawn by hand
-  st.lab=el("g",{opacity:0},A.ill)}};
-{const I=SPEC.intake,st=A=>A.st;
- const scene=async(A,world)=>{const s=A.st;await Promise.all([A.op(s.sS,world?0:1,400),A.op(s.wS,world?1:0,400)])};
- const stateOnly=A=>{const s=A.st;A.op(s.pin2.g,0,200);A.op(s.circ,0,200)};
+  // the stray copy of the record, and where it ends up
+  st.spin=st.sL.mark(P0,g=>A.pin(g,"var(--red-500)"));st.spin.g.style.opacity=0;
+  st.offN=offMark(A,st.sL,352,"81.63° N, 21.25° E","about 7,200 km north");
+  st.offW=offMark(A,st.sL,267,"0° N, 0° E","9,100 km west");
+  st.offG=el("g",{},A.ill)}};
+{const I=SPEC.intake;
+ const home=A=>{const s=A.st;A.op(s.pin2.g,0,200);A.op(s.circ,0,200);A.op(s.env,0,200);A.op(s.spin.g,0,200);s.offG.innerHTML=""};
+ // the stray pin leaves Raipur for the edge of the map, then its marker is written in
+ const stray=async(A,off)=>{const s=A.st;s.offG.innerHTML="";s.spin.p=s.P0.slice();s.spin.upd();
+   await Promise.all([s.sL.fly(RVIEW,600),A.op([s.vil,s.rd],0,250),A.op(s.env,1,400)]);await A.op(s.spin.g,1,200);
+   await s.spin.move(off.p,900);const g=off.draw(s.offG);await A.op(g,1,300)};
+ I.stray=stray;
  I.steps=[
- {nav:"Template",go:async A=>{const s=A.st;stateOnly(A);await scene(A,false);await Promise.all([s.sL.fly(SVIEW,700),A.op([s.vil,s.rd],0,300)]);s.pin.p=s.P0.slice();s.pin.upd()},
-  notes:[{at:"l0",t:"Sent on one template",b:["one row per asset: an ID,","latitude and longitude to","six decimal places, and","LGD codes to the village"],to:A=>A.st.sL.ill([A.st.P0[0],A.st.P0[1]-8])},
+ {nav:"Template",go:async A=>{const s=A.st;home(A);await Promise.all([s.sL.fly(RVIEW,700),A.op([s.vil,s.rd],0,300)]);s.pin.p=s.P0.slice();s.pin.upd()},
+  notes:[{at:"l0",t:"Sent on one template",b:["one row per asset: an ID,","latitude and longitude to","six decimal places, and","LGD codes to the village"],to:A=>A.st.sL.ill([A.st.P0[0]-6,A.st.P0[1]-10])},
          {at:"r0",t:"Our record",c:"var(--dv-blue-700)",b:["AWC-RPR-00412, an","Anganwadi centre in Raipur.","It lands where it should"],to:A=>{const p=A.st.sL.ill(A.st.P0);return[p[0],p[1]-20]},ring:16},
-         {at:"r1",dy:40,t:"Four checks run first",b:["before anything is converted.","Step through them below"]}]},
- {nav:"Swapped",go:async A=>{const s=A.st;stateOnly(A);s.wpin.p=G.worldPts.cg.slice();s.wpin.upd();await scene(A,true);await A.wait(250);await s.wpin.move(G.worldPts.transposed,900)},
-  notes:[{at:"l0",t:"Latitude and longitude swapped",c:"var(--red-700)",b:["21.25, 81.63 becomes","81.63, 21.25: the Arctic","Ocean, near Svalbard"],to:A=>A.st.wL.ill(G.worldPts.transposed)},
-         {at:"r0",t:"Outside the state's box",b:["17.78° to 24.11° N,","80.25° to 84.40° E.","Anything outside it","is sent back"],to:A=>A.st.wL.ill([466.3,122.7]),ring:14}]},
- {nav:"Blank = 0, 0",go:async A=>{const s=A.st;stateOnly(A);await scene(A,true);await s.wpin.move(G.worldPts.nullisl,900)},
-  notes:[{at:"l0",t:"Empty fields saved as zero",c:"var(--red-700)",b:["put the centre at 0° N, 0° E,","in the Atlantic off","West Africa"],to:A=>A.st.wL.ill(G.worldPts.nullisl),ring:14},
+         {at:"r1",t:"Four checks run first",b:["before anything is converted.","Step through them below"]}]},
+ {nav:"Swapped",go:async A=>{home(A);await stray(A,A.st.offN)},
+  notes:[{at:"l0",t:"Latitude and longitude swapped",c:"var(--red-700)",b:["21.25, 81.63 becomes","81.63, 21.25: far off the","top of this map, in the","Arctic Ocean near Svalbard"],to:A=>A.st.offN.head()},
+         {at:"r0",t:"Outside the state's box",b:["17.78° to 24.11° N,","80.25° to 84.40° E.","Anything outside it","is sent back"],to:A=>A.st.sL.ill(ll2xy(84.4,20.4))}]},
+ {nav:"Blank = 0, 0",go:async A=>{home(A);await stray(A,A.st.offW)},
+  notes:[{at:"l0",t:"Empty fields saved as zero",c:"var(--red-700)",b:["put the centre at 0° N, 0° E,","in the Atlantic off","West Africa"],to:A=>A.st.offW.head()},
          {at:"r0",t:"Sent back",b:["no asset in Chhattisgarh","can be at 0, 0"]}]},
- {nav:"Decimals",go:async A=>{const s=A.st;A.op(s.pin2.g,0,200);await scene(A,false);await Promise.all([s.sL.fly({cx:s.P0[0],cy:s.P0[1]+1.2,w:6.2},1100),A.op([s.vil,s.rd],1,700)]);await A.op(s.circ,1,400)},
+ {nav:"Decimals",go:async A=>{const s=A.st;home(A);await Promise.all([s.sL.fly({cx:s.P0[0],cy:s.P0[1]+1.2,w:9},1100),A.op([s.vil,s.rd],1,700)]);await A.op(s.circ,1,400)},
   notes:[{at:"l0",t:"Two decimal places",c:"var(--orange-700)",b:["21.25, 81.63 could be","anywhere in this circle,","about a kilometre wide.","Enough to count a centre"],to:A=>A.st.sL.ill([A.st.P0[0]-G.precR*.72,A.st.P0[1]+G.precR*.7])},
          {at:"r0",t:"Six decimal places",c:"var(--green-700)",b:["21.251384, 81.629641","finds the building.","Enough to send","someone there"],to:A=>A.st.sL.ill([A.st.P0[0],A.st.P0[1]-.25])}]},
- {nav:"Duplicates",go:async A=>{const s=A.st;A.op(s.circ,0,200);await scene(A,false);await Promise.all([s.sL.fly({cx:s.P0[0]+.1,cy:s.P0[1]+.2,w:2.2},900),A.op([s.vil,s.rd],1,500)]);await A.op(s.pin2.g,1,300)},
+ {nav:"Duplicates",go:async A=>{const s=A.st;home(A);await Promise.all([s.sL.fly({cx:s.P0[0]+.1,cy:s.P0[1]+.2,w:3.2},900),A.op([s.vil,s.rd],1,500)]);await A.op(s.pin2.g,1,300)},
   notes:[{at:"l0",t:"The same centre, twice",c:"var(--red-700)",b:["sent by two offices under","two spellings of one ID:","AWC-RPR-00412 and","AWC-Rpr-412"],to:A=>A.st.sL.ill([A.st.pin2.p[0],A.st.pin2.p[1]-.12]),bx:26},
          {at:"r0",t:"Nothing is fixed quietly",b:["each rejected row goes back","to its department with","the reason beside it"]}]}]}
 
@@ -272,10 +328,10 @@ SPEC.conversion={W:540,H:540,portH:520,next:"Projection",foot:"An illustrative s
   A.hand(s.pol,150,478,"Lease A",{size:28,bold:1,fill:"var(--dv-orange-700)"});A.hand(s.pol,360,470,"Lease B",{size:28,bold:1,fill:"var(--dv-orange-700)"});
   // field mapping, written on the sheet
   s.map=el("g",{opacity:0},g);const rows=[["Functional / F / functional","status = 1"],["Raipur / RAIPUR / Rpr","LGD district 22"],["LAT, LONG as text","a point, EPSG:4326"]];
-  rows.forEach((r,i)=>{const y=90+i*150;A.hand(s.map,40,y,r[0],{size:30,fill:"var(--n700)"});
+  rows.forEach((r,i)=>{const y=90+i*150;A.hand(s.map,40,y,r[0],{size:30,mono:1,fill:"var(--n700)"});
     el("path",{d:`M60,${y+18} C70,${y+50} 90,${y+60} 128,${y+62}`,fill:"none",stroke:"var(--n800)","stroke-width":2,"stroke-linecap":"round"},s.map);
     el("path",{d:`M116,${y+54} L128,${y+62} L116,${y+70}`,fill:"none",stroke:"var(--n800)","stroke-width":2,"stroke-linecap":"round"},s.map);
-    A.hand(s.map,140,y+72,r[1],{size:34,bold:1,fill:"var(--dv-aqua-700)"})});
+    A.hand(s.map,140,y+72,r[1],{size:36,mono:1,bold:1,fill:"var(--dv-aqua-700)"})});
   s.reset=()=>{s.dupB.setAttribute("cx",262);s.dupB.setAttribute("cy",130);s.dupB.style.opacity=1;s.spur.setAttribute("d","M470,318 L410,296 L346,268");s.end.setAttribute("cx",346);s.end.setAttribute("cy",268);s.end.style.opacity=1;
     s.polB.setAttribute("d","M288,408 L488,402 L494,512 L300,516Z");s.slv.style.opacity=1}},
  steps:[
@@ -296,9 +352,9 @@ SPEC.conversion={W:540,H:540,portH:520,next:"Projection",foot:"An illustrative s
          {at:"r1",dy:40,t:"Kept three ways",b:["shapefile to exchange,","GeoJSON for the web,","PostGIS as the master"]}]}]};
 
 /* ============================================================ PROJECTION */
-SPEC.projection={W:380,H:620,portH:560,next:"Storage",foot:"Colour shows scale error per kilometre, worked out for every 0.1° cell of the state.",draw(A){const s=A.st;
-  s.sS=el("g",{},A.ill);s.wS=el("g",{},A.ill);s.wS.style.opacity=0;
-  s.L=A.lens(s.sS,{view:SVIEW});s.L.scalebar();const g=s.L.g;
+SPEC.projection={W:560,H:620,portH:560,foot:"Colour shows scale error per kilometre, worked out for every 0.1° cell of the state.",draw(A){const s=A.st;
+  s.sS=el("g",{},A.ill);
+  s.L=regionLens(A,s.sS,RVIEW,{state:false});s.L.scalebar();const g=s.L.g;
   el("path",{d:G.state,fill:"rgba(60,50,40,.13)",transform:"translate(4 7)",filter:"url(#projection-soft)"},g);
   el("path",{d:G.state,fill:"#fbfaf8"},g);
   const cid="projection-st";const cp=el("clipPath",{id:cid},A.defs);el("path",{d:G.state},cp);
@@ -314,14 +370,18 @@ SPEC.projection={W:380,H:620,portH:560,next:"Storage",foot:"Colour shows scale e
   s.labs=G.grat.filter(l=>["20°N","22°N","24°N","81°E","83°E"].includes(l.t));
   // colour key
   s.key=el("g",{opacity:0},A.ill);const ky=600;
-  for(let i=0;i<24;i++){const v=i/23*2-1;el("rect",{x:70+i*10,y:ky-12,width:10.5,height:12,fill:ramp(v)},s.key)}
-  A.hand(s.key,60,ky-1,"−1 m",{size:20,anchor:"end"});A.hand(s.key,320,ky-1,"+1 m per km",{size:20});
-  s.wL=worldLens(A,s.wS,WVIEW);s.wpin=s.wL.mark(G.worldPts.nullisl,g2=>A.pin(g2,"var(--red-500)"));
+  // v7: the key starts clear of the scale bar, which sits at the same height on the left
+  for(let i=0;i<24;i++){const v=i/23*2-1;el("rect",{x:150+i*10,y:ky-12,width:10.5,height:12,fill:ramp(v)},s.key)}
+  A.hand(s.key,142,ky-1,"−1 m",{size:20,anchor:"end"});A.hand(s.key,398,ky-1,"+1 m per km",{size:20});
+  s.spin=s.L.mark(G.stack.pin,g2=>A.pin(g2,"var(--red-500)"));s.spin.g.style.opacity=0;
+  s.offW=offMark(A,s.L,267,"0° N, 0° E","9,100 km west");s.offG=el("g",{},A.ill);
   s.paint=k=>{s.cellEls.forEach((e,i)=>e.setAttribute("fill",ramp(clamp(G.cells[i][k]/1062,-1,1))))}},
  steps:[]};
 function ramp(v){const a=[[63,81,174],[210,220,255],[251,250,248],[245,214,179],[146,67,10]],t=(v+1)/2*4,i=Math.min(3,Math.floor(t)),f=t-i;const c=a[i].map((x,j)=>Math.round(lerp(x,a[i+1][j],f)));return`rgb(${c})`}
 {const I=SPEC.projection;
- const scene=(A,w)=>Promise.all([A.op(A.st.sS,w?0:1,400),A.op(A.st.wS,w?1:0,400)]);
+ // v7.1: no world map. The layer that lost its .prj leaves the state for the edge of the map
+ const scene=async(A,w)=>{const s=A.st;if(!w){s.offG.innerHTML="";return A.op(s.spin.g,0,200)}
+   s.offG.innerHTML="";s.spin.p=G.stack.pin.slice();s.spin.upd();await A.op(s.spin.g,1,200);await s.spin.move(s.offW.p,1000);await A.op(s.offW.draw(s.offG),1,300)};
  const lab=A=>{const s=A.st;s.glab.innerHTML="";s.labs.forEach(l=>{const p=s.L.ill(l.lab);A.hand(s.glab,l.ax==="y"?p[0]+26:p[0],l.ax==="y"?p[1]+6:p[1]-2,l.t.replace("°"," °").replace(" °","°"),{size:20,anchor:"middle",fill:"#6c8aa6"})})};
  I.steps=[
  {nav:"Degrees",go:async A=>{const s=A.st;await scene(A,false);lab(A);await Promise.all([A.op([s.cells,s.m84,s.east,s.key],0,300),A.op([s.grat,s.glab],1,600)])},
@@ -330,13 +390,13 @@ function ramp(v){const a=[[63,81,174],[210,220,255],[251,250,248],[245,214,179],
  {nav:"UTM 44N",go:async A=>{const s=A.st;await scene(A,false);s.paint("u44");await Promise.all([A.op([s.grat,s.glab],.35,300),A.op([s.cells,s.key],1,700)]);await A.op([s.m84,s.east],1,500)},
   notes:[{at:"l0",t:"Measured in UTM zone 44N",c:"var(--dv-blue-700)",b:["in metres. Across the state","a kilometre stays within","about a metre of true"],to:A=>A.st.L.ill([200,300])},
          {at:"r0",t:"The zone ends at 84° E",c:"var(--dv-magenta-700)",b:["Jashpur and Balrampur,","1,528 km² of the state,","sit beyond the line"],to:A=>A.st.L.ill([424,130]),ring:16},
-         {at:"r1",dy:60,t:"Colour = error per km",b:["blue reads a little short,","orange a little long"],to:A=>[330,588]}]},
+         {at:"r1",dy:60,t:"Colour = error per km",b:["blue reads a little short,","orange a little long"],to:A=>[392,588]}]},
  {nav:"Lambert",go:async A=>{const s=A.st;await scene(A,false);await A.op([s.cells],.2,250);s.paint("lcc");await Promise.all([A.op([s.m84,s.east],0,400),A.op([s.cells,s.key],1,600),A.op([s.grat,s.glab],.35,300)])},
   notes:[{at:"l0",t:"One projection for the state",c:"var(--green-700)",b:["a Lambert conformal conic","fitted to Chhattisgarh, so","nothing splits at 84° E"],to:A=>A.st.L.ill([250,250])},
          {at:"r0",t:"Still under a metre",b:["per kilometre, everywhere:","good enough to measure","fibre routes and lease areas"]}]},
- {nav:"The .prj file",go:async A=>{const s=A.st;await scene(A,true);s.wpin.p=G.worldPts.cg.slice();s.wpin.upd();await A.wait(200);await s.wpin.move(G.worldPts.nullisl,1000)},
-  notes:[{at:"l0",t:"A shapefile is six files",b:["lose the .prj, the one","that names its coordinate","system…"]},
-         {at:"r0",t:"…and it turns up",c:"var(--red-700)",b:["in the Atlantic, nowhere","near Chhattisgarh. The most","common layer mistake"],to:A=>A.st.wL.ill(G.worldPts.nullisl),ring:14}]}]}
+ {nav:"The .prj file",go:async A=>{const s=A.st;await Promise.all([A.op([s.cells,s.key,s.m84,s.east],0,300),A.op([s.grat,s.glab],.35,300)]);await scene(A,true)},
+  notes:[{at:"l0",t:"A lost .prj file",c:"var(--red-700)",b:["a shapefile is six files. Lose","the .prj, the one that names","the coordinate system, and the","layer lands at 0° N, 0° E"],to:A=>A.st.offW.head()},
+         {at:"r0",t:"The most common mistake",b:["a missing .prj is the most","frequent reason a layer","turns up in the Atlantic,","9,100 km from home"]}]}]}
 
 /* ============================================================ STORAGE */
 SPEC.storage={W:520,H:640,portH:560,draw(A){const s=A.st;
@@ -496,9 +556,10 @@ SPEC.provenance={W:560,H:560,portH:540,next:"In use",foot:"The card shows the fi
   sheet(A,s.card,22,90,.48,{id:"provenance",aw:1,dist:1});
   el("path",{d:"M160,150 C200,120 220,150 262,96",fill:"none",stroke:"var(--n600)","stroke-width":1.8,"stroke-linecap":"round"},s.card);
   A.rough(s.card,246,40,300,480,{fill:"#fffdf7",stroke:"var(--n700)"});el("circle",{cx:268,cy:64,r:7,fill:"var(--page)",stroke:"var(--n600)","stroke-width":1.6},s.card);
-  A.hand(s.card,286,72,"wcd_anganwadi_pt_10k",{size:25,bold:1});
-  const F=[["Custodian","WCD, nodal officer"],["Captured","date of survey"],["Updated","how often"],["Position","accuracy in metres"],["Attributes","how they were checked"],["Source scale","1:10,000"],["Licence","who may reuse it"],["Lineage","what was done, by whom, when"]];
-  s.rows=F.map(([k,v],i)=>{const y=124+i*48,r=el("g",{},s.card);A.hand(r,266,y,k,{size:23,bold:1,fill:"var(--n900)"});A.hand(r,388,y,v,{size:21,fill:"var(--n600)"});
+  A.hand(s.card,286,72,"wcd_anganwadi_pt_10k",{size:27,mono:1,bold:1});
+  // v7: short values so the typed column stays inside the card at every width
+  const F=[["Custodian","WCD, nodal officer"],["Captured","date of survey"],["Updated","how often"],["Position","accuracy, metres"],["Attributes","how checked"],["Source scale","1:10,000"],["Licence","who may reuse it"],["Lineage","who did what, when"]];
+  s.rows=F.map(([k,v],i)=>{const y=124+i*48,r=el("g",{},s.card);A.hand(r,266,y,k,{size:21,bold:1,fill:"var(--n900)"});A.hand(r,398,y,v,{size:20,fill:"var(--n600)"});
     el("path",{d:`M266,${y+12} L528,${y+11}`,stroke:"#ece6da","stroke-width":1},r);return r});
   s.lin=el("g",{opacity:0},s.card);
   const E=[["Received","from WCD, on the template"],["Checked","four intake tests passed"],["Converted","snapped to its village"],["Published","as a feature service"]];
@@ -542,7 +603,7 @@ SPEC.provenance={W:560,H:560,portH:540,next:"In use",foot:"The card shows the fi
   s.aw=G.stack.aw.map(p=>{const c=el("circle",{cx:p[0],cy:p[1],r:3.4,fill:"var(--dv-blue-500)",stroke:"#fff","stroke-width":.8},g);c._hit=hits.includes(p);return c});
   s.L.on(u=>{s.aw.forEach(c=>{c.setAttribute("r",(c._on?6:4.2)*u);c.setAttribute("stroke-width",(c._on?2:1)*u)})});
   s.list=el("g",{opacity:0},A.ill);A.rough(s.list,40,380,300,210,{fill:"#fffdf7"});A.hand(s.list,60,414,`${hits.length} centres within ${KM} km`,{size:27,bold:1});
-  hits.slice(0,4).forEach((p,i)=>{const[lo,la]=xy2ll(p[0],p[1]);A.hand(s.list,60,452+i*32,`AWC-${String(100+i*37).padStart(5,"0")}  ${la.toFixed(3)}° N  ${lo.toFixed(3)}° E`,{size:20,fill:"var(--n700)"})});
+  hits.slice(0,4).forEach((p,i)=>{const[lo,la]=xy2ll(p[0],p[1]);A.hand(s.list,60,452+i*32,`AWC-${String(100+i*37).padStart(5,"0")}  ${la.toFixed(3)}° N  ${lo.toFixed(3)}° E`,{size:24,mono:1,fill:"var(--n700)"})});
   A.hand(s.list,60,578,`… and ${Math.max(0,hits.length-4)} more (sample IDs)`,{size:19,fill:"var(--n500)"});
   s.mark=(on)=>{s.aw.forEach(c=>{c._on=on&&c._hit;c.setAttribute("fill",c._on?"var(--dv-blue-700)":on?"#b9c4ee":"var(--dv-blue-500)")});s.L.set(s.L.v)}},
  steps:[
@@ -579,14 +640,14 @@ SPEC.update={W:540,H:540,portH:520,foot:"Schedules and records shown are example
   s.setEdge(0);
   // 3 records revised in place
   s.rec=el("g",{opacity:0},A.ill);
-  A.rough(s.rec,60,60,420,170,{fill:"#fff"});A.hand(s.rec,84,104,"AWC-RPR-00412",{size:28,bold:1});A.hand(s.rec,84,150,"status",{size:23,fill:"var(--n600)"});A.hand(s.rec,84,196,"version",{size:23,fill:"var(--n600)"});
+  A.rough(s.rec,60,60,420,170,{fill:"#fff"});A.hand(s.rec,84,104,"AWC-RPR-00412",{size:32,mono:1,bold:1});A.hand(s.rec,84,150,"status",{size:23,fill:"var(--n600)"});A.hand(s.rec,84,196,"version",{size:23,fill:"var(--n600)"});
   s.st1=A.hand(s.rec,210,150,"Functional",{size:26});s.v1=A.hand(s.rec,210,196,"3",{size:26});
-  s.hl=el("path",{d:"M202,158 L420,156",stroke:"rgba(247,214,90,.85)","stroke-width":30,"stroke-linecap":"round",opacity:0},s.rec);s.rec.insertBefore(s.hl,s.st1);
-  s.old=el("g",{},s.rec);A.rough(s.old,60,300,420,150,{fill:"#fff"});A.hand(s.old,84,344,"AWC-RPR-00388",{size:28,bold:1});A.hand(s.old,84,392,"status",{size:23,fill:"var(--n600)"});A.hand(s.old,210,392,"Closed",{size:26});
+  s.hl=el("path",{d:"M202,145 L420,143",stroke:"rgba(247,214,90,.85)","stroke-width":26,"stroke-linecap":"round",opacity:0},s.rec);s.rec.insertBefore(s.hl,s.st1);
+  s.old=el("g",{},s.rec);A.rough(s.old,60,300,420,150,{fill:"#fff"});A.hand(s.old,84,344,"AWC-RPR-00388",{size:32,mono:1,bold:1});A.hand(s.old,84,392,"status",{size:23,fill:"var(--n600)"});A.hand(s.old,210,392,"Closed",{size:26});
   s.stamp=el("g",{opacity:0},s.rec);el("rect",{x:300,y:350,width:160,height:52,rx:6,fill:"none",stroke:"var(--red-500)","stroke-width":3,transform:"rotate(-8 380 376)"},s.stamp);A.hand(s.stamp,380,388,"INACTIVE",{size:30,bold:1,anchor:"middle",fill:"var(--red-500)",rot:-8});
   // 4 what follows
   s.chain=el("g",{opacity:0},A.ill);s.ticks=[];
-  ["Services refresh","Map caches rebuild","Metadata dates move on","Subscribers are told"].forEach((t,i)=>{const y=40+i*125;A.rough(s.chain,110,y,320,76,{fill:"#fff"});A.hand(s.chain,140,y+47,t,{size:28});
+  ["Services refresh","Map caches rebuild","Metadata dates move on","Subscribers are told"].forEach((t,i)=>{const y=40+i*125;A.rough(s.chain,110,y,320,76,{fill:"#fff"});A.hand(s.chain,136,y+46,t,{size:27});
     s.ticks.push(el("path",{d:`M392,${y+38} L402,${y+50} L420,${y+24}`,fill:"none",stroke:"var(--green-500)","stroke-width":4,"stroke-linecap":"round","stroke-linejoin":"round",pathLength:1,"stroke-dasharray":1,"stroke-dashoffset":1},s.chain));
     if(i<3)el("path",{d:`M270,${y+80} L270,${y+120} M262,${y+110} L270,${y+121} L278,${y+110}`,fill:"none",stroke:"var(--n600)","stroke-width":2,"stroke-linecap":"round"},s.chain)});
   s.scene=k=>Promise.all(["cal","bnd","rec","chain"].map(n=>A.op(s[n],n===k?1:0,400)))},
@@ -599,7 +660,7 @@ SPEC.update={W:540,H:540,portH:520,foot:"Schedules and records shown are example
          {at:"r0",t:"Every layer follows",b:["everything snapped to it moves","too: this centre now counts","in its new village"],to:()=>[236,300],ring:18}]},
  {nav:"Revise, don't copy",go:async A=>{const s=A.st;s.st1.textContent="Functional";s.v1.textContent="3";s.hl.style.opacity=0;s.stamp.style.opacity=0;s.old.style.opacity=1;await s.scene("rec");await A.wait(400);
    await A.op(s.hl,1,300);s.st1.textContent="Under repair";s.v1.textContent="4";await A.wait(300);await Promise.all([A.op(s.old,.45,400),A.op(s.stamp,1,400)])},
-  notes:[{at:"l0",t:"Matched on a stable ID",b:["a revision updates the row;","it never adds a second one"],to:()=>[300,150]},
+  notes:[{at:"l0",dy:64,t:"Matched on a stable ID",b:["a revision updates the row;","it never adds a second one"],to:()=>[62,146]},
          {at:"r0",t:"Retired, not deleted",b:["a closed centre is flagged","inactive, so its history","stays on record"],to:()=>[380,378]}]},
  {nav:"What follows",go:async A=>{const s=A.st;s.ticks.forEach(t=>t.setAttribute("stroke-dashoffset",1));await s.scene("chain");for(const t of s.ticks){await A.draw(t,1,350)}},
   notes:[{at:"l0",t:"One update, four follow-ons",b:["all automatic, in order"],to:()=>[110,78]},
