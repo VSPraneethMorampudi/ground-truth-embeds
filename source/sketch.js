@@ -30,7 +30,7 @@ function Sketch(id,spec){
   btns.forEach((b,i)=>b.onclick=()=>{stop();go(i)});
   prev.onclick=()=>{stop();if(cur>0)go(cur-1)};
   next.onclick=()=>{stop();go(cur>=N-1?0:cur+1)};
-  S.addEventListener("click",e=>{if(e.target.closest(".plt")||Date.now()<noClickUntil)return;stop();if(animating){go(cur,true);return}
+  S.addEventListener("click",e=>{if(e.target.closest(".plt")||Date.now()<noClickUntil)return;if(OPT.nav==="off"&&OPT.step!==undefined)return;stop();if(animating){go(cur,true);return}
     // v7: a try-it step is optional. A stray tap on the drawing neither skips it nor scolds; the
     // arrows and the step list always move on.
     const s=spec.steps[cur];if(s&&s.play&&!solved[cur])return;go(cur>=N-1?0:cur+1)});
@@ -226,6 +226,8 @@ function Sketch(id,spec){
   Promise.all(faces.map(f=>document.fonts.load(f).catch(()=>{}))).then(()=>{
     build();
     new IntersectionObserver((es,o)=>{if(es[0].isIntersecting){o.disconnect();auto=!OPT.auto||OPT.auto!=="off";if(OPT.step!==undefined){auto=false;go(clamp(+OPT.step,0,N-1),true)}else go(0)}},{threshold:.3}).observe(S)});
+  // v8.1: a sidecar keeps one iframe and only swaps the #hash between slides, so follow &step=N changes live
+  addEventListener("hashchange",()=>{if(OPT.step!==undefined&&cur>=0){stop();go(clamp(+OPT.step,0,N-1))}});
   let rt,lastW=innerWidth;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{const m=innerWidth<700?"port":"land";if(m!==mode||(m==="port"&&innerWidth!==lastW)){lastW=innerWidth;build();if(cur>=0){const c=cur;cur=-1;go(c,true)}}},160)})}
 
 /* shared scenes ------------------------------------------------------------ */
