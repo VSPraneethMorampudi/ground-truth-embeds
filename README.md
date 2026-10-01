@@ -60,6 +60,8 @@ NEW STORY OUTLINE (v8 · 1 Oct 2026) — one figure per section of the re-ordere
   index.html#cycle&bare         Closing: the six stages as one loop (Try it: drag the marker round once)
   Cover: reuse index.html#overview. Source: source/story8.js (inlined by assemble4.py after sketch.js and play.js).
   Pinned copy: versions/v8/#<view>&bare
+  Step control: arrows and progress dots (no labelled tabs). &nav=off hides it, so a sidecar can pin one
+    step per slide with &step=N and let the story's own scrolling move the figure.
 
 VERSIONS (frozen copies; links never change)
   versions/v8/   1 Oct 2026 · Figures for the new story outline (current build)

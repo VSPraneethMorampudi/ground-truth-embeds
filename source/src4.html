@@ -309,16 +309,15 @@ body.framed #publication>.ctrls{padding-right:48px}
 body.framed .sketch:not(.port) svg.sk{max-height:calc(100vh / var(--z,1) - 140px)}
 body.framed .sketch:not(.port){padding-top:8px;padding-bottom:6px}
 
-/* step bar: one compact row in the story's font */
-.sknav{display:flex;align-items:center;justify-content:center;gap:10px;font:400 14px/1.2 var(--font);color:var(--n700)}
-.sknav ol{display:flex;list-style:none;flex-wrap:wrap;justify-content:center;gap:2px 4px}
-.sknav ol button{border:1px solid transparent;background:none;padding:0 10px;min-height:32px;color:var(--n600);font:inherit;border-radius:9999px;display:inline-flex;align-items:center;gap:6px;transition:background .15s,color .15s}
-.sknav ol button b{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;font-size:11px;font-weight:700;background:var(--n50);color:var(--n700);font-variant-numeric:tabular-nums}
-.sknav ol button:hover{color:var(--n950);background:rgba(5,5,6,.04)}
-.sknav ol button[aria-current=step]{color:var(--n950);font-weight:500;background:#fff;border-color:var(--n200);box-shadow:0 1px 2px rgba(5,5,6,.06)}
-.sknav ol button[aria-current=step] b{background:var(--n900);color:#fff}
-.sknav ol button.done b{background:var(--green-500);color:#fff}
-.sknav ol button.done b::after{content:none}
+/* step control (v8): arrows and progress dots. The story owns navigation; this only shows where you are */
+.sknav{display:flex;align-items:center;justify-content:center;gap:14px;font:400 14px/1.2 var(--font);color:var(--n700)}
+.sknav[hidden]{display:none}
+.sknav ol{display:flex;list-style:none;justify-content:center;gap:2px}
+.sknav ol button{width:24px;height:24px;border:0;background:none;padding:0;display:grid;place-items:center;cursor:pointer;border-radius:12px}
+.sknav ol button::before{content:"";width:8px;height:8px;border-radius:4px;background:var(--n200);transition:width .2s,background .2s}
+.sknav ol button:hover::before{background:var(--n500)}
+.sknav ol button[aria-current=step]::before{width:22px;background:var(--n900)}
+.sknav ol button:focus-visible{outline:2px solid var(--blue-500);outline-offset:1px}
 .skb{flex:none;width:36px;height:36px;border-radius:50%;border:1px solid var(--n200);background:#fff;font:500 18px/1 var(--font);color:var(--n800);display:grid;place-items:center;transition:border-color .15s,background .15s}
 .skb:hover{border-color:var(--n500);background:var(--n10)}
 .skb:disabled{opacity:.35;cursor:default}
@@ -328,10 +327,7 @@ body.framed .sketch:not(.port){padding-top:8px;padding-bottom:6px}
 /* phones: drawing on top, numbered notes below, a sticky step bar */
 .sketch.port .skplay{position:sticky;bottom:62px;z-index:3;background:var(--page);font-size:14px;padding:8px 8px 4px;gap:6px 10px;box-shadow:0 -10px 12px -6px var(--page)}
 .sketch.port .prange{width:140px}
-.sketch.port .sknav{position:sticky;bottom:0;background:linear-gradient(rgba(244,247,241,0),var(--page) 30%);padding:10px 0 8px;justify-content:space-between}
-.sketch.port .sknav ol{display:none}
-.sketch.port .skcur{display:block;flex:1;text-align:center;font-size:15px;color:var(--n900)}
-.sketch.port .skcur b{font-weight:700}
+.sketch.port .sknav{position:sticky;bottom:0;background:linear-gradient(rgba(244,247,241,0),var(--page) 30%);padding:10px 0 8px}
 .sketch.port .skb{width:44px;height:44px}
 .sketch.port .skfoot{flex-direction:column;gap:2px;padding-bottom:4px}
 body.framed .sketch.port{min-height:0;justify-content:flex-start}

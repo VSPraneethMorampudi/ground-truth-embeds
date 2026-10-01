@@ -27,28 +27,34 @@ V8.mini=(g,cx,cy,k,o={})=>{const t=el("g",{transform:`translate(${cx-260*k} ${cy
 V8.area=d=>{let A=0;d.split("M").filter(Boolean).forEach(r=>{const P=r.replace(/Z/g,"").split("L").map(v=>v.split(",").map(Number));for(let i=0,j=P.length-1;i<P.length;j=i++)A+=(P[j][0]+P[i][0])*(P[j][1]-P[i][1])});return Math.abs(A/2)};
 
 /* ============================================================ 1 · DATA CREATION */
-SPEC.create={W:560,H:600,portH:560,foot:"District boundaries, rivers and roads are real. The paper sheet, the imagery tones and the new features are illustrative.",
+SPEC.create={W:560,H:600,portH:560,foot:"Boundaries, rivers, rail and the degree ticks are real. The scan, the imagery tones and the new features are illustrative.",
  draw(A){const s=A.st,V0={cx:262,cy:316,w:620};s.V0=V0;
-  // ---- the old paper sheet
-  s.old=el("g",{},A.ill);
-  s.LO=A.lens(s.old,{paper:"#efe4cb",view:V0,w:560,h:600});const go=s.LO.g;
-  const gr=el("g",{fill:"none",stroke:"#d6c29b","stroke-width":1,"vector-effect":"non-scaling-stroke"},go);G.grat.forEach(l=>el("path",{d:l.d,"vector-effect":"non-scaling-stroke"},gr));
-  el("path",{d:G.state,fill:"#ebdcb8",stroke:"#7a5a2e","stroke-width":2,"vector-effect":"non-scaling-stroke","stroke-linejoin":"round"},go);
-  const od=el("g",{fill:"none",stroke:"#a5875a","stroke-width":1,"stroke-dasharray":"5 3","vector-effect":"non-scaling-stroke"},go);G.districts.forEach(d=>el("path",{d:d.d,"vector-effect":"non-scaling-stroke"},od));
-  const orv=el("g",{fill:"none",stroke:"#7f6a46","stroke-width":1.2,"clip-path":V8.clip(A,"st"),"stroke-linecap":"round"},go);G.ctx.rivers.forEach(r=>el("path",{d:r.d,"vector-effect":"non-scaling-stroke"},orv));
-  const oc=el("g",{},go);G.ctx.cities.filter(c=>c.cg).forEach(c=>{const m=s.LO.mark(c.xy,g=>{el("circle",{r:4.2,fill:"none",stroke:"#6b5330","stroke-width":1.4},g);
-    txt({x:7,y:-5,style:"font-family:Georgia,'Times New Roman',serif;font-style:italic;fill:#6b5330","font-size":13},g,c.n)})});
-  // paper life: folds, a ring stain, the sheet title, and a village register on top
-  const pl=el("g",{"pointer-events":"none"},s.old);
-  el("path",{d:"M280,6 L281,594",stroke:"rgba(110,80,40,.16)","stroke-width":2},pl);el("path",{d:"M283,6 L284,594",stroke:"rgba(255,255,255,.35)","stroke-width":1.5},pl);
-  el("path",{d:"M6,300 L554,302",stroke:"rgba(110,80,40,.16)","stroke-width":2},pl);el("path",{d:"M6,303 L554,305",stroke:"rgba(255,255,255,.35)","stroke-width":1.5},pl);
-  el("circle",{cx:96,cy:170,r:40,fill:"rgba(150,110,50,.06)",stroke:"rgba(140,100,50,.2)","stroke-width":5},pl);
-  txt({x:536,y:560,"text-anchor":"end",style:"font-family:Georgia,'Times New Roman',serif;fill:#6b5330;letter-spacing:2px","font-size":15},pl,"OLD SURVEY SHEET");
-  txt({x:536,y:580,"text-anchor":"end",style:"font-family:Georgia,'Times New Roman',serif;font-style:italic;fill:#8a7350","font-size":13},pl,"traced by hand, kept on paper");
-  const rg=el("g",{transform:"rotate(-5 110 520)"},pl);V8.card(A,rg,22,456,186,124,{fill:"#f7efdc",stroke:"#cdb88f",rx:4});
-  txt({x:36,y:480,style:"font-family:Georgia,serif;fill:#6b5330","font-size":13,"font-weight":700},rg,"Village register");
-  for(let i=0;i<4;i++){const y=500+i*18;el("path",{d:`M36,${y} L194,${y}`,stroke:"#d8c7a2","stroke-width":1},rg);
-    el("path",{d:`M38,${y-5} q8,-5 16,0 t16,0 t16,0 ${i%2?"t16,0":""}`,fill:"none",stroke:"#7a6a52","stroke-width":1.2},rg);el("path",{d:`M112,${y-5} q7,-4 14,0 t14,0`,fill:"none",stroke:"#7a6a52","stroke-width":1.2},rg)}
+  // ---- the legacy record: a printed sheet, scanned a little crooked, one ink. No props: a real
+  // department scan has a neatline with degree ticks, a title block and nothing else
+  s.old=el("g",{transform:"rotate(-1.6 280 300)"},A.ill);
+  A.defs.insertAdjacentHTML("beforeend",`<filter id="create-ink" x="-2%" y="-2%" width="104%" height="104%"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter>`);
+  s.LO=A.lens(s.old,{paper:"#f1efe9",view:V0,w:560,h:600});const go=el("g",{filter:"url(#create-ink)"},s.LO.g);
+  const ink="#34322d",c=V8.clip(A,"st");
+  const gr=el("g",{fill:"none",stroke:"#bdb8ad","stroke-width":.7,"vector-effect":"non-scaling-stroke"},go);G.grat.forEach(l=>el("path",{d:l.d,"vector-effect":"non-scaling-stroke"},gr));
+  el("path",{d:G.state,fill:"#f7f5f0",stroke:"none"},go);
+  const od=el("g",{fill:"none",stroke:ink,"stroke-width":.9,"stroke-dasharray":"7 2.5 1.5 2.5","vector-effect":"non-scaling-stroke"},go);G.districts.forEach(d=>el("path",{d:d.d,"vector-effect":"non-scaling-stroke"},od));
+  const orv=el("g",{fill:"none",stroke:ink,"stroke-width":.8,"clip-path":c,"stroke-linecap":"round",opacity:.75},go);G.ctx.rivers.forEach(r=>el("path",{d:r.d,"vector-effect":"non-scaling-stroke"},orv));
+  el("path",{d:G.ctx.rail,fill:"none",stroke:ink,"stroke-width":1.6,"clip-path":c,"vector-effect":"non-scaling-stroke"},go);el("path",{d:G.ctx.rail,fill:"none",stroke:"#f7f5f0","stroke-width":.7,"stroke-dasharray":"4 4","clip-path":c,"vector-effect":"non-scaling-stroke"},go);
+  el("path",{d:G.state,fill:"none",stroke:ink,"stroke-width":1.8,"vector-effect":"non-scaling-stroke","stroke-linejoin":"round"},go);
+  G.ctx.cities.filter(c=>c.cg).forEach(c=>s.LO.mark(c.xy,g=>{el("rect",{x:-3,y:-3,width:6,height:6,fill:ink},g);
+    txt({x:c.n==="Bhilai"?-6:6,y:c.n==="Bhilai"?12:-5,"text-anchor":c.n==="Bhilai"?"end":"start",style:`fill:${ink};letter-spacing:.6px`,"font-size":10,"font-weight":600},g,c.n.toUpperCase())}));
+  // neatline with the real degree ticks where the meridians and parallels meet it
+  const nl=el("g",{"pointer-events":"none"},s.old),N0=22,N1=538,M0=22,M1=578;
+  el("rect",{x:14,y:14,width:532,height:572,fill:"none",stroke:ink,"stroke-width":1.6},nl);el("rect",{x:N0,y:M0,width:N1-N0,height:M1-M0,fill:"none",stroke:ink,"stroke-width":.8},nl);
+  const at=(lo,la)=>s.LO.ill(ll2xy(lo,la)),fs={style:`fill:${ink}`,"font-size":9.5};
+  const solve=(f,lo,hi,want)=>{for(let k=0;k<40;k++){const m=(lo+hi)/2;if(f(m)<want)lo=m;else hi=m}return(lo+hi)/2};
+  for(let lo=80;lo<=85;lo++){const la=solve(v=>-at(lo,v)[1],10,30,-M1),p=at(lo,la);if(p[0]>N0+14&&p[0]<N1-14){el("path",{d:`M${p[0]},${M1} L${p[0]},${M1-7}`,stroke:ink},nl);txt({x:p[0],y:M1+11,"text-anchor":"middle",...fs},nl,lo+"°E")}}
+  for(let la=18;la<=24;la++){const lo=solve(v=>at(v,la)[0],70,90,N0),p=at(lo,la);if(p[1]>M0+14&&p[1]<M1-14){el("path",{d:`M${N0},${p[1]} L${N0+7},${p[1]}`,stroke:ink},nl);txt({x:N0-3,y:p[1]+3,"text-anchor":"end",...fs},nl,la+"°N")}}
+  const tb=el("g",{},nl);el("rect",{x:392,y:520,width:140,height:52,fill:"#f1efe9",stroke:ink,"stroke-width":.8},tb);
+  txt({x:462,y:541,"text-anchor":"middle",style:`fill:${ink};letter-spacing:2px`,"font-size":12,"font-weight":700},tb,"CHHATTISGARH");
+  txt({x:462,y:558,"text-anchor":"middle",style:`fill:${ink}`,"font-size":9.5},tb,"District boundaries");
+  // the scanner bed shows along one edge of a crooked scan
+  el("path",{d:"M14,14 L546,14",stroke:"rgba(0,0,0,.10)","stroke-width":5},nl);
   // ---- the digital layer, revealed by the scanner
   s.dig=el("g",{},A.ill);
   s.LD=A.lens(s.dig,{paper:"#fbfaf8",view:V0,w:560,h:600});const gd=s.LD.g;
@@ -75,9 +81,9 @@ SPEC.create={W:560,H:600,portH:560,foot:"District boundaries, rivers and roads a
   el("path",{d:"M0,0 L0,600",stroke:"rgba(0,144,177,.18)","stroke-width":18},s.scan);
   s.knob=el("g",{},s.scan);el("circle",{cx:0,cy:300,r:22,fill:"#fff",stroke:"var(--dv-aqua-600)","stroke-width":3},s.knob);
   el("path",{d:"M-8,293 L-13,300 L-8,307 M8,293 L13,300 L8,307",fill:"none",stroke:"var(--dv-aqua-700)","stroke-width":2.6,"stroke-linecap":"round","stroke-linejoin":"round"},s.knob);
-  s.tags=el("g",{},A.ill);s.tagD=V8.chip(A,s.tags,0,14,"Digital",{fill:"#e6f4f7",stroke:"#b5dde6",ink:"var(--dv-aqua-700)"});s.tagP=V8.chip(A,s.tags,0,14,"Paper",{fill:"#f4ead3",stroke:"#d6c29b",ink:"#6b5330"});
+  s.tags=el("g",{},A.ill);s.tagD=V8.chip(A,s.tags,0,14,"Digital",{fill:"#e6f4f7",stroke:"#b5dde6",ink:"var(--dv-aqua-700)"});s.tagP=V8.chip(A,s.tags,0,14,"Scan",{w:62,fill:"#fff",stroke:"var(--n200)",ink:"var(--n800)"});
   s.setSw=x=>{s.sw.setAttribute("width",x);s.scan.setAttribute("transform",`translate(${x} 0)`);s.scan.style.opacity=x<=0||x>=560?0:1;
-    s.tagD.setAttribute("transform",`translate(${clamp(x-102,14,446)} 0)`);s.tagD.style.opacity=x>110?1:0;s.tagP.setAttribute("transform",`translate(${clamp(x+18,14,474)} 0)`);s.tagP.style.opacity=x<450?1:0};
+    s.tagD.setAttribute("transform",`translate(${clamp(x-102,30,446)} 18)`);s.tagD.style.opacity=x>120?1:0;s.tagP.setAttribute("transform",`translate(${clamp(x+18,30,470)} 18)`);s.tagP.style.opacity=x<450?1:0};
   s.setSw(0);
   // drone and satellite for the new data
   s.sky=el("g",{opacity:0,"pointer-events":"none"},A.ill);
@@ -102,12 +108,11 @@ SPEC.create={W:560,H:600,portH:560,foot:"District boundaries, rivers and roads a
  const zoom=async(A,ms)=>{const s=A.st;s.setSw(560);A.op(s.tags,0,200);A.op(s.old,0,300);A.op(s.aw,0,250);A.op(s.ctx.city,0,250);await Promise.all([s.LD.fly(s.Z,ms),A.op(s.img,1,600)])};
  I.steps=[
  {nav:"Old records",go:async A=>{const s=A.st;flat(A);s.LD.set(s.V0);s.LO.set(s.V0);s.setSw(0);await A.op(s.old,1,400)},
-  notes:[{at:"l0",t:"Old paper maps",b:["decades of survey sheets","and village registers,","kept in office cupboards"],to:A=>A.st.LO.ill([212,250])},
-         {at:"r0",t:"Precious, but scattered",b:["each sheet drawn at its","own scale, by its own","office, in its own style"]},
-         {at:"r1",dy:40,t:"Registers too",b:["land and village records","written by hand"],to:()=>[160,512]}]},
+  notes:[{at:"l0",t:"Old printed maps",b:["decades of survey sheets","and registers, kept on paper","or as flat scans"],to:A=>A.st.LO.ill([212,250])},
+         {at:"r0",t:"Precious, but scattered",b:["each sheet drawn at its","own scale, by its own","office, in its own style"]}]},
  {nav:"Paper to digital",go:async A=>{const s=A.st;flat(A);s.LD.set(s.V0);s.LO.set(s.V0);A.op(s.old,1,200);s.setSw(0);await A.wait(250);await A.tw(1600,t=>s.setSw(560*t*.62))},
   notes:[{at:"l0",t:"Scanned, then traced",c:"var(--dv-aqua-700)",b:["a road becomes a line,","a village a point, a","boundary an outline"],to:A=>[+A.st.sw.getAttribute("width"),276]},
-         {at:"r0",t:"Pinned to the earth",b:["every shape is placed on its","true spot, so it lines up","with satellite images"]}]},
+         {at:"r0",t:"Straightened and pinned",b:["the crooked scan is lined up","with the earth, so every","shape sits on its true spot"]}]},
  {nav:"New data",go:async A=>{const s=A.st;flat(A);await zoom(A,1100);s.newRoad.setAttribute("stroke-dashoffset",1);A.op(s.newRoad,1,10);A.op([s.sky,s.dTrail],1,400);await A.op(s.drone,1,200);
    const marks=s.newM.slice();await A.tw(2600,t=>{const p=s.dAt(t);s.drone.setAttribute("transform",`translate(${p[0]} ${p[1]}) rotate(${Math.sin(t*40)*3})`);
      s.newRoad.setAttribute("stroke-dashoffset",1-clamp(t*1.25,0,1));marks.forEach((m,i)=>{if(t>.15+i*.16)m.g.style.opacity=1})});A.op(s.drone,0,300)},

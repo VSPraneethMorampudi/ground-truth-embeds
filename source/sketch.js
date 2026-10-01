@@ -17,8 +17,11 @@ function Sketch(id,spec){
   const D=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 
   nav.innerHTML=`<button type="button" class="skb prev" aria-label="Previous step">←</button>`+
-    `<ol>${spec.steps.map((s,i)=>`<li><button type="button" data-i="${i}"><b>${i+1}</b> ${s.nav}</button></li>`).join("")}</ol>`+
+    `<ol>${spec.steps.map((s,i)=>`<li><button type="button" data-i="${i}" aria-label="Step ${i+1} of ${N}: ${s.nav}" title="${s.nav}"></button></li>`).join("")}</ol>`+
     `<span class="skcur" aria-hidden="true"></span><button type="button" class="skb next" aria-label="Next step">→</button>`;
+  // v8: in a story that already scrolls, a labelled tab bar is a second menu. Dots show progress only;
+  // &nav=off hides the control so a sidecar can pin one step per slide (&step=N).
+  if(OPT.nav==="off")nav.hidden=true;
   const btns=[...nav.querySelectorAll("ol button")],prev=nav.querySelector(".prev"),next=nav.querySelector(".next"),curL=nav.querySelector(".skcur");
   function updNav(){btns.forEach((b,i)=>{b.classList.toggle("done",!!solved[i]);if(i===cur)b.setAttribute("aria-current","step");else b.removeAttribute("aria-current")});
     prev.disabled=cur<=0;const last=cur>=N-1;next.textContent=last?"↺":"→";next.setAttribute("aria-label",last?"Start again":"Next step");
