@@ -309,16 +309,15 @@ body.framed #publication>.ctrls{padding-right:48px}
 body.framed .sketch:not(.port) svg.sk{max-height:calc(100vh / var(--z,1) - 140px)}
 body.framed .sketch:not(.port){padding-top:8px;padding-bottom:6px}
 
-/* step bar: one compact row in the story's font */
-.sknav{display:flex;align-items:center;justify-content:center;gap:10px;font:400 14px/1.2 var(--font);color:var(--n700)}
-.sknav ol{display:flex;list-style:none;flex-wrap:wrap;justify-content:center;gap:2px 4px}
-.sknav ol button{border:1px solid transparent;background:none;padding:0 10px;min-height:32px;color:var(--n600);font:inherit;border-radius:9999px;display:inline-flex;align-items:center;gap:6px;transition:background .15s,color .15s}
-.sknav ol button b{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;font-size:11px;font-weight:700;background:var(--n50);color:var(--n700);font-variant-numeric:tabular-nums}
-.sknav ol button:hover{color:var(--n950);background:rgba(5,5,6,.04)}
-.sknav ol button[aria-current=step]{color:var(--n950);font-weight:500;background:#fff;border-color:var(--n200);box-shadow:0 1px 2px rgba(5,5,6,.06)}
-.sknav ol button[aria-current=step] b{background:var(--n900);color:#fff}
-.sknav ol button.done b{background:var(--green-500);color:#fff}
-.sknav ol button.done b::after{content:none}
+/* step control (v8): arrows and progress dots. The story owns navigation; this only shows where you are */
+.sknav{display:flex;align-items:center;justify-content:center;gap:14px;font:400 14px/1.2 var(--font);color:var(--n700)}
+.sknav[hidden]{display:none}
+.sknav ol{display:flex;list-style:none;justify-content:center;gap:2px}
+.sknav ol button{width:24px;height:24px;border:0;background:none;padding:0;display:grid;place-items:center;cursor:pointer;border-radius:12px}
+.sknav ol button::before{content:"";width:8px;height:8px;border-radius:4px;background:var(--n200);transition:width .2s,background .2s}
+.sknav ol button:hover::before{background:var(--n500)}
+.sknav ol button[aria-current=step]::before{width:22px;background:var(--n900)}
+.sknav ol button:focus-visible{outline:2px solid var(--blue-500);outline-offset:1px}
 .skb{flex:none;width:36px;height:36px;border-radius:50%;border:1px solid var(--n200);background:#fff;font:500 18px/1 var(--font);color:var(--n800);display:grid;place-items:center;transition:border-color .15s,background .15s}
 .skb:hover{border-color:var(--n500);background:var(--n10)}
 .skb:disabled{opacity:.35;cursor:default}
@@ -328,10 +327,7 @@ body.framed .sketch:not(.port){padding-top:8px;padding-bottom:6px}
 /* phones: drawing on top, numbered notes below, a sticky step bar */
 .sketch.port .skplay{position:sticky;bottom:62px;z-index:3;background:var(--page);font-size:14px;padding:8px 8px 4px;gap:6px 10px;box-shadow:0 -10px 12px -6px var(--page)}
 .sketch.port .prange{width:140px}
-.sketch.port .sknav{position:sticky;bottom:0;background:linear-gradient(rgba(244,247,241,0),var(--page) 30%);padding:10px 0 8px;justify-content:space-between}
-.sketch.port .sknav ol{display:none}
-.sketch.port .skcur{display:block;flex:1;text-align:center;font-size:15px;color:var(--n900)}
-.sketch.port .skcur b{font-weight:700}
+.sketch.port .sknav{position:sticky;bottom:0;background:linear-gradient(rgba(244,247,241,0),var(--page) 30%);padding:10px 0 8px}
 .sketch.port .skb{width:44px;height:44px}
 .sketch.port .skfoot{flex-direction:column;gap:2px;padding-bottom:4px}
 body.framed .sketch.port{min-height:0;justify-content:flex-start}
@@ -436,6 +432,14 @@ body.framed .sketch.port{min-height:0;justify-content:flex-start}
 <section class="view sketch" id="provenance" aria-labelledby="provenance-h"><div class="hd"><h1 id="provenance-h">Where a layer came from, and who may use it</h1></div><svg class="sk" role="img" aria-labelledby="provenance-h"></svg><nav class="sknav" aria-label="Steps"></nav><p class="sr sklive" aria-live="polite"></p></section>
 <section class="view sketch" id="inuse" aria-labelledby="inuse-h"><div class="hd"><h1 id="inuse-h">One question, two departments</h1></div><svg class="sk" role="img" aria-labelledby="inuse-h"></svg><nav class="sknav" aria-label="Steps"></nav><p class="sr sklive" aria-live="polite"></p></section>
 <section class="view sketch" id="update" aria-labelledby="update-h"><div class="hd"><h1 id="update-h">How the map stays current</h1></div><svg class="sk" role="img" aria-labelledby="update-h"></svg><nav class="sknav" aria-label="Steps"></nav><p class="sr sklive" aria-live="polite"></p></section>
+<!-- v8: the new story outline -->
+<section class="view sketch" id="create" aria-labelledby="create-h"><div class="hd"><h1 id="create-h">It all starts with knowing where things are</h1></div><svg class="sk" role="img" aria-labelledby="create-h"></svg><nav class="sknav" aria-label="Steps"></nav><p class="sr sklive" aria-live="polite"></p></section>
+<section class="view sketch" id="geodatabase" aria-labelledby="geodatabase-h"><div class="hd"><h1 id="geodatabase-h">One safe home for every map layer</h1></div><svg class="sk" role="img" aria-labelledby="geodatabase-h"></svg><nav class="sknav" aria-label="Steps"></nav><p class="sr sklive" aria-live="polite"></p></section>
+<section class="view sketch" id="portal" aria-labelledby="portal-h"><div class="hd"><h1 id="portal-h">The state's map, open in your browser</h1></div><svg class="sk" role="img" aria-labelledby="portal-h"></svg><nav class="sknav" aria-label="Steps"></nav><p class="sr sklive" aria-live="polite"></p></section>
+<section class="view sketch" id="mobile" aria-labelledby="mobile-h"><div class="hd"><h1 id="mobile-h">The map goes to the field</h1></div><svg class="sk" role="img" aria-labelledby="mobile-h"></svg><nav class="sknav" aria-label="Steps"></nav><p class="sr sklive" aria-live="polite"></p></section>
+<section class="view sketch" id="mapping" aria-labelledby="mapping-h"><div class="hd"><h1 id="mapping-h">Turning data into maps people understand</h1></div><svg class="sk" role="img" aria-labelledby="mapping-h"></svg><nav class="sknav" aria-label="Steps"></nav><p class="sr sklive" aria-live="polite"></p></section>
+<section class="view sketch" id="maintain" aria-labelledby="maintain-h"><div class="hd"><h1 id="maintain-h">A map is never finished</h1></div><svg class="sk" role="img" aria-labelledby="maintain-h"></svg><nav class="sknav" aria-label="Steps"></nav><p class="sr sklive" aria-live="polite"></p></section>
+<section class="view sketch" id="cycle" aria-labelledby="cycle-h"><div class="hd"><h1 id="cycle-h">From the ground, back to the ground</h1></div><svg class="sk" role="img" aria-labelledby="cycle-h"></svg><nav class="sknav" aria-label="Steps"></nav><p class="sr sklive" aria-live="polite"></p></section>
 <!-- ============================================================ STORAGE -->
 <section class="view" id="storage" aria-labelledby="st-h">
   <div class="hd"><h1 id="st-h">One spot, every layer</h1></div>
@@ -491,7 +495,7 @@ function xy2ll(x,y){let lon=82.3,lat=21;for(let k=0;k<12;k++){const p=ll2xy(lon,
   const a=(q[0]-p[0])/.01,b=(r[0]-p[0])/.01,c=(q[1]-p[1])/.01,d=(r[1]-p[1])/.01,det=a*d-b*c;const dx=x-p[0],dy=y-p[1];lon+=(d*dx-b*dy)/det;lat+=(-c*dx+a*dy)/det}return[lon,lat]}
 
 /* ---------------- router ---------------- */
-const VIEWS={flow:"The intro told top to bottom; arrows draw as the reader scrolls",overview:"The base map and the departments that build on it",intake:"Drag a pin; the four intake checks run live",conversion:"Drag to fix a duplicate, a dangle and a sliver",projection:"Measure a kilometre anywhere in four coordinate systems",storage:"Point at the stack; every layer answers for the same spot",publication:"Change one record; every consumer updates",cartography:"Zoom from state to street; each layer switches on when it becomes useful",provenance:"The metadata card, lineage, and three tiers of access",inuse:"An example query across two departments' layers",update:"Schedules, boundary changes, revisions and what follows"};
+const VIEWS={flow:"The intro told top to bottom; arrows draw as the reader scrolls",overview:"The base map and the departments that build on it",intake:"Drag a pin; the four intake checks run live",conversion:"Drag to fix a duplicate, a dangle and a sliver",projection:"Measure a kilometre anywhere in four coordinate systems",storage:"Point at the stack; every layer answers for the same spot",publication:"Change one record; every consumer updates",cartography:"Zoom from state to street; each layer switches on when it becomes useful",provenance:"The metadata card, lineage, and three tiers of access",inuse:"An example query across two departments' layers",update:"Schedules, boundary changes, revisions and what follows",create:"v8 · Data Creation: old records, paper to digital, new data, keeping it current",geodatabase:"v8 · Geodatabase: layers, a record, rules at the door, one home",portal:"v8 · Geo Portal: layers, search, Ask AI, accessibility",mobile:"v8 · Mobile App: you are here, nearby, capture, send",mapping:"v8 · Mapping and cartography: raw data to a map that decides",maintain:"v8 · Maintenance: running, safe, current",cycle:"v8 · Closing: the six stages as one loop"};
 const OPT={};
 function parse(){const p=location.hash.slice(1).split("&");const v=p.shift();for(const k in OPT)delete OPT[k];p.forEach(x=>{const[a,b]=x.split("=");OPT[a]=b===undefined?true:decodeURIComponent(b)});return v}
 const INIT={},inited={};

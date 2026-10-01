@@ -50,9 +50,23 @@ SECTION FIGURES (v5 · hand-annotated, stepped)
   scale bars on map figures, a note under each figure saying what is real and what is illustrative,
   and a "next:" cue on the last step.
 
+NEW STORY OUTLINE (v8 · 1 Oct 2026) — one figure per section of the re-ordered story
+  index.html#create&bare        1 Data Creation: old records, paper to digital (Try it: drag the scanner), new data, keeping it current
+  index.html#geodatabase&bare   2 Geodatabase: stacked layers, a record (Try it: tap the centre), rules at the door, one home
+  index.html#portal&bare        3 Geo Portal: open it, layers (Try it: switch on centres), search, Ask AI, accessibility
+  index.html#mobile&bare        4 Mobile App: you are here, nearby, capture (Try it: tap to drop a point), send for review
+  index.html#mapping&bare       5 Mapping and cartography: raw data, colour (Try it: pick the river colour), labels, a thematic map
+  index.html#maintain&bare      6 Maintenance: running, safe, current (Try it: publish or send back), all three
+  index.html#cycle&bare         Closing: the six stages as one loop (Try it: drag the marker round once)
+  Cover: reuse index.html#overview. Source: source/story8.js (inlined by assemble4.py after sketch.js and play.js).
+  Pinned copy: versions/v8/#<view>&bare
+  Step control: arrows and progress dots (no labelled tabs). &nav=off hides it, so a sidecar can pin one
+    step per slide with &step=N and let the story's own scrolling move the figure.
+
 VERSIONS (frozen copies; links never change)
+  versions/v8/   1 Oct 2026 · Figures for the new story outline (current build)
   versions/index.html lists every version and its embed links
-  versions/v7/   30 Sep 2026 · Pen only for arrowed notes, one optional Try it per figure (current build)
+  versions/v7/   30 Sep 2026 · Pen only for arrowed notes, one optional Try it per figure
   versions/v6/   29 Sep 2026 · Your turn: hands-on sketch figures, faster
   versions/v5/   28 Sep 2026 · Hand-annotated section figures (commit 51c3791)
   versions/v4.1/   25 Sep 2026 · Overview, vertical flow and the scroll journey (commit cafc85f)
