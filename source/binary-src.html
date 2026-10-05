@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chhattisgarh in 0s and 1s</title>
+<style>
+@font-face{font-family:"GitLab Mono";src:url("fonts/GitLabMono-sub.woff2") format("woff2");font-display:swap}
+html,body{margin:0;height:100%;background:#06120f;overflow:hidden}
+canvas{display:block;width:100vw;height:100vh}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<canvas id="c" role="img" aria-label="Rows from an Excel sheet, features from GeoJSON and tables from PostGIS stream out as 0s and 1s and settle into the outline of Chhattisgarh, with its district boundaries."></canvas>
+<p class="sr">Three data sources, an Excel sheet, a GeoJSON file and a PostGIS database, send streams of binary digits that come together as one map of Chhattisgarh.</p>
+<script>
+/* Real geometry: the state and its 27 districts (2011 census), in the state's Lambert projection,
+   the same outline every other Ground Truth figure uses. */
+const GEO=/*GEO*/null;
+const Q=new URLSearchParams(location.search+"&"+location.hash.slice(1));
+const SHOW_LABELS=Q.get("labels")!=="0";
+const REDUCE=matchMedia("(prefers-reduced-motion: reduce)").matches||Q.has("still");
+const SRC=[
+  {key:"xls", name:"Excel sheet", sub:"rows and columns", col:"#2fbf71"},
+  {key:"geo", name:"GeoJSON",     sub:"features",         col:"#f2b544"},
+  {key:"pg",  name:"PostGIS",     sub:"spatial tables",   col:"#6aa8ff"}];
+const LAND="#5fe3b3",EDGE="#c9ffe9",BG0="#06120f",BG1="#0d2620";
+const cv=document.getElementById("c"),cx=cv.getContext("2d");
+let sent=0,W,H,DPR,L,cells=[],flying=[],t0=performance.now(),last=t0,done=false,glyph={},statePath,distPaths,mapT;
+
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+function path(d){return new Path2D(d)}
+
+function layout(){
+  DPR=Math.min(2,window.devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;cx.setTransform(DPR,0,0,DPR,0,0);
+  const land=W/H>1.05,bb={x:79.11,y:24,w:361.78,h:592},pad=Math.max(16,Math.min(W,H)*.05);
+  // map box and source column/row
+  let mx,my,mw,mh,srcPos=[];
+  if(land){const colW=Math.min(260,W*.26);mx=pad+colW+pad;my=pad;mw=W-mx-pad;mh=H-2*pad;
+    SRC.forEach((s,i)=>srcPos.push({x:pad+colW/2,y:H*(.25+i*.25)}))}
+  else{const rowH=Math.min(150,H*.2);mx=pad;my=pad+rowH;mw=W-2*pad;mh=H-my-pad;
+    SRC.forEach((s,i)=>srcPos.push({x:W*(.2+i*.3),y:pad+rowH*.45}))}
+  const k=Math.min(mw/bb.w,mh/bb.h);mapT={k,ox:mx+(mw-bb.w*k)/2-bb.x*k,oy:my+(mh-bb.h*k)/2-bb.y*k};
+  SRC.forEach((s,i)=>{s.x=srcPos[i].x;s.y=srcPos[i].y;s.r=Math.max(26,Math.min(44,Math.min(W,H)*.055))});
+  statePath=path(GEO.state);distPaths=GEO.districts.map(d=>path(d.d));
+  // the grid of digits: every cell whose centre falls inside the state
+  const areaPx=bb.w*bb.h*k*k*.47,cs=Math.max(9,Math.sqrt(areaPx/1300));L={cs,font:Math.round(cs*1.02)};
+  const off=new OffscreenCanvas(1,1).getContext("2d"),inside=(x,y)=>off.isPointInPath(statePath,(x-mapT.ox)/k,(y-mapT.oy)/k);
+  const next=[],grid=new Map();
+  for(let y=my+cs/2;y<my+mh;y+=cs)for(let x=mx+cs/2;x<mx+mw;x+=cs)if(inside(x,y)){const c={x,y,b:Math.random()<.5?1:0,src:Math.floor(Math.random()*3),on:0,land:0,edge:false};next.push(c);grid.set(Math.round(x/cs)+","+Math.round(y/cs),c)}
+  next.forEach(c=>{const gx=Math.round(c.x/cs),gy=Math.round(c.y/cs);c.edge=[[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>!grid.has((gx+a)+","+(gy+b)))});
+  // keep what had already landed when the window is resized
+  const keep=done||cells.some(c=>c.on);cells=next;flying=[];sent=keep||REDUCE?next.length:0;
+  // order of arrival: a soft sweep from the sources' side, with noise, so the state fills in, not pops in
+  cells.forEach(c=>{const s=SRC[c.src];c.order=(land?(c.x-mx)/mw:(c.y-my)/mh)*.55+Math.random()*.45});
+  cells.sort((a,b)=>a.order-b.order);
+  if(keep||REDUCE){cells.forEach(c=>{c.on=1;c.land=1});done=true}
+  makeGlyphs()}
+
+function makeGlyphs(){glyph={};const f=L.font;
+  [LAND,EDGE,...SRC.map(s=>s.col)].forEach(col=>{["0","1"].forEach(ch=>{const g=new OffscreenCanvas(Math.ceil(f*1.2*DPR),Math.ceil(f*1.4*DPR)),c=g.getContext("2d");
+    c.scale(DPR,DPR);c.fillStyle=col;c.font=`${f}px "GitLab Mono",ui-monospace,Menlo,Consolas,monospace`;c.textAlign="center";c.textBaseline="middle";c.fillText(ch,f*.6,f*.72);glyph[col+ch]=g})})}
+function digit(col,b,x,y,a){const g=glyph[col+b];if(!g)return;cx.globalAlpha=a;cx.drawImage(g,x-L.font*.6,y-L.font*.72,g.width/DPR,g.height/DPR)}
+
+/* the three sources, drawn as small cards */
+function drawSource(s,a){
+  const r=s.r;cx.save();cx.globalAlpha=a;cx.translate(s.x,s.y);
+  cx.fillStyle="rgba(255,255,255,.04)";cx.strokeStyle=s.col;cx.lineWidth=1.5;
+  rr(-r*1.25,-r,r*2.5,r*2,10);cx.fill();cx.stroke();cx.strokeStyle=s.col;cx.fillStyle=s.col;cx.lineWidth=1.6;
+  if(s.key==="xls"){const w=r*1.5,h=r*1.1;cx.strokeRect(-w/2,-h/2,w,h);for(let i=1;i<3;i++){cx.beginPath();cx.moveTo(-w/2+w*i/3,-h/2);cx.lineTo(-w/2+w*i/3,h/2);cx.stroke()}
+    for(let j=1;j<4;j++){cx.beginPath();cx.moveTo(-w/2,-h/2+h*j/4);cx.lineTo(w/2,-h/2+h*j/4);cx.stroke()}cx.globalAlpha=a*.35;cx.fillRect(-w/2,-h/2,w,h/4)}
+  if(s.key==="geo"){cx.font=`700 ${r*.9}px "GitLab Mono",ui-monospace,monospace`;cx.textAlign="center";cx.textBaseline="middle";cx.fillText("{ }",0,-r*.05);
+    cx.globalAlpha=a*.6;cx.font=`${r*.26}px "GitLab Mono",ui-monospace,monospace`;cx.fillText('"Polygon"',0,r*.6)}
+  if(s.key==="pg"){const w=r*.75,h=r*.22;for(let i=0;i<3;i++){const y=-r*.45+i*r*.42;cx.beginPath();cx.ellipse(0,y,w,h,0,0,Math.PI*2);cx.stroke()}
+    cx.beginPath();cx.moveTo(-w,-r*.45);cx.lineTo(-w,r*.39);cx.moveTo(w,-r*.45);cx.lineTo(w,r*.39);cx.stroke()}
+  if(SHOW_LABELS){cx.globalAlpha=a;cx.fillStyle="#e8f5ef";cx.textAlign="center";cx.textBaseline="top";cx.font=`600 ${Math.max(12,r*.36)}px "Avenir Next World","Avenir Next",system-ui,sans-serif`;cx.fillText(s.name,0,r*1.15);
+    cx.globalAlpha=a*.6;cx.font=`${Math.max(10.5,r*.28)}px "Avenir Next World","Avenir Next",system-ui,sans-serif`;cx.fillText(s.sub,0,r*1.15+Math.max(15,r*.42))}
+  cx.restore()}
+function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
+
+/* emission: every cell is fetched once by a digit flying from its source */
+function emit(now,dt){
+  const T=(now-t0)/1000;if(T<.9||sent>=cells.length)return;
+  const rate=cells.length/6.2,n=Math.min(cells.length-sent,Math.ceil(rate*dt/1000*1.0+Math.random()));
+  for(let i=0;i<n;i++){const c=cells[sent++],s=SRC[c.src];
+    const mxp=(s.x+c.x)/2+rnd(-60,60),myp=(s.y+c.y)/2+rnd(-90,90);
+    const lx=W/H>1.05,ex=lx?s.x+s.r*1.3:s.x+rnd(-s.r,s.r),ey=lx?s.y+rnd(-s.r*.8,s.r*.8):s.y+s.r*1.05+(SHOW_LABELS?s.r*1.2:0);
+    flying.push({c,s,sx:ex,sy:ey,mx:mxp,my:myp,t:now,d:rnd(1000,1700),b:Math.random()<.5?1:0})}}
+
+function frame(now){
+  const dt=Math.min(64,now-last);last=now;const T=(now-t0)/1000;
+  // background
+  const g=cx.createRadialGradient(W*.62,H*.52,0,W*.62,H*.52,Math.max(W,H)*.75);g.addColorStop(0,BG1);g.addColorStop(1,BG0);cx.globalAlpha=1;cx.fillStyle=g;cx.fillRect(0,0,W,H);
+  // a faint lattice: the grid every digit sits on
+  cx.globalAlpha=.05;cx.strokeStyle="#9fe8cc";cx.lineWidth=1;cx.beginPath();for(let x=L.cs*4;x<W;x+=L.cs*4){cx.moveTo(x,0);cx.lineTo(x,H)}for(let y=L.cs*4;y<H;y+=L.cs*4){cx.moveTo(0,y);cx.lineTo(W,y)}cx.stroke();
+  const srcA=REDUCE?1:Math.min(1,T/.8);
+  if(!done&&!REDUCE)emit(now,dt);
+  // landed digits; a few flip each frame, the map is live data, not a picture
+  const flips=REDUCE?0:Math.ceil(cells.length*.0025);for(let i=0;i<flips;i++){const c=cells[Math.floor(Math.random()*cells.length)];if(c.land)c.b^=1,c.flash=1}
+  for(const c of cells){if(!c.on)continue;const a=c.edge?1:.62+((c.x*7+c.y*13)%10)/32;
+    if(c.land<1){c.land=Math.min(1,c.land+dt/350)}
+    const col=c.land<1?SRC[c.src].col:(c.edge?EDGE:LAND);digit(col,c.b,c.x,c.y,a*(c.flash?1:1));if(c.flash){c.flash=Math.max(0,c.flash-dt/400);if(c.flash>0)digit(EDGE,c.b,c.x,c.y,c.flash*.8)}}
+  // digits in flight, coloured by the source they came from
+  for(let i=flying.length-1;i>=0;i--){const f=flying[i];let u=(now-f.t)/f.d;if(u>=1){f.c.on=1;f.c.b=f.b;flying.splice(i,1);continue}
+    const e=ease(u),x=(1-e)*(1-e)*f.sx+2*(1-e)*e*f.mx+e*e*f.c.x,y=(1-e)*(1-e)*f.sy+2*(1-e)*e*f.my+e*e*f.c.y;
+    digit(f.s.col,(u*12|0)%2?f.b:1-f.b,x,y,.35+.65*Math.sin(u*Math.PI))}
+  if(!done&&sent>=cells.length&&!flying.length){done=true;window.__formed=now}
+  // once the map has formed: the real state outline and district lines come up
+  const fa=done?(REDUCE?1:Math.min(1,(now-(window.__formed||now))/1500)):0;
+  if(fa>0){cx.save();cx.setTransform(DPR*mapT.k,0,0,DPR*mapT.k,DPR*mapT.ox,DPR*mapT.oy);
+    cx.globalAlpha=.22*fa;cx.strokeStyle="#bff5df";cx.lineWidth=.9/mapT.k;distPaths.forEach(p=>cx.stroke(p));
+    cx.globalAlpha=.85*fa;cx.strokeStyle=EDGE;cx.lineWidth=1.6/mapT.k;cx.shadowColor=LAND;cx.shadowBlur=12;cx.stroke(statePath);cx.restore()}
+  SRC.forEach(s=>drawSource(s,srcA*(done?.85:1)));
+  // after it forms, the sources keep sending small updates, as the portal does
+  if(done&&!REDUCE&&Math.random()<dt/260){const c=cells[Math.floor(Math.random()*cells.length)];const s=SRC[Math.floor(Math.random()*3)];c.src=SRC.indexOf(s);
+    const lx=W/H>1.05;flying.push({c,s,sx:lx?s.x+s.r*1.3:s.x,sy:lx?s.y:s.y+s.r*1.05+(SHOW_LABELS?s.r*1.2:0),mx:(s.x+c.x)/2+rnd(-60,60),my:(s.y+c.y)/2+rnd(-90,90),t:now,d:rnd(1200,1800),b:Math.random()<.5?1:0});c.land=0}
+  if(!REDUCE)requestAnimationFrame(frame)}
+
+let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{layout();if(REDUCE)frame(performance.now())},150)});
+document.fonts.load('16px "GitLab Mono"').catch(()=>{}).finally(()=>{layout();requestAnimationFrame(frame)});
+</script>
+</body>
+</html>
