@@ -335,18 +335,38 @@ SPEC.mobile={W:560,H:600,portH:580,foot:"State and district boundaries are real.
   const raipur=G.districts.find(d=>d.n==="Raipur");el("path",{d:raipur.d,fill:"#fff"},g);
   const dg=el("g",{fill:"none",stroke:"#9b948a","stroke-width":1.3,"stroke-dasharray":"6 3","vector-effect":"non-scaling-stroke"},g);G.districts.forEach(d=>el("path",{d:d.d,"vector-effect":"non-scaling-stroke"},dg));
   el("path",{d:G.state,fill:"none",stroke:"var(--n800)","stroke-width":2.2,"vector-effect":"non-scaling-stroke"},g);
-  const vring=G.carto.village.find(v=>v.split("M").filter(Boolean).some(r=>{const P=r.replace(/Z/g,"").split("L").map(q=>q.split(",").map(Number));let c=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const a=P[i],b=P[j];if((a[1]>P0[1])!==(b[1]>P0[1])&&P0[0]<(b[0]-a[0])*(P0[1]-a[1])/(b[1]-a[1])+a[0])c=!c}return c}));
-  s.vil=el("path",{d:vring,fill:"rgba(97,122,226,.10)",stroke:"var(--dv-blue-700)","stroke-width":2.2,"vector-effect":"non-scaling-stroke"},g);
-  {const P=vring.replace(/[MZ]/g,"").split("L").map(q=>q.split(",").map(Number));s.vc=[P.reduce((a,p)=>a+p[0],0)/P.length,P.reduce((a,p)=>a+p[1],0)/P.length];s.vtop=Math.min(...P.map(p=>p[1]))}
+  // real main roads and rail, for the district view
+  s.big=el("g",{},g);const cst=V8.clip(A,"st");el("path",{d:G.ctx.roads,fill:"none",stroke:"#e0b98f","stroke-width":2,"clip-path":cst,"vector-effect":"non-scaling-stroke"},s.big);
+  el("path",{d:G.ctx.rail,fill:"none",stroke:"#8a8888","stroke-width":2,"clip-path":cst,"vector-effect":"non-scaling-stroke"},s.big);el("path",{d:G.ctx.rail,fill:"none",stroke:"#fff","stroke-width":1,"stroke-dasharray":"3 3","clip-path":cst,"vector-effect":"non-scaling-stroke"},s.big);
   // district names, placed at the middle of each district's box, kept a constant size on screen
   const dl=el("g",{},g);s.dlab=G.districts.map(d=>{const xs=[],ys=[];d.d.replace(/(-?[\d.]+),(-?[\d.]+)/g,(m,x,y)=>{xs.push(+x);ys.push(+y)});
     const c=[(Math.min(...xs)+Math.max(...xs))/2,(Math.min(...ys)+Math.max(...ys))/2];if(d.n==="Raipur"){c[0]-=6;c[1]-=10}
     const t=txt({x:c[0],y:c[1],"text-anchor":"middle",class:"halo","font-weight":d.n==="Raipur"?700:500,fill:d.n==="Raipur"?"var(--n900)":"var(--n500)"},dl,d.n.toUpperCase());return{t,c}});
-  s.vlab=txt({"text-anchor":"middle",class:"halo","font-weight":700,fill:"var(--dv-blue-700)"},g,"YOUR VILLAGE");
-  s.awS=V8.dots(s.L,g,G.stack.aw.filter(p=>Math.hypot(p[0]-P0[0],p[1]-P0[1])>6),{r:3.2,sw:1});s.awd=V8.dots(s.L,g,G.carto.aw,{r:5,sw:1.4});
-  s.L.on(u=>{const z=s.L.v.w;s.vil.style.opacity=z>20?0:1;s.dlab.forEach(({t,c})=>{t.setAttribute("x",c[0]);t.setAttribute("y",c[1]);t.setAttribute("font-size",11*u);t.setAttribute("letter-spacing",1.2*u);t.style.strokeWidth=3.4*u+"px";t.style.opacity=z>20?1:0});
-    s.vlab.setAttribute("x",s.vc[0]);s.vlab.setAttribute("y",s.vtop-.35);s.vlab.setAttribute("font-size",11*u);s.vlab.setAttribute("letter-spacing",1*u);s.vlab.style.strokeWidth=3.4*u+"px";s.vlab.style.opacity=z<20?1:0;
-    s.awd.style.opacity=z>20?0:1;s.awS.style.opacity=z>20?1:0});
+  // the village view: drawn the way a map app shows a village. Positions are in screen pixels around
+  // the centre of the phone's map at village zoom, turned into map units so the markers stay put
+  const K=s.L.w/s.VV.w,Wp=(x,y)=>[s.VV.cx+x/K,s.VV.cy+y/K],pt=(x,y)=>Wp(x,y).map(v=>v.toFixed(3)).join(","),
+    path=d=>d.replace(/(-?[\d.]+),(-?[\d.]+)/g,(m,x,y)=>pt(+x,+y));
+  s.street=el("g",{},g);const st=s.street;el("rect",{x:-3000,y:-3000,width:7000,height:7000,fill:"#f3f1ec"},st);
+  [[-108,60,70,90],[30,70,90,60],[-100,-230,60,80],[40,-230,70,70],[70,-120,50,60],[-108,-140,40,60]].forEach(([x,y,w,h])=>el("path",{d:path(`M${x},${y} L${x+w},${y} L${x+w},${y+h} L${x},${y+h}Z`),fill:"#e4ebd5"},st));
+  el("path",{d:path("M38,40 C38,30 78,26 84,38 C90,52 52,58 42,52Z"),fill:"#bcd3ea",stroke:"#9dbad6","stroke-width":1,"vector-effect":"non-scaling-stroke"},st);
+  const road=(d,w,c="#fff")=>{el("path",{d:path(d),fill:"none",stroke:"#cfc6b8","stroke-width":w+3,"stroke-linecap":"round","stroke-linejoin":"round","vector-effect":"non-scaling-stroke"},st);
+    return el("path",{d:path(d),fill:"none",stroke:c,"stroke-width":w,"stroke-linecap":"round","stroke-linejoin":"round","vector-effect":"non-scaling-stroke"},st)};
+  const main="M-140,190 C-80,120 -66,40 -58,-20 C-50,-90 -20,-170 30,-260";
+  road(main,9,"#fbe3b8");road("M-58,6 C0,-4 60,-14 140,-40",6);
+  road("M-56,-60 L36,-66",4);road("M-12,-110 L-8,30",4);road("M36,-66 L44,8",4);road("M-8,30 C30,40 60,90 70,200",4);road("M-40,-150 L-90,-200",4);
+  const hs=el("g",{fill:"#e4dfd6",stroke:"#cbc3b6","stroke-width":.8,"vector-effect":"non-scaling-stroke"},st);
+  [[-40,-76],[-24,-76],[8,-78],[22,-80],[-28,-50],[-2,-46],[14,-52],[-24,-30],[2,-22],[22,-26],[-24,-4],[50,-40],[54,-20],[-22,12],[6,16],[-40,-100],[0,-100],
+   [80,170],[92,184],[64,182],[-80,-190],[-96,-176],[-70,-206],[90,-150],[104,-140]].forEach(([x,y])=>el("path",{d:path(`M${x-4},${y-3} L${x+4},${y-3} L${x+4},${y+3} L${x-4},${y+3}Z`),"vector-effect":"non-scaling-stroke"},hs));
+  s.vbound=el("path",{d:path("M-66,-120 C-20,-134 40,-126 66,-100 C82,-80 76,-10 66,30 C46,54 -10,58 -40,40 C-70,20 -78,-60 -66,-120Z"),fill:"rgba(97,122,226,.06)",stroke:"var(--dv-blue-700)","stroke-width":2,"stroke-dasharray":"7 4","vector-effect":"non-scaling-stroke"},st);
+  const lbl=(x,y,t,o={})=>{const q=Wp(x,y),e=txt({x:q[0],y:q[1],"text-anchor":"middle",class:"halo","font-weight":o.w||600,fill:o.c||"var(--n500)"},st,t);e._k=o.k||10;e._ls=o.ls||0;e._rot=o.r||0;e._q=q;return e};
+  s.slabs=[lbl(0,-140,"YOUR VILLAGE",{c:"var(--dv-blue-700)",w:700,k:11,ls:1}),lbl(58,214,"next village",{k:10}),lbl(-62,-224,"next village",{k:10}),lbl(60,64,"pond",{c:"#5b85ad",k:9.5}),
+    lbl(-54,96,"Main road",{c:"#9a7a4a",k:9.5,r:-62})];
+  // four Anganwadi centres: ours, and one in each neighbouring settlement
+  s.awV=V8.dots(s.L,st,[P0,Wp(84,170),Wp(-84,-200),Wp(96,-130)],{r:5.5,sw:1.8});
+  s.awS=V8.dots(s.L,g,G.stack.aw.filter(p=>Math.hypot(p[0]-P0[0],p[1]-P0[1])>6),{r:3.2,sw:1});g.insertBefore(s.awS,s.street);
+  s.L.on(u=>{const z=s.L.v.w;s.street.style.opacity=z>20?0:1;s.big.style.opacity=z>20?1:0;s.awS.style.opacity=z>20?1:0;
+    s.dlab.forEach(({t,c})=>{t.setAttribute("x",c[0]);t.setAttribute("y",c[1]);t.setAttribute("font-size",11*u);t.setAttribute("letter-spacing",1.2*u);t.style.strokeWidth=3.4*u+"px";t.style.opacity=z>20?1:0});
+    s.slabs.forEach(e=>{e.setAttribute("font-size",e._k*u);e.setAttribute("letter-spacing",e._ls*u);e.style.strokeWidth=3.2*u+"px";if(e._rot)e.setAttribute("transform",`rotate(${e._rot} ${e._q[0]} ${e._q[1]})`)})});
   // where you are in the hierarchy, written out under the app bar
   s.crumb=el("g",{},s.ph);el("rect",{x:s.scr.x,y:my,width:s.scr.w,height:26,fill:"rgba(255,255,255,.94)"},s.crumb);el("path",{d:`M${s.scr.x},${my+26} h${s.scr.w}`,stroke:"#e3dfd8"},s.crumb);
   s.crumbT=A.hand(s.crumb,s.scr.x+12,my+18,"",{size:16,fill:"var(--n700)"});
