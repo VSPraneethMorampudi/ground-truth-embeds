@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-build="1791182673">
+<html lang="en" data-build="1791183648">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -2278,41 +2278,96 @@ SPEC.portal={W:600,H:560,portH:520,foot:"Boundaries, rivers, roads and rail are 
          {at:"r0",t:"Use it your way",b:["larger text, high contrast,","keyboard or screen reader"],to:()=>[588,200]}]}]}
 
 /* ============================================================ 4 · MOBILE APP */
-SPEC.mobile={W:560,H:600,portH:580,foot:"Village boundaries and roads are drawn around Raipur. The app screens, record and photo are a sketch.",
- draw(A){const s=A.st;const P0=V8.near(G.carto.aw,[214,300]);s.P0=P0;s.you=[P0[0]-.42,P0[1]+.52];
+SPEC.mobile={W:560,H:600,portH:580,foot:"State and district boundaries are real. The village outline, the centres and the app screens are illustrative.",
+ draw(A){const s=A.st;const P0=V8.near(G.carto.aw,[214,300]);s.P0=P0;s.you=[P0[0]-.95,P0[1]+1.15];
   s.dist=Math.round(Math.hypot(P0[0]-s.you[0],P0[1]-s.you[1])/G.kmPx*1000/10)*10;
   // the ground behind the phone
   s.bg=A.lens(A.ill,{paper:"#eef0e6",view:{cx:P0[0]+1.6,cy:P0[1]+.2,w:16}});const bg=s.bg.g;
   el("rect",{x:-3000,y:-3000,width:7000,height:7000,fill:"#e6e9da"},bg);
   // the phone
-  s.ph=el("g",{},A.ill);const X=120,Y=8,W=240,H=584;s.scr={x:X+12,y:Y+48,w:W-24,h:H-72};
-  el("rect",{x:X+4,y:Y+10,width:W,height:H,rx:38,fill:"rgba(40,39,45,.25)",filter:"url(#mobile-soft)"},s.ph);
-  el("rect",{x:X,y:Y,width:W,height:H,rx:38,fill:"var(--n900)"},s.ph);el("rect",{x:X+86,y:Y+16,width:68,height:16,rx:8,fill:"#000"},s.ph);
-  el("rect",{x:s.scr.x,y:s.scr.y,width:s.scr.w,height:s.scr.h,rx:14,fill:"#fff"},s.ph);
-  A.hand(s.ph,s.scr.x+12,s.scr.y+18,"9:41",{size:17,bold:1});[0,1,2].forEach(i=>el("rect",{x:s.scr.x+168+i*7,y:s.scr.y+14-i*3,width:4,height:6+i*3,rx:1,fill:"var(--n900)"},s.ph));
-  el("rect",{x:s.scr.x,y:s.scr.y+26,width:s.scr.w,height:38,fill:"var(--n900)"},s.ph);A.hand(s.ph,s.scr.x+14,s.scr.y+51,"Field app",{size:20,bold:1,fill:"#fff"});
-  A.hand(s.ph,s.scr.x+s.scr.w-14,s.scr.y+51,"Raipur",{size:17,anchor:"end",fill:"#c1bfbe"});
-  const my=s.scr.y+64,mh=s.scr.h-64;
-  s.L=A.lens(s.ph,{x:s.scr.x,y:my,w:s.scr.w,h:mh,view:{cx:P0[0]-.15,cy:P0[1]+.25,w:3}});const g=s.L.g;
-  el("rect",{x:-3000,y:-3000,width:7000,height:7000,fill:"#f4f1ea"},g);
-  el("path",{d:G.carto.roads,fill:"none",stroke:"#d8cdbd","stroke-width":5,"vector-effect":"non-scaling-stroke","stroke-linecap":"round"},g);el("path",{d:G.carto.roads,fill:"none",stroke:"#fff","stroke-width":2.8,"vector-effect":"non-scaling-stroke","stroke-linecap":"round"},g);
-  el("path",{d:G.carto.fibre,fill:"none",stroke:"var(--dv-aqua-600)","stroke-width":2.4,"vector-effect":"non-scaling-stroke"},g);V8.diam(s.L,g,G.carto.gp,{z:11});
-  V8.dots(s.L,g,G.carto.aw,{r:5.5,sw:1.6});
+  // a current flagship phone, kept generic: metal frame, thin even bezel, a pill-shaped camera cutout,
+  // side buttons, status icons and a home bar. No logo, nothing brand-specific
+  s.ph=el("g",{},A.ill);const X=128,Y=4,W=232,H=592,RX=50;s.scr={x:X+9,y:Y+9,w:W-18,h:H-18};const sc=s.scr,SR=41;
+  A.defs.insertAdjacentHTML("beforeend",`<linearGradient id="mobile-metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8d9096"/><stop offset=".06" stop-color="#e4e6e9"/><stop offset=".5" stop-color="#b9bcc1"/><stop offset=".94" stop-color="#e9eaec"/><stop offset="1" stop-color="#8d9096"/></linearGradient>`+
+    `<clipPath id="mobile-screen"><rect x="${sc.x}" y="${sc.y}" width="${sc.w}" height="${sc.h}" rx="${SR}"/></clipPath>`);
+  el("rect",{x:X+4,y:Y+12,width:W,height:H,rx:RX,fill:"rgba(40,39,45,.28)",filter:"url(#mobile-soft)"},s.ph);
+  const btn=(x,y,h)=>el("rect",{x,y,width:4,height:h,rx:2,fill:"url(#mobile-metal)",stroke:"#7d8086","stroke-width":.6},s.ph);
+  btn(X-3,Y+118,26);btn(X-3,Y+166,48);btn(X-3,Y+224,48);btn(X+W-1,Y+178,74);btn(X+W-1,Y+352,40);
+  el("rect",{x:X,y:Y,width:W,height:H,rx:RX,fill:"url(#mobile-metal)"},s.ph);
+  el("rect",{x:X+.8,y:Y+.8,width:W-1.6,height:H-1.6,rx:RX-1,fill:"none",stroke:"rgba(255,255,255,.55)","stroke-width":.8},s.ph);
+  el("rect",{x:X+3,y:Y+3,width:W-6,height:H-6,rx:RX-3,fill:"#0b0b0d"},s.ph);
+  el("rect",{x:sc.x,y:sc.y,width:sc.w,height:sc.h,rx:SR,fill:"#fff"},s.ph);
+  A.hand(s.ph,sc.x+40,sc.y+29,"9:41",{size:19,bold:1,anchor:"middle"});
+  {const x=sc.x+146,y=sc.y+29;[0,1,2,3].forEach(i=>el("rect",{x:x+i*4,y:y-2.6-i*2,width:2.8,height:2.6+i*2,rx:.7,fill:"var(--n900)"},s.ph));
+   const wx=x+27,wy=y;[7,4.5].forEach(r=>el("path",{d:`M${wx-r},${wy-r*.6} A${r},${r} 0 0 1 ${wx+r},${wy-r*.6}`,fill:"none",stroke:"var(--n900)","stroke-width":1.7,"stroke-linecap":"round"},s.ph));el("circle",{cx:wx,cy:wy-1.2,r:1.5,fill:"var(--n900)"},s.ph);
+   el("rect",{x:x+37,y:y-8.5,width:18,height:9.5,rx:2.8,fill:"none",stroke:"var(--n500)","stroke-width":1},s.ph);el("rect",{x:x+38.5,y:y-7,width:12.5,height:6.5,rx:1.4,fill:"var(--n900)"},s.ph);el("rect",{x:x+55.6,y:y-5.2,width:1.5,height:3,rx:.7,fill:"var(--n500)"},s.ph)}
+  el("rect",{x:sc.x,y:sc.y+44,width:sc.w,height:38,fill:"var(--n900)"},s.ph);A.hand(s.ph,sc.x+16,sc.y+69,"Field app",{size:20,bold:1,fill:"#fff"});
+  const my=s.scr.y+82,mh=s.scr.h-82;s.VD={cx:P0[0]+3,cy:P0[1]+4,w:62};s.VV={cx:P0[0]+.1,cy:P0[1]+.9,w:7};
+  s.L=A.lens(s.ph,{x:s.scr.x,y:my,w:s.scr.w,h:mh,view:s.VD});s.L.outer.setAttribute("clip-path","url(#mobile-screen)");const g=s.L.g;
+  // only what an officer needs: the state, districts with names, their village, and Anganwadi centres
+  el("rect",{x:-3000,y:-3000,width:7000,height:7000,fill:"#e9e6df"},g);
+  el("path",{d:G.state,fill:"#f7f5f0"},g);
+  const raipur=G.districts.find(d=>d.n==="Raipur");el("path",{d:raipur.d,fill:"#fff"},g);
+  const dg=el("g",{fill:"none",stroke:"#9b948a","stroke-width":1.3,"stroke-dasharray":"6 3","vector-effect":"non-scaling-stroke"},g);G.districts.forEach(d=>el("path",{d:d.d,"vector-effect":"non-scaling-stroke"},dg));
+  el("path",{d:G.state,fill:"none",stroke:"var(--n800)","stroke-width":2.2,"vector-effect":"non-scaling-stroke"},g);
+  // real main roads and rail, for the district view
+  s.big=el("g",{},g);const cst=V8.clip(A,"st");el("path",{d:G.ctx.roads,fill:"none",stroke:"#e0b98f","stroke-width":2,"clip-path":cst,"vector-effect":"non-scaling-stroke"},s.big);
+  el("path",{d:G.ctx.rail,fill:"none",stroke:"#8a8888","stroke-width":2,"clip-path":cst,"vector-effect":"non-scaling-stroke"},s.big);el("path",{d:G.ctx.rail,fill:"none",stroke:"#fff","stroke-width":1,"stroke-dasharray":"3 3","clip-path":cst,"vector-effect":"non-scaling-stroke"},s.big);
+  // district names, placed at the middle of each district's box, kept a constant size on screen
+  const dl=el("g",{},g);s.dlab=G.districts.map(d=>{const xs=[],ys=[];d.d.replace(/(-?[\d.]+),(-?[\d.]+)/g,(m,x,y)=>{xs.push(+x);ys.push(+y)});
+    const c=[(Math.min(...xs)+Math.max(...xs))/2,(Math.min(...ys)+Math.max(...ys))/2];if(d.n==="Raipur"){c[0]-=6;c[1]-=10}
+    const t=txt({x:c[0],y:c[1],"text-anchor":"middle",class:"halo","font-weight":d.n==="Raipur"?700:500,fill:d.n==="Raipur"?"var(--n900)":"var(--n500)"},dl,d.n.toUpperCase());return{t,c}});
+  // the village view: drawn the way a map app shows a village. Positions are in screen pixels around
+  // the centre of the phone's map at village zoom, turned into map units so the markers stay put
+  const K=s.L.w/s.VV.w,Wp=(x,y)=>[s.VV.cx+x/K,s.VV.cy+y/K],pt=(x,y)=>Wp(x,y).map(v=>v.toFixed(3)).join(","),
+    path=d=>d.replace(/(-?[\d.]+),(-?[\d.]+)/g,(m,x,y)=>pt(+x,+y));
+  s.street=el("g",{},g);const st=s.street;el("rect",{x:-3000,y:-3000,width:7000,height:7000,fill:"#f3f1ec"},st);
+  [[-108,60,70,90],[30,70,90,60],[-100,-230,60,80],[40,-230,70,70],[70,-120,50,60],[-108,-140,40,60]].forEach(([x,y,w,h])=>el("path",{d:path(`M${x},${y} L${x+w},${y} L${x+w},${y+h} L${x},${y+h}Z`),fill:"#e4ebd5"},st));
+  el("path",{d:path("M38,40 C38,30 78,26 84,38 C90,52 52,58 42,52Z"),fill:"#bcd3ea",stroke:"#9dbad6","stroke-width":1,"vector-effect":"non-scaling-stroke"},st);
+  const road=(d,w,c="#fff")=>{el("path",{d:path(d),fill:"none",stroke:"#cfc6b8","stroke-width":w+3,"stroke-linecap":"round","stroke-linejoin":"round","vector-effect":"non-scaling-stroke"},st);
+    return el("path",{d:path(d),fill:"none",stroke:c,"stroke-width":w,"stroke-linecap":"round","stroke-linejoin":"round","vector-effect":"non-scaling-stroke"},st)};
+  const main="M-140,190 C-80,120 -66,40 -58,-20 C-50,-90 -20,-170 30,-260";
+  road(main,9,"#fbe3b8");road("M-58,6 C0,-4 60,-14 140,-40",6);
+  road("M-56,-60 L36,-66",4);road("M-12,-110 L-8,30",4);road("M36,-66 L44,8",4);road("M-8,30 C30,40 60,90 70,200",4);road("M-40,-150 L-90,-200",4);
+  const hs=el("g",{fill:"#e4dfd6",stroke:"#cbc3b6","stroke-width":.8,"vector-effect":"non-scaling-stroke"},st);
+  [[-40,-76],[-24,-76],[8,-78],[22,-80],[-28,-50],[-2,-46],[14,-52],[-24,-30],[2,-22],[22,-26],[-24,-4],[50,-40],[54,-20],[-22,12],[6,16],[-40,-100],[0,-100],
+   [80,170],[92,184],[64,182],[-80,-190],[-96,-176],[-70,-206],[90,-150],[104,-140]].forEach(([x,y])=>el("path",{d:path(`M${x-4},${y-3} L${x+4},${y-3} L${x+4},${y+3} L${x-4},${y+3}Z`),"vector-effect":"non-scaling-stroke"},hs));
+  s.vbound=el("path",{d:path("M-66,-120 C-20,-134 40,-126 66,-100 C82,-80 76,-10 66,30 C46,54 -10,58 -40,40 C-70,20 -78,-60 -66,-120Z"),fill:"rgba(97,122,226,.06)",stroke:"var(--dv-blue-700)","stroke-width":2,"stroke-dasharray":"7 4","vector-effect":"non-scaling-stroke"},st);
+  const lbl=(x,y,t,o={})=>{const q=Wp(x,y),e=txt({x:q[0],y:q[1],"text-anchor":"middle",class:"halo","font-weight":o.w||600,fill:o.c||"var(--n500)"},st,t);e._k=o.k||10;e._ls=o.ls||0;e._rot=o.r||0;e._q=q;return e};
+  s.slabs=[lbl(0,-140,"YOUR VILLAGE",{c:"var(--dv-blue-700)",w:700,k:11,ls:1}),lbl(58,214,"next village",{k:10}),lbl(-62,-224,"next village",{k:10}),lbl(60,64,"pond",{c:"#5b85ad",k:9.5}),
+    lbl(-54,96,"Main road",{c:"#9a7a4a",k:9.5,r:-62})];
+  // four Anganwadi centres: ours, and one in each neighbouring settlement
+  s.awV=V8.dots(s.L,st,[P0,Wp(84,170),Wp(-84,-200),Wp(96,-130)],{r:5.5,sw:1.8});
+  s.awS=V8.dots(s.L,g,G.stack.aw.filter(p=>Math.hypot(p[0]-P0[0],p[1]-P0[1])>6),{r:3.2,sw:1});g.insertBefore(s.awS,s.street);
+  s.L.on(u=>{const z=s.L.v.w;s.street.style.opacity=z>20?0:1;s.big.style.opacity=z>20?1:0;s.awS.style.opacity=z>20?1:0;
+    s.dlab.forEach(({t,c})=>{t.setAttribute("x",c[0]);t.setAttribute("y",c[1]);t.setAttribute("font-size",11*u);t.setAttribute("letter-spacing",1.2*u);t.style.strokeWidth=3.4*u+"px";t.style.opacity=z>20?1:0});
+    s.slabs.forEach(e=>{e.setAttribute("font-size",e._k*u);e.setAttribute("letter-spacing",e._ls*u);e.style.strokeWidth=3.2*u+"px";if(e._rot)e.setAttribute("transform",`rotate(${e._rot} ${e._q[0]} ${e._q[1]})`)})});
+  // where you are in the hierarchy, written out under the app bar
+  s.crumb=el("g",{},s.ph);el("rect",{x:s.scr.x,y:my,width:s.scr.w,height:26,fill:"rgba(255,255,255,.94)"},s.crumb);el("path",{d:`M${s.scr.x},${my+26} h${s.scr.w}`,stroke:"#e3dfd8"},s.crumb);
+  s.crumbT=A.hand(s.crumb,s.scr.x+12,my+18,"",{size:16,fill:"var(--n700)"});
+  s.setCrumb=v=>{s.crumbT.textContent=v?"Chhattisgarh  ›  Raipur  ›  your village":"Chhattisgarh  ›  Raipur district"};s.setCrumb(0);
+  // a small state map, so the district view still says where in the state you are
+  s.inset=el("g",{},s.ph);V8.card(A,s.inset,s.scr.x+s.scr.w-66,my+34,58,74,{rx:6,fill:"#fff"});
+  {const k=.1,t=el("g",{transform:`translate(${s.scr.x+s.scr.w-37-260*k} ${my+71-322*k}) scale(${k})`},s.inset);el("path",{d:G.state,fill:"#f1efea",stroke:"var(--n700)","stroke-width":1,"vector-effect":"non-scaling-stroke"},t);
+   el("path",{d:raipur.d,fill:"var(--dv-blue-500)"},t)}
   s.sel=s.L.mark(P0,g2=>el("circle",{r:12,fill:"none",stroke:"var(--dv-blue-700)","stroke-width":3},g2));s.sel.g.style.opacity=0;
   s.me=s.L.mark(s.you,g2=>{el("circle",{r:26,fill:"rgba(31,117,203,.14)",stroke:"rgba(31,117,203,.35)"},g2);el("circle",{r:8,fill:"var(--blue-500)",stroke:"#fff","stroke-width":3},g2)});
   s.halo=s.me.g.firstChild;
   s.newPin=s.L.mark(s.you,g2=>A.pin(g2,"var(--dv-orange-500)"));s.newPin.g.style.opacity=0;
   s.hit=el("rect",{x:s.scr.x,y:my,width:s.scr.w,height:mh,fill:"transparent"},s.ph);s.hit.style.pointerEvents="none";
   // bottom sheets
-  const sh=(h)=>{const g2=el("g",{opacity:0},s.ph),y0=s.scr.y+s.scr.h-h;el("path",{d:`M${s.scr.x},${y0+16} Q${s.scr.x},${y0} ${s.scr.x+16},${y0} L${s.scr.x+s.scr.w-16},${y0} Q${s.scr.x+s.scr.w},${y0} ${s.scr.x+s.scr.w},${y0+16} L${s.scr.x+s.scr.w},${s.scr.y+s.scr.h-14} Q${s.scr.x+s.scr.w},${s.scr.y+s.scr.h} ${s.scr.x+s.scr.w-14},${s.scr.y+s.scr.h} L${s.scr.x+14},${s.scr.y+s.scr.h} Q${s.scr.x},${s.scr.y+s.scr.h} ${s.scr.x},${s.scr.y+s.scr.h-14}Z`,fill:"#fff",stroke:"#e3dfd8"},g2);
+  const sh=(h)=>{const g2=el("g",{opacity:0,"clip-path":"url(#mobile-screen)"},s.ph),y0=s.scr.y+s.scr.h-h;el("path",{d:`M${s.scr.x},${y0+16} Q${s.scr.x},${y0} ${s.scr.x+16},${y0} L${s.scr.x+s.scr.w-16},${y0} Q${s.scr.x+s.scr.w},${y0} ${s.scr.x+s.scr.w},${y0+16} L${s.scr.x+s.scr.w},${s.scr.y+s.scr.h-14} Q${s.scr.x+s.scr.w},${s.scr.y+s.scr.h} ${s.scr.x+s.scr.w-14},${s.scr.y+s.scr.h} L${s.scr.x+14},${s.scr.y+s.scr.h} Q${s.scr.x},${s.scr.y+s.scr.h} ${s.scr.x},${s.scr.y+s.scr.h-14}Z`,fill:"#fff",stroke:"#e3dfd8"},g2);
     el("rect",{x:s.scr.x+s.scr.w/2-18,y:y0+8,width:36,height:5,rx:2.5,fill:"var(--n200)"},g2);return{g:g2,y0}};
-  s.info=sh(150);{const{g:g2,y0}=s.info,x=s.scr.x+16;A.hand(g2,x,y0+40,"Anganwadi centre",{size:21,bold:1});A.hand(g2,x,y0+66,"AWC-RPR-00412",{size:19,mono:1,fill:"var(--n700)"});
+  s.info=sh(162);{const{g:g2,y0}=s.info,x=s.scr.x+16;A.hand(g2,x,y0+40,"Anganwadi centre",{size:21,bold:1});A.hand(g2,x,y0+66,"AWC-RPR-00412",{size:19,mono:1,fill:"var(--n700)"});
     V8.chip(A,g2,x,y0+82,"Functional",{w:96,h:24,size:17});A.hand(g2,x,y0+132,`about ${s.dist} m from you`,{size:18,fill:"var(--n600)"})}
   s.form=sh(214);{const{g:g2,y0}=s.form,x=s.scr.x+16;A.hand(g2,x,y0+38,"New place",{size:21,bold:1});
     el("rect",{x,y:y0+52,width:70,height:52,rx:6,fill:"#c9d6e3"},g2);el("path",{d:`M${x},${y0+104} L${x+22},${y0+76} L${x+36},${y0+92} L${x+48},${y0+80} L${x+70},${y0+104}Z`,fill:"#7f9a7a"},g2);el("circle",{cx:x+54,cy:y0+66,r:6,fill:"#f2d27a"},g2);
     A.hand(g2,x+82,y0+76,"Photo added",{size:17,fill:"var(--n700)"});A.hand(g2,x+82,y0+96,"just now",{size:16,fill:"var(--n500)"});s.gps=A.hand(g2,x,y0+124,"",{size:16,mono:1,fill:"var(--n700)"});
     A.hand(g2,x,y0+146,"Note: new centre building",{size:17,fill:"var(--n800)"});
     el("rect",{x,y:y0+158,width:s.scr.w-32,height:36,rx:18,fill:"var(--blue-500)"},g2);A.hand(g2,s.scr.x+s.scr.w/2,y0+182,"Submit",{size:20,bold:1,anchor:"middle",fill:"#fff"})}
+  // camera cutout and home bar sit above everything on the screen
+  el("rect",{x:s.scr.x+s.scr.w/2-32,y:s.scr.y+12,width:64,height:22,rx:11,fill:"#000"},s.ph);el("circle",{cx:s.scr.x+s.scr.w/2+19,cy:s.scr.y+23.5,r:4,fill:"#15161c"},s.ph);
+  el("rect",{x:s.scr.x+s.scr.w/2-48,y:s.scr.y+s.scr.h-11,width:96,height:4.5,rx:2.25,fill:"var(--n900)"},s.ph);
   // where the record goes
   s.flow=el("g",{opacity:0},A.ill);
   V8.card(A,s.flow,394,96,160,120);icon(s.flow,"query",430,140,.9);A.hand(s.flow,456,148,"Review",{size:22,bold:1});A.hand(s.flow,410,186,"a supervisor checks",{size:16,fill:"var(--n600)"});
@@ -2320,24 +2375,25 @@ SPEC.mobile={W:560,H:600,portH:580,foot:"Village boundaries and roads are drawn 
   s.arr1=el("path",{d:"M352,330 C380,300 400,260 430,222",fill:"none",stroke:"var(--n700)","stroke-width":2,"stroke-dasharray":"5 5"},s.flow);s.arr2=el("path",{d:"M474,222 C482,280 482,330 474,378",fill:"none",stroke:"var(--n700)","stroke-width":2,"stroke-dasharray":"5 5"},s.flow);
   s.ok1=V8.tick(s.flow,534,146,.9);s.ok2=V8.tick(s.flow,546,402,.8);
   s.env=el("g",{opacity:0},A.ill);el("rect",{x:-22,y:-15,width:44,height:30,rx:4,fill:"#fff",stroke:"var(--dv-orange-500)","stroke-width":2.2},s.env);el("circle",{cx:-10,cy:-3,r:4,fill:"var(--dv-orange-500)"},s.env);el("path",{d:"M-2,-4 L14,-4 M-2,4 L10,4",stroke:"var(--n500)","stroke-width":2},s.env);
-  s.newAt=[P0[0]+.55,P0[1]-.35]},
+  s.newAt=[P0[0]+1.2,P0[1]+.2]},
  steps:[]};
 {const I=SPEC.mobile;
  const base=A=>{const s=A.st;A.op([s.info.g,s.form.g,s.sel.g,s.newPin.g,s.flow,s.env],0,200);A.to(s.ph,{opacity:1},200);s.ph.setAttribute("transform","")};
+ const toVillage=async(A,ms=900)=>{const s=A.st;s.setCrumb(1);A.op(s.inset,0,250);await s.L.fly(s.VV,ms)};
  const pulse=A=>{const s=A.st;return A.tw(1400,t=>{const k=1+Math.sin(t*Math.PI*3)*.25;s.halo.setAttribute("r",26*k)})};
  const capture=async(A,p)=>{const s=A.st;s.newPin.p=p.slice();s.newPin.upd();s.newPin.g.setAttribute("opacity",1);s.newPin.g.style.opacity=1;
    const[lo,la]=xy2ll(p[0],p[1]);s.gps.textContent=`${la.toFixed(4)}° N, ${lo.toFixed(4)}° E`;await A.op(s.form.g,1,350)};
  I.steps=[
- {nav:"In your pocket",go:async A=>{const s=A.st;base(A);s.ph.style.transition="";await A.tw(700,t=>s.ph.setAttribute("transform",`translate(0 ${(1-t)*80})`));await pulse(A)},
-  notes:[{at:"l0",t:"The map in your pocket",b:["field staff carry the state's","map on their phone,","out in the villages"],to:()=>[240,20]},
-         {at:"r0",t:"You are here",c:"var(--blue-700)",b:["the phone's GPS puts","you on the map"],to:A=>A.st.L.ill(A.st.you),ring:14}]},
- {nav:"What's nearby",go:async A=>{const s=A.st;base(A);await A.wait(300);await A.op(s.sel.g,1,250);await A.op(s.info.g,1,350)},
-  notes:[{at:"l0",t:"Check what's nearby",b:["tap a place to see its","details on the spot"],to:A=>A.st.L.ill(A.st.P0)},
+ {nav:"In your pocket",go:async A=>{const s=A.st;base(A);s.setCrumb(0);A.op(s.inset,1,200);s.L.set(s.VD);s.ph.style.transition="";await A.tw(700,t=>s.ph.setAttribute("transform",`translate(0 ${(1-t)*80})`));await pulse(A)},
+  notes:[{at:"l0",t:"The map in your pocket",b:["the state, its districts and","every Anganwadi centre,","on the officer's phone"],to:A=>A.st.L.ill([A.st.P0[0]-14,A.st.P0[1]-6])},
+         {at:"r0",t:"You are here",c:"var(--blue-700)",b:["the phone's GPS puts you","in Raipur district, and the","small map shows where","that is in the state"],to:A=>A.st.L.ill(A.st.you)}]},
+ {nav:"What's nearby",go:async A=>{const s=A.st;base(A);await toVillage(A);await A.wait(200);await A.op(s.sel.g,1,250);await A.op(s.info.g,1,350)},
+  notes:[{at:"l0",t:"Zoom to your village",b:["tap a centre to see its","details on the spot"],to:A=>A.st.L.ill(A.st.P0)},
          {at:"r0",t:"Is it still right?",b:["staff see what the map says","and compare it with what","is in front of them"]}]},
- {nav:"Capture",go:async A=>{const s=A.st;base(A);await A.wait(300);await capture(A,s.newAt)},
+ {nav:"Capture",go:async A=>{const s=A.st;base(A);await toVillage(A,500);await A.wait(200);await capture(A,s.newAt)},
   notes:[{at:"l0",t:"Record something new",c:"var(--dv-orange-700)",b:["a point, a photo and a","short note, right where","you stand"],to:A=>A.st.L.ill(A.st.newAt)},
          {at:"r0",t:"The location is exact",b:["the phone fills in the","coordinates itself"]}]},
- {nav:"Send",go:async A=>{const s=A.st;base(A);s.newPin.p=s.newAt.slice();s.newPin.upd();s.newPin.g.style.opacity=1;[s.ok1,s.ok2].forEach(t=>t.setAttribute("stroke-dashoffset",1));
+ {nav:"Send",go:async A=>{const s=A.st;base(A);await toVillage(A,400);s.newPin.p=s.newAt.slice();s.newPin.upd();s.newPin.g.style.opacity=1;[s.ok1,s.ok2].forEach(t=>t.setAttribute("stroke-dashoffset",1));
    await A.op(s.flow,1,350);const fly=async(a,b,ms)=>A.tw(ms,t=>s.env.setAttribute("transform",`translate(${lerp(a[0],b[0],t)} ${lerp(a[1],b[1],t)-Math.sin(t*Math.PI)*30})`));
    s.env.style.opacity=1;await fly([240,470],[474,156],900);await A.draw(s.ok1,1,300);await A.wait(200);await fly([474,156],[474,440],800);await A.op(s.env,0,150);await A.draw(s.ok2,1,300)},
   notes:[{at:"l0",t:"Checked, then added",b:["what is captured is reviewed","before it joins the map"],to:()=>[398,150]},
@@ -2552,7 +2608,7 @@ SPEC.cycle={W:640,H:600,portH:600,foot:"The six stages of the story. The state o
   solve:async A=>{const s=A.st,r=s.LY.find(x=>x.k==="aw");r.on=true;r.tr.setAttribute("fill","var(--blue-500)");await Promise.all([A.to(r.kn,{cx:40},300),A.op(s.lay.aw,1,400)])}}}
 // mobile: tap where the new centre stands
 {const I=SPEC.mobile.steps;
- I[2].go=async A=>{const s=A.st;A.op([s.info.g,s.form.g,s.sel.g,s.newPin.g,s.flow,s.env],0,200);s.ph.setAttribute("transform","")};
+ I[2].go=async A=>{const s=A.st;A.op([s.info.g,s.form.g,s.sel.g,s.newPin.g,s.flow,s.env],0,200);s.ph.setAttribute("transform","");s.setCrumb(1);A.op(s.inset,0,200);await s.L.fly(s.VV,500)};
  I[2].play={ask:"tap the phone's map where the new centre stands",ok:"Pinned, with a photo, a note and the exact coordinates",
   setup(A,done,ui){const s=A.st;s.hit.style.pointerEvents="";A.pulse(s.L.ill(s.newAt),20);
    A.tap(s.hit,async e=>{s.hit.style.pointerEvents="none";A.notesG.querySelectorAll(".skpulse").forEach(n=>n.remove());const p=s.L.world(A.pt(e));s.newAt=p;await cap(A,p);done()})},
