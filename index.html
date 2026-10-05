@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-build="1791182673">
+<html lang="en" data-build="1791183322">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -2278,8 +2278,8 @@ SPEC.portal={W:600,H:560,portH:520,foot:"Boundaries, rivers, roads and rail are 
          {at:"r0",t:"Use it your way",b:["larger text, high contrast,","keyboard or screen reader"],to:()=>[588,200]}]}]}
 
 /* ============================================================ 4 · MOBILE APP */
-SPEC.mobile={W:560,H:600,portH:580,foot:"Village boundaries and roads are drawn around Raipur. The app screens, record and photo are a sketch.",
- draw(A){const s=A.st;const P0=V8.near(G.carto.aw,[214,300]);s.P0=P0;s.you=[P0[0]-.42,P0[1]+.52];
+SPEC.mobile={W:560,H:600,portH:580,foot:"State and district boundaries are real. The village outline, the centres and the app screens are illustrative.",
+ draw(A){const s=A.st;const P0=V8.near(G.carto.aw,[214,300]);s.P0=P0;s.you=[P0[0]-.95,P0[1]+1.15];
   s.dist=Math.round(Math.hypot(P0[0]-s.you[0],P0[1]-s.you[1])/G.kmPx*1000/10)*10;
   // the ground behind the phone
   s.bg=A.lens(A.ill,{paper:"#eef0e6",view:{cx:P0[0]+1.6,cy:P0[1]+.2,w:16}});const bg=s.bg.g;
@@ -2291,13 +2291,35 @@ SPEC.mobile={W:560,H:600,portH:580,foot:"Village boundaries and roads are drawn 
   el("rect",{x:s.scr.x,y:s.scr.y,width:s.scr.w,height:s.scr.h,rx:14,fill:"#fff"},s.ph);
   A.hand(s.ph,s.scr.x+12,s.scr.y+18,"9:41",{size:17,bold:1});[0,1,2].forEach(i=>el("rect",{x:s.scr.x+168+i*7,y:s.scr.y+14-i*3,width:4,height:6+i*3,rx:1,fill:"var(--n900)"},s.ph));
   el("rect",{x:s.scr.x,y:s.scr.y+26,width:s.scr.w,height:38,fill:"var(--n900)"},s.ph);A.hand(s.ph,s.scr.x+14,s.scr.y+51,"Field app",{size:20,bold:1,fill:"#fff"});
-  A.hand(s.ph,s.scr.x+s.scr.w-14,s.scr.y+51,"Raipur",{size:17,anchor:"end",fill:"#c1bfbe"});
-  const my=s.scr.y+64,mh=s.scr.h-64;
-  s.L=A.lens(s.ph,{x:s.scr.x,y:my,w:s.scr.w,h:mh,view:{cx:P0[0]-.15,cy:P0[1]+.25,w:3}});const g=s.L.g;
-  el("rect",{x:-3000,y:-3000,width:7000,height:7000,fill:"#f4f1ea"},g);
-  el("path",{d:G.carto.roads,fill:"none",stroke:"#d8cdbd","stroke-width":5,"vector-effect":"non-scaling-stroke","stroke-linecap":"round"},g);el("path",{d:G.carto.roads,fill:"none",stroke:"#fff","stroke-width":2.8,"vector-effect":"non-scaling-stroke","stroke-linecap":"round"},g);
-  el("path",{d:G.carto.fibre,fill:"none",stroke:"var(--dv-aqua-600)","stroke-width":2.4,"vector-effect":"non-scaling-stroke"},g);V8.diam(s.L,g,G.carto.gp,{z:11});
-  V8.dots(s.L,g,G.carto.aw,{r:5.5,sw:1.6});
+  
+  const my=s.scr.y+64,mh=s.scr.h-64;s.VD={cx:P0[0]+3,cy:P0[1]+4,w:62};s.VV={cx:P0[0]+.1,cy:P0[1]+.9,w:7};
+  s.L=A.lens(s.ph,{x:s.scr.x,y:my,w:s.scr.w,h:mh,view:s.VD});const g=s.L.g;
+  // only what an officer needs: the state, districts with names, their village, and Anganwadi centres
+  el("rect",{x:-3000,y:-3000,width:7000,height:7000,fill:"#e9e6df"},g);
+  el("path",{d:G.state,fill:"#f7f5f0"},g);
+  const raipur=G.districts.find(d=>d.n==="Raipur");el("path",{d:raipur.d,fill:"#fff"},g);
+  const dg=el("g",{fill:"none",stroke:"#9b948a","stroke-width":1.3,"stroke-dasharray":"6 3","vector-effect":"non-scaling-stroke"},g);G.districts.forEach(d=>el("path",{d:d.d,"vector-effect":"non-scaling-stroke"},dg));
+  el("path",{d:G.state,fill:"none",stroke:"var(--n800)","stroke-width":2.2,"vector-effect":"non-scaling-stroke"},g);
+  const vring=G.carto.village.find(v=>v.split("M").filter(Boolean).some(r=>{const P=r.replace(/Z/g,"").split("L").map(q=>q.split(",").map(Number));let c=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const a=P[i],b=P[j];if((a[1]>P0[1])!==(b[1]>P0[1])&&P0[0]<(b[0]-a[0])*(P0[1]-a[1])/(b[1]-a[1])+a[0])c=!c}return c}));
+  s.vil=el("path",{d:vring,fill:"rgba(97,122,226,.10)",stroke:"var(--dv-blue-700)","stroke-width":2.2,"vector-effect":"non-scaling-stroke"},g);
+  {const P=vring.replace(/[MZ]/g,"").split("L").map(q=>q.split(",").map(Number));s.vc=[P.reduce((a,p)=>a+p[0],0)/P.length,P.reduce((a,p)=>a+p[1],0)/P.length];s.vtop=Math.min(...P.map(p=>p[1]))}
+  // district names, placed at the middle of each district's box, kept a constant size on screen
+  const dl=el("g",{},g);s.dlab=G.districts.map(d=>{const xs=[],ys=[];d.d.replace(/(-?[\d.]+),(-?[\d.]+)/g,(m,x,y)=>{xs.push(+x);ys.push(+y)});
+    const c=[(Math.min(...xs)+Math.max(...xs))/2,(Math.min(...ys)+Math.max(...ys))/2];if(d.n==="Raipur"){c[0]-=6;c[1]-=10}
+    const t=txt({x:c[0],y:c[1],"text-anchor":"middle",class:"halo","font-weight":d.n==="Raipur"?700:500,fill:d.n==="Raipur"?"var(--n900)":"var(--n500)"},dl,d.n.toUpperCase());return{t,c}});
+  s.vlab=txt({"text-anchor":"middle",class:"halo","font-weight":700,fill:"var(--dv-blue-700)"},g,"YOUR VILLAGE");
+  s.awS=V8.dots(s.L,g,G.stack.aw.filter(p=>Math.hypot(p[0]-P0[0],p[1]-P0[1])>6),{r:3.2,sw:1});s.awd=V8.dots(s.L,g,G.carto.aw,{r:5,sw:1.4});
+  s.L.on(u=>{const z=s.L.v.w;s.vil.style.opacity=z>20?0:1;s.dlab.forEach(({t,c})=>{t.setAttribute("x",c[0]);t.setAttribute("y",c[1]);t.setAttribute("font-size",11*u);t.setAttribute("letter-spacing",1.2*u);t.style.strokeWidth=3.4*u+"px";t.style.opacity=z>20?1:0});
+    s.vlab.setAttribute("x",s.vc[0]);s.vlab.setAttribute("y",s.vtop-.35);s.vlab.setAttribute("font-size",11*u);s.vlab.setAttribute("letter-spacing",1*u);s.vlab.style.strokeWidth=3.4*u+"px";s.vlab.style.opacity=z<20?1:0;
+    s.awd.style.opacity=z>20?0:1;s.awS.style.opacity=z>20?1:0});
+  // where you are in the hierarchy, written out under the app bar
+  s.crumb=el("g",{},s.ph);el("rect",{x:s.scr.x,y:my,width:s.scr.w,height:26,fill:"rgba(255,255,255,.94)"},s.crumb);el("path",{d:`M${s.scr.x},${my+26} h${s.scr.w}`,stroke:"#e3dfd8"},s.crumb);
+  s.crumbT=A.hand(s.crumb,s.scr.x+12,my+18,"",{size:16,fill:"var(--n700)"});
+  s.setCrumb=v=>{s.crumbT.textContent=v?"Chhattisgarh  ›  Raipur  ›  your village":"Chhattisgarh  ›  Raipur district"};s.setCrumb(0);
+  // a small state map, so the district view still says where in the state you are
+  s.inset=el("g",{},s.ph);V8.card(A,s.inset,s.scr.x+s.scr.w-66,my+34,58,74,{rx:6,fill:"#fff"});
+  {const k=.1,t=el("g",{transform:`translate(${s.scr.x+s.scr.w-37-260*k} ${my+71-322*k}) scale(${k})`},s.inset);el("path",{d:G.state,fill:"#f1efea",stroke:"var(--n700)","stroke-width":1,"vector-effect":"non-scaling-stroke"},t);
+   el("path",{d:raipur.d,fill:"var(--dv-blue-500)"},t)}
   s.sel=s.L.mark(P0,g2=>el("circle",{r:12,fill:"none",stroke:"var(--dv-blue-700)","stroke-width":3},g2));s.sel.g.style.opacity=0;
   s.me=s.L.mark(s.you,g2=>{el("circle",{r:26,fill:"rgba(31,117,203,.14)",stroke:"rgba(31,117,203,.35)"},g2);el("circle",{r:8,fill:"var(--blue-500)",stroke:"#fff","stroke-width":3},g2)});
   s.halo=s.me.g.firstChild;
@@ -2320,24 +2342,25 @@ SPEC.mobile={W:560,H:600,portH:580,foot:"Village boundaries and roads are drawn 
   s.arr1=el("path",{d:"M352,330 C380,300 400,260 430,222",fill:"none",stroke:"var(--n700)","stroke-width":2,"stroke-dasharray":"5 5"},s.flow);s.arr2=el("path",{d:"M474,222 C482,280 482,330 474,378",fill:"none",stroke:"var(--n700)","stroke-width":2,"stroke-dasharray":"5 5"},s.flow);
   s.ok1=V8.tick(s.flow,534,146,.9);s.ok2=V8.tick(s.flow,546,402,.8);
   s.env=el("g",{opacity:0},A.ill);el("rect",{x:-22,y:-15,width:44,height:30,rx:4,fill:"#fff",stroke:"var(--dv-orange-500)","stroke-width":2.2},s.env);el("circle",{cx:-10,cy:-3,r:4,fill:"var(--dv-orange-500)"},s.env);el("path",{d:"M-2,-4 L14,-4 M-2,4 L10,4",stroke:"var(--n500)","stroke-width":2},s.env);
-  s.newAt=[P0[0]+.55,P0[1]-.35]},
+  s.newAt=[P0[0]+1.2,P0[1]+.2]},
  steps:[]};
 {const I=SPEC.mobile;
  const base=A=>{const s=A.st;A.op([s.info.g,s.form.g,s.sel.g,s.newPin.g,s.flow,s.env],0,200);A.to(s.ph,{opacity:1},200);s.ph.setAttribute("transform","")};
+ const toVillage=async(A,ms=900)=>{const s=A.st;s.setCrumb(1);A.op(s.inset,0,250);await s.L.fly(s.VV,ms)};
  const pulse=A=>{const s=A.st;return A.tw(1400,t=>{const k=1+Math.sin(t*Math.PI*3)*.25;s.halo.setAttribute("r",26*k)})};
  const capture=async(A,p)=>{const s=A.st;s.newPin.p=p.slice();s.newPin.upd();s.newPin.g.setAttribute("opacity",1);s.newPin.g.style.opacity=1;
    const[lo,la]=xy2ll(p[0],p[1]);s.gps.textContent=`${la.toFixed(4)}° N, ${lo.toFixed(4)}° E`;await A.op(s.form.g,1,350)};
  I.steps=[
- {nav:"In your pocket",go:async A=>{const s=A.st;base(A);s.ph.style.transition="";await A.tw(700,t=>s.ph.setAttribute("transform",`translate(0 ${(1-t)*80})`));await pulse(A)},
-  notes:[{at:"l0",t:"The map in your pocket",b:["field staff carry the state's","map on their phone,","out in the villages"],to:()=>[240,20]},
-         {at:"r0",t:"You are here",c:"var(--blue-700)",b:["the phone's GPS puts","you on the map"],to:A=>A.st.L.ill(A.st.you),ring:14}]},
- {nav:"What's nearby",go:async A=>{const s=A.st;base(A);await A.wait(300);await A.op(s.sel.g,1,250);await A.op(s.info.g,1,350)},
-  notes:[{at:"l0",t:"Check what's nearby",b:["tap a place to see its","details on the spot"],to:A=>A.st.L.ill(A.st.P0)},
+ {nav:"In your pocket",go:async A=>{const s=A.st;base(A);s.setCrumb(0);A.op(s.inset,1,200);s.L.set(s.VD);s.ph.style.transition="";await A.tw(700,t=>s.ph.setAttribute("transform",`translate(0 ${(1-t)*80})`));await pulse(A)},
+  notes:[{at:"l0",t:"The map in your pocket",b:["the state, its districts and","every Anganwadi centre,","on the officer's phone"],to:A=>A.st.L.ill([A.st.P0[0]-14,A.st.P0[1]-6])},
+         {at:"r0",t:"You are here",c:"var(--blue-700)",b:["the phone's GPS puts you","in Raipur district, and the","small map shows where","that is in the state"],to:A=>A.st.L.ill(A.st.you)}]},
+ {nav:"What's nearby",go:async A=>{const s=A.st;base(A);await toVillage(A);await A.wait(200);await A.op(s.sel.g,1,250);await A.op(s.info.g,1,350)},
+  notes:[{at:"l0",t:"Zoom to your village",b:["tap a centre to see its","details on the spot"],to:A=>A.st.L.ill(A.st.P0)},
          {at:"r0",t:"Is it still right?",b:["staff see what the map says","and compare it with what","is in front of them"]}]},
- {nav:"Capture",go:async A=>{const s=A.st;base(A);await A.wait(300);await capture(A,s.newAt)},
+ {nav:"Capture",go:async A=>{const s=A.st;base(A);await toVillage(A,500);await A.wait(200);await capture(A,s.newAt)},
   notes:[{at:"l0",t:"Record something new",c:"var(--dv-orange-700)",b:["a point, a photo and a","short note, right where","you stand"],to:A=>A.st.L.ill(A.st.newAt)},
          {at:"r0",t:"The location is exact",b:["the phone fills in the","coordinates itself"]}]},
- {nav:"Send",go:async A=>{const s=A.st;base(A);s.newPin.p=s.newAt.slice();s.newPin.upd();s.newPin.g.style.opacity=1;[s.ok1,s.ok2].forEach(t=>t.setAttribute("stroke-dashoffset",1));
+ {nav:"Send",go:async A=>{const s=A.st;base(A);await toVillage(A,400);s.newPin.p=s.newAt.slice();s.newPin.upd();s.newPin.g.style.opacity=1;[s.ok1,s.ok2].forEach(t=>t.setAttribute("stroke-dashoffset",1));
    await A.op(s.flow,1,350);const fly=async(a,b,ms)=>A.tw(ms,t=>s.env.setAttribute("transform",`translate(${lerp(a[0],b[0],t)} ${lerp(a[1],b[1],t)-Math.sin(t*Math.PI)*30})`));
    s.env.style.opacity=1;await fly([240,470],[474,156],900);await A.draw(s.ok1,1,300);await A.wait(200);await fly([474,156],[474,440],800);await A.op(s.env,0,150);await A.draw(s.ok2,1,300)},
   notes:[{at:"l0",t:"Checked, then added",b:["what is captured is reviewed","before it joins the map"],to:()=>[398,150]},
@@ -2552,7 +2575,7 @@ SPEC.cycle={W:640,H:600,portH:600,foot:"The six stages of the story. The state o
   solve:async A=>{const s=A.st,r=s.LY.find(x=>x.k==="aw");r.on=true;r.tr.setAttribute("fill","var(--blue-500)");await Promise.all([A.to(r.kn,{cx:40},300),A.op(s.lay.aw,1,400)])}}}
 // mobile: tap where the new centre stands
 {const I=SPEC.mobile.steps;
- I[2].go=async A=>{const s=A.st;A.op([s.info.g,s.form.g,s.sel.g,s.newPin.g,s.flow,s.env],0,200);s.ph.setAttribute("transform","")};
+ I[2].go=async A=>{const s=A.st;A.op([s.info.g,s.form.g,s.sel.g,s.newPin.g,s.flow,s.env],0,200);s.ph.setAttribute("transform","");s.setCrumb(1);A.op(s.inset,0,200);await s.L.fly(s.VV,500)};
  I[2].play={ask:"tap the phone's map where the new centre stands",ok:"Pinned, with a photo, a note and the exact coordinates",
   setup(A,done,ui){const s=A.st;s.hit.style.pointerEvents="";A.pulse(s.L.ill(s.newAt),20);
    A.tap(s.hit,async e=>{s.hit.style.pointerEvents="none";A.notesG.querySelectorAll(".skpulse").forEach(n=>n.remove());const p=s.L.world(A.pt(e));s.newAt=p;await cap(A,p);done()})},
