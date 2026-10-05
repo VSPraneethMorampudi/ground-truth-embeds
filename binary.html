@@ -6,129 +6,146 @@
 <title>Chhattisgarh in 0s and 1s</title>
 <style>
 @font-face{font-family:"GitLab Mono";src:url("fonts/GitLabMono-sub.woff2") format("woff2");font-display:swap}
-html,body{margin:0;height:100%;background:#06120f;overflow:hidden}
+html,body{margin:0;height:100%;background:#020b16;overflow:hidden}
 canvas{display:block;width:100vw;height:100vh}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 </style>
 </head>
 <body>
-<canvas id="c" role="img" aria-label="Rows from an Excel sheet, features from GeoJSON and tables from PostGIS stream out as 0s and 1s and settle into the outline of Chhattisgarh, with its district boundaries."></canvas>
-<p class="sr">Three data sources, an Excel sheet, a GeoJSON file and a PostGIS database, send streams of binary digits that come together as one map of Chhattisgarh.</p>
+<canvas id="c" role="img" aria-label="An Excel sheet of Anganwadi centres, a GeoJSON file of districts and a PostGIS table send ribbons of 0s and 1s that come together as a glowing map of Chhattisgarh with its district boundaries."></canvas>
+<p class="sr">Three data sources, a spreadsheet, a GeoJSON file and a PostGIS database, stream binary digits that form one map of Chhattisgarh.</p>
 <script>
-/* Real geometry: the state and its 27 districts (2011 census), in the state's Lambert projection,
-   the same outline every other Ground Truth figure uses. */
+/* v10 · cinematic. Real geometry: the state and its 27 districts (2011 census), in the state's own
+   Lambert projection, the same outline as every other Ground Truth figure. Everything else is drawn. */
 const GEO={"state":"M346.28,280.04L339.68,302.46L329.7,305.06L319.83,299.18L291.4,301.23L290.45,312.09L278.09,324.28L275.64,332L265.07,327.49L268.33,350.18L264.45,356.8L273.75,368.79L270.45,377.56L272.34,390.35L270.36,404.19L298.42,410.51L296.62,425.38L290.45,428.86L274.5,417.94L265.61,424.92L258.89,411.85L236.74,404.91L224.26,404.57L223.64,418.59L240.91,429.15L237.66,455.66L243.93,454.84L251.83,463.22L249.05,478.44L256.8,510.91L249.2,514.69L249.07,523.22L225.96,535.14L226.95,543.58L214.33,557.79L192.97,574.48L185.13,607.73L177.04,614.49L160.23,610.22L146.78,616L142.79,592.22L143.73,581.18L133.69,583.46L122.84,580.52L123.34,567.57L113.65,547.37L97.46,537.06L87.65,540.14L79.11,524.34L88.49,519.5L81.51,507.6L100.65,470.78L124.42,475.74L133.48,468.57L137.41,454.01L121.52,444.76L117.78,436.69L100.04,424.81L105.55,414.32L107.05,399.33L97.06,395.77L94.04,385.52L114.42,377.54L111.41,371.84L113.88,353.79L108.11,334.01L107.98,320.97L100.76,321.44L98.79,305.7L101.09,298.38L114.22,293.7L125.29,270.65L123.41,252.98L127.15,243.57L135.03,236.88L133.97,231.03L140.65,211.13L148.89,215.96L152.66,198.92L159.11,194.2L158.52,180.63L170.45,178.59L177.43,172.37L190.16,175.85L202.88,171.33L212.17,158.96L217.9,149.94L216.31,139.81L223.74,138.45L231.45,129.67L230.75,120.65L246.39,118.4L252.96,98.65L244.71,90.7L237.69,91.73L229.01,78.02L215.04,76.41L202.38,79.87L205.35,55.67L202.4,43.11L219.58,52.16L229.15,46.31L242.91,51.44L253.65,50.35L278.67,54.41L290.45,49.43L295.4,41.79L307.3,38.15L317.3,46.18L329.6,46.12L339.6,41.4L349.24,24L358.7,25.82L370.83,46.76L382.37,50.54L388.56,70.29L402.57,74L410.49,70.99L404.89,91.22L414.61,96.01L411.64,111.24L423.92,129.08L440.89,128.94L429.42,156.04L416.13,161.24L407.27,174.06L410.04,186.32L392.12,193.78L376.92,202.34L369.21,217.33L375.24,229.58L365.42,238.72L361.27,253.89L352.22,268.44L357.57,277.41L346.7,280.13L346.52,280.06Z","districts":[{"n":"Mahasamund","d":"M346.28,280.04L339.68,302.46L329.7,305.06L319.83,299.18L291.4,301.23L290.45,312.09L278.09,324.28L275.64,332L265.07,327.49L252.73,321.42L249.55,314.2L234.35,307.87L237.89,293.91L252.31,280.16L269.46,291.1L276.63,284.96L296.21,284.74L295.75,270.19L311.98,263.47L316.96,269.02Z"},{"n":"Uttar Bastar Kanker","d":"M117.78,436.69L100.04,424.81L105.55,414.32L107.05,399.33L116.79,387.5L132.31,379.99L135.03,372.54L146.68,365.94L160.44,373.77L166.86,369.9L175.96,356.47L183.49,357.28L208.22,364.26L217.21,378.84L218.83,393.73L207.02,397.22L198.66,391.03L186.84,395.56L181.27,404.72L172.74,407.22L182.73,420.48L179.81,430L160.78,432.15L154.32,436.66L133.12,413.86L124.73,422.62Z"},{"n":"Narayanpur","d":"M117.78,436.69L124.73,422.62L133.12,413.86L154.32,436.66L160.78,432.15L179.81,430L189.63,438.57L184.36,458.05L188.2,467.76L176.89,473.14L172.85,471.48L157.92,478.86L142.48,480.64L142.26,473.68L133.48,468.57L137.41,454.01L121.52,444.76Z"},{"n":"Dakshin Bastar Dantewada","d":"M157.92,478.86L172.85,471.48L176.89,473.14L179.67,474.39L182,485.14L193.25,499.66L195.53,511.42L201.82,520.69L215.16,524.56L205.85,535.84L196.62,527.59L178.75,556.4L162.17,546.04L160.3,531.99L163.66,526.63L167.22,506.03L164.96,485.77Z"},{"n":"Bastar","d":"M205.85,535.84L215.16,524.56L201.82,520.69L195.53,511.42L193.25,499.66L182,485.14L179.67,474.39L193.95,482.25L202.62,471.03L216.85,470.16L216.63,460.72L223.03,451.48L237.66,455.66L243.93,454.84L251.83,463.22L249.05,478.44L256.8,510.91L249.2,514.69L249.07,523.22L225.96,535.14L214.18,541.38Z"},{"n":"Kondagaon","d":"M179.81,430L182.73,420.48L172.74,407.22L181.27,404.72L186.84,395.56L198.66,391.03L207.02,397.22L218.83,393.73L224.26,404.57L223.64,418.59L240.91,429.15L237.66,455.66L223.03,451.48L216.63,460.72L216.85,470.16L202.62,471.03L193.95,482.25L179.67,474.39L176.89,473.14L188.2,467.76L184.36,458.05L189.63,438.57Z"},{"n":"Gariaband","d":"M234.35,307.87L249.55,314.2L252.73,321.42L265.07,327.49L268.33,350.18L264.45,356.8L273.75,368.79L270.45,377.56L272.34,390.35L270.36,404.19L298.42,410.51L296.62,425.38L290.45,428.86L274.5,417.94L265.61,424.92L258.89,411.85L236.74,404.91L244.01,399.6L251.06,385.4L244.77,382.22L237.09,360.03L233.67,341.57L228.54,338.98L223.62,319.22Z"},{"n":"Raipur","d":"M252.31,280.16L237.89,293.91L234.35,307.87L223.62,319.22L201.41,313.49L195.45,292.39L196.43,284.43L203.81,277.73L204.35,264.38L208.81,259.26L226.81,259.41L229.35,269.51Z"},{"n":"Durg","d":"M196.43,284.43L195.45,292.39L201.41,313.49L199.32,321.13L189.06,327.66L184.58,314.9L161.49,308.18L160.95,295.47L166.05,266.81L179.28,264.44L186.74,269.83L191.39,282.34Z"},{"n":"Dhamtari","d":"M218.83,393.73L217.21,378.84L208.22,364.26L183.49,357.28L191.15,352.06L192.84,342.38L189.06,327.66L199.32,321.13L201.41,313.49L223.62,319.22L228.54,338.98L233.67,341.57L237.09,360.03L244.77,382.22L251.06,385.4L244.01,399.6L236.74,404.91L224.26,404.57Z"},{"n":"Balod","d":"M183.49,357.28L175.96,356.47L166.86,369.9L160.44,373.77L146.68,365.94L143.86,349.89L131.46,344.31L141.06,336.59L143.74,314.92L158.35,314.92L161.49,308.18L184.58,314.9L189.06,327.66L192.84,342.38L191.15,352.06Z"},{"n":"Kabeerdham","d":"M190.16,175.85L197.03,189.51L192.15,221.42L188.07,229.8L163.34,249.23L148.3,246.99L142.34,237.87L135.03,236.88L133.97,231.03L140.65,211.13L148.89,215.96L152.66,198.92L159.11,194.2L158.52,180.63L170.45,178.59L177.43,172.37Z"},{"n":"Janjgir Champa","d":"M317,210.3L330.43,224.09L338.8,228.53L338.12,235.74L345.63,248.37L318.17,247.69L293.16,249.16L274.39,245.86L268.87,244.36L262.03,230.55L264.61,211.97L275.38,201.81L287.13,197.25L293.37,204.28L293.78,214.28L310.4,205.77Z"},{"n":"Bametara","d":"M208.81,259.26L204.35,264.38L203.81,277.73L196.43,284.43L191.39,282.34L186.74,269.83L179.28,264.44L166.05,266.81L163.34,249.23L188.07,229.8L192.15,221.42L214.03,225.61L230.02,239.34L222.2,244.46L209.17,245.43Z"},{"n":"Rajnandgaon","d":"M146.68,365.94L135.03,372.54L132.31,379.99L116.79,387.5L107.05,399.33L97.06,395.77L94.04,385.52L114.42,377.54L111.41,371.84L113.88,353.79L108.11,334.01L107.98,320.97L100.76,321.44L98.79,305.7L101.09,298.38L114.22,293.7L125.29,270.65L123.41,252.98L127.15,243.57L135.03,236.88L142.34,237.87L148.3,246.99L163.34,249.23L166.05,266.81L160.95,295.47L161.49,308.18L158.35,314.92L143.74,314.92L141.06,336.59L131.46,344.31L143.86,349.89Z"},{"n":"Baloda Bazar","d":"M316.96,269.02L311.98,263.47L295.75,270.19L296.21,284.74L276.63,284.96L269.46,291.1L252.31,280.16L229.35,269.51L226.81,259.41L208.81,259.26L209.17,245.43L222.2,244.46L230.02,239.34L238.75,232.87L252.97,244.33L269.66,248.91L274.39,245.86L293.16,249.16L318.17,247.69L321.43,254.79Z"},{"n":"Mungeli","d":"M192.15,221.42L197.03,189.51L190.16,175.85L202.88,171.33L212.17,158.96L213.73,166.35L233.57,188.13L215.27,199.13L234.52,222.37L238.75,232.87L230.02,239.34L214.03,225.61Z"},{"n":"Bijapur","d":"M133.48,468.57L142.26,473.68L142.48,480.64L157.92,478.86L164.96,485.77L167.22,506.03L163.66,526.63L160.3,531.99L162.17,546.04L148.88,546.59L147.82,552.98L152.43,578.72L143.73,581.18L133.69,583.46L122.84,580.52L123.34,567.57L113.65,547.37L97.46,537.06L87.65,540.14L79.11,524.34L88.49,519.5L81.51,507.6L100.65,470.78L124.42,475.74Z"},{"n":"Raigarh","d":"M346.28,280.04L316.96,269.02L321.43,254.79L318.17,247.69L345.63,248.37L338.12,235.74L338.8,228.53L330.43,224.09L317,210.3L325.02,199.37L332.18,182.21L329.79,177.7L331.8,158.8L341.09,147.79L352.69,153.2L357.69,161.54L356.99,169.61L386.36,185.99L392.12,193.78L376.92,202.34L369.21,217.33L375.24,229.58L365.42,238.72L361.27,253.89L352.22,268.44L357.57,277.41L346.7,280.13L346.52,280.06Z"},{"n":"Bilaspur","d":"M275.38,201.81L264.61,211.97L262.03,230.55L268.87,244.36L274.39,245.86L269.66,248.91L252.97,244.33L238.75,232.87L234.52,222.37L215.27,199.13L233.57,188.13L213.73,166.35L212.17,158.96L217.9,149.94L216.31,139.81L223.74,138.45L231.45,129.67L230.75,120.65L246.39,118.4L254.37,133.28L247.3,141.86L250.7,159.02L247.59,179.29L253.25,192.68L266.11,191.21Z"},{"n":"Sukma","d":"M162.17,546.04L178.75,556.4L196.62,527.59L205.85,535.84L214.18,541.38L225.96,535.14L226.95,543.58L214.33,557.79L192.97,574.48L185.13,607.73L177.04,614.49L160.23,610.22L146.78,616L142.79,592.22L143.73,581.18L152.43,578.72L147.82,552.98L148.88,546.59Z"},{"n":"Koriya","d":"M254.37,133.28L246.39,118.4L252.96,98.65L244.71,90.7L237.69,91.73L229.01,78.02L215.04,76.41L202.38,79.87L205.35,55.67L202.4,43.11L219.58,52.16L229.15,46.31L242.91,51.44L253.65,50.35L278.67,54.41L287.59,64.68L285.91,76.93L291.81,91.94L300.29,94.76L299.95,102.85L285.52,116.09L285.25,131.72L268.94,128.11Z"},{"n":"Jashpur","d":"M392.12,193.78L386.36,185.99L356.99,169.61L357.69,161.54L376.68,154.66L378.06,143.91L365.69,132.25L365.28,121.64L369.93,111.79L375.93,107.06L390.21,103.95L402,111.65L411.64,111.24L423.92,129.08L440.89,128.94L429.42,156.04L416.13,161.24L407.27,174.06L410.04,186.32Z"},{"n":"Korba","d":"M317,210.3L310.4,205.77L293.78,214.28L293.37,204.28L287.13,197.25L275.38,201.81L266.11,191.21L253.25,192.68L247.59,179.29L250.7,159.02L247.3,141.86L254.37,133.28L268.94,128.11L285.25,131.72L284.07,141.6L301.24,147.04L323.44,161.88L331.8,158.8L329.79,177.7L332.18,182.21L325.02,199.37Z"},{"n":"Surajpur","d":"M285.25,131.72L285.52,116.09L299.95,102.85L300.29,94.76L291.81,91.94L285.91,76.93L287.59,64.68L278.67,54.41L290.45,49.43L295.4,41.79L303.06,51.28L313.96,55.37L327.36,55.69L338.86,63.57L351.98,83.72L339.8,92.5L343.24,106.15L330.78,115.85L307.5,126.59L301.24,147.04L284.07,141.6Z"},{"n":"Surguja","d":"M357.69,161.54L352.69,153.2L341.09,147.79L331.8,158.8L323.44,161.88L301.24,147.04L307.5,126.59L330.78,115.85L343.24,106.15L352.59,111.6L355.88,102.47L363.15,103.49L369.93,111.79L365.28,121.64L365.69,132.25L378.06,143.91L376.68,154.66Z"},{"n":"Balrampur","d":"M411.64,111.24L402,111.65L390.21,103.95L375.93,107.06L369.93,111.79L363.15,103.49L355.88,102.47L352.59,111.6L343.24,106.15L339.8,92.5L351.98,83.72L338.86,63.57L327.36,55.69L313.96,55.37L303.06,51.28L295.4,41.79L307.3,38.15L317.3,46.18L329.6,46.12L339.6,41.4L349.24,24L358.7,25.82L370.83,46.76L382.37,50.54L388.56,70.29L402.57,74L410.49,70.99L404.89,91.22L414.61,96.01Z"}]};
 const Q=new URLSearchParams(location.search+"&"+location.hash.slice(1));
-const SHOW_LABELS=Q.get("labels")!=="0";
-// ?poster: one still frame of the formation itself, half built, with the three streams in flight
-const POSTER=Q.has("poster");let seed=11;if(POSTER)Math.random=()=>(seed=seed*16807%2147483647)/2147483647;
-const REDUCE=(matchMedia("(prefers-reduced-motion: reduce)").matches&&!POSTER)||Q.has("still");
+const POSTER=Q.has("poster"),STILL=Q.has("still");
+let seed=7;if(POSTER||STILL)Math.random=()=>(seed=seed*16807%2147483647)/2147483647;
+const REDUCE=(matchMedia("(prefers-reduced-motion: reduce)").matches&&!POSTER)||STILL;
+const LABELS=Q.get("labels")!=="0";
+const MAP="#7fe9ff",EDGE="#e8fdff",BG0="#020b16",BG1="#06223a";
 const SRC=[
-  {key:"xls", name:"Excel sheet", sub:"rows and columns", col:"#2fbf71"},
-  {key:"geo", name:"GeoJSON",     sub:"features",         col:"#f2b544"},
-  {key:"pg",  name:"PostGIS",     sub:"spatial tables",   col:"#6aa8ff"}];
-const LAND="#5fe3b3",EDGE="#c9ffe9",BG0="#06120f",BG1="#0d2620";
+ {key:"xls",col:"#3ddc84",title:"anganwadi_centres.xlsx",tag:"Excel sheet"},
+ {key:"geo",col:"#ffbe4d",title:"cg_districts.geojson",tag:"GeoJSON"},
+ {key:"pg", col:"#6fa8ff",title:"PostGIS · cg_gis",tag:"PostGIS"}];
+const ROWS=[["AWC-RPR-00412","21.2514","81.6296","Raipur"],["AWC-BSP-00218","22.0797","82.1409","Bilaspur"],["AWC-DRG-00577","21.1904","81.2849","Durg"],
+ ["AWC-JDP-00105","19.0748","82.0080","Bastar"],["AWC-AMB-00331","23.1185","83.1956","Surguja"],["AWC-KRB-00264","22.3595","82.7501","Korba"],["AWC-RGH-00149","21.8974","83.3950","Raigarh"]];
+const GJ=['{','  "type": "Feature",','  "properties": {','    "district": "Raipur"','  },','  "geometry": {','    "type": "Polygon",','    "coordinates": [[','      [81.6296, 21.2514],','      [81.7102, 21.3008],','      [81.7745, 21.2231],','      ...'];
+const SQL=["SELECT name,","  ST_AsGeoJSON(geom)","FROM cg_districts;","","name     | geom","---------+-------------","Raipur   | {\"type\":\"Multi…","Bilaspur | {\"type\":\"Multi…","Bastar   | {\"type\":\"Multi…","(27 rows)"];
 const cv=document.getElementById("c"),cx=cv.getContext("2d");
-let sent=0,W,H,DPR,L,cells=[],flying=[],t0=performance.now(),last=t0,done=false,glyph={},statePath,distPaths,mapT;
-
-const rnd=(a,b)=>a+Math.random()*(b-a);const clamp3=v=>Math.max(0,Math.min(2,v));
-function srcEdge(s){const lx=W/H>1.05;return lx?[s.x+s.r*1.3,s.y+rnd(-s.r*.5,s.r*.5)]:[s.x+rnd(-s.r*.6,s.r*.6),s.y+s.r*1.05+(SHOW_LABELS?s.r*1.2:0)]}
+let W,H,DPR,mapT,cells=[],fly=[],strands=[],nodes=[],sent=0,done=false,formedAt=0,t0=performance.now(),last=t0,L,glyph={},statePath,distPaths;
+const rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
-function path(d){return new Path2D(d)}
+const bez=(p0,p1,p2,p3,t)=>{const m=1-t;return[m*m*m*p0[0]+3*m*m*t*p1[0]+3*m*t*t*p2[0]+t*t*t*p3[0],m*m*m*p0[1]+3*m*m*t*p1[1]+3*m*t*t*p2[1]+t*t*t*p3[1]]};
 
 function layout(){
-  DPR=Math.min(2,window.devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;cx.setTransform(DPR,0,0,DPR,0,0);
-  const land=W/H>1.05,bb={x:79.11,y:24,w:361.78,h:592},pad=Math.max(16,Math.min(W,H)*.05);
-  // map box and source column/row
-  let mx,my,mw,mh,srcPos=[];
-  if(land){const colW=Math.min(260,W*.26);mx=pad+colW+pad;my=pad;mw=W-mx-pad;mh=H-2*pad;
-    SRC.forEach((s,i)=>srcPos.push({x:pad+colW/2,y:H*(.25+i*.25)}))}
-  else{const rowH=Math.min(150,H*.2);mx=pad;my=pad+rowH;mw=W-2*pad;mh=H-my-pad;
-    SRC.forEach((s,i)=>srcPos.push({x:W*(.2+i*.3),y:pad+rowH*.45}))}
-  const k=Math.min(mw/bb.w,mh/bb.h);mapT={k,ox:mx+(mw-bb.w*k)/2-bb.x*k,oy:my+(mh-bb.h*k)/2-bb.y*k};
-  SRC.forEach((s,i)=>{s.x=srcPos[i].x;s.y=srcPos[i].y;s.r=Math.max(26,Math.min(44,Math.min(W,H)*.055))});
-  statePath=path(GEO.state);distPaths=GEO.districts.map(d=>path(d.d));
-  // the grid of digits: every cell whose centre falls inside the state
-  const areaPx=bb.w*bb.h*k*k*.47,cs=Math.max(9,Math.sqrt(areaPx/1300));L={cs,font:Math.round(cs*1.02)};
+  DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;
+  const land=W/H>1.05,bb={x:79.11,y:24,w:361.78,h:592},pad=Math.max(14,Math.min(W,H)*.045);
+  let mx,my,mw,mh;
+  if(land){const sk=-.09,pw=Math.min(360,W*.29,(H-2*pad-60)/(.62*3.1+.09)),ph=pw*.62,gap=ph*1.05,stack=gap*2+ph,y0=pad+30+pw*.09+Math.max(0,(H-2*pad-30-pw*.09-stack)/2);
+    mx=W*.5;my=pad;mw=W-mx-pad;mh=H-2*pad;
+    SRC.forEach((s,i)=>Object.assign(s,{w:pw,h:ph,x:pad+i*pw*.1,y:y0+i*gap,sk,sx:.93}))}
+  else{const pw=Math.min(200,W*.4),ph=pw*.62;mx=pad;my=pad+ph*1.6;mw=W-2*pad;mh=H-my-pad;
+    SRC.forEach((s,i)=>Object.assign(s,{w:pw,h:ph,x:pad+i*(W-2*pad-pw*.95)/2,y:pad+(i%2)*ph*.45,sk:-.06,sx:.95}))}
+  const k=Math.min(mw/bb.w,mh/bb.h);mapT={k,ox:mx+(mw-bb.w*k)/2-bb.x*k,oy:my+(mh-bb.h*k)/2-bb.y*k,land,mx,my,mw,mh};
+  statePath=new Path2D(GEO.state);distPaths=GEO.districts.map(d=>new Path2D(d.d));
   const off=new OffscreenCanvas(1,1).getContext("2d"),inside=(x,y)=>off.isPointInPath(statePath,(x-mapT.ox)/k,(y-mapT.oy)/k);
-  const next=[],grid=new Map();
-  for(let y=my+cs/2;y<my+mh;y+=cs)for(let x=mx+cs/2;x<mx+mw;x+=cs)if(inside(x,y)){const c={x,y,b:Math.random()<.5?1:0,src:Math.floor(Math.random()*3),on:0,land:0,edge:false};next.push(c);grid.set(Math.round(x/cs)+","+Math.round(y/cs),c)}
-  next.forEach(c=>{const gx=Math.round(c.x/cs),gy=Math.round(c.y/cs);c.edge=[[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>!grid.has((gx+a)+","+(gy+b)))});
-  // keep what had already landed when the window is resized
-  const keep=done||cells.some(c=>c.on);cells=next;flying=[];sent=keep||REDUCE?next.length:0;
-  // order of arrival: a soft sweep from the sources' side, with noise, so the state fills in, not pops in
-  cells.forEach(c=>{const band=land?(c.y-my)/mh:(c.x-mx)/mw;c.src=clamp3(Math.floor(band*3+(Math.random()-.5)*.5));
-    c.order=(land?(c.x-mx)/mw:(c.y-my)/mh)*.7+Math.random()*.3});
+  const areaPx=bb.w*bb.h*k*k*.47,cs=Math.max(8,Math.sqrt(areaPx/1700));L={cs,font:Math.round(cs*1.0)};
+  const grid=new Set();cells=[];
+  for(let y=my+cs/2;y<my+mh;y+=cs)for(let x=mx+cs/2;x<mx+mw;x+=cs)if(inside(x,y)){cells.push({x,y,b:Math.random()<.5?1:0,on:0,heat:0});grid.add(Math.round(x/cs)+","+Math.round(y/cs))}
+  cells.forEach(c=>{const gx=Math.round(c.x/cs),gy=Math.round(c.y/cs);c.edge=[[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>!grid.has((gx+a)+","+(gy+b)));
+    const band=land?(c.y-my)/mh:(c.x-mx)/mw;c.src=clamp(Math.floor(band*3+(Math.random()-.5)*.6),0,2);
+    c.order=(land?(c.x-mx)/mw:(c.y-my)/mh)*.65+Math.random()*.35;c.tw=Math.random()*6.28});
   cells.sort((a,b)=>a.order-b.order);
-  if(POSTER){done=false;sent=cells.length;const cut=.5;
-    cells.forEach(c=>{c.on=c.order<cut?1:0;c.land=1});
-    // the rest are on their way: placed along their flight paths, nearer the map the closer they are to landing
-    const wait=cells.filter(c=>!c.on);for(let k=0;k<wait.length*1.6;k++){const c=wait[Math.floor(Math.random()*wait.length)],s=SRC[c.src],e=srcEdge(s);
-      flying.push({c,s,sx:e[0],sy:e[1],mx:(e[0]+c.x)/2+rnd(-22,22),my:(e[1]+c.y)/2+rnd(-30,30),u:Math.random()*.9+.05,b:Math.random()<.5?1:0})}}
-  else if(keep||REDUCE){cells.forEach(c=>{c.on=1;c.land=1});done=true}
+  // ribbons: each source has a bundle of strands; they leave the panel together and fan out over the map
+  strands=[];SRC.forEach((s,si)=>{const mine=cells.filter(c=>c.src===si).sort((a,b)=>land?a.y-b.y:a.x-b.x);for(let j=0;j<16;j++){
+      const a=edgePoint(s,(j+.5)/16),tgt=mine[Math.floor((j+.5)/16*mine.length)]||cells[0];
+      const c1=land?[a[0]+(mx-a[0])*.4,a[1]+rnd(-12,12)]:[a[0]+rnd(-12,12),a[1]+(my-a[1])*.5];
+      const c2=land?[mx-mw*.04+rnd(-25,25),tgt.y+rnd(-30,30)]:[tgt.x+rnd(-25,25),my-mh*.02];
+      strands.push({si,a,c1,c2,end:[tgt.x,tgt.y],ph:Math.random()*6.28})}});
+  cells.forEach(c=>{const opts=strands.filter(t=>t.si===c.src);c.st=opts.reduce((b,t)=>Math.hypot(t.end[0]-c.x,t.end[1]-c.y)<Math.hypot(b.end[0]-c.x,b.end[1]-c.y)?t:b)});
+  // constellation behind everything
+  nodes=Array.from({length:Math.round(W*H/26000)},()=>({x:Math.random()*W,y:Math.random()*H,vx:rnd(-.06,.06),vy:rnd(-.06,.06),r:rnd(.8,1.8)}));
+  fly=[];sent=0;done=false;
+  if(REDUCE){cells.forEach(c=>c.on=1);sent=cells.length;done=true;formedAt=-1e9}
+  if(POSTER){const cut=.52;cells.forEach(c=>c.on=c.order<cut?1:0);sent=cells.length;
+    const wait=cells.filter(c=>!c.on);for(let i=0;i<Math.min(2600,wait.length*2.4);i++){const c=wait[Math.floor(Math.random()*wait.length)];fly.push(mkFly(c,0,Math.random()*.94+.03))}
+    for(let i=0;i<700;i++){const c=cells[Math.floor(Math.random()*cells.length)];fly.push(mkFly(c,0,Math.random()*.7))}}
   makeGlyphs()}
 
-function makeGlyphs(){glyph={};const f=L.font;
-  [LAND,EDGE,...SRC.map(s=>s.col)].forEach(col=>{["0","1"].forEach(ch=>{const g=new OffscreenCanvas(Math.ceil(f*1.2*DPR),Math.ceil(f*1.4*DPR)),c=g.getContext("2d");
-    c.scale(DPR,DPR);c.fillStyle=col;c.font=`${f}px "GitLab Mono",ui-monospace,Menlo,Consolas,monospace`;c.textAlign="center";c.textBaseline="middle";c.fillText(ch,f*.6,f*.72);glyph[col+ch]=g})})}
-function digit(col,b,x,y,a){const g=glyph[col+b];if(!g)return;cx.globalAlpha=a;cx.drawImage(g,x-L.font*.6,y-L.font*.72,g.width/DPR,g.height/DPR)}
+// a point on the panel's right edge (or bottom edge on phones), after the panel's tilt
+function edgePoint(s,f){const land=W/H>1.05,lx=land?s.w:f*s.w,ly=land?f*s.h*.84+s.h*.12:s.h;return[s.x+lx*s.sx,s.y+ly+lx*s.sk]}
+function mkFly(c,now,u){const t=c.st,a=[t.a[0]+rnd(-3,3),t.a[1]+rnd(-3,3)];return{c,a,c1:[t.c1[0]+rnd(-8,8),t.c1[1]+rnd(-8,8)],c2:[t.c2[0]+rnd(-16,16),t.c2[1]+rnd(-16,16)],t:now,d:rnd(1500,2400),u,b:Math.random()<.5?1:0}}
 
-/* the three sources, drawn as small cards */
-function drawSource(s,a){
-  const r=s.r;cx.save();cx.globalAlpha=a;cx.translate(s.x,s.y);
-  cx.fillStyle="rgba(255,255,255,.04)";cx.strokeStyle=s.col;cx.lineWidth=1.5;
-  rr(-r*1.25,-r,r*2.5,r*2,10);cx.fill();cx.stroke();cx.strokeStyle=s.col;cx.fillStyle=s.col;cx.lineWidth=1.6;
-  if(s.key==="xls"){const w=r*1.5,h=r*1.1;cx.strokeRect(-w/2,-h/2,w,h);for(let i=1;i<3;i++){cx.beginPath();cx.moveTo(-w/2+w*i/3,-h/2);cx.lineTo(-w/2+w*i/3,h/2);cx.stroke()}
-    for(let j=1;j<4;j++){cx.beginPath();cx.moveTo(-w/2,-h/2+h*j/4);cx.lineTo(w/2,-h/2+h*j/4);cx.stroke()}cx.globalAlpha=a*.35;cx.fillRect(-w/2,-h/2,w,h/4)}
-  if(s.key==="geo"){cx.font=`700 ${r*.9}px "GitLab Mono",ui-monospace,monospace`;cx.textAlign="center";cx.textBaseline="middle";cx.fillText("{ }",0,-r*.05);
-    cx.globalAlpha=a*.6;cx.font=`${r*.26}px "GitLab Mono",ui-monospace,monospace`;cx.fillText('"Polygon"',0,r*.6)}
-  if(s.key==="pg"){const w=r*.75,h=r*.22;for(let i=0;i<3;i++){const y=-r*.45+i*r*.42;cx.beginPath();cx.ellipse(0,y,w,h,0,0,Math.PI*2);cx.stroke()}
-    cx.beginPath();cx.moveTo(-w,-r*.45);cx.lineTo(-w,r*.39);cx.moveTo(w,-r*.45);cx.lineTo(w,r*.39);cx.stroke()}
-  if(SHOW_LABELS){cx.globalAlpha=a;cx.fillStyle="#e8f5ef";cx.textAlign="center";cx.textBaseline="top";cx.font=`600 ${Math.max(12,r*.36)}px "Avenir Next World","Avenir Next",system-ui,sans-serif`;cx.fillText(s.name,0,r*1.15);
-    cx.globalAlpha=a*.6;cx.font=`${Math.max(10.5,r*.28)}px "Avenir Next World","Avenir Next",system-ui,sans-serif`;cx.fillText(s.sub,0,r*1.15+Math.max(15,r*.42))}
-  cx.restore()}
+function makeGlyphs(){glyph={};const f=L.font,sz=[f,Math.round(f*.8)];
+  [MAP,EDGE,...SRC.map(s=>s.col)].forEach(col=>sz.forEach(z=>["0","1"].forEach(ch=>{const g=new OffscreenCanvas(Math.ceil(z*1.3*DPR),Math.ceil(z*1.5*DPR)),c=g.getContext("2d");
+    c.scale(DPR,DPR);c.fillStyle=col;c.shadowColor=col;c.shadowBlur=z*.5;c.font=`600 ${z}px "GitLab Mono",ui-monospace,Menlo,Consolas,monospace`;c.textAlign="center";c.textBaseline="middle";c.fillText(ch,z*.65,z*.75);glyph[col+z+ch]=g})))}
+function digit(col,z,b,x,y,a){const g=glyph[col+z+b];if(!g)return;cx.globalAlpha=a;cx.drawImage(g,x-z*.65,y-z*.75,g.width/DPR,g.height/DPR)}
+
+/* glass panels, tilted as if standing in space */
+function panel(s,a){cx.save();cx.setTransform(DPR*s.sx,DPR*s.sk,0,DPR,DPR*s.x,DPR*s.y);
+  const w=s.w,h=s.h,r=10;
+  cx.globalAlpha=a;cx.shadowColor=s.col;cx.shadowBlur=24;cx.fillStyle="rgba(10,30,50,.66)";rr(0,0,w,h,r);cx.fill();cx.shadowBlur=0;
+  const g=cx.createLinearGradient(0,0,w,h);g.addColorStop(0,"rgba(255,255,255,.10)");g.addColorStop(.5,"rgba(255,255,255,.02)");g.addColorStop(1,"rgba(255,255,255,.06)");cx.fillStyle=g;rr(0,0,w,h,r);cx.fill();
+  cx.strokeStyle=s.col;cx.globalAlpha=a*.85;cx.lineWidth=1.3;rr(0,0,w,h,r);cx.stroke();
+  cx.globalAlpha=a;cx.fillStyle="rgba(255,255,255,.06)";cx.fillRect(1,1,w-2,h*.13);[0,1,2].forEach(i=>{cx.beginPath();cx.arc(12+i*11,h*.065,3.2,0,6.3);cx.fillStyle=i===0?s.col:"rgba(255,255,255,.25)";cx.fill()});
+  const fs=Math.max(7.5,w*.034);cx.font=`500 ${fs}px "GitLab Mono",ui-monospace,monospace`;cx.fillStyle="rgba(230,245,255,.85)";cx.textBaseline="middle";cx.fillText(s.title,48,h*.067);
+  const n=s.key==="xls"?ROWS.length+1:s.key==="geo"?GJ.length:SQL.length,top=h*.16,lh=(h-top-6)/n;cx.font=`${Math.min(fs*.95,lh*.8)}px "GitLab Mono",ui-monospace,monospace`;
+  if(s.key==="xls"){const cols=[.03,.41,.61,.80],hd=["centre_id","lat","lon","district"];
+    cx.fillStyle="rgba(61,220,132,.16)";cx.fillRect(1,top,w-2,lh);
+    hd.forEach((t,i)=>{cx.fillStyle=s.col;cx.fillText(t,w*cols[i],top+lh/2)});
+    ROWS.forEach((row,j)=>{const y=top+lh*(j+1.5);cx.strokeStyle="rgba(255,255,255,.07)";cx.beginPath();cx.moveTo(1,y+lh/2);cx.lineTo(w-1,y+lh/2);cx.stroke();
+      row.forEach((t,i)=>{cx.fillStyle=i===0?"rgba(230,245,255,.9)":"rgba(200,230,255,.7)";cx.fillText(t,w*cols[i],y)})});
+    [.39,.59,.78].forEach(f=>{cx.strokeStyle="rgba(255,255,255,.08)";cx.beginPath();cx.moveTo(w*f,top);cx.lineTo(w*f,h-4);cx.stroke()})}
+  if(s.key==="geo")GJ.forEach((t,j)=>{cx.fillStyle=/"[a-z_]+":/.test(t)?s.col:"rgba(225,240,255,.8)";cx.fillText(t,10,top+lh*(j+.5))});
+  if(s.key==="pg")SQL.forEach((t,j)=>{cx.fillStyle=/^(SELECT|FROM)|ST_/.test(t.trim())?s.col:j>=4?"rgba(200,230,255,.7)":"rgba(225,240,255,.85)";cx.fillText(t,10,top+lh*(j+.5))});
+  cx.restore();
+  if(LABELS&&W/H>1.05){cx.save();cx.setTransform(DPR,0,0,DPR,0,0);cx.globalAlpha=a;cx.textAlign="left";cx.textBaseline="middle";cx.fillStyle=s.col;
+    cx.font=`700 ${Math.max(11,s.w*.042)}px "Avenir Next World","Avenir Next",system-ui,sans-serif`;cx.shadowColor="#000";cx.shadowBlur=6;
+    cx.fillText(s.tag.toUpperCase(),s.x+6,s.y-10);cx.restore()}}
 function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
 
-/* emission: every cell is fetched once by a digit flying from its source */
-function emit(now,dt){
-  const T=(now-t0)/1000;if(T<.9||sent>=cells.length)return;
-  const rate=cells.length/6.2,n=Math.min(cells.length-sent,Math.ceil(rate*dt/1000*1.0+Math.random()));
-  for(let i=0;i<n;i++){const c=cells[sent++],s=SRC[c.src];
-    const mxp=(s.x+c.x)/2+rnd(-30,30),myp=(s.y+c.y)/2+rnd(-45,45);
-    const lx=W/H>1.05,ex=lx?s.x+s.r*1.3:s.x+rnd(-s.r,s.r),ey=lx?s.y+rnd(-s.r*.8,s.r*.8):s.y+s.r*1.05+(SHOW_LABELS?s.r*1.2:0);
-    flying.push({c,s,sx:ex,sy:ey,mx:mxp,my:myp,t:now,d:rnd(1000,1700),b:Math.random()<.5?1:0})}}
-
 function frame(now){
-  const dt=Math.min(64,now-last);last=now;const T=(now-t0)/1000;
-  // background
-  const g=cx.createRadialGradient(W*.62,H*.52,0,W*.62,H*.52,Math.max(W,H)*.75);g.addColorStop(0,BG1);g.addColorStop(1,BG0);cx.globalAlpha=1;cx.fillStyle=g;cx.fillRect(0,0,W,H);
-  // a faint lattice: the grid every digit sits on
-  cx.globalAlpha=.05;cx.strokeStyle="#9fe8cc";cx.lineWidth=1;cx.beginPath();for(let x=L.cs*4;x<W;x+=L.cs*4){cx.moveTo(x,0);cx.lineTo(x,H)}for(let y=L.cs*4;y<H;y+=L.cs*4){cx.moveTo(0,y);cx.lineTo(W,y)}cx.stroke();
-  const srcA=REDUCE?1:Math.min(1,T/.8);
-  if(!done&&!REDUCE)emit(now,dt);
-  // landed digits; a few flip each frame, the map is live data, not a picture
-  const flips=REDUCE?0:Math.ceil(cells.length*.0025);for(let i=0;i<flips;i++){const c=cells[Math.floor(Math.random()*cells.length)];if(c.land)c.b^=1,c.flash=1}
-  for(const c of cells){if(!c.on)continue;const a=c.edge?1:.62+((c.x*7+c.y*13)%10)/32;
-    if(c.land<1){c.land=Math.min(1,c.land+dt/350)}if(POSTER&&c.order>.4&&c.order<.5){digit(SRC[c.src].col,c.b,c.x,c.y,.9);continue}
-    const col=c.land<1?SRC[c.src].col:(c.edge?EDGE:LAND);digit(col,c.b,c.x,c.y,a*(c.flash?1:1));if(c.flash){c.flash=Math.max(0,c.flash-dt/400);if(c.flash>0)digit(EDGE,c.b,c.x,c.y,c.flash*.8)}}
-  // digits in flight, coloured by the source they came from
-  for(let i=flying.length-1;i>=0;i--){const f=flying[i];let u=f.u!==undefined?f.u:(now-f.t)/f.d;if(u>=1){f.c.on=1;f.c.b=f.b;flying.splice(i,1);continue}
-    const e=ease(u),x=(1-e)*(1-e)*f.sx+2*(1-e)*e*f.mx+e*e*f.c.x,y=(1-e)*(1-e)*f.sy+2*(1-e)*e*f.my+e*e*f.c.y;
-    digit(f.s.col,f.u!==undefined?f.b:((u*12|0)%2?f.b:1-f.b),x,y,f.u!==undefined?.6+.4*Math.sin(u*Math.PI):.35+.65*Math.sin(u*Math.PI))}
-  if(!done&&sent>=cells.length&&!flying.length){done=true;window.__formed=now}
-  // once the map has formed: the real state outline and district lines come up
-  const fa=done?(REDUCE?1:Math.min(1,(now-(window.__formed||now))/1500)):0;
-  if(fa>0){cx.save();cx.setTransform(DPR*mapT.k,0,0,DPR*mapT.k,DPR*mapT.ox,DPR*mapT.oy);
-    cx.globalAlpha=.22*fa;cx.strokeStyle="#bff5df";cx.lineWidth=.9/mapT.k;distPaths.forEach(p=>cx.stroke(p));
-    cx.globalAlpha=.85*fa;cx.strokeStyle=EDGE;cx.lineWidth=1.6/mapT.k;cx.shadowColor=LAND;cx.shadowBlur=12;cx.stroke(statePath);cx.restore()}
-  if(!done||POSTER){cx.save();cx.setTransform(DPR*mapT.k,0,0,DPR*mapT.k,DPR*mapT.ox,DPR*mapT.oy);cx.globalAlpha=POSTER?.5:.25*Math.min(1,T/1.5);cx.strokeStyle=EDGE;cx.lineWidth=1.2/mapT.k;cx.setLineDash([4/mapT.k,5/mapT.k]);cx.stroke(statePath);cx.restore()}
-  SRC.forEach(s=>drawSource(s,POSTER?1:srcA*(done?.85:1)));
-  // after it forms, the sources keep sending small updates, as the portal does
-  if(done&&!REDUCE&&Math.random()<dt/260){const c=cells[Math.floor(Math.random()*cells.length)];const s=SRC[Math.floor(Math.random()*3)];c.src=SRC.indexOf(s);
-    const lx=W/H>1.05;flying.push({c,s,sx:lx?s.x+s.r*1.3:s.x,sy:lx?s.y:s.y+s.r*1.05+(SHOW_LABELS?s.r*1.2:0),mx:(s.x+c.x)/2+rnd(-60,60),my:(s.y+c.y)/2+rnd(-90,90),t:now,d:rnd(1200,1800),b:Math.random()<.5?1:0});c.land=0}
+  const dt=Math.min(64,now-last);last=now;const T=(now-t0)/1000;cx.setTransform(DPR,0,0,DPR,0,0);cx.globalCompositeOperation="source-over";
+  const g=cx.createRadialGradient(W*.62,H*.45,0,W*.62,H*.45,Math.max(W,H)*.8);g.addColorStop(0,BG1);g.addColorStop(1,BG0);cx.globalAlpha=1;cx.fillStyle=g;cx.fillRect(0,0,W,H);
+  // constellation
+  cx.lineWidth=.6;if(!REDUCE&&!POSTER)for(const n of nodes){n.x+=n.vx*dt/16;n.y+=n.vy*dt/16;if(n.x<0||n.x>W)n.vx*=-1;if(n.y<0||n.y>H)n.vy*=-1}
+  for(let i=0;i<nodes.length;i++){const a=nodes[i];for(let j=i+1;j<nodes.length;j++){const b=nodes[j],d=Math.hypot(a.x-b.x,a.y-b.y);if(d<130){cx.globalAlpha=(1-d/130)*.18;cx.strokeStyle="#5fb6ff";cx.beginPath();cx.moveTo(a.x,a.y);cx.lineTo(b.x,b.y);cx.stroke()}}
+    cx.globalAlpha=.4;cx.fillStyle="#8fd0ff";cx.beginPath();cx.arc(a.x,a.y,a.r,0,6.3);cx.fill()}
+  cx.globalCompositeOperation="lighter";
+  // the ribbons: thin lines of light along every strand
+  const rib=POSTER?1:REDUCE?.6:Math.min(1,T/1.2);
+  for(const t of strands){const s=SRC[t.si],gr=cx.createLinearGradient(t.a[0],t.a[1],t.end[0],t.end[1]);gr.addColorStop(0,s.col);gr.addColorStop(.55,s.col);gr.addColorStop(1,MAP);
+    const pulse=.75+.25*Math.sin(T*1.6+t.ph);cx.strokeStyle=gr;cx.beginPath();cx.moveTo(t.a[0],t.a[1]);cx.bezierCurveTo(t.c1[0],t.c1[1],t.c2[0],t.c2[1],t.end[0],t.end[1]);
+    cx.lineWidth=5;cx.globalAlpha=.06*rib*pulse;cx.stroke();cx.lineWidth=1.2;cx.globalAlpha=.32*rib*pulse;cx.stroke()}
+  // emission: first the whole state, then a steady trickle of updates
+  if(!REDUCE&&!POSTER&&T>.8){if(sent<cells.length){const n=Math.ceil(cells.length/5.5*dt/1000)+1;for(let i=0;i<n&&sent<cells.length;i++)fly.push(mkFly(cells[sent++],now))}
+    else if(fly.length<480)for(let i=0;i<Math.ceil(dt/12);i++)fly.push(mkFly(cells[Math.floor(Math.random()*cells.length)],now))}
+  // digits riding the ribbons, in their source's colour until they reach the map
+  const big=L.font,sm=Math.round(L.font*.8);
+  for(let i=fly.length-1;i>=0;i--){const f=fly[i],fixed=f.u!==undefined,u=fixed?f.u:(now-f.t)/f.d;if(u>=1){f.c.on=1;f.c.b=f.b;f.c.heat=1;fly.splice(i,1);continue}
+    const e=fixed?u:ease(u),p=bez(f.a,f.c1,f.c2,[f.c.x,f.c.y],e),col=e<.62?SRC[f.c.src].col:MAP;
+    digit(col,e<.5?sm:big,fixed?f.b:((u*14|0)%2?f.b:1-f.b),p[0],p[1],.3+.7*Math.sin(Math.min(1,u*1.15)*Math.PI*.5))}
+  // the map, digit by digit
+  let landed=0;for(const c of cells){if(!c.on)continue;landed++;
+    const tw=REDUCE?0:.16*Math.sin(T*1.3+c.tw),a=(c.edge?1:.55+((c.x*7+c.y*13)%10)/45)+tw;
+    digit(c.edge?EDGE:MAP,big,c.b,c.x,c.y,clamp(a,.2,1));
+    if(c.heat>0){digit(EDGE,big,c.b,c.x,c.y,c.heat);c.heat=Math.max(0,c.heat-dt/450)}}
+  if(!REDUCE&&!POSTER){const flips=Math.ceil(cells.length*.002);for(let i=0;i<flips;i++){const c=cells[Math.floor(Math.random()*cells.length)];if(c.on){c.b^=1;c.heat=.6}}}
+  if(!done&&landed===cells.length){done=true;formedAt=now}
+  // the outline: dashed while forming, then a bright glowing border with the district lines
+  cx.save();cx.setTransform(DPR*mapT.k,0,0,DPR*mapT.k,DPR*mapT.ox,DPR*mapT.oy);
+  const fa=done?Math.min(1,(now-formedAt)/1400):0;
+  cx.globalAlpha=POSTER?.55:(1-fa)*.35*Math.min(1,T/1.2);cx.strokeStyle=MAP;cx.lineWidth=1.3/mapT.k;cx.setLineDash([5/mapT.k,5/mapT.k]);cx.stroke(statePath);cx.setLineDash([]);
+  if(fa>0){cx.globalAlpha=.2*fa;cx.strokeStyle=MAP;cx.lineWidth=.8/mapT.k;distPaths.forEach(p=>cx.stroke(p));
+    cx.shadowColor=MAP;cx.shadowBlur=26*DPR;cx.globalAlpha=.55*fa;cx.lineWidth=6/mapT.k;cx.strokeStyle=MAP;cx.stroke(statePath);
+    cx.shadowBlur=8*DPR;cx.globalAlpha=fa;cx.lineWidth=2.2/mapT.k;cx.strokeStyle=EDGE;cx.stroke(statePath)}
+  cx.restore();cx.globalCompositeOperation="source-over";
+  // panels last, so the ribbons appear to leave them
+  SRC.forEach((s,i)=>panel(s,POSTER||REDUCE?1:clamp(T*1.5-i*.25,0,1)));
   if(!REDUCE&&!POSTER)requestAnimationFrame(frame)}
 
-let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{layout();if(REDUCE)frame(performance.now())},150)});
+let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{layout();last=performance.now();if(REDUCE||POSTER)frame(performance.now())},150)});
 document.fonts.load('16px "GitLab Mono"').catch(()=>{}).finally(()=>{layout();requestAnimationFrame(frame)});
 </script>
 </body>
