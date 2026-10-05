@@ -27,7 +27,7 @@ V8.mini=(g,cx,cy,k,o={})=>{const t=el("g",{transform:`translate(${cx-260*k} ${cy
 V8.area=d=>{let A=0;d.split("M").filter(Boolean).forEach(r=>{const P=r.replace(/Z/g,"").split("L").map(v=>v.split(",").map(Number));for(let i=0,j=P.length-1;i<P.length;j=i++)A+=(P[j][0]+P[i][0])*(P[j][1]-P[i][1])});return Math.abs(A/2)};
 
 /* ============================================================ 1 · DATA CREATION */
-SPEC.create={W:560,H:600,portH:560,foot:"Boundaries, rivers, rail and the degree ticks are real. The scan, the imagery tones and the new features are illustrative.",
+SPEC.create={W:560,H:600,portH:560,foot:"Boundaries, rivers, rail and the degree ticks are real. The scan and the village photo are illustrations.",
  draw(A){const s=A.st,V0={cx:262,cy:316,w:620};s.V0=V0;
   // ---- the legacy record: a printed sheet, scanned a little crooked, one ink. No props: a real
   // department scan has a neatline with degree ticks, a title block and nothing else
@@ -61,20 +61,6 @@ SPEC.create={W:560,H:600,portH:560,foot:"Boundaries, rivers, rail and the degree
   s.ctx=drawContext(gd,{labels:false,rivers:true,rail:true,roads:true,cities:true,riverLabels:false});
   s.ctx.rivers.setAttribute("clip-path",V8.clip(A,"st"));s.ctx.roads.setAttribute("clip-path",V8.clip(A,"st"));s.ctx.rail.setAttribute("clip-path",V8.clip(A,"st"));
   s.aw=V8.dots(s.LD,gd,G.stack.aw,{r:2.6,sw:.7});
-  // imagery: villages in earth tones, the way a satellite sees fields and scrub
-  const tones=["#b9b58e","#a9ad84","#c4b893","#9fa67c","#cdbf98","#b2ae86"];
-  s.img=el("g",{opacity:0},gd);G.carto.village.forEach((d,i)=>el("path",{d,fill:tones[(i*7)%tones.length],stroke:tones[(i*7)%tones.length],"stroke-width":.6,"vector-effect":"non-scaling-stroke"},s.img));
-  el("path",{d:G.carto.roads,fill:"none",stroke:"#ebe3cf","stroke-width":1.1,"vector-effect":"non-scaling-stroke","stroke-linecap":"round",opacity:.75},s.img);
-  s.ctx.roads.parentNode.insertBefore(s.img,s.ctx.roads);
-  // new features: a road the old sheet never had, and buildings found from the air
-  const C=G.carto.vill_c,hub=G.carto.hub;const pick=[[205,276],[214,284],[224,290],[234,297],[244,301]].map(q=>V8.near(C,q));
-  s.newRoad=el("path",{d:"M"+pick.map(p=>p.map(v=>v.toFixed(2)).join(",")).join(" L"),fill:"none",stroke:"var(--dv-orange-500)",pathLength:1,"stroke-dasharray":1,"stroke-dashoffset":0,"stroke-linecap":"round","stroke-linejoin":"round",opacity:0},gd);
-  s.rw=3.4;s.LD.on(u=>{s.u=u;s.newRoad.setAttribute("stroke-width",s.rw*u)});s.road=w=>{s.rw=w;s.newRoad.setAttribute("stroke-width",w*s.u)};
-  s.blds=[[219,272],[229,281],[240,286],[211,296],[236,307]].map(q=>V8.near(C,q));
-  s.newG=el("g",{},gd);s.newM=s.blds.map(p=>{const m=s.LD.mark(p,g=>{el("rect",{x:-6,y:-6,width:12,height:12,rx:2,fill:"var(--dv-orange-500)",stroke:"#fff","stroke-width":1.6},g);
-    el("circle",{r:13,fill:"none",stroke:"var(--orange-400)","stroke-width":2,"stroke-dasharray":"4 3"},g)});m.g.style.opacity=0;return m});
-  s.ghost=s.LD.mark(s.blds[3],g=>el("rect",{x:-6,y:-6,width:12,height:12,rx:2,fill:"none",stroke:"var(--n500)","stroke-width":1.6,"stroke-dasharray":"3 2"},g));s.ghost.g.style.opacity=0;
-  s.moveTo=[s.blds[3][0]+1.6,s.blds[3][1]-1.1];
   // scanner: the line between paper and digital
   const cid="create-swipe",cp=el("clipPath",{id:cid},A.defs);s.sw=el("rect",{x:0,y:0,width:0,height:600},cp);s.dig.setAttribute("clip-path",`url(#${cid})`);
   s.scan=el("g",{},A.ill);s.scanL=el("path",{d:"M0,0 L0,600",stroke:"var(--dv-aqua-600)","stroke-width":3},s.scan);
@@ -85,27 +71,64 @@ SPEC.create={W:560,H:600,portH:560,foot:"Boundaries, rivers, rail and the degree
   s.setSw=x=>{s.sw.setAttribute("width",x);s.scan.setAttribute("transform",`translate(${x} 0)`);s.scan.style.opacity=x<=0||x>=560?0:1;
     s.tagD.setAttribute("transform",`translate(${clamp(x-102,30,446)} 18)`);s.tagD.style.opacity=x>120?1:0;s.tagP.setAttribute("transform",`translate(${clamp(x+18,30,470)} 18)`);s.tagP.style.opacity=x<450?1:0};
   s.setSw(0);
-  // drone and satellite for the new data
-  s.sky=el("g",{opacity:0,"pointer-events":"none"},A.ill);
-  const sat=el("g",{transform:"translate(506 52)"},s.sky);el("rect",{x:-9,y:-9,width:18,height:18,rx:3,fill:"var(--n700)"},sat);el("rect",{x:-38,y:-6,width:24,height:12,fill:"#9fb6cc",stroke:"var(--n700)","stroke-width":1.4},sat);el("rect",{x:14,y:-6,width:24,height:12,fill:"#9fb6cc",stroke:"var(--n700)","stroke-width":1.4},sat);
-  s.beam=el("path",{d:"M506,62 L330,250 L470,330 Z",fill:"rgba(159,182,204,.22)",stroke:"none"},s.sky);s.sky.insertBefore(s.beam,sat);
-  s.drone=el("g",{opacity:0,"pointer-events":"none"},A.ill);const dr=el("g",{},s.drone);
-  [[-14,-14],[14,-14],[-14,14],[14,14]].forEach(([x,y])=>{el("path",{d:`M0,0 L${x},${y}`,stroke:"var(--n800)","stroke-width":3},dr);el("ellipse",{cx:x,cy:y,rx:10,ry:3.4,fill:"rgba(58,56,61,.35)",stroke:"var(--n800)","stroke-width":1.2},dr)});
-  el("rect",{x:-8,y:-6,width:16,height:12,rx:4,fill:"var(--n900)"},dr);el("circle",{cx:0,cy:8,r:3,fill:"var(--red-500)"},dr);
-  s.dPath=[[60,120],[500,120],[500,250],[60,250],[60,380],[500,380]];
-  s.dAt=t=>{const P=s.dPath,L=[];let T=0;for(let i=1;i<P.length;i++){const l=Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]);L.push(l);T+=l}let d=t*T,i=0;while(i<L.length-1&&d>L[i]){d-=L[i];i++}const f=d/L[i];return[lerp(P[i][0],P[i+1][0],f),lerp(P[i][1],P[i+1][1],f)]};
-  s.dTrail=el("path",{d:"M"+s.dPath.map(p=>p.join(",")).join(" L"),fill:"none",stroke:"rgba(58,56,61,.35)","stroke-width":1.6,"stroke-dasharray":"2 6",opacity:0},A.ill);A.ill.insertBefore(s.dTrail,s.drone);
+  // ---- steps 3-4: one village, seen two ways. The old map's lines (dark ink) lie over a satellite
+  // photo; what the photo shows and the map lacks is traced in orange. A key in the corner says which
+  // is which, so no line is left unexplained.
+  s.gnd=el("g",{opacity:0},A.ill);V8.card(A,s.gnd,0,0,560,600,{fill:"#f1efe9",rx:14});
+  {const cp=el("clipPath",{id:"create-gnd"},A.defs);el("rect",{x:0,y:0,width:560,height:600,rx:14},cp)}
+  const gi=el("g",{"clip-path":"url(#create-gnd)"},s.gnd);
+  // the photo: farm plots, trees along a stream, roofs
+  s.photo=el("g",{opacity:0},gi);const ph=s.photo;el("rect",{x:0,y:0,width:560,height:600,fill:"#8c955f"},ph);
+  const fc=["#a3a86e","#b9b07c","#94a065","#c6bb8b","#adac72","#87955c","#bfb382"];let sd=11;const rn=()=>(sd=sd*16807%2147483647)/2147483647;
+  const fg=el("g",{transform:"rotate(-12 280 300)"},ph);
+  for(let x=-120;x<700;){const w=60+rn()*70;for(let y=-120;y<720;){const h=44+rn()*60,j=()=>(rn()-.5)*6;
+      el("path",{d:`M${x+1.2+j()},${y+1.2+j()} L${x+w-1.2+j()},${y+1.2+j()} L${x+w-1.2+j()},${y+h-1.2+j()} L${x+1.2+j()},${y+h-1.2+j()}Z`,fill:fc[Math.floor(rn()*fc.length)]},fg);y+=h}x+=w}
+  const brook="M-20,96 C110,150 170,232 132,330 C104,410 150,520 214,620";
+  el("path",{d:brook,fill:"none",stroke:"#55693f","stroke-width":30,"stroke-linecap":"round",opacity:.85},ph);
+  el("path",{d:brook,fill:"none",stroke:"#6f8a9c","stroke-width":7,"stroke-linecap":"round"},ph);
+  const tr=el("g",{},ph);for(let k=0;k<70;k++){const t=k/70;
+    // trees sit beside the stream: sample the curve by hand
+    const P=[[-20,96],[110,150],[170,232],[132,330]],Q=[[132,330],[104,410],[150,520],[214,620]],bz=(P,u)=>{const m=1-u;return[0,1].map(i=>m*m*m*P[0][i]+3*m*m*u*P[1][i]+3*m*u*u*P[2][i]+u*u*u*P[3][i])};
+    const c=t<.5?bz(P,t*2):bz(Q,t*2-1),o=(rn()-.5)*44;el("circle",{cx:c[0]+o,cy:c[1]+(rn()-.5)*16,r:6+rn()*7,fill:rn()<.5?"#4f6438":"#5d7342"},tr)}
+  // roads on the photo: the old one, and the one built since
+  const oldRd="M-10,470 C80,440 160,392 246,340",newRd="M300,318 C360,296 410,268 470,250 C510,238 540,232 580,226";
+  el("path",{d:oldRd+" C266,330 284,322 300,318",fill:"none",stroke:"#e2d6b8","stroke-width":9,"stroke-linecap":"round"},ph);
+  el("path",{d:newRd,fill:"none",stroke:"#e9e0c8","stroke-width":9,"stroke-linecap":"round"},ph);
+  const roofs=(g,list,col)=>list.map(([x,y,w,h,r])=>el("rect",{x:x-w/2,y:y-h/2,width:w,height:h,rx:1.5,fill:col(),stroke:"rgba(0,0,0,.18)","stroke-width":1,transform:`rotate(${r} ${x} ${y})`},g));
+  const oldH=[];for(let k=0;k<24;k++){const a=rn()*6.283,d=Math.sqrt(rn())*58;oldH.push([262+Math.cos(a)*d*1.2,312+Math.sin(a)*d,12+rn()*8,10+rn()*6,(rn()-.5)*40])}
+  roofs(ph,oldH,()=>rn()<.5?"#a8604a":"#8a8780");
+  s.newH=[[420,236,16,12,-14],[446,226,15,12,-12],[472,216,17,13,-10],[432,266,15,12,-14],[460,258,16,12,-12],[488,248,15,12,-10],[516,236,16,12,-8]];
+  roofs(ph,s.newH,()=>"#d9d6cf");
+  s.school=el("g",{opacity:0},ph);el("rect",{x:352,y:356,width:76,height:40,rx:2,fill:"#cfd3d6",stroke:"rgba(0,0,0,.2)",transform:"rotate(-12 390 376)"},s.school);
+  el("rect",{x:352,y:404,width:52,height:30,rx:2,fill:"#c9a77a",transform:"rotate(-12 378 419)"},s.school);
+  // the old map, on top: the road as far as the village, and the village edge
+  s.ink=el("g",{},gi);const ink2="#2f2d29";
+  el("path",{d:oldRd,fill:"none",stroke:"#f7f5f0","stroke-width":7,"stroke-linecap":"round"},s.ink);el("path",{d:oldRd,fill:"none",stroke:ink2,"stroke-width":3.2,"stroke-linecap":"round"},s.ink);
+  el("path",{d:brook,fill:"none",stroke:ink2,"stroke-width":1.6,"stroke-dasharray":"8 4"},s.ink);
+  el("path",{d:"M188,300 C190,250 250,236 300,250 C344,262 350,330 330,362 C300,400 220,398 196,366 C182,346 186,320 188,300Z",fill:"none",stroke:ink2,"stroke-width":2,"stroke-dasharray":"9 3 2 3"},s.ink);
+  s.endDot=el("circle",{cx:246,cy:340,r:6,fill:"#f7f5f0",stroke:ink2,"stroke-width":2.6},s.ink);
+  // traced: the new road, the new houses, later the school
+  s.tr=el("g",{},gi);const or="var(--dv-orange-500)";
+  s.newRoad=el("path",{d:"M246,340 C266,330 284,322 300,318 "+newRd.slice(newRd.indexOf("C")),fill:"none",stroke:or,"stroke-width":5,"stroke-linecap":"round",pathLength:1,"stroke-dasharray":1,"stroke-dashoffset":1},s.tr);
+  s.newOut=s.newH.map(([x,y,w,h,r])=>el("rect",{x:x-w/2-2,y:y-h/2-2,width:w+4,height:h+4,fill:"none",stroke:or,"stroke-width":2.6,transform:`rotate(${r} ${x} ${y})`,opacity:0},s.tr));
+  s.schOut=el("path",{d:"M352,356 h76 v40 h-76Z",fill:"rgba(201,93,46,.12)",stroke:or,"stroke-width":2.8,transform:"rotate(-12 390 376)",pathLength:1,"stroke-dasharray":1,"stroke-dashoffset":1},s.tr);
+  // corner furniture: what the photo is, and the key
+  s.pchip=el("g",{opacity:0},s.gnd);V8.card(A,s.pchip,388,16,158,32,{rx:16,fill:"#fff"});s.pyear=A.hand(s.pchip,467,38,"Satellite photo, 2024",{size:18,bold:1,anchor:"middle"});
+  s.key=el("g",{},s.gnd);V8.card(A,s.key,16,518,214,66,{fill:"rgba(255,255,255,.96)"});
+  el("path",{d:"M32,540 L62,540",stroke:ink2,"stroke-width":3.2,"stroke-linecap":"round"},s.key);A.hand(s.key,72,546,"On the old map",{size:19});
+  s.keyNew=el("g",{opacity:0},s.key);el("path",{d:"M32,566 L62,566",stroke:or,"stroke-width":5,"stroke-linecap":"round"},s.keyNew);A.hand(s.keyNew,72,572,"Added from the photo",{size:19});
   // the change log for updates
-  const mv=(Math.hypot(1.6,1.1)/G.kmPx).toFixed(1);
-  s.log=el("g",{opacity:0},A.ill);V8.card(A,s.log,18,18,262,196);A.hand(s.log,38,52,"Change log",{size:26,bold:1});
-  s.logRows=[["Road widened","by the field team"],[`School relocated ${mv} km`,"checked on imagery"],["Each change saved","with who did it, and when"]].map(([a,b],i)=>{const r=el("g",{opacity:0},s.log),y=84+i*44;
-    el("circle",{cx:42,cy:y-5,r:4,fill:i<2?"var(--dv-orange-500)":"var(--n500)"},r);A.hand(r,54,y,a,{size:20,bold:1});A.hand(r,54,y+19,b,{size:18,fill:"var(--n600)"});return r});
-  s.Z={cx:222,cy:290,w:40}},
+  s.log=el("g",{opacity:0},A.ill);V8.card(A,s.log,16,16,250,178);A.hand(s.log,36,48,"Change log",{size:25,bold:1});
+  s.logRows=[["New school added","traced from the 2026 photo"],["Road widened","seen on the same photo"],["Each change saved","with who did it, and when"]].map(([a,b],i)=>{const r=el("g",{opacity:0},s.log),y=78+i*40;
+    el("circle",{cx:40,cy:y-5,r:4,fill:i<2?or:"var(--n500)"},r);A.hand(r,52,y,a,{size:19,bold:1});A.hand(r,52,y+18,b,{size:17,fill:"var(--n600)"});return r});
+  },
  steps:[]};
 {const I=SPEC.create;
- const flat=A=>{const s=A.st;A.op(s.tags,1,200);A.op([s.sky,s.drone,s.dTrail,s.log,s.img,s.newRoad],0,200);s.newM.forEach(m=>{m.g.style.opacity=0});s.ghost.g.style.opacity=0;
-   s.newM[3].p=s.blds[3].slice();s.newM[3].upd();s.road(3.4);A.op(s.aw,1,200);A.op(s.ctx.city,1,200)};
- const zoom=async(A,ms)=>{const s=A.st;s.setSw(560);A.op(s.tags,0,200);A.op(s.old,0,300);A.op(s.aw,0,250);A.op(s.ctx.city,0,250);await Promise.all([s.LD.fly(s.Z,ms),A.op(s.img,1,600)])};
+ const flat=A=>{const s=A.st;A.op(s.tags,1,200);A.op([s.gnd,s.log],0,250);A.op(s.dig,1,200);A.op(s.aw,1,200);A.op(s.ctx.city,1,200)};
+ const ground=(A,photo,year)=>{const s=A.st;s.setSw(560);A.op([s.tags,s.old],0,250);s.newRoad.style.strokeWidth="";s.pyear.textContent=`Satellite photo, ${year}`;
+   s.school.style.opacity=0;s.schOut.setAttribute("stroke-dashoffset",1);s.logRows.forEach(r=>r.style.opacity=0);A.op(s.log,0,150);
+   s.photo.style.opacity=photo?1:0;s.pchip.style.opacity=photo?1:0;return A.op([s.dig],0,300).then(()=>A.op(s.gnd,1,350))};
+ const traced=(A,on)=>{const s=A.st;s.newRoad.setAttribute("stroke-dashoffset",on?0:1);s.newOut.forEach(o=>o.style.opacity=on?1:0);s.keyNew.style.opacity=on?1:0};
  I.steps=[
  {nav:"Old records",go:async A=>{const s=A.st;flat(A);s.LD.set(s.V0);s.LO.set(s.V0);s.setSw(0);await A.op(s.old,1,400)},
   notes:[{at:"l0",t:"Old printed maps",b:["decades of survey sheets","and registers, kept on paper","or as flat scans"],to:A=>A.st.LO.ill([212,250])},
@@ -113,16 +136,16 @@ SPEC.create={W:560,H:600,portH:560,foot:"Boundaries, rivers, rail and the degree
  {nav:"Paper to digital",go:async A=>{const s=A.st;flat(A);s.LD.set(s.V0);s.LO.set(s.V0);A.op(s.old,1,200);s.setSw(0);await A.wait(250);await A.tw(1600,t=>s.setSw(560*t*.62))},
   notes:[{at:"l0",t:"Scanned, then traced",c:"var(--dv-aqua-700)",b:["a road becomes a line,","a village a point, a","boundary an outline"],to:A=>[+A.st.sw.getAttribute("width"),276]},
          {at:"r0",t:"Straightened and pinned",b:["the crooked scan is lined up","with the earth, so every","shape sits on its true spot"]}]},
- {nav:"New data",go:async A=>{const s=A.st;flat(A);await zoom(A,1100);s.newRoad.setAttribute("stroke-dashoffset",1);A.op(s.newRoad,1,10);A.op([s.sky,s.dTrail],1,400);await A.op(s.drone,1,200);
-   const marks=s.newM.slice();await A.tw(2600,t=>{const p=s.dAt(t);s.drone.setAttribute("transform",`translate(${p[0]} ${p[1]}) rotate(${Math.sin(t*40)*3})`);
-     s.newRoad.setAttribute("stroke-dashoffset",1-clamp(t*1.25,0,1));marks.forEach((m,i)=>{if(t>.15+i*.16)m.g.style.opacity=1})});A.op(s.drone,0,300)},
-  notes:[{at:"l0",t:"Filling the gaps",c:"var(--dv-orange-700)",b:["a new road and new buildings","the old sheet never had"],to:A=>{const s=A.st;return s.LD.ill(s.blds[1])},ring:16},
-         {at:"r0",t:"From the sky and on foot",b:["satellite images, drone","flights and GPS visits","in the field"],to:()=>[488,66]}]},
- {nav:"Keep current",go:async A=>{const s=A.st;flat(A);await zoom(A,500);s.newRoad.setAttribute("stroke-dashoffset",0);A.op(s.newRoad,1,200);s.newM.forEach(m=>m.g.style.opacity=1);A.op(s.sky,0,100);
-   s.newM[3].p=s.blds[3].slice();s.newM[3].upd();await A.wait(300);A.op(s.ghost.g,1,300);await s.newM[3].move(s.moveTo,900);
-   await A.tw(500,t=>s.road(lerp(3.4,7,t)));await A.op(s.log,1,300);for(const r of s.logRows)await A.op(r,1,260)},
-  notes:[{at:"l0",dy:180,t:"The ground keeps changing",b:["a road is widened,","a school moves"],to:A=>A.st.LD.ill(A.st.moveTo),ring:16},
-         {at:"r0",t:"Every change is recorded",b:["anyone can see what","changed, and when"],to:()=>[280,100]}]}]}
+ {nav:"New data",go:async A=>{const s=A.st;traced(A,false);await ground(A,false,2024);await A.wait(500);
+   await Promise.all([A.op(s.photo,1,900),A.op(s.pchip,1,600)]);await A.wait(500);
+   await A.draw(s.newRoad,1,1200);for(const o of s.newOut){await A.op(o,1,120)}await A.op(s.keyNew,1,300)},
+  notes:[{at:"l0",t:"The old map stops here",b:["it has the old road and","the village, nothing more"],to:()=>[240,344]},
+         {at:"r0",t:"The photo shows more",c:"var(--dv-orange-700)",b:["a new road and new houses.","They are traced in orange,","then checked on the ground","with a GPS visit"],to:()=>[470,272]}]},
+ {nav:"Keep current",go:async A=>{const s=A.st;await ground(A,true,2024);traced(A,true);await A.wait(400);
+   s.pyear.textContent="Satellite photo, 2026";await A.op(s.school,1,700);await A.draw(s.schOut,1,700);
+   await A.tw(500,t=>s.newRoad.style.strokeWidth=lerp(5,9,t)+"px");await A.op(s.log,1,300);for(const r of s.logRows)await A.op(r,1,240)},
+  notes:[{at:"l0",dy:260,t:"A newer photo",b:["two years on, a school","has been built and the","road widened"],to:()=>[392,398]},
+         {at:"r0",t:"Every change is recorded",b:["anyone can see what","changed, and when"],to:()=>[266,110]}]}]}
 
 /* ============================================================ 2 · GEODATABASE */
 SPEC.geodatabase={W:560,H:620,portH:600,foot:"Boundaries, rivers, roads and rail are real. Centres, nodes, leases, the record and the department list are examples.",
@@ -221,9 +244,9 @@ SPEC.portal={W:600,H:560,portH:520,foot:"Boundaries, rivers, roads and rail are 
   s.L=A.lens(s.win,{x:190,y:42,w:410,h:518,view:{cx:258,cy:318,w:560}});const g=s.L.g;
   el("rect",{x:-3000,y:-3000,width:7000,height:7000,fill:"var(--land-out)"},g);G.ctx.states.forEach(t=>el("path",{d:t.d,fill:"#f1efeb",stroke:"#fff","stroke-width":1.4,"vector-effect":"non-scaling-stroke"},g));
   el("path",{d:G.state,fill:"#fff"},g);const c=V8.clip(A,"st");
-  s.vill=el("g",{opacity:0},g);G.carto.village.forEach(d=>el("path",{d,fill:"#faf8f4",stroke:"#ddd6cb","stroke-width":.7,"vector-effect":"non-scaling-stroke"},s.vill));
+  s.vill=el("g",{opacity:0},g);
   s.lay={};
-  s.lay.road=el("g",{},g);el("path",{d:G.ctx.roads,fill:"none",stroke:"var(--road)","stroke-width":1.3,"clip-path":c,"vector-effect":"non-scaling-stroke"},s.lay.road);el("path",{d:G.carto.roads,fill:"none",stroke:"#eadccb","stroke-width":1,"vector-effect":"non-scaling-stroke"},s.vill);
+  s.lay.road=el("g",{},g);el("path",{d:G.ctx.roads,fill:"none",stroke:"var(--road)","stroke-width":1.3,"clip-path":c,"vector-effect":"non-scaling-stroke"},s.lay.road);
   el("path",{d:G.ctx.rail,fill:"none",stroke:"var(--rail)","stroke-width":1.4,"clip-path":c,"vector-effect":"non-scaling-stroke"},s.lay.road);
   s.lay.riv=el("g",{fill:"none",stroke:"var(--water)","stroke-width":1.5,"clip-path":c},g);G.ctx.rivers.forEach(r=>el("path",{d:r.d,"vector-effect":"non-scaling-stroke"},s.lay.riv));
   s.lay.dist=el("g",{fill:"none",stroke:"#c3bcb1","stroke-width":1,"vector-effect":"non-scaling-stroke"},g);G.districts.forEach(d=>el("path",{d:d.d,"vector-effect":"non-scaling-stroke"},s.lay.dist));
@@ -279,7 +302,7 @@ SPEC.portal={W:600,H:560,portH:520,foot:"Boundaries, rivers, roads and rail are 
    for(const ch of "Raipur"){s.q.textContent+=ch;await A.wait(110)}await A.op(s.sug,1,250);await A.wait(450);A.op(s.sug,0,200);
    await Promise.all([s.L.fly(s.V.city,1300),A.op(s.vill,1,1000)]);await A.op(s.pin.g,1,250)},
   notes:[{at:"l0",t:"Search a place",b:["type a village, a district or","a centre's name, and the","map takes you there"],to:()=>[300,76]},
-         {at:"r0",t:"Detail appears as you zoom",b:["villages and centres show","once there is room to","read them"],to:A=>A.st.L.ill([203.06,289.6])}]},
+         {at:"r0",t:"Detail appears as you zoom",b:["centres show once","there is room to","read them"],to:A=>A.st.L.ill([203.06,289.6])}]},
  {nav:"Ask AI",go:async A=>{const s=A.st;reset(A);lays(A,["dist","riv","road","aw","bn"]);A.op(s.vill,1,300);await s.L.fly(s.V.ask,900);
    [s.qB,s.dotsB,s.aB].forEach(e=>e.style.opacity=0);await A.op(s.chat,1,300);await A.op(s.qB,1,300);await A.op(s.dotsB,1,200);await A.wait(700);await A.op(s.dotsB,0,150);
    await A.op(s.aB,1,300);for(const m of s.rings){m.g.style.opacity=1;await A.wait(40)}},
@@ -295,8 +318,7 @@ SPEC.mobile={W:560,H:600,portH:580,foot:"Village boundaries and roads are drawn 
   s.dist=Math.round(Math.hypot(P0[0]-s.you[0],P0[1]-s.you[1])/G.kmPx*1000/10)*10;
   // the ground behind the phone
   s.bg=A.lens(A.ill,{paper:"#eef0e6",view:{cx:P0[0]+1.6,cy:P0[1]+.2,w:16}});const bg=s.bg.g;
-  const tones=["#e3e6d3","#dfe3cc","#e8e9d8","#dde2ca"];G.carto.village.forEach((d,i)=>el("path",{d,fill:tones[i%4],stroke:"#cfd3bd","stroke-width":.9,"vector-effect":"non-scaling-stroke"},bg));
-  el("path",{d:G.carto.roads,fill:"none",stroke:"#f5f3e9","stroke-width":1.5,"vector-effect":"non-scaling-stroke",opacity:.8},bg);
+  el("rect",{x:-3000,y:-3000,width:7000,height:7000,fill:"#e6e9da"},bg);
   // the phone
   s.ph=el("g",{},A.ill);const X=120,Y=8,W=240,H=584;s.scr={x:X+12,y:Y+48,w:W-24,h:H-72};
   el("rect",{x:X+4,y:Y+10,width:W,height:H,rx:38,fill:"rgba(40,39,45,.25)",filter:"url(#mobile-soft)"},s.ph);
@@ -308,7 +330,6 @@ SPEC.mobile={W:560,H:600,portH:580,foot:"Village boundaries and roads are drawn 
   const my=s.scr.y+64,mh=s.scr.h-64;
   s.L=A.lens(s.ph,{x:s.scr.x,y:my,w:s.scr.w,h:mh,view:{cx:P0[0]-.15,cy:P0[1]+.25,w:3}});const g=s.L.g;
   el("rect",{x:-3000,y:-3000,width:7000,height:7000,fill:"#f4f1ea"},g);
-  G.carto.village.forEach((d,i)=>el("path",{d,fill:i%3?"#faf8f4":"#f3efe7",stroke:"#d6cfc4","stroke-width":.9,"vector-effect":"non-scaling-stroke"},g));
   el("path",{d:G.carto.roads,fill:"none",stroke:"#d8cdbd","stroke-width":5,"vector-effect":"non-scaling-stroke","stroke-linecap":"round"},g);el("path",{d:G.carto.roads,fill:"none",stroke:"#fff","stroke-width":2.8,"vector-effect":"non-scaling-stroke","stroke-linecap":"round"},g);
   el("path",{d:G.carto.fibre,fill:"none",stroke:"var(--dv-aqua-600)","stroke-width":2.4,"vector-effect":"non-scaling-stroke"},g);V8.diam(s.L,g,G.carto.gp,{z:11});
   V8.dots(s.L,g,G.carto.aw,{r:5.5,sw:1.6});
@@ -537,7 +558,7 @@ SPEC.cycle={W:640,H:600,portH:600,foot:"The six stages of the story. The state o
 /* ============================================================ TRY IT · one per figure */
 // create: drag the scanner across the sheet
 {const I=SPEC.create.steps;
- I[1].go=async A=>{const s=A.st;A.op([s.sky,s.drone,s.dTrail,s.log,s.img,s.newRoad],0,150);s.LD.set(s.V0);s.LO.set(s.V0);A.op(s.old,1,200);A.op(s.aw,1,200);A.op(s.ctx.city,1,200);s.setSw(0);await A.wait(200);await A.tw(700,t=>s.setSw(84*t))};
+ I[1].go=async A=>{const s=A.st;A.op([s.gnd,s.log],0,150);A.op(s.dig,1,150);A.op(s.tags,1,150);s.LD.set(s.V0);s.LO.set(s.V0);A.op(s.old,1,200);A.op(s.aw,1,200);A.op(s.ctx.city,1,200);s.setSw(0);await A.wait(200);await A.tw(700,t=>s.setSw(84*t))};
  I[1].play={ask:"drag the scanner across the sheet to turn paper into digital",ok:"The whole sheet is digital: every line, point and outline now sits on the earth",
   setup(A,done,ui){const s=A.st;let x=84;A.pulse([84,300],26);
    A.drag(s.knob,{move:p=>{x=clamp(p[0],0,560);s.setSw(x)},end:()=>{if(x>470){A.tw(300,t=>s.setSw(lerp(x,560,t))).then(()=>done())}else ui.say("Keep going: take it all the way across",true)}});
