@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-build="1791183483">
+<html lang="en" data-build="1791183648">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -2285,15 +2285,25 @@ SPEC.mobile={W:560,H:600,portH:580,foot:"State and district boundaries are real.
   s.bg=A.lens(A.ill,{paper:"#eef0e6",view:{cx:P0[0]+1.6,cy:P0[1]+.2,w:16}});const bg=s.bg.g;
   el("rect",{x:-3000,y:-3000,width:7000,height:7000,fill:"#e6e9da"},bg);
   // the phone
-  s.ph=el("g",{},A.ill);const X=120,Y=8,W=240,H=584;s.scr={x:X+12,y:Y+48,w:W-24,h:H-72};
-  el("rect",{x:X+4,y:Y+10,width:W,height:H,rx:38,fill:"rgba(40,39,45,.25)",filter:"url(#mobile-soft)"},s.ph);
-  el("rect",{x:X,y:Y,width:W,height:H,rx:38,fill:"var(--n900)"},s.ph);el("rect",{x:X+86,y:Y+16,width:68,height:16,rx:8,fill:"#000"},s.ph);
-  el("rect",{x:s.scr.x,y:s.scr.y,width:s.scr.w,height:s.scr.h,rx:14,fill:"#fff"},s.ph);
-  A.hand(s.ph,s.scr.x+12,s.scr.y+18,"9:41",{size:17,bold:1});[0,1,2].forEach(i=>el("rect",{x:s.scr.x+168+i*7,y:s.scr.y+14-i*3,width:4,height:6+i*3,rx:1,fill:"var(--n900)"},s.ph));
-  el("rect",{x:s.scr.x,y:s.scr.y+26,width:s.scr.w,height:38,fill:"var(--n900)"},s.ph);A.hand(s.ph,s.scr.x+14,s.scr.y+51,"Field app",{size:20,bold:1,fill:"#fff"});
-  
-  const my=s.scr.y+64,mh=s.scr.h-64;s.VD={cx:P0[0]+3,cy:P0[1]+4,w:62};s.VV={cx:P0[0]+.1,cy:P0[1]+.9,w:7};
-  s.L=A.lens(s.ph,{x:s.scr.x,y:my,w:s.scr.w,h:mh,view:s.VD});const g=s.L.g;
+  // a current flagship phone, kept generic: metal frame, thin even bezel, a pill-shaped camera cutout,
+  // side buttons, status icons and a home bar. No logo, nothing brand-specific
+  s.ph=el("g",{},A.ill);const X=128,Y=4,W=232,H=592,RX=50;s.scr={x:X+9,y:Y+9,w:W-18,h:H-18};const sc=s.scr,SR=41;
+  A.defs.insertAdjacentHTML("beforeend",`<linearGradient id="mobile-metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8d9096"/><stop offset=".06" stop-color="#e4e6e9"/><stop offset=".5" stop-color="#b9bcc1"/><stop offset=".94" stop-color="#e9eaec"/><stop offset="1" stop-color="#8d9096"/></linearGradient>`+
+    `<clipPath id="mobile-screen"><rect x="${sc.x}" y="${sc.y}" width="${sc.w}" height="${sc.h}" rx="${SR}"/></clipPath>`);
+  el("rect",{x:X+4,y:Y+12,width:W,height:H,rx:RX,fill:"rgba(40,39,45,.28)",filter:"url(#mobile-soft)"},s.ph);
+  const btn=(x,y,h)=>el("rect",{x,y,width:4,height:h,rx:2,fill:"url(#mobile-metal)",stroke:"#7d8086","stroke-width":.6},s.ph);
+  btn(X-3,Y+118,26);btn(X-3,Y+166,48);btn(X-3,Y+224,48);btn(X+W-1,Y+178,74);btn(X+W-1,Y+352,40);
+  el("rect",{x:X,y:Y,width:W,height:H,rx:RX,fill:"url(#mobile-metal)"},s.ph);
+  el("rect",{x:X+.8,y:Y+.8,width:W-1.6,height:H-1.6,rx:RX-1,fill:"none",stroke:"rgba(255,255,255,.55)","stroke-width":.8},s.ph);
+  el("rect",{x:X+3,y:Y+3,width:W-6,height:H-6,rx:RX-3,fill:"#0b0b0d"},s.ph);
+  el("rect",{x:sc.x,y:sc.y,width:sc.w,height:sc.h,rx:SR,fill:"#fff"},s.ph);
+  A.hand(s.ph,sc.x+40,sc.y+29,"9:41",{size:19,bold:1,anchor:"middle"});
+  {const x=sc.x+146,y=sc.y+29;[0,1,2,3].forEach(i=>el("rect",{x:x+i*4,y:y-2.6-i*2,width:2.8,height:2.6+i*2,rx:.7,fill:"var(--n900)"},s.ph));
+   const wx=x+27,wy=y;[7,4.5].forEach(r=>el("path",{d:`M${wx-r},${wy-r*.6} A${r},${r} 0 0 1 ${wx+r},${wy-r*.6}`,fill:"none",stroke:"var(--n900)","stroke-width":1.7,"stroke-linecap":"round"},s.ph));el("circle",{cx:wx,cy:wy-1.2,r:1.5,fill:"var(--n900)"},s.ph);
+   el("rect",{x:x+37,y:y-8.5,width:18,height:9.5,rx:2.8,fill:"none",stroke:"var(--n500)","stroke-width":1},s.ph);el("rect",{x:x+38.5,y:y-7,width:12.5,height:6.5,rx:1.4,fill:"var(--n900)"},s.ph);el("rect",{x:x+55.6,y:y-5.2,width:1.5,height:3,rx:.7,fill:"var(--n500)"},s.ph)}
+  el("rect",{x:sc.x,y:sc.y+44,width:sc.w,height:38,fill:"var(--n900)"},s.ph);A.hand(s.ph,sc.x+16,sc.y+69,"Field app",{size:20,bold:1,fill:"#fff"});
+  const my=s.scr.y+82,mh=s.scr.h-82;s.VD={cx:P0[0]+3,cy:P0[1]+4,w:62};s.VV={cx:P0[0]+.1,cy:P0[1]+.9,w:7};
+  s.L=A.lens(s.ph,{x:s.scr.x,y:my,w:s.scr.w,h:mh,view:s.VD});s.L.outer.setAttribute("clip-path","url(#mobile-screen)");const g=s.L.g;
   // only what an officer needs: the state, districts with names, their village, and Anganwadi centres
   el("rect",{x:-3000,y:-3000,width:7000,height:7000,fill:"#e9e6df"},g);
   el("path",{d:G.state,fill:"#f7f5f0"},g);
@@ -2346,15 +2356,18 @@ SPEC.mobile={W:560,H:600,portH:580,foot:"State and district boundaries are real.
   s.newPin=s.L.mark(s.you,g2=>A.pin(g2,"var(--dv-orange-500)"));s.newPin.g.style.opacity=0;
   s.hit=el("rect",{x:s.scr.x,y:my,width:s.scr.w,height:mh,fill:"transparent"},s.ph);s.hit.style.pointerEvents="none";
   // bottom sheets
-  const sh=(h)=>{const g2=el("g",{opacity:0},s.ph),y0=s.scr.y+s.scr.h-h;el("path",{d:`M${s.scr.x},${y0+16} Q${s.scr.x},${y0} ${s.scr.x+16},${y0} L${s.scr.x+s.scr.w-16},${y0} Q${s.scr.x+s.scr.w},${y0} ${s.scr.x+s.scr.w},${y0+16} L${s.scr.x+s.scr.w},${s.scr.y+s.scr.h-14} Q${s.scr.x+s.scr.w},${s.scr.y+s.scr.h} ${s.scr.x+s.scr.w-14},${s.scr.y+s.scr.h} L${s.scr.x+14},${s.scr.y+s.scr.h} Q${s.scr.x},${s.scr.y+s.scr.h} ${s.scr.x},${s.scr.y+s.scr.h-14}Z`,fill:"#fff",stroke:"#e3dfd8"},g2);
+  const sh=(h)=>{const g2=el("g",{opacity:0,"clip-path":"url(#mobile-screen)"},s.ph),y0=s.scr.y+s.scr.h-h;el("path",{d:`M${s.scr.x},${y0+16} Q${s.scr.x},${y0} ${s.scr.x+16},${y0} L${s.scr.x+s.scr.w-16},${y0} Q${s.scr.x+s.scr.w},${y0} ${s.scr.x+s.scr.w},${y0+16} L${s.scr.x+s.scr.w},${s.scr.y+s.scr.h-14} Q${s.scr.x+s.scr.w},${s.scr.y+s.scr.h} ${s.scr.x+s.scr.w-14},${s.scr.y+s.scr.h} L${s.scr.x+14},${s.scr.y+s.scr.h} Q${s.scr.x},${s.scr.y+s.scr.h} ${s.scr.x},${s.scr.y+s.scr.h-14}Z`,fill:"#fff",stroke:"#e3dfd8"},g2);
     el("rect",{x:s.scr.x+s.scr.w/2-18,y:y0+8,width:36,height:5,rx:2.5,fill:"var(--n200)"},g2);return{g:g2,y0}};
-  s.info=sh(150);{const{g:g2,y0}=s.info,x=s.scr.x+16;A.hand(g2,x,y0+40,"Anganwadi centre",{size:21,bold:1});A.hand(g2,x,y0+66,"AWC-RPR-00412",{size:19,mono:1,fill:"var(--n700)"});
+  s.info=sh(162);{const{g:g2,y0}=s.info,x=s.scr.x+16;A.hand(g2,x,y0+40,"Anganwadi centre",{size:21,bold:1});A.hand(g2,x,y0+66,"AWC-RPR-00412",{size:19,mono:1,fill:"var(--n700)"});
     V8.chip(A,g2,x,y0+82,"Functional",{w:96,h:24,size:17});A.hand(g2,x,y0+132,`about ${s.dist} m from you`,{size:18,fill:"var(--n600)"})}
   s.form=sh(214);{const{g:g2,y0}=s.form,x=s.scr.x+16;A.hand(g2,x,y0+38,"New place",{size:21,bold:1});
     el("rect",{x,y:y0+52,width:70,height:52,rx:6,fill:"#c9d6e3"},g2);el("path",{d:`M${x},${y0+104} L${x+22},${y0+76} L${x+36},${y0+92} L${x+48},${y0+80} L${x+70},${y0+104}Z`,fill:"#7f9a7a"},g2);el("circle",{cx:x+54,cy:y0+66,r:6,fill:"#f2d27a"},g2);
     A.hand(g2,x+82,y0+76,"Photo added",{size:17,fill:"var(--n700)"});A.hand(g2,x+82,y0+96,"just now",{size:16,fill:"var(--n500)"});s.gps=A.hand(g2,x,y0+124,"",{size:16,mono:1,fill:"var(--n700)"});
     A.hand(g2,x,y0+146,"Note: new centre building",{size:17,fill:"var(--n800)"});
     el("rect",{x,y:y0+158,width:s.scr.w-32,height:36,rx:18,fill:"var(--blue-500)"},g2);A.hand(g2,s.scr.x+s.scr.w/2,y0+182,"Submit",{size:20,bold:1,anchor:"middle",fill:"#fff"})}
+  // camera cutout and home bar sit above everything on the screen
+  el("rect",{x:s.scr.x+s.scr.w/2-32,y:s.scr.y+12,width:64,height:22,rx:11,fill:"#000"},s.ph);el("circle",{cx:s.scr.x+s.scr.w/2+19,cy:s.scr.y+23.5,r:4,fill:"#15161c"},s.ph);
+  el("rect",{x:s.scr.x+s.scr.w/2-48,y:s.scr.y+s.scr.h-11,width:96,height:4.5,rx:2.25,fill:"var(--n900)"},s.ph);
   // where the record goes
   s.flow=el("g",{opacity:0},A.ill);
   V8.card(A,s.flow,394,96,160,120);icon(s.flow,"query",430,140,.9);A.hand(s.flow,456,148,"Review",{size:22,bold:1});A.hand(s.flow,410,186,"a supervisor checks",{size:16,fill:"var(--n600)"});
