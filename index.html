@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-build="1791183648">
+<html lang="en" data-build="1791184144">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -2282,28 +2282,30 @@ SPEC.mobile={W:560,H:600,portH:580,foot:"State and district boundaries are real.
  draw(A){const s=A.st;const P0=V8.near(G.carto.aw,[214,300]);s.P0=P0;s.you=[P0[0]-.95,P0[1]+1.15];
   s.dist=Math.round(Math.hypot(P0[0]-s.you[0],P0[1]-s.you[1])/G.kmPx*1000/10)*10;
   // the ground behind the phone
-  s.bg=A.lens(A.ill,{paper:"#eef0e6",view:{cx:P0[0]+1.6,cy:P0[1]+.2,w:16}});const bg=s.bg.g;
-  el("rect",{x:-3000,y:-3000,width:7000,height:7000,fill:"#e6e9da"},bg);
+  // the ground behind the phone: a live, faded copy of the phone's own map, lined up with it, so the
+  // phone reads as held over the place it shows
+  s.bgc=V8.card(A,A.ill,0,0,560,600,{fill:"#f3f1ec",rx:14});A.defs.insertAdjacentHTML("beforeend",`<clipPath id="mobile-bg"><rect x="0" y="0" width="560" height="600" rx="14"/></clipPath>`);
+  s.bgu=el("g",{"clip-path":"url(#mobile-bg)",opacity:.42},A.ill);
   // the phone
   // a current flagship phone, kept generic: metal frame, thin even bezel, a pill-shaped camera cutout,
   // side buttons, status icons and a home bar. No logo, nothing brand-specific
-  s.ph=el("g",{},A.ill);const X=128,Y=4,W=232,H=592,RX=50;s.scr={x:X+9,y:Y+9,w:W-18,h:H-18};const sc=s.scr,SR=41;
+  s.ph=el("g",{},A.ill);const X=96,Y=8,W=280,H=584,RX=58;s.scr={x:X+9,y:Y+9,w:W-18,h:H-18};const sc=s.scr,SR=49;
   A.defs.insertAdjacentHTML("beforeend",`<linearGradient id="mobile-metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8d9096"/><stop offset=".06" stop-color="#e4e6e9"/><stop offset=".5" stop-color="#b9bcc1"/><stop offset=".94" stop-color="#e9eaec"/><stop offset="1" stop-color="#8d9096"/></linearGradient>`+
     `<clipPath id="mobile-screen"><rect x="${sc.x}" y="${sc.y}" width="${sc.w}" height="${sc.h}" rx="${SR}"/></clipPath>`);
   el("rect",{x:X+4,y:Y+12,width:W,height:H,rx:RX,fill:"rgba(40,39,45,.28)",filter:"url(#mobile-soft)"},s.ph);
   const btn=(x,y,h)=>el("rect",{x,y,width:4,height:h,rx:2,fill:"url(#mobile-metal)",stroke:"#7d8086","stroke-width":.6},s.ph);
-  btn(X-3,Y+118,26);btn(X-3,Y+166,48);btn(X-3,Y+224,48);btn(X+W-1,Y+178,74);btn(X+W-1,Y+352,40);
+  btn(X-3,Y+112,28);btn(X-3,Y+160,50);btn(X-3,Y+220,50);btn(X+W-1,Y+176,78);btn(X+W-1,Y+344,44);
   el("rect",{x:X,y:Y,width:W,height:H,rx:RX,fill:"url(#mobile-metal)"},s.ph);
   el("rect",{x:X+.8,y:Y+.8,width:W-1.6,height:H-1.6,rx:RX-1,fill:"none",stroke:"rgba(255,255,255,.55)","stroke-width":.8},s.ph);
   el("rect",{x:X+3,y:Y+3,width:W-6,height:H-6,rx:RX-3,fill:"#0b0b0d"},s.ph);
   el("rect",{x:sc.x,y:sc.y,width:sc.w,height:sc.h,rx:SR,fill:"#fff"},s.ph);
-  A.hand(s.ph,sc.x+40,sc.y+29,"9:41",{size:19,bold:1,anchor:"middle"});
-  {const x=sc.x+146,y=sc.y+29;[0,1,2,3].forEach(i=>el("rect",{x:x+i*4,y:y-2.6-i*2,width:2.8,height:2.6+i*2,rx:.7,fill:"var(--n900)"},s.ph));
+  A.hand(s.ph,sc.x+54,sc.y+30,"9:41",{size:19,bold:1,anchor:"middle"});
+  {const x=sc.x+182,y=sc.y+30;[0,1,2,3].forEach(i=>el("rect",{x:x+i*4,y:y-2.6-i*2,width:2.8,height:2.6+i*2,rx:.7,fill:"var(--n900)"},s.ph));
    const wx=x+27,wy=y;[7,4.5].forEach(r=>el("path",{d:`M${wx-r},${wy-r*.6} A${r},${r} 0 0 1 ${wx+r},${wy-r*.6}`,fill:"none",stroke:"var(--n900)","stroke-width":1.7,"stroke-linecap":"round"},s.ph));el("circle",{cx:wx,cy:wy-1.2,r:1.5,fill:"var(--n900)"},s.ph);
    el("rect",{x:x+37,y:y-8.5,width:18,height:9.5,rx:2.8,fill:"none",stroke:"var(--n500)","stroke-width":1},s.ph);el("rect",{x:x+38.5,y:y-7,width:12.5,height:6.5,rx:1.4,fill:"var(--n900)"},s.ph);el("rect",{x:x+55.6,y:y-5.2,width:1.5,height:3,rx:.7,fill:"var(--n500)"},s.ph)}
   el("rect",{x:sc.x,y:sc.y+44,width:sc.w,height:38,fill:"var(--n900)"},s.ph);A.hand(s.ph,sc.x+16,sc.y+69,"Field app",{size:20,bold:1,fill:"#fff"});
   const my=s.scr.y+82,mh=s.scr.h-82;s.VD={cx:P0[0]+3,cy:P0[1]+4,w:62};s.VV={cx:P0[0]+.1,cy:P0[1]+.9,w:7};
-  s.L=A.lens(s.ph,{x:s.scr.x,y:my,w:s.scr.w,h:mh,view:s.VD});s.L.outer.setAttribute("clip-path","url(#mobile-screen)");const g=s.L.g;
+  s.L=A.lens(s.ph,{x:s.scr.x,y:my,w:s.scr.w,h:mh,view:s.VD});s.L.outer.setAttribute("clip-path","url(#mobile-screen)");const g=s.L.g;g.id="mobile-map";el("use",{href:"#mobile-map"},s.bgu);
   // only what an officer needs: the state, districts with names, their village, and Anganwadi centres
   el("rect",{x:-3000,y:-3000,width:7000,height:7000,fill:"#e9e6df"},g);
   el("path",{d:G.state,fill:"#f7f5f0"},g);
@@ -2327,17 +2329,21 @@ SPEC.mobile={W:560,H:600,portH:580,foot:"State and district boundaries are real.
   const road=(d,w,c="#fff")=>{el("path",{d:path(d),fill:"none",stroke:"#cfc6b8","stroke-width":w+3,"stroke-linecap":"round","stroke-linejoin":"round","vector-effect":"non-scaling-stroke"},st);
     return el("path",{d:path(d),fill:"none",stroke:c,"stroke-width":w,"stroke-linecap":"round","stroke-linejoin":"round","vector-effect":"non-scaling-stroke"},st)};
   const main="M-140,190 C-80,120 -66,40 -58,-20 C-50,-90 -20,-170 30,-260";
-  road(main,9,"#fbe3b8");road("M-58,6 C0,-4 60,-14 140,-40",6);
+  [[-300,-330,120,110],[-170,-340,60,90],[150,-330,140,90],[170,-210,120,120],[150,-60,140,100],[160,80,130,110],[-300,-180,100,120],[-300,-30,90,80],[-300,90,110,90],[-160,210,120,80],[120,220,170,70]]
+    .forEach(([x,y,w,h],i)=>el("path",{d:path(`M${x},${y} L${x+w},${y} L${x+w},${y+h} L${x},${y+h}Z`),fill:i%2?"#e4ebd5":"#e9eedd"},st));
+  road(main+" C40,-300 60,-340 80,-380",9,"#fbe3b8");el("path",{d:path("M-140,190 C-170,230 -190,260 -210,300"),fill:"none",stroke:"#fbe3b8","stroke-width":9,"vector-effect":"non-scaling-stroke"},st);
+  road("M-58,6 C0,-4 60,-14 140,-40 C200,-60 250,-80 300,-96",6);road("M-66,60 C-120,70 -180,60 -300,40",5);road("M-200,48 L-196,120",3.5);road("M200,-70 L214,40",3.5);
   road("M-56,-60 L36,-66",4);road("M-12,-110 L-8,30",4);road("M36,-66 L44,8",4);road("M-8,30 C30,40 60,90 70,200",4);road("M-40,-150 L-90,-200",4);
   const hs=el("g",{fill:"#e4dfd6",stroke:"#cbc3b6","stroke-width":.8,"vector-effect":"non-scaling-stroke"},st);
   [[-40,-76],[-24,-76],[8,-78],[22,-80],[-28,-50],[-2,-46],[14,-52],[-24,-30],[2,-22],[22,-26],[-24,-4],[50,-40],[54,-20],[-22,12],[6,16],[-40,-100],[0,-100],
-   [80,170],[92,184],[64,182],[-80,-190],[-96,-176],[-70,-206],[90,-150],[104,-140]].forEach(([x,y])=>el("path",{d:path(`M${x-4},${y-3} L${x+4},${y-3} L${x+4},${y+3} L${x-4},${y+3}Z`),"vector-effect":"non-scaling-stroke"},hs));
+   [80,170],[92,184],[64,182],[-80,-190],[-96,-176],[-70,-206],[90,-150],[104,-140],
+   [-214,30],[-200,26],[-186,32],[-210,62],[-188,70],[-206,92],[-184,100],[204,-40],[222,-30],[206,-8],[224,4],[208,24]].forEach(([x,y])=>el("path",{d:path(`M${x-4},${y-3} L${x+4},${y-3} L${x+4},${y+3} L${x-4},${y+3}Z`),"vector-effect":"non-scaling-stroke"},hs));
   s.vbound=el("path",{d:path("M-66,-120 C-20,-134 40,-126 66,-100 C82,-80 76,-10 66,30 C46,54 -10,58 -40,40 C-70,20 -78,-60 -66,-120Z"),fill:"rgba(97,122,226,.06)",stroke:"var(--dv-blue-700)","stroke-width":2,"stroke-dasharray":"7 4","vector-effect":"non-scaling-stroke"},st);
   const lbl=(x,y,t,o={})=>{const q=Wp(x,y),e=txt({x:q[0],y:q[1],"text-anchor":"middle",class:"halo","font-weight":o.w||600,fill:o.c||"var(--n500)"},st,t);e._k=o.k||10;e._ls=o.ls||0;e._rot=o.r||0;e._q=q;return e};
   s.slabs=[lbl(0,-140,"YOUR VILLAGE",{c:"var(--dv-blue-700)",w:700,k:11,ls:1}),lbl(58,214,"next village",{k:10}),lbl(-62,-224,"next village",{k:10}),lbl(60,64,"pond",{c:"#5b85ad",k:9.5}),
     lbl(-54,96,"Main road",{c:"#9a7a4a",k:9.5,r:-62})];
   // four Anganwadi centres: ours, and one in each neighbouring settlement
-  s.awV=V8.dots(s.L,st,[P0,Wp(84,170),Wp(-84,-200),Wp(96,-130)],{r:5.5,sw:1.8});
+  s.awV=V8.dots(s.L,st,[P0,Wp(84,170),Wp(-84,-200),Wp(96,-130),Wp(-196,76),Wp(214,-12)],{r:5.5,sw:1.8});
   s.awS=V8.dots(s.L,g,G.stack.aw.filter(p=>Math.hypot(p[0]-P0[0],p[1]-P0[1])>6),{r:3.2,sw:1});g.insertBefore(s.awS,s.street);
   s.L.on(u=>{const z=s.L.v.w;s.street.style.opacity=z>20?0:1;s.big.style.opacity=z>20?1:0;s.awS.style.opacity=z>20?1:0;
     s.dlab.forEach(({t,c})=>{t.setAttribute("x",c[0]);t.setAttribute("y",c[1]);t.setAttribute("font-size",11*u);t.setAttribute("letter-spacing",1.2*u);t.style.strokeWidth=3.4*u+"px";t.style.opacity=z>20?1:0});
@@ -2366,8 +2372,8 @@ SPEC.mobile={W:560,H:600,portH:580,foot:"State and district boundaries are real.
     A.hand(g2,x,y0+146,"Note: new centre building",{size:17,fill:"var(--n800)"});
     el("rect",{x,y:y0+158,width:s.scr.w-32,height:36,rx:18,fill:"var(--blue-500)"},g2);A.hand(g2,s.scr.x+s.scr.w/2,y0+182,"Submit",{size:20,bold:1,anchor:"middle",fill:"#fff"})}
   // camera cutout and home bar sit above everything on the screen
-  el("rect",{x:s.scr.x+s.scr.w/2-32,y:s.scr.y+12,width:64,height:22,rx:11,fill:"#000"},s.ph);el("circle",{cx:s.scr.x+s.scr.w/2+19,cy:s.scr.y+23.5,r:4,fill:"#15161c"},s.ph);
-  el("rect",{x:s.scr.x+s.scr.w/2-48,y:s.scr.y+s.scr.h-11,width:96,height:4.5,rx:2.25,fill:"var(--n900)"},s.ph);
+  el("rect",{x:s.scr.x+s.scr.w/2-40,y:s.scr.y+12,width:80,height:25,rx:12.5,fill:"#000"},s.ph);el("circle",{cx:s.scr.x+s.scr.w/2+25,cy:s.scr.y+24.5,r:4,fill:"#15161c"},s.ph);
+  el("rect",{x:s.scr.x+s.scr.w/2-56,y:s.scr.y+s.scr.h-11,width:112,height:4.5,rx:2.25,fill:"var(--n900)"},s.ph);
   // where the record goes
   s.flow=el("g",{opacity:0},A.ill);
   V8.card(A,s.flow,394,96,160,120);icon(s.flow,"query",430,140,.9);A.hand(s.flow,456,148,"Review",{size:22,bold:1});A.hand(s.flow,410,186,"a supervisor checks",{size:16,fill:"var(--n600)"});
