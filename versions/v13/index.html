@@ -2038,9 +2038,9 @@ V8.area=d=>{let A=0;d.split("M").filter(Boolean).forEach(r=>{const P=r.replace(/
 /* ============================================================ 1 · DATA CREATION */
 SPEC.create={W:560,H:600,portH:560,foot:"Boundaries, rivers, rail and the degree ticks are real. The scan and the village photo are illustrations.",
  draw(A){const s=A.st,V0={cx:262,cy:316,w:620};s.V0=V0;
-  // ---- the legacy record: a printed sheet, scanned a little crooked, one ink. No props: a real
+  // ---- the legacy record: a printed sheet, scanned straight, one ink. No props: a real
   // department scan has a neatline with degree ticks, a title block and nothing else
-  s.old=el("g",{transform:"rotate(-1.6 280 300)"},A.ill);
+  s.old=el("g",{},A.ill);
   A.defs.insertAdjacentHTML("beforeend",`<filter id="create-ink" x="-2%" y="-2%" width="104%" height="104%"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter>`);
   s.LO=A.lens(s.old,{paper:"#f1efe9",view:V0,w:560,h:600});const go=el("g",{filter:"url(#create-ink)"},s.LO.g);
   const ink="#34322d",c=V8.clip(A,"st");
@@ -2144,7 +2144,7 @@ SPEC.create={W:560,H:600,portH:560,foot:"Boundaries, rivers, rail and the degree
          {at:"r0",t:"Precious, but scattered",b:["each sheet drawn at its","own scale, by its own","office, in its own style"]}]},
  {nav:"Paper to digital",go:async A=>{const s=A.st;flat(A);s.LD.set(s.V0);s.LO.set(s.V0);A.op(s.old,1,200);s.setSw(0);await A.wait(250);await A.tw(1600,t=>s.setSw(560*t*.62))},
   notes:[{at:"l0",t:"Scanned, then traced",c:"var(--dv-aqua-700)",b:["a road becomes a line,","a village a point, a","boundary an outline"],to:A=>[+A.st.sw.getAttribute("width"),276]},
-         {at:"r0",t:"Straightened and pinned",b:["the crooked scan is lined up","with the earth, so every","shape sits on its true spot"]}]},
+         {at:"r0",t:"Pinned to the earth",b:["the scan is lined up with","the earth, so every shape","sits on its true spot"]}]},
  {nav:"New data",go:async A=>{const s=A.st;traced(A,false);await ground(A,false,2024);await A.wait(500);
    await Promise.all([A.op(s.photo,1,900),A.op(s.pchip,1,600)]);await A.wait(500);
    await A.draw(s.newRoad,1,1200);for(const o of s.newOut){await A.op(o,1,120)}await A.op(s.keyNew,1,300)},
