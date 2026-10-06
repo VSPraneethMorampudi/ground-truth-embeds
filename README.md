@@ -99,3 +99,8 @@ v7 (30 Sep 2026): type and interaction cleanup after a review of the story.
     9,100 km west. The Intake task is now: drag that pin back inside the dashed box.
   Fixes: Projection colour key no longer overlaps the scale bar; Provenance card values stay inside
     the card; Update cycle arrow no longer crosses the record ID.
+
+AUTOSLIDE (v11 · 6 Oct 2026)
+  A try-it step can demo itself when nothing else drives the figure (e.g. &nav=off&step=N in a sidecar).
+  Data Creation step 2: the scanner sweeps across the sheet and back, looping, until the reader grabs it.
+  index.html#create&bare&nav=off&step=1      &auto=off keeps it still.   Frozen copy: versions/v11/

@@ -13,6 +13,10 @@ function Sketch(id,spec){
   let animating=false,solved=[],ctl=null,cp=null,noClickUntil=0;const SP=REDUCE?0:.5;
   const pb=document.createElement("div");pb.className="skplay";pb.setAttribute("aria-live","polite");nav.before(pb);
   let mode=null,api=null,cur=-1,run=0,cancels=[],auto=false,autoT=null,seed=7,uid=0,hinted=false;
+  // v11: a try-it step can idle-demo itself (P.demo) when nothing else is driving the figure, e.g. a
+  // sidecar pinned with &nav=off&step=N. It loops until the reader grabs the control; &auto=off stops it.
+  let touched=false,demoC=[];
+  const grab=()=>{touched=true;stop();demoC.forEach(c=>c());demoC=[]};
   const R=()=>(seed=seed*16807%2147483647)/2147483647;
   const D=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 
@@ -57,10 +61,10 @@ function Sketch(id,spec){
       halt:()=>stop(),
       pt:e=>{const q=svgPt(S,e);return[(q.x-bx)/sc,(q.y-by)/sc]},
       drag(t,h){t.classList.add("plt");t.style.cursor="grab";t.style.touchAction="none";const sig=A.sig;t.addEventListener("click",e=>e.stopPropagation(),{signal:sig});
-        t.addEventListener("pointerdown",e=>{if(e.button>0)return;e.preventDefault();e.stopPropagation();stop();try{t.setPointerCapture(e.pointerId)}catch(_){}t.style.cursor="grabbing";const p0=A.pt(e);h.start&&h.start(p0);
+        t.addEventListener("pointerdown",e=>{if(e.button>0)return;e.preventDefault();e.stopPropagation();grab();try{t.setPointerCapture(e.pointerId)}catch(_){}t.style.cursor="grabbing";const p0=A.pt(e);h.start&&h.start(p0);
           const mv=ev=>h.move&&h.move(A.pt(ev),p0),up=ev=>{t.removeEventListener("pointermove",mv);t.removeEventListener("pointerup",up);t.removeEventListener("pointercancel",up);t.style.cursor="grab";noClickUntil=Date.now()+350;h.end&&h.end(A.pt(ev),p0)};
           t.addEventListener("pointermove",mv);t.addEventListener("pointerup",up);t.addEventListener("pointercancel",up)},{signal:sig})},
-      tap(t,fn){t.classList.add("plt");t.style.cursor="pointer";t.addEventListener("click",e=>{e.stopPropagation();stop();fn(e)},{signal:A.sig})},
+      tap(t,fn){t.classList.add("plt");t.style.cursor="pointer";t.addEventListener("click",e=>{e.stopPropagation();grab();fn(e)},{signal:A.sig})},
       pulse(ip,r=22){const p=A.P(ip);return el("circle",{cx:p[0],cy:p[1],r,class:"skpulse",fill:"none",stroke:"var(--orange-500)","stroke-width":2.6,"stroke-dasharray":"6 5"},A.notesG)},
       // tween numeric attributes (or opacity) from where they are now
       to(e,attrs,ms=500){if(!e)return Promise.resolve();const f={};for(const k in attrs)f[k]=k==="opacity"?+getComputedStyle(e).opacity:+(e.getAttribute(k)||0);
@@ -179,7 +183,7 @@ function Sketch(id,spec){
     pb.innerHTML=`<span class="ask"></span><span class="acts"></span><button type="button" class="show">Show me</button>`;
     const ask=pb.querySelector(".ask"),acts=pb.querySelector(".acts"),show=pb.querySelector(".show");
     const ui={acts,say(t,bad){ask.innerHTML=t;pb.classList.toggle("bad",!!bad);if(bad){pb.classList.remove("shake");void pb.offsetWidth;pb.classList.add("shake")}},
-      btn(label,fn,cls=""){const b=document.createElement("button");b.type="button";b.className="pbtn "+cls;b.innerHTML=label;b.onclick=e=>{e.stopPropagation();stop();fn(b)};acts.appendChild(b);return b}};
+      btn(label,fn,cls=""){const b=document.createElement("button");b.type="button";b.className="pbtn "+cls;b.innerHTML=label;b.onclick=e=>{e.stopPropagation();grab();fn(b)};acts.appendChild(b);return b}};
     const done=msg=>{if(pb.classList.contains("ok"))return;solved[i]=true;updNav();pb.classList.remove("bad");pb.classList.add("ok");ask.innerHTML=`<b class="tick">✓</b> ${msg||P.ok||"Done"}`;acts.innerHTML="";show.remove();
       api.notesG.querySelectorAll(".skpulse").forEach(n=>n.remove());if(cur<N-1)next.classList.add("pulse");live.textContent=(msg||P.ok||"Done")};
     const rc=(P.choices||[]).find(c=>c.right);
@@ -187,11 +191,12 @@ function Sketch(id,spec){
     cp={done,autoSolve};ui.say(`<b class="lbl">Try it</b> ${P.ask[0].toUpperCase()+P.ask.slice(1)}`);
     (P.choices||[]).forEach(c=>ui.btn(c.label,async()=>{if(c.right){done(c.ok);c.then&&await c.then(api)}else ui.say(c.why,true)}));
     P.setup&&P.setup(api,m=>{stop();done(m)},ui);
-    show.onclick=async e=>{e.stopPropagation();stop();show.disabled=true;await autoSolve()};
+    show.onclick=async e=>{e.stopPropagation();grab();show.disabled=true;await autoSolve()};
     pb.classList.add("on")}
 
   async function go(i,instant){
     cancels.forEach(c=>c());cancels=[];clearTimeout(autoT);const me=++run,alive=()=>me===run;next.classList.remove("pulse");animating=!instant&&!REDUCE;
+    demoC.forEach(c=>c());demoC=[];if(i!==cur)touched=false;
     const from=cur;cur=i;updNav();api.fast=!!instant||REDUCE;
     const old=[...api.notesG.childNodes];
     if(api.fast)old.forEach(n=>n.remove());else{old.forEach(n=>{n.style.transition="opacity .18s";n.style.opacity=0});setTimeout(()=>old.forEach(n=>n.remove()),200)}
@@ -213,7 +218,13 @@ function Sketch(id,spec){
     animating=false;
     const adv=()=>{if(!alive()||!auto)return;if(cur<N-1)go(cur+1);else{auto=false;updNav()}};
     if(auto){if(s.play&&!solved[i])autoT=setTimeout(async()=>{if(!alive()||!auto)return;cp&&await cp.autoSolve();if(!alive()||!auto)return;autoT=setTimeout(adv,1800)},spec.dwell||3400);
-      else autoT=setTimeout(adv,spec.dwell||3400)}}
+      else autoT=setTimeout(adv,spec.dwell||3400)}
+    const P=s.play,demoOK=()=>alive()&&!auto&&!touched&&P&&P.demo&&!solved[i]&&!REDUCE&&OPT.auto!=="off";
+    if(demoOK()){
+      const dA=Object.assign({},api,{fast:false,tw:(ms,fn)=>new Promise(r=>{demoC.push(tween(ms*SP,fn,r))}),wait:ms=>new Promise(r=>{const t=setTimeout(r,ms*SP);demoC.push(()=>clearTimeout(t))})});
+      const loop=async()=>{if(!demoOK())return;api.notesG.querySelectorAll(".skpulse").forEach(n=>n.remove());
+        await P.demo(dA);if(demoOK())autoT=setTimeout(loop,0)};
+      autoT=setTimeout(loop,1400)}}
 
   function build(){
     mode=innerWidth<700?"port":"land";seed=7;api=mkApi();
