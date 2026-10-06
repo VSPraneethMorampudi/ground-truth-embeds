@@ -123,6 +123,7 @@ b,strong{font-weight:700;color:var(--ink)}
 #ovSvg text.u.cue{fill:var(--n600);font-style:italic}
 #ovSvg .ovmap{cursor:zoom-in;outline:none}
 #ovSvg .pen{pointer-events:none}
+#ovSvg .caret{fill:var(--n500);font-weight:400}
 #ovSvg .ovmap[aria-expanded=true]{cursor:default}
 #ovSvg .ovmap:focus-visible>rect{stroke:var(--n800);stroke-width:2;stroke-dasharray:6 5;rx:10}
 .base .dist{transition:stroke .25s}
@@ -702,13 +703,24 @@ INIT.overview=()=>{
     sCancel=tween(REDUCE?0:Math.abs(to-s0)*700+120,t=>{st.s=lerp(s0,to,t);render()},()=>{sCancel=null})}
 
   const tw=(ms,fn)=>new Promise(r=>{cancel.push(tween(ms,fn,r))});
+  // v14.1: the left block types itself in, line by line, quick enough not to hold the reader up
+  const typed=()=>{const g=P.pts.vil;return{lines:[...g.querySelectorAll("text")],hl:g.querySelector("rect")}};
+  function setTyped(full){const{lines,hl}=typed();lines.forEach(e=>{if(e.dataset.full===undefined)e.dataset.full=e.textContent;e.textContent=full?e.dataset.full:""});
+    if(hl){if(hl.dataset.w===undefined)hl.dataset.w=hl.getAttribute("width");hl.setAttribute("width",full?hl.dataset.w:0)}}
+  async function typeIn(alive){const{lines,hl}=typed();
+    for(const e of lines){const full=e.dataset.full,ms=e.classList.contains("t")?26:17;
+      const car=()=>{const c=el("tspan",{class:"caret"},e);c.textContent="|"};
+      for(let i=1;i<=full.length;i++){if(!alive())return;e.textContent=full.slice(0,i);car();await wait(ms)}
+      e.textContent=full;
+      if(e.classList.contains("hlt")&&hl){const w=+hl.dataset.w;await tw(260,t=>hl.setAttribute("width",w*t))}
+      await wait(e.classList.contains("t")?140:60)}}
   async function play(){cancel.forEach(c=>c());cancel=[];const me=++run,alive=()=>run===me;rep.classList.remove("on");
-    Object.assign(st,{d:0,min:0,awc:0,bn:0,vil:0,p1:0,p2:0,pen:0,ring:0});st.cnt&&(st.cnt.textContent="0");render();
-    const fin=()=>{Object.assign(st,{d:1,min:1,awc:1,bn:1,vil:1,p1:1,p2:1,pen:1,ring:1});P&&(P.pts.num.querySelector("tspan").textContent="162");render();rep.classList.add("on")};
+    Object.assign(st,{d:0,min:0,awc:0,bn:0,vil:0,p1:0,p2:0,pen:0,ring:0});st.cnt&&(st.cnt.textContent="0");setTyped(false);render();
+    const fin=()=>{Object.assign(st,{d:1,min:1,awc:1,bn:1,vil:1,p1:1,p2:1,pen:1,ring:1});setTyped(true);P&&(P.pts.num.querySelector("tspan").textContent="162");render();rep.classList.add("on")};
     if(REDUCE)return fin();
     await tw(1100,t=>{st.d=t;render()});if(!alive())return;
     for(const k of["min","awc","bn"]){await tw(420,t=>{st[k]=t;render()});if(!alive())return;await wait(120)}
-    await tw(500,t=>{st.vil=t;st.p1=t;render()});if(!alive())return;
+    st.p1=1;render();tw(400,t=>{st.vil=t;render()});await typeIn(alive);if(!alive())return;
     if(P.arw){await tw(560,t=>{st.pen=t;render()});if(!alive())return}
     await tw(480,t=>{st.ring=t;render()});await wait(250);if(!alive())return;
     const n=P.pts.num.querySelector("tspan");tw(500,t=>{st.p2=t;render()});await tw(1300,t=>{n.textContent=Math.round(162*t)});if(!alive())return;

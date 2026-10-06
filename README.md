@@ -117,3 +117,4 @@ OVERVIEW TEXT (v13 · 6 Oct 2026)
 OVERVIEW PEN MARKS (v14 · 6 Oct 2026)
   Pen arrow from the highlighted line to a hand-drawn ring round the village (ring only on phones).
   Larger type; blocks hug the map at a fixed gap; title and number share one cap line. Frozen: versions/v14/
+  v14.1 (in place): the left block types itself in, line by line, then the arrow and ring draw.
