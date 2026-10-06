@@ -22,11 +22,11 @@
 </style>
 </head>
 <body>
-<svg id="sv" viewBox="0 0 1100 178" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Story progress"></svg>
+<svg id="sv" viewBox="0 0 1100 186" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Story progress"></svg>
 <script>
 (function(){
   var C={ink:'#28272d',orange:'#c95d2e',white:'#ffffff'}; // --n900 and --dv-orange-500 from the v8 embeds
-  var W=1100,H=178,R=11,RA=18; // tall enough for the labels under stages 1 and 6, which sit lowest on the arc
+  var W=1100,H=186,R=11,RA=18; // tall enough for the labels under stages 1 and 6, which sit lowest on the arc
   var CYCLE='<path d="M7.5 -3 A8 8 0 0 0 -7 -3.5"/><path d="M-7.5 3 A8 8 0 0 0 7 3.5"/><path d="M-7 -8 V-3.5 H-2.5"/><path d="M7 8 V3.5 H2.5"/>';
   var NAMES=['Data Creation','Geodatabase Creation','Geo Portal Development','Mobile App','Mapping and Cartography','Maintenance'];
   var ICON=[
@@ -40,7 +40,7 @@
   // stage from the URL hash: #1..#6, #7 = full cycle
   var n=parseInt((location.hash||'').replace(/\D/g,''),10); if(!(n>=1&&n<=7)) n=1;
   var i=n-1, full=i===6, OUT=null;
-  if(full){H=212;document.getElementById('sv').setAttribute('viewBox','0 0 1100 212');}
+  if(full){H=220;document.getElementById('sv').setAttribute('viewBox','0 0 1100 220');}
 
   var A=[150,104],B=[550,40],D=[950,104];
   function Q(t){return [(1-t)*(1-t)*A[0]+2*(1-t)*t*B[0]+t*t*D[0],(1-t)*(1-t)*A[1]+2*(1-t)*t*B[1]+t*t*D[1]];}
@@ -76,7 +76,7 @@
     var mx=(p6[0]-4+3*(p6[0]-60)+3*(p1[0]+60)+p1[0]+5)/8, my=((p6[1]+R+4)+3*lowY+3*lowY+(p1[1]+R+5))/8;
     s+='<g class="act"><circle cx="'+mx+'" cy="'+my+'" r="'+RA+'" fill="'+C.ink+'"/>'+
        '<g transform="translate('+mx+' '+my+') scale(.9)" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+CYCLE+'</g></g>';
-    s+='<text class="lbl name" x="'+mx+'" y="'+(my+RA+32)+'" text-anchor="middle" font-size="16" fill="'+C.ink+'">Output</text>';
+    s+='<text class="lbl name" x="'+mx+'" y="'+(my+RA+36)+'" text-anchor="middle" font-size="20" font-weight="700" fill="'+C.ink+'">Output</text>';
     OUT=[mx,my];
   }
 
@@ -88,7 +88,7 @@
     if(cur){
       s+='<g class="act"><circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+RA+'" fill="'+C.ink+'"/>'+
          '<g transform="translate('+p[0]+' '+p[1]+') scale(.9)" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+ICON[k]+'</g></g>';
-      s+='<text class="lbl name" x="'+p[0]+'" y="'+(p[1]+RA+32)+'" text-anchor="middle" font-size="16" fill="'+C.ink+'">'+NAMES[k]+'</text>';
+      s+='<text class="lbl name" x="'+p[0]+'" y="'+(p[1]+RA+36)+'" text-anchor="middle" font-size="20" font-weight="700" fill="'+C.ink+'">'+NAMES[k]+'</text>';
     }
   }
   s+='<circle id="mk" r="4" fill="'+C.orange+'" stroke="#fff" stroke-width="1.6"/>';
