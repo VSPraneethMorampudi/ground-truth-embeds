@@ -113,13 +113,17 @@ b,strong{font-weight:700;color:var(--ink)}
 @font-face{font-family:"Caveat";src:url("fonts/Caveat-700.woff2") format("woff2");font-weight:700;font-display:block}
 #overview{max-width:1320px;gap:4px}
 #ovSvg{width:100%;height:auto;max-height:calc(100vh - 74px);display:block;margin:0 auto}
-#ovSvg text.h{font-family:"Caveat","Segoe Print","Bradley Hand",cursive;fill:var(--n800)}
-#ovSvg text.h.t{font-weight:700;fill:var(--n950)}
-#ovSvg .note{cursor:default;transition:opacity .25s;outline:none}
-#ovSvg .lay,#ovSvg .arw{transition:opacity .25s}
-#ovSvg[data-f] .note,#ovSvg[data-f] .lay,#ovSvg[data-f] .arw{opacity:.16}
-#ovSvg[data-f=ref] .f-ref,#ovSvg[data-f=min] .f-min,#ovSvg[data-f=awc] .f-awc,#ovSvg[data-f=bn] .f-bn,#ovSvg[data-f=vil] .f-vil,#ovSvg[data-f=num] .f-num{opacity:1}
-#ovSvg[data-f=ref] .base .dist{stroke:var(--n700)}
+#ovSvg text.u{font-family:var(--font);fill:var(--n800)}
+#ovSvg text.u.t{font-weight:700;fill:var(--n950)}
+#ovSvg text.u.big{font-weight:700;fill:var(--n950);letter-spacing:-.02em}
+#ovSvg text.u.big .unit{font-weight:500;letter-spacing:0}
+#ovSvg text.u.hlt{fill:var(--n950)}
+#ovSvg text.u.tag{font-weight:600;letter-spacing:.08em;fill:var(--n600)}
+#ovSvg text.u.t2{font-weight:600;fill:var(--n900)}
+#ovSvg text.u.cue{fill:var(--n600);font-style:italic}
+#ovSvg .ovmap{cursor:zoom-in;outline:none}
+#ovSvg .ovmap[aria-expanded=true]{cursor:default}
+#ovSvg .ovmap:focus-visible>rect{stroke:var(--n800);stroke-width:2;stroke-dasharray:6 5;rx:10}
 .base .dist{transition:stroke .25s}
 .ovcap{display:flex;align-items:center;justify-content:center;gap:14px;color:var(--muted);font-size:15px;line-height:1.45;text-align:center;max-width:1100px;margin:0 auto;padding:0 12px}
 .ovcap .hand{font-family:"Caveat",cursive;font-size:25px;color:var(--n800);white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
@@ -555,108 +559,132 @@ function drawContext(svg,{labels=true,rivers=true,rail=false,roads=false,cities=
     txt({x:c.xy[0]+(c.n==="Bhilai"?-5:5)*k,y:c.xy[1]+(c.n==="Bhilai"?9:-4)*k,"text-anchor":c.n==="Bhilai"?"end":"start","font-size":(c.cg?11:9.5)*k,"font-weight":c.cg?700:400,fill:c.cg?"var(--n900)":"#8a857d",class:"halo"},L.city,c.n)})}
   return L}
 
-/* ============================================================ OVERVIEW */
+/* ============================================================ OVERVIEW
+   v12: two points stay in view, set in the story's own type: the work (merge it all) and the count
+   (162 layers). The four sources are explained only on demand: hover the map (tap on phones, focus
+   with the keyboard) and it separates into four upright copies, each labelled, like Storage. */
 INIT.overview=()=>{
   const S=$("#ovSvg"),rep=$("#ovRep"),ST=G.stack;
-  const NOTES=[
-    {k:"ref",c:"var(--n900)",t:"Revenue Department",b:["sends the base: district, tehsil,","block and village boundaries","for the whole state"]},
-    {k:"min",c:"var(--dv-orange-700)",t:"Mining",b:["lease boundaries, arriving","in its own format,","on its own schedule"]},
-    {k:"awc",c:"var(--dv-blue-700)",t:"Anganwadi",b:["centres arrive as points,","laid on the same base"]},
-    {k:"bn",c:"var(--dv-aqua-700)",t:"BharatNet",b:["fibre routes and GP nodes,","one more source on top"]},
-    {k:"vil",c:"var(--n950)",t:"The work: merge it all",b:["onto one set of boundaries","and one coordinate system,","so a village means the","same village in every layer"],hl:3},
-    {k:"num",c:"var(--n950)",big:"162 layers",b:["from 42 departments,","published to one standard.","Already running on it:","Mining · Anganwadi · BharatNet"]}];
+  const LAYERS=[
+    {k:"ref",c:"var(--n900)",sw:"ref",t:"Revenue Department",b:["the base: district, tehsil,","block and village boundaries"]},
+    {k:"min",c:"var(--dv-orange-700)",sw:"min",t:"Mining",b:["lease boundaries, in its","own format and schedule"]},
+    {k:"awc",c:"var(--dv-blue-700)",sw:"awc",t:"Anganwadi",b:["centres arrive as points","on the same base"]},
+    {k:"bn",c:"var(--dv-aqua-700)",sw:"bn",t:"BharatNet",b:["fibre routes and GP nodes,","one more source on top"]}];
+  const POINTS={
+    vil:{t:"The work: merge it all",b:["Every department’s data is fitted","onto one set of boundaries and","one coordinate system, so a village",{hl:"is the same village in every layer."}]},
+    num:{big:"162",bigU:"layers",b:["from 42 departments,","published to one standard."],tag:"Already running on it",tagB:"Mining · Anganwadi · BharatNet"}};
+  const CAN_HOVER=matchMedia("(hover: hover)").matches;
   const L={
-    land:{vb:[0,0,1280,720],k:1.1,tx:354,ty:8,fs:26,ts:34,lh:28,
-      at:{ref:[44,96,"s"],vil:[44,290,"s"],min:[44,520,"s"],awc:[1236,100,"e"],bn:[1236,330,"e"],num:[1236,490,"e"]},
-      q:{ref:[20,215],min:[100,420],awc:[420,170],bn:[420,400]}},
-    port:{vb:[0,0,640,1600],k:.92,tx:80,ty:360,fs:30,ts:38,lh:32,
-      at:{ref:[18,56,"s"],awc:[340,56,"s"],min:[18,1010,"s"],bn:[340,1010,"s"],vil:[18,1195,"s"],num:[18,1395,"s"]},
-      q:{ref:[140,40],min:[150,560],awc:[330,60],bn:[330,560]},noArrow:["vil"]}};
-  L.wide={vb:[0,0,1400,610],k:.95,tx:453,ty:-10,fs:31,ts:39,lh:33,
-      at:{ref:[60,66,"s"],vil:[60,250,"s"],min:[60,448,"s"],awc:[1340,66,"e"],bn:[1340,262,"e"],num:[1340,410,"e"]},
-      q:{ref:[20,215],min:[100,420],awc:[420,170],bn:[420,400]}};
+    land:{vb:[1280,720],m:[354,8,1.1],sk:.56,sy:128,gap:24,fade:true,
+      pts:{vil:[44,250,"start"],num:[1236,230,"end"]},ts:27,fs:18,lh:27,big:76,lab:[17,14,19]},
+    wide:{vb:[1400,610],m:[453,-10,.95],sk:.58,sy:56,gap:30,fade:true,
+      pts:{vil:[60,214,"start"],num:[1340,196,"end"]},ts:27,fs:18,lh:27,big:76,lab:[17,14,19]},
+    port:{vb:[640,1250],m:[66,24,.98],sk:.5,grid:[[40,30],[340,30],[40,436],[340,436]],fade:true,
+      pts:{vil:[34,770,"start"],num:[34,1000,"start"]},ts:34,fs:25,lh:35,big:84,lab:[24,19,25]}};
   const pick=()=>innerWidth<700?"port":innerWidth/innerHeight>1.9?"wide":"land";
-  const P=(m,x,y)=>[m.tx+x*m.k,m.ty+y*m.k];
-  const D=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
-  const near=(arr,q)=>arr.reduce((a,b)=>D(b,q)<D(a,q)?b:a);
-  const mines=ST.mines.split("M").filter(Boolean).map(p=>{const n=p.replace(/Z/g,"").split("L").map(v=>v.split(",").map(Number));return[n.reduce((a,v)=>a+v[0],0)/n.length,n.reduce((a,v)=>a+v[1],0)/n.length]});
-  const cell=G.cells.find(c=>{const n=c.d.match(/-?[\d.]+/g).map(Number),xs=n.filter((_,i)=>!(i%2)),ys=n.filter((_,i)=>i%2);return ST.pin[0]>=Math.min(...xs)&&ST.pin[0]<=Math.max(...xs)&&ST.pin[1]>=Math.min(...ys)&&ST.pin[1]<=Math.max(...ys)});
-  let seed=7;const R=()=>(seed=seed*16807%2147483647)/2147483647;
-  let mode=null,parts=null,played=false,cancel=[],run=0;
+  const lerp=(a,b,t)=>a+(b-a)*t;
+  let mode,P,st,cancel=[],run=0,sCancel=null;
 
-  // a pen stroke: one relaxed curve, an open two-stroke head
-  function arrow(g,a,b,bend){
-    const dx=b[0]-a[0],dy=b[1]-a[1],d=Math.hypot(dx,dy),nx=-dy/d,ny=dx/d,w=bend*d;
-    const c1=[a[0]+dx*.28+nx*w*(.9+R()*.2),a[1]+dy*.28+ny*w*(.9+R()*.2)],c2=[a[0]+dx*.74+nx*w*.4,a[1]+dy*.74+ny*w*.4];
-    const ex=b[0]-c2[0],ey=b[1]-c2[1],l=Math.hypot(ex,ey),ux=ex/l,uy=ey/l;
-    const h=(t,s)=>[b[0]-s*(ux*Math.cos(t)-uy*Math.sin(t)),b[1]-s*(uy*Math.cos(t)+ux*Math.sin(t))].map(v=>v.toFixed(1));
-    const f=p=>p.map(v=>(+v).toFixed(1)).join(",");
-    const sh=el("path",{d:`M${f(a)} C${f(c1)} ${f(c2)} ${f(b)}`,fill:"none",stroke:"var(--n800)","stroke-width":2,"stroke-linecap":"round",pathLength:1,"stroke-dasharray":1,"stroke-dashoffset":1},g);
-    const hd=el("path",{d:`M${h(.5,14)} L${f(b)} L${h(-.45,11.5)}`,fill:"none",stroke:"var(--n800)","stroke-width":2,"stroke-linecap":"round","stroke-linejoin":"round",opacity:0},g);
-    return{sh,hd}}
-  // a loose ring drawn round the village, ends overlapping
-  function ring(g,c,r){let d="";for(let i=0;i<=48;i++){const a=-2.3+i/48*(Math.PI*2+.75),rr=r*(1+.07*Math.sin(a*3+.6)+i*.0024);d+=(i?"L":"M")+(c[0]+Math.cos(a)*rr*1.2).toFixed(1)+","+(c[1]+Math.sin(a)*rr).toFixed(1)}
-    return el("path",{d,fill:"none",stroke:"var(--n900)","stroke-width":2.1,"stroke-linecap":"round","stroke-linejoin":"round",pathLength:1,"stroke-dasharray":1,"stroke-dashoffset":1},g)}
+  function block(g,k,m){const p=POINTS[k],[x,y,an]=m.pts[k];let yy=y;
+    if(p.t){txt({x,y:yy,class:"u t","font-size":m.ts,"text-anchor":an},g,p.t);yy+=m.lh*1.35}
+    if(p.big){const t=txt({x,y:yy+m.big*.62,class:"u big","font-size":m.big,"text-anchor":an},g,"");
+      const n=el("tspan",{},t);n.textContent="0";const u=el("tspan",{class:"unit","font-size":m.ts*1.05,dx:10},t);u.textContent=p.bigU;
+      st.cnt=n;yy+=m.big*.62+m.lh*1.25}
+    p.b.forEach(l=>{if(typeof l==="string")txt({x,y:yy,class:"u","font-size":m.fs,"text-anchor":an},g,l);
+      else{const e=txt({x,y:yy,class:"u hlt","font-size":m.fs,"text-anchor":an},g,l.hl)
+        const b=e.getBBox();g.insertBefore(el("rect",{x:b.x-5,y:b.y+b.height*.34,width:b.width+10,height:b.height*.58,rx:3,fill:"rgba(247,214,90,.75)"}),e)}
+      yy+=m.lh});
+    if(p.tag){yy+=m.lh*.45;txt({x,y:yy,class:"u tag","font-size":m.fs*.72,"text-anchor":an},g,p.tag.toUpperCase());yy+=m.lh*1.02;
+      txt({x,y:yy,class:"u t2","font-size":m.fs,"text-anchor":an},g,p.tagB)}
+    return g}
 
   function build(){
-    const m=L[mode=pick()];seed=7;S.innerHTML="";S.setAttribute("viewBox",m.vb.join(" "));
+    const m=L[mode=pick()],[VW,VH]=m.vb;S.innerHTML="";S.setAttribute("viewBox",`0 0 ${VW} ${VH}`);S.classList.toggle("port",mode==="port");
+    st=st||{d:0,min:0,awc:0,bn:0,vil:0,p1:0,p2:0,s:0};
     const defs=el("defs",{},S);defs.innerHTML='<filter id="ovSoft" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="7"/></filter>';
-    const map=el("g",{transform:`translate(${m.tx} ${m.ty}) scale(${m.k})`},S),base=el("g",{class:"base"},map);
-    el("path",{d:G.state,fill:"rgba(60,50,40,.12)",transform:"translate(4 7)",filter:"url(#ovSoft)"},base);
-    el("path",{d:G.state,fill:"#fbfaf8"},base);
-    const dists=G.districts.map(d=>el("path",{d:d.d,class:"dist",fill:"none",stroke:"#b9b2a8","stroke-width":1.2,pathLength:1,"stroke-dasharray":1,"stroke-dashoffset":1},base));
-    const edge=el("path",{d:G.state,fill:"none",stroke:"#8f887e","stroke-width":1.6,"stroke-linejoin":"round",pathLength:1,"stroke-dasharray":1,"stroke-dashoffset":1},base);
-    const lay={},LG=k=>lay[k]=el("g",{class:"lay f-"+k,opacity:0},map);
-    el("path",{d:ST.mines,fill:"var(--dv-orange-500)",stroke:"var(--dv-orange-700)","stroke-width":1.1},LG("min"));
-    const ga=LG("awc");ST.aw.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:2.9,fill:"var(--dv-blue-500)"},ga));
-    el("path",{d:ST.fibre,fill:"none",stroke:"var(--dv-aqua-600)","stroke-width":2.4,"stroke-linecap":"round"},LG("bn"));
-    ST.gp.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:4.4,fill:"#fff",stroke:"var(--dv-aqua-600)","stroke-width":1.8},lay.bn));
-    if(cell)el("path",{d:cell.d,fill:"rgba(247,214,90,.7)",stroke:"var(--n950)","stroke-width":1.5},LG("vil"));
-    const notes={},arrows={},hand=el("g",{},S);
-    NOTES.forEach(n=>{const[x,y,an]=m.at[n.k],ta=an==="e"?"end":"start";
-      const g=el("g",{class:"note f-"+n.k,tabindex:0,"aria-label":(n.t||n.big)+". "+n.b.join(" ")},S),lines=[];let yy=y;
-      if(n.big){lines.push(txt({x,y:yy,class:"h t","font-size":m.ts*1.55,"text-anchor":ta},g,n.big));yy+=m.lh*1.3}
-      if(n.t){lines.push(txt({x,y:yy,class:"h t","font-size":m.ts,"text-anchor":ta,style:`fill:${n.c}`},g,n.t));yy+=m.lh+4}
-      n.b.forEach((t,i)=>{const e=txt({x,y:yy,class:"h","font-size":m.fs,"text-anchor":ta},g,t);if(n.hl===i)e.dataset.hl=1;lines.push(e);yy+=m.lh});
-      notes[n.k]={g,lines}});
-    const tgt={
-      ref:()=>{let best,bd=1e9;const T=edge.getTotalLength();for(let i=0;i<500;i++){const p=edge.getPointAtLength(i/500*T),d=D([p.x,p.y],m.q.ref);if(d<bd){bd=d;best=[p.x,p.y]}}return best},
-      min:()=>near(mines,m.q.min),awc:()=>near(ST.aw,m.q.awc),bn:()=>near(ST.gp,m.q.bn),vil:()=>ST.pin};
-    for(const k in notes){const n=notes[k];
-      n.lines.forEach(e=>{if(!e.dataset.hl)return;const b=e.getBBox();n.g.insertBefore(el("path",{d:`M${b.x-4},${b.y+b.height*.64} L${b.x+b.width+5},${b.y+b.height*.56}`,stroke:"rgba(247,214,90,.8)","stroke-width":b.height*.44,"stroke-linecap":"round",fill:"none"}),n.g.firstChild)});
-      const cp=el("clipPath",{id:"ovc-"+k},defs);
-      n.rects=n.lines.map(e=>{const b=e.getBBox(),r=el("rect",{x:b.x-8,y:b.y-8,width:0,height:b.height+16},cp);r.dataset.w=b.width+18;return r});
-      n.g.setAttribute("clip-path",`url(#ovc-${k})`);
-      if(!tgt[k])continue;
-      if((m.noArrow||[]).includes(k)){arrows[k]={sh:el("path",{}),hd:el("path",{}),ring:ring(el("g",{class:"arw f-"+k},hand),P(m,...tgt[k]()),21)};continue}
-      const gb=n.g.getBBox(),t=P(m,...tgt[k]());
-      const sides=[[gb.x+gb.width+16,gb.y+gb.height*.42],[gb.x-16,gb.y+gb.height*.42],[gb.x+gb.width*.5,gb.y+gb.height+12],[gb.x+gb.width*.5,gb.y-12]];
-      const a=sides.reduce((p,q)=>D(q,t)<D(p,t)?q:p),stop=k==="vil"?30:k==="ref"?5:9,d=D(a,t),b=[t[0]-(t[0]-a[0])/d*stop,t[1]-(t[1]-a[1])/d*stop];
-      const ag=el("g",{class:"arw f-"+k},hand);arrows[k]=arrow(ag,a,b,(a[0]<t[0]?-1:1)*(a[1]<t[1]?1:-1)*.17);
-      if(k==="vil")arrows[k].ring=ring(ag,t,21)}
-    S.appendChild(hand);
-    for(const k in notes){const g=notes[k].g,on=()=>S.dataset.f=k,off=()=>delete S.dataset.f;
-      g.addEventListener("pointerenter",on);g.addEventListener("pointerleave",off);g.addEventListener("focus",on);g.addEventListener("blur",off)}
-    parts={dists,edge,lay,notes,arrows};set(played?1:0)}
+    // where each copy sits when merged and when separated
+    const M0=m.m,w=G.W*m.sk;let pos;
+    if(m.grid)pos=m.grid.map(([x,y])=>[x,y,m.sk]);
+    else{const tot=4*w+3*m.gap,x0=(VW-tot)/2;pos=LAYERS.map((_,i)=>[x0+i*(w+m.gap),m.sy,m.sk])}
+    // the two points
+    const pts={};for(const k in POINTS)pts[k]=block(el("g",{class:"pt"},S),k,m);
+    // the map: one copy per source, stacked
+    const mapG=el("g",{class:"ovmap",tabindex:0,role:"button","aria-expanded":"false","aria-label":"The four sources, one base. Show them separately"},S);
+    const hit=el("rect",{fill:"transparent"},mapG);
+    const copies=LAYERS.map((Ly,i)=>{const g=el("g",{},mapG),o={g,Ly};
+      o.sh=el("path",{d:G.state,fill:"rgba(60,50,40,.12)",transform:"translate(4 7)",filter:"url(#ovSoft)"},g);
+      o.fill=el("path",{d:G.state,fill:"#fbfaf8"},g);
+      if(i===0){o.dists=G.districts.map(d=>el("path",{d:d.d,fill:"none",stroke:"#b9b2a8","stroke-width":1.2,pathLength:1,"stroke-dasharray":1,"stroke-dashoffset":1},g))}
+      o.edge=el("path",{d:G.state,fill:"none",stroke:"#8f887e","stroke-width":1.6,"stroke-linejoin":"round",pathLength:1,"stroke-dasharray":1,"stroke-dashoffset":i?0:1},g);
+      const lay=o.lay=el("g",{opacity:0},g);
+      if(Ly.k==="min")el("path",{d:ST.mines,fill:"var(--dv-orange-500)",stroke:"var(--dv-orange-700)","stroke-width":1.1},lay);
+      if(Ly.k==="awc")ST.aw.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:2.9,fill:"var(--dv-blue-500)"},lay));
+      if(Ly.k==="bn"){el("path",{d:ST.fibre,fill:"none",stroke:"var(--dv-aqua-600)","stroke-width":2.4,"stroke-linecap":"round"},lay);
+        ST.gp.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:4.4,fill:"#fff",stroke:"var(--dv-aqua-600)","stroke-width":1.8},lay))}
+      return o});
+    // the village that means the same thing in every layer
+    const cell=G.cells.find(c=>{const n=c.d.match(/-?[\d.]+/g).map(Number),xs=n.filter((_,i)=>!(i%2)),ys=n.filter((_,i)=>i%2);return ST.pin[0]>=Math.min(...xs)&&ST.pin[0]<=Math.max(...xs)&&ST.pin[1]>=Math.min(...ys)&&ST.pin[1]<=Math.max(...ys)});
+    const vilG=el("g",{opacity:0},mapG);if(cell)el("path",{d:cell.d,fill:"rgba(247,214,90,.85)",stroke:"var(--n950)","stroke-width":1.5},vilG);
+    // labels under each separated copy
+    const [lt,lf,llh]=m.lab;
+    const labs=LAYERS.map((Ly,i)=>{const[x,y,k]=pos[i],cx=x+G.W*k/2,g=el("g",{class:"lab",opacity:0},S);let yy=y+G.H*k+lt+6;
+      const t=txt({x:cx,y:yy,class:"u t","font-size":lt,"text-anchor":"middle",style:`fill:${Ly.c}`},g,Ly.t);
+      Ly.b.forEach(l=>{yy+=llh;txt({x:cx,y:yy,class:"u","font-size":lf,"text-anchor":"middle"},g,l)});
+      const b=t.getBBox(),sx=b.x-(Ly.k==="bn"?17:14),sy=b.y+b.height/2;
+      if(Ly.k==="ref")el("rect",{x:sx-5,y:sy-5,width:10,height:10,rx:1.5,fill:"#fbfaf8",stroke:"var(--n700)","stroke-width":1.3},g);
+      if(Ly.k==="min")el("rect",{x:sx-5,y:sy-4,width:10,height:8,fill:"var(--dv-orange-500)",stroke:"var(--dv-orange-700)"},g);
+      if(Ly.k==="awc")el("circle",{cx:sx,cy:sy,r:4.2,fill:"var(--dv-blue-500)"},g);
+      if(Ly.k==="bn"){el("path",{d:`M${sx-7},${sy+4} L${sx+7},${sy-4}`,stroke:"var(--dv-aqua-600)","stroke-width":2.2},g);el("circle",{cx:sx+7,cy:sy-4,r:2.8,fill:"#fff",stroke:"var(--dv-aqua-600)","stroke-width":1.5},g)}
+      return g});
+    // a quiet cue saying the map can be opened up
+    const [hx,hy]=mode==="port"?[VW/2,M0[1]+G.H*M0[2]+44]:[m.pts.vil[0],m.pts.vil[1]+m.lh*6.7];
+    const hint=txt({x:hx,y:hy,class:"u cue","font-size":m.fs*.8,"text-anchor":mode==="port"?"middle":"start"},S,(CAN_HOVER?"Hover over":"Tap")+" the map to see each source on its own");
+    P={m,M0,pos,pts,mapG,hit,copies,vilG,labs,hint,VW,VH};
+    // hover, tap and keyboard all open the same view
+    let ptype="mouse";
+    mapG.addEventListener("pointerdown",e=>{ptype=e.pointerType});
+    mapG.addEventListener("pointerenter",e=>{if(e.pointerType==="mouse")split(1)});
+    mapG.addEventListener("pointerleave",e=>{if(e.pointerType==="mouse")split(0)});
+    mapG.addEventListener("click",()=>{if(ptype!=="mouse")split(st.tgt?0:1)});
+    mapG.addEventListener("focus",()=>{if(!mapG.matches(":focus-visible"))return;split(1)});
+    mapG.addEventListener("blur",()=>split(0));
+    mapG.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();split(st.tgt?0:1)}else if(e.key==="Escape")split(0)});
+    render()}
 
-  function set(v){const p=parts;p.dists.concat(p.edge).forEach(e=>e.setAttribute("stroke-dashoffset",1-v));for(const k in p.lay)p.lay[k].setAttribute("opacity",v);
-    for(const k in p.notes)p.notes[k].rects.forEach(r=>r.setAttribute("width",v*r.dataset.w));
-    for(const k in p.arrows){const a=p.arrows[k];a.sh.setAttribute("stroke-dashoffset",1-v);a.hd.setAttribute("opacity",v);a.ring&&a.ring.setAttribute("stroke-dashoffset",1-v)}}
+  function render(){const p=P,s=st.s,m=p.m;
+    p.copies.forEach((o,i)=>{const[x,y,k]=p.pos[i],M=p.M0;
+      o.g.setAttribute("transform",`translate(${lerp(M[0],x,s).toFixed(2)} ${lerp(M[1],y,s).toFixed(2)}) scale(${lerp(M[2],k,s).toFixed(4)})`);
+      if(i){o.sh.setAttribute("opacity",s);o.fill.setAttribute("opacity",s);o.edge.setAttribute("opacity",s)}
+      else{o.dists.forEach(e=>{e.setAttribute("stroke-dashoffset",1-st.d)});o.edge.setAttribute("stroke-dashoffset",1-st.d)}
+      if(i)o.lay.setAttribute("opacity",st[o.Ly.k])});
+    p.vilG.setAttribute("transform",p.copies[0].g.getAttribute("transform"));p.vilG.setAttribute("opacity",st.vil*Math.max(0,1-s*2));
+    const ls=Math.max(0,(s-.55)/.45);p.labs.forEach(g=>g.setAttribute("opacity",ls));
+    const fade=m.fade?Math.max(0,1-s*2.2):1;
+    p.pts.vil.setAttribute("opacity",st.p1*fade);p.pts.num.setAttribute("opacity",st.p2*fade);
+    p.hint.setAttribute("opacity",st.p2*Math.max(0,1-s*2.2)*.95);
+    // the hit area grows with the copies so the pointer can travel between them
+    if(s>.01){const x0=Math.min(...p.pos.map(q=>q[0]))-16,x1=Math.max(...p.pos.map(q=>q[0]+G.W*q[2]))+16,y0=Math.min(...p.pos.map(q=>q[1]))-16,y1=Math.max(...p.pos.map(q=>q[1]+G.H*q[2]))+m.lab[2]*3+30;
+      Object.entries({x:x0,y:y0,width:x1-x0,height:y1-y0}).forEach(([a,v])=>p.hit.setAttribute(a,v))}
+    else{const M=p.M0;Object.entries({x:M[0],y:M[1],width:G.W*M[2],height:G.H*M[2]}).forEach(([a,v])=>p.hit.setAttribute(a,v))}}
+
+  function split(to){st.tgt=to;P.mapG.setAttribute("aria-expanded",to?"true":"false");sCancel&&sCancel();const s0=st.s;
+    sCancel=tween(REDUCE?0:Math.abs(to-s0)*700+120,t=>{st.s=lerp(s0,to,t);render()},()=>{sCancel=null})}
+
   const tw=(ms,fn)=>new Promise(r=>{cancel.push(tween(ms,fn,r))});
-  async function play(){cancel.forEach(c=>c());cancel=[];const me=++run,p=parts,alive=()=>run===me&&parts===p;played=true;rep.classList.remove("on");
-    if(REDUCE){set(1);rep.classList.add("on");return}
-    set(0);
-    const write=async k=>{for(const r of p.notes[k].rects){const w=+r.dataset.w;await tw(Math.min(380,w*1.3),t=>r.setAttribute("width",Math.max(0,w*t)));if(!alive())return}};
-    const draw=async k=>{const a=p.arrows[k];if(!a||!alive())return;await tw(440,t=>a.sh.setAttribute("stroke-dashoffset",1-t));a.hd.setAttribute("opacity",1);if(a.ring&&alive())await tw(460,t=>a.ring.setAttribute("stroke-dashoffset",1-t))};
-    await Promise.all([tw(950,t=>p.dists.forEach(e=>e.setAttribute("stroke-dashoffset",1-t))),tw(1100,t=>p.edge.setAttribute("stroke-dashoffset",1-t)),write("ref")]);
-    if(!alive())return;draw("ref");
-    for(const k of["min","awc","bn"]){await wait(160);if(!alive())return;await write(k);if(!alive())return;tw(450,t=>p.lay[k].setAttribute("opacity",t));draw(k)}
-    await wait(300);if(!alive())return;await write("vil");if(!alive())return;tw(400,t=>p.lay.vil.setAttribute("opacity",t));draw("vil");
-    await wait(500);if(!alive())return;await write("num");await wait(400);if(alive())rep.classList.add("on")}
-  rep.onclick=()=>play();
-  document.fonts.load('700 30px "Caveat"').then(()=>document.fonts.load('400 26px "Caveat"')).catch(()=>{}).then(()=>{build();
+  async function play(){cancel.forEach(c=>c());cancel=[];const me=++run,alive=()=>run===me;rep.classList.remove("on");
+    Object.assign(st,{d:0,min:0,awc:0,bn:0,vil:0,p1:0,p2:0});st.cnt&&(st.cnt.textContent="0");render();
+    const fin=()=>{Object.assign(st,{d:1,min:1,awc:1,bn:1,vil:1,p1:1,p2:1});P&&(P.pts.num.querySelector("tspan").textContent="162");render();rep.classList.add("on")};
+    if(REDUCE)return fin();
+    await tw(1100,t=>{st.d=t;render()});if(!alive())return;
+    for(const k of["min","awc","bn"]){await tw(420,t=>{st[k]=t;render()});if(!alive())return;await wait(120)}
+    tw(500,t=>{st.vil=t;st.p1=t;render()});await wait(700);if(!alive())return;
+    const n=P.pts.num.querySelector("tspan");tw(500,t=>{st.p2=t;render()});await tw(1300,t=>{n.textContent=Math.round(162*t)});if(!alive())return;
+    rep.classList.add("on")}
+  rep.onclick=()=>{split(0);play()};
+  const faces=['700 27px "Avenir Next World"','400 18px "Avenir Next World"'];
+  Promise.all(faces.map(f=>document.fonts.load(f).catch(()=>{}))).then(()=>{build();
     new IntersectionObserver((es,o)=>{if(es[0].isIntersecting){o.disconnect();setTimeout(play,250)}},{threshold:.35}).observe(S)});
-  let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(pick()!==mode){build()}},150)})};
+  let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(pick()!==mode){const done=rep.classList.contains("on");build();if(done){P.pts.num.querySelector("tspan").textContent="162"}render()}},150)})};
 
 /* ============================================================ FLOW (vertical, scroll-driven) */
 INIT.flow=()=>{
