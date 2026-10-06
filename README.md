@@ -113,3 +113,7 @@ OVERVIEW ON HOVER (v12 · 6 Oct 2026)
 OVERVIEW TEXT (v13 · 6 Oct 2026)
   Drops the "Already running on it" row and the caption under the overview. Two left-aligned blocks,
   same top, centred on the map: "Merged onto one base" and "162 layers". Frozen copy: versions/v13/
+
+OVERVIEW PEN MARKS (v14 · 6 Oct 2026)
+  Pen arrow from the highlighted line to a hand-drawn ring round the village (ring only on phones).
+  Larger type; blocks hug the map at a fixed gap; title and number share one cap line. Frozen: versions/v14/
