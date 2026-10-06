@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ground Truth · new data and updates</title>
+<!--
+  Two StoryMap embeds on one page, picked by the hash:
+    expressmaps.html#new      New data creation: a road traced from a satellite photo, a drone survey area,
+                              new houses and a new centre located on a GPS visit
+    expressmaps.html#update   Keeping data current: a widened road, a school that moved, a demolished building
+  Options: &auto=off shows the finished map without the animation.
+  Base: roads, blocks and buildings hand-traced from OpenStreetMap (© OpenStreetMap contributors, ODbL).
+  Everything drawn in colour on top is illustrative.
+-->
+<style>
+@font-face{font-family:"Avenir Next World";font-weight:400;font-display:swap;src:local("Avenir Next World"),local("AvenirNextWorld-Regular"),url("https://cogcg.cgstate.gov.in/portal/apps/storymaps/static/storymaps-website-common/fonts/Avenir_Next_World/09ab0626-bb45-4650-acc8-0182d693df02.woff2") format("woff2")}
+@font-face{font-family:"Avenir Next World";font-weight:500;font-display:swap;src:local("Avenir Next World Medium"),local("AvenirNextWorld-Medium"),url("https://cogcg.cgstate.gov.in/portal/apps/storymaps/static/storymaps-website-common/fonts/Avenir_Next_World/a53dd870-d60f-11ec-9404-069abf4c3446.woff2") format("woff2")}
+@font-face{font-family:"Avenir Next World";font-weight:700;font-display:swap;src:local("Avenir Next World Bold"),local("AvenirNextWorld-Bold"),url("https://cogcg.cgstate.gov.in/portal/apps/storymaps/static/storymaps-website-common/fonts/Avenir_Next_World/074dfc70-6436-4f4b-9314-d1e69287aea1.woff2") format("woff2")}
+:root{
+  --font:"Avenir Next World","Avenir Next",Avenir,"Segoe UI",system-ui,-apple-system,sans-serif;
+  --ink:#18171d;--text:#3a383d;--muted:#646163;--line:#dcdbd9;--page:#f8f7f4;
+  --new:#c2521f;--new-fill:rgba(224,118,61,.42);--survey:#0f7c8a;--survey-fill:rgba(15,124,138,.12);
+  --pin:#3b5bdb;--old:#6b6b6b;--gone:#c8261a;
+  --ground:#f2efe9;--road:#fff;--road-edge:#d8d2c8;--trunk:#fcd6a4;--trunk-edge:#e2aa6c;
+  --yellow:#f6f4b6;--yellow-edge:#c9c06a;--park:#d3f1c8;--bldg:#ddd4cb;--bldg-edge:#c8bdb2;--water:#aad3df;--built:#e3e1dc;--res:#cfd0b8
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--page);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased}
+.fig{position:relative;height:100%;min-height:380px;display:flex;flex-direction:column}
+.stage{position:relative;flex:1;min-height:0;overflow:hidden;border-radius:10px;background:var(--ground)}
+svg.map{position:absolute;inset:0;width:100%;height:100%;display:block}
+.lab{font-family:var(--font);font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:5px;stroke-linejoin:round}
+.lab.sub{font-weight:400}
+.legend{position:absolute;left:12px;bottom:12px;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:8px;padding:9px 12px 8px;box-shadow:0 1px 3px rgba(0,0,0,.06);font-size:13px;line-height:1.25;max-width:calc(100% - 24px)}
+.legend b{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:6px}
+.legend ul{list-style:none;margin:0;padding:0;display:grid;gap:5px}
+.legend li{display:flex;align-items:center;gap:8px;color:var(--ink);opacity:.25;transition:opacity .35s;cursor:default}
+.legend li.on{opacity:1}
+.legend svg{flex:none}
+.legend li:focus-visible{outline:2px solid var(--pin);outline-offset:2px;border-radius:3px}
+.foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 2px 0;font-size:12.5px;color:var(--muted);line-height:1.4}
+.rep{flex:none;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;color:var(--text);font:500 13px var(--font);border-radius:6px;padding:5px 10px;cursor:pointer;opacity:0;transition:opacity .3s;pointer-events:none}
+.rep.on{opacity:1;pointer-events:auto}
+.rep:hover{color:var(--ink);border-color:#c1bfbe}
+.rep:focus-visible{outline:2px solid var(--pin);outline-offset:2px}
+.f{transition:opacity .25s}
+.stage[data-f] .f{opacity:.18}
+.stage[data-f] .f.hi{opacity:1}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (max-width:560px){.legend{font-size:12px;padding:7px 9px}.legend b{font-size:11px}.foot{font-size:11.5px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="fig">
+  <div class="stage" id="stage">
+    <svg class="map" id="map" role="img" aria-labelledby="desc"></svg>
+    <div class="legend" id="legend"><b id="lgT"></b><ul id="lgL"></ul></div>
+  </div>
+  <div class="foot"><span id="note"></span><button class="rep" id="rep" type="button"><svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 2.5v3h-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Replay</button></div>
+  <p class="sr" id="desc"></p>
+</div>
+<script>
+const NS="http://www.w3.org/2000/svg";
+const el=(t,a,p)=>{const e=document.createElementNS(NS,t);if(a)for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e};
+const REDUCE=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const OPT=Object.fromEntries(location.hash.slice(1).split("&").filter(Boolean).map(s=>{const[k,v]=s.split("=");return[k,v===undefined?true:decodeURIComponent(v)]}));
+const MODE=OPT.update?"update":"new";
+const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+let FAST=false;
+function tween(ms,fn){return new Promise(r=>{if(REDUCE||FAST||ms<=0){fn(1);return r()}const t0=performance.now();const st=n=>{const t=Math.min(1,(n-t0)/ms);fn(ease(t));t<1?requestAnimationFrame(st):r()};requestAnimationFrame(st)})}
+const wait=ms=>new Promise(r=>setTimeout(r,REDUCE||FAST?0:ms));
+
+/* ================================================================ BASE MAP
+   Hand-traced from OpenStreetMap at about 1:10,000. Coordinates are in one 1743 × 967 frame; each
+   figure shows its own window of it. */
+const S=document.getElementById("map");
+function base(){
+  const g=el("g",{},S);
+  el("rect",{x:-400,y:-400,width:2600,height:1800,fill:"var(--ground)"},g);
+  // residential blocks, settlement, park, water
+  el("path",{d:"M1325,215 L1440,8 L1705,190 L1560,312 Z",fill:"var(--res)",stroke:"#b9bb9c","stroke-width":1},g);
+  el("path",{d:"M1410,700 L1460,690 L1600,705 L1700,780 L1743,967 L1430,967 L1415,820 Z",fill:"var(--built)"},g);
+  el("path",{d:"M20,668 L585,860 L565,912 L0,722 Z",fill:"var(--park)"},g);
+  el("path",{d:"M1650,595 L1735,605 L1728,690 L1718,765 L1665,760 L1660,680 Z",fill:"var(--water)"},g);
+  el("path",{d:"M640,945 L655,912 L700,915 M655,912 L820,967",fill:"none",stroke:"var(--water)","stroke-width":3},g);
+  // roads: casing then fill
+  const R=[
+    // [path, width, kind]
+    ["M560,-20 L1000,140 L1200,212 L1550,345 L1760,400",26,"r"],
+    ["M1045,-20 L960,240 L880,470 L800,700 L725,990",26,"r"],
+    ["M1760,160 L1640,300 L1565,385 L1430,600 L1300,800 L1210,990",22,"r"],
+    ["M318,112 L620,215 L780,272 L905,305",13,"r"],
+    ["M330,118 L300,230 L262,330 L242,398",12,"r"],
+    ["M100,404 L200,412 L242,398 L400,418 L545,438 L640,456 L710,480 L830,520",13,"r"],
+    ["M290,660 L320,585 L340,568 L500,572 L600,598 L700,660 L780,692",12,"r"],
+    ["M695,40 L620,230 L540,450 L480,620 L440,770",12,"r"],
+    ["M445,170 L435,250 L380,412",9,"r"],["M488,182 L470,250 L410,412",9,"r"],
+    ["M800,205 L760,330 L700,472",9,"r"],["M770,205 L735,330 L675,472",8,"r"],
+    ["M200,420 L215,480 L240,510 L330,525 L345,560",9,"r"],
+    ["M110,380 L130,420 L195,445",7,"r"],
+    ["M405,40 L430,60 L560,105 L580,125",8,"r"],["M710,160 L740,175 L860,200 L875,220 L860,232 L800,215",8,"r"],
+    ["M1440,625 L1560,690 L1700,770 L1743,800",10,"r"],["M1515,470 L1530,560 L1545,690",7,"r"],
+    ["M1720,410 L1650,530 L1600,640 L1580,700",9,"r"],
+    ["M1460,700 L1500,760 L1580,780 L1620,860 L1600,967",8,"r"],
+    ["M1285,60 L1340,85 L1350,95",6,"r"],
+    ["M240,-20 L-20,700",30,"trunk"],
+    ["M5,640 L990,980",20,"yel"],["M-10,735 L690,985",20,"yel"]];
+  const cas=el("g",{fill:"none","stroke-linecap":"round","stroke-linejoin":"round"},g),fil=el("g",{fill:"none","stroke-linecap":"round","stroke-linejoin":"round"},g);
+  for(const[d,w,k]of R){
+    el("path",{d,stroke:k==="trunk"?"var(--trunk-edge)":k==="yel"?"var(--yellow-edge)":"var(--road-edge)","stroke-width":w+2.4},cas);
+    el("path",{d,stroke:k==="trunk"?"var(--trunk)":k==="yel"?"var(--yellow)":"var(--road)","stroke-width":w},fil)}
+  // railway
+  el("path",{d:"M160,-20 L-20,500",fill:"none",stroke:"#8a8888","stroke-width":4},g);
+  el("path",{d:"M160,-20 L-20,500",fill:"none",stroke:"#fff","stroke-width":2,"stroke-dasharray":"7 7"},g);
+  // roundabouts
+  [[1350,93,9],[200,448,7]].forEach(([x,y,r])=>{el("circle",{cx:x,cy:y,r:r+3,fill:"var(--road-edge)"},g);el("circle",{cx:x,cy:y,r,fill:"var(--ground)",stroke:"#fff","stroke-width":5},g)});
+  // buildings (as on the base map)
+  const B=g.appendChild(el("g",{fill:"var(--bldg)",stroke:"var(--bldg-edge)","stroke-width":1}));
+  B.id="bldgs";
+  [["M620,292 L652,292 L652,302 L680,302 L680,318 L640,322 L620,312Z"],["M603,342 L632,342 L632,352 L668,356 L672,392 L620,388 L603,372Z"],
+   ["M625,392 L686,408 L680,445 L620,432Z"],["M690,312 L720,320 L716,334 L686,328Z"],["M640,334 L688,345 L686,372 L640,360Z"],
+   ["M676,508 L700,512 L700,524 L812,544 L808,576 L745,566 L745,556 L680,540Z"],["M630,248 L640,250 L634,274 L626,272Z"],["M644,252 L652,254 L646,268 L640,266Z"],
+   ["M726,440 L752,446 L748,458 L722,452Z"],["M720,465 L730,467 L727,480 L717,478Z"],["M730,468 L755,472 L752,478 L728,474Z"],
+   ["M1097,400 L1108,406 L1094,424 L1084,420Z"],["M1098,456 L1120,462 L1118,467 L1096,461Z"],["M950,493 L990,497 L988,505 L948,501Z"],
+   ["M1102,578 L1118,580 L1117,587 L1101,585Z"],["M1100,598 L1114,600 L1112,612 L1098,610Z"],["M1118,620 L1126,622 L1124,628 L1116,626Z"],["M1090,676 L1104,678 L1102,683 L1088,681Z"],
+   ["M545,42 L568,48 L566,55 L543,49Z"],["M607,45 L630,52 L626,62 L604,56Z"],["M570,146 L590,153 L587,161 L567,154Z"],["M560,113 L570,116 L567,124 L557,121Z"],
+   ["M582,636 L598,640 L594,654 L578,650Z"],["M748,610 L788,618 L786,624 L746,616Z"],["M670,570 L682,573 L679,580 L667,577Z"],["M260,684 L274,688 L272,693 L258,689Z"],
+   ["M1563,467 L1574,469 L1572,479 L1561,477Z"],["M1586,503 L1593,504 L1592,515 L1585,514Z"],["M1550,594 L1557,596 L1554,606 L1547,604Z"],["M1716,548 L1726,552 L1720,566 L1712,562Z"],
+   ["M1360,135 L1440,165 L1432,180 L1352,150Z"],["M1380,170 L1430,188 L1422,205 L1372,187Z"],["M1440,40 L1500,64 L1492,80 L1432,56Z"],["M1510,60 L1560,84 L1550,100 L1500,76Z"],
+   ["M1480,200 L1590,240 L1582,256 L1472,216Z"],["M1490,240 L1560,264 L1554,276 L1484,252Z"],["M1340,180 L1360,186 L1352,214 L1332,208Z"],
+   ["M1440,760 L1470,766 L1466,790 L1436,784Z"],["M1500,800 L1520,804 L1518,822 L1498,818Z"],["M1560,750 L1580,754 L1576,780 L1556,776Z"],["M1600,830 L1620,834 L1616,850 L1596,846Z"],["M1510,870 L1540,876 L1536,888 L1506,882Z"]
+  ].forEach(([d])=>el("path",{d},B));
+  return g}
+
+/* ================================================================ FIGURES */
+const ovl=()=>el("g",{},S);
+const LABS=[];
+function lab(p,x,y,t,c,sz=19,sub){const e=el("text",{x,y,class:"lab"+(sub?" sub":""),"font-size":sz,fill:c},p);e.textContent=t;e.dataset.sz=sz;LABS.push(e);return e}
+function pin(p,x,y,c){const g=el("g",{transform:`translate(${x} ${y})`},p);el("ellipse",{cx:0,cy:1,rx:7,ry:2.6,fill:"rgba(0,0,0,.18)"},g);
+  const h=el("g",{},g);el("path",{d:"M0,0 C-14,-20 -16,-28 -16,-34 A16,16 0 1 1 16,-34 C16,-28 14,-20 0,0Z",fill:c,stroke:"#fff","stroke-width":2},h);el("circle",{cx:0,cy:-34,r:6,fill:"#fff"},h);return{g,h}}
+const dash=(e)=>{e.setAttribute("pathLength",1);e.setAttribute("stroke-dasharray",1);e.setAttribute("stroke-dashoffset",1);return e};
+
+const FIG={
+ new:{
+  vb:[760,250,800,520],title:"Added to the map",
+  note:"Base roads traced from OpenStreetMap. The new road, houses, survey area and centre are illustrative.",
+  desc:"An open block on the base map, next to the main road. A drone survey covers the block. A new road is traced across it from a satellite photo, five new houses are drawn beside the road, and a new Anganwadi centre is placed from a GPS field visit.",
+  legend:[{k:"survey",t:"Drone survey area",sw:'<svg width="22" height="14"><rect x="1.5" y="1.5" width="19" height="11" fill="rgba(15,124,138,.15)" stroke="#0f7c8a" stroke-width="2" stroke-dasharray="4 3"/></svg>'},
+          {k:"road",t:"New road, traced from a satellite photo",sw:'<svg width="22" height="14"><path d="M1,9 L21,5" stroke="#c2521f" stroke-width="4" stroke-linecap="round"/></svg>'},
+          {k:"houses",t:"New houses",sw:'<svg width="22" height="14"><rect x="5" y="2.5" width="12" height="9" fill="rgba(224,118,61,.42)" stroke="#c2521f" stroke-width="1.8"/></svg>'},
+          {k:"gps",t:"New centre, located on a GPS visit",sw:'<svg width="22" height="16" viewBox="-11 -16 22 18"><path d="M0,0 C-6,-8 -7,-11 -7,-13 A7,7 0 1 1 7,-13 C7,-11 6,-8 0,0Z" fill="#3b5bdb"/><circle cx="0" cy="-13" r="2.6" fill="#fff"/></svg>'}],
+  build(){const o=ovl(),F={};
+   F.survey=el("g",{class:"f",opacity:0},o);
+   el("path",{d:"M930,342 L1428,424 L1452,512 L1308,690 L874,638 L892,470 Z",fill:"var(--survey-fill)",stroke:"var(--survey)","stroke-width":3,"stroke-dasharray":"12 8","stroke-linejoin":"round"},F.survey);
+   lab(F.survey,950,380,"Drone survey area","var(--survey)");
+   F.road=el("g",{class:"f"},o);
+   const rd=[dash(el("path",{d:"M868,503 C990,512 1100,525 1200,533 S1380,540 1476,534",fill:"none",stroke:"#fff","stroke-width":11,"stroke-linecap":"round"},F.road)),
+             dash(el("path",{d:"M868,503 C990,512 1100,525 1200,533 S1380,540 1476,534",fill:"none",stroke:"var(--new)","stroke-width":6,"stroke-linecap":"round"},F.road))];
+   F.roadLab=lab(F.road,968,488,"New road","var(--new)");F.roadLab.setAttribute("opacity",0);
+   F.houses=el("g",{class:"f"},o);
+   const H=[[1140,486],[1188,490],[1236,494],[1165,557],[1215,561]].map(([x,y])=>{const o=el("g",{transform:`translate(${x+15} ${y+10})`},F.houses),g=el("g",{},o);
+     el("rect",{x:-15,y:-10,width:30,height:20,fill:"var(--new-fill)",stroke:"var(--new)","stroke-width":2.4},g);g.style.transform="scale(0)";return g});
+   F.hLab=lab(F.houses,1280,482,"New houses","var(--new)");F.hLab.setAttribute("opacity",0);
+   F.gps=el("g",{class:"f",opacity:0},o);const P=pin(F.gps,1110,640,"var(--pin)");
+   lab(F.gps,1132,632,"New Anganwadi centre","#2b44b5");lab(F.gps,1132,654,"located on a GPS visit","#2b44b5",15,1);
+   return{F,steps:[
+     async()=>{await tween(600,t=>F.survey.setAttribute("opacity",t))},
+     async()=>{await tween(1300,t=>rd.forEach(e=>e.setAttribute("stroke-dashoffset",1-t)));await tween(250,t=>F.roadLab.setAttribute("opacity",t))},
+     async()=>{for(const h of H){tween(320,t=>h.style.transform=`scale(${t})`);await wait(130)}await wait(200);await tween(250,t=>F.hLab.setAttribute("opacity",t))},
+     async()=>{F.gps.setAttribute("opacity",1);await tween(520,t=>P.h.setAttribute("transform",`translate(0 ${(-60*(1-t)).toFixed(1)})`))}],
+    reset(){F.survey.setAttribute("opacity",0);rd.forEach(e=>e.setAttribute("stroke-dashoffset",1));F.roadLab.setAttribute("opacity",0);H.forEach(h=>h.style.transform="scale(0)");F.hLab.setAttribute("opacity",0);F.gps.setAttribute("opacity",0);P.h.setAttribute("transform","translate(0 -60)")}}}},
+ update:{
+  vb:[150,170,880,500],title:"Changed on the map",
+  note:"Base roads traced from OpenStreetMap. The changes shown are illustrative.",
+  desc:"A built-up area already on the map. One road is widened from two lanes to four. A school moves from its old site to a new site in the next block, shown with an arrow. A small building is demolished and removed from the map.",
+  legend:[{k:"road",t:"Road widened, 2 → 4 lanes",sw:'<svg width="22" height="14"><path d="M2,7 L20,7" stroke="rgba(194,82,31,.55)" stroke-width="9" stroke-linecap="round"/><path d="M2,7 L20,7" stroke="#c2521f" stroke-width="1.6"/></svg>'},
+          {k:"moved",t:"School moved to a new site",sw:'<svg width="22" height="16" viewBox="-11 -16 22 18"><path d="M0,0 C-6,-8 -7,-11 -7,-13 A7,7 0 1 1 7,-13 C7,-11 6,-8 0,0Z" fill="#3b5bdb"/><circle cx="0" cy="-13" r="2.6" fill="#fff"/></svg>'},
+          {k:"old",t:"Old site",sw:'<svg width="22" height="16"><circle cx="11" cy="8" r="6.5" fill="rgba(110,110,110,.12)" stroke="#6b6b6b" stroke-width="1.8" stroke-dasharray="3 2"/></svg>'},
+          {k:"gone",t:"Building demolished, removed",sw:'<svg width="22" height="14"><rect x="4" y="2" width="14" height="10" fill="none" stroke="#c8261a" stroke-width="1.6" stroke-dasharray="3 2"/><path d="M7,4 L15,10 M15,4 L7,10" stroke="#c8261a" stroke-width="1.8" stroke-linecap="round"/></svg>'}],
+  build(){const o=ovl(),F={};
+   F.road=el("g",{class:"f"},o);
+   const band=el("path",{d:"M250,401 L400,419 L545,438",fill:"none",stroke:"rgba(194,82,31,.5)","stroke-width":13,"stroke-linecap":"round","stroke-linejoin":"round"},F.road);
+   const cl=dash(el("path",{d:"M250,401 L400,419 L545,438",fill:"none",stroke:"var(--new)","stroke-width":3,"stroke-linecap":"round"},F.road));
+   band.setAttribute("opacity",0);
+   F.rl=el("g",{opacity:0},F.road);lab(F.rl,262,470,"Road widened","var(--new)");lab(F.rl,262,492,"2 lanes → 4 lanes","#7a3413",16,1);
+   F.old=el("g",{class:"f",opacity:0},o);
+   el("circle",{cx:645,cy:372,r:40,fill:"rgba(110,110,110,.12)",stroke:"var(--old)","stroke-width":3,"stroke-dasharray":"8 6"},F.old);lab(F.old,692,326,"Old site","#555");
+   F.moved=el("g",{class:"f"},o);
+   const ar=dash(el("path",{d:"M608,356 C540,326 452,298 388,284",fill:"none",stroke:"#1f2328","stroke-width":3,"stroke-linecap":"round"},F.moved));
+   const ah=el("path",{d:"M396,276 L383,283 L395,293",fill:"none",stroke:"#1f2328","stroke-width":3,"stroke-linecap":"round","stroke-linejoin":"round",opacity:0},F.moved);
+   const pg=el("g",{opacity:0},F.moved);const P=pin(pg,360,292,"var(--pin)");lab(pg,384,256,"School, new site","#2b44b5");lab(pg,384,236,"moved 2025","#2b44b5",15,1);
+   F.gone=el("g",{class:"f",opacity:0},o);
+   el("rect",{x:718,y:432,width:42,height:30,fill:"none",stroke:"var(--gone)","stroke-width":3,"stroke-dasharray":"6 4"},F.gone);
+   const X=[dash(el("path",{d:"M725,438 L753,456",stroke:"var(--gone)","stroke-width":3.6,"stroke-linecap":"round"},F.gone)),dash(el("path",{d:"M753,438 L725,456",stroke:"var(--gone)","stroke-width":3.6,"stroke-linecap":"round"},F.gone))];
+   const gl=el("g",{opacity:0},F.gone);lab(gl,718,488,"Building demolished","#b11");lab(gl,718,510,"removed from the map","#b11",15,1);
+   const doomed=[...document.querySelectorAll("#bldgs path")].filter(p=>p.getAttribute("d").startsWith("M726,440"));
+   return{F,steps:[
+     async()=>{band.setAttribute("opacity",1);await tween(900,t=>{band.setAttribute("stroke-width",(13+11*t).toFixed(1));cl.setAttribute("stroke-dashoffset",1-t)});await tween(250,t=>F.rl.setAttribute("opacity",t))},
+     async()=>{await tween(400,t=>F.old.setAttribute("opacity",t));await tween(800,t=>ar.setAttribute("stroke-dashoffset",1-t));ah.setAttribute("opacity",1);pg.setAttribute("opacity",1);await tween(500,t=>P.h.setAttribute("transform",`translate(0 ${(-60*(1-t)).toFixed(1)})`))},
+     async()=>{F.gone.setAttribute("opacity",1);for(const x of X)await tween(260,t=>x.setAttribute("stroke-dashoffset",1-t));await tween(500,t=>doomed.forEach(d=>d.setAttribute("opacity",1-t*.85)));await tween(250,t=>gl.setAttribute("opacity",t))}],
+    keys:["road","moved","gone"],extra:{moved:["old"]},
+    reset(){band.setAttribute("opacity",0);band.setAttribute("stroke-width",13);cl.setAttribute("stroke-dashoffset",1);F.rl.setAttribute("opacity",0);F.old.setAttribute("opacity",0);ar.setAttribute("stroke-dashoffset",1);ah.setAttribute("opacity",0);pg.setAttribute("opacity",0);P.h.setAttribute("transform","translate(0 -60)");
+      F.gone.setAttribute("opacity",0);X.forEach(x=>x.setAttribute("stroke-dashoffset",1));gl.setAttribute("opacity",0);doomed.forEach(d=>d.setAttribute("opacity",1))}}}}};
+
+/* ================================================================ RUN */
+const fig=FIG[MODE],stage=document.getElementById("stage"),rep=document.getElementById("rep");
+document.title="Ground Truth · "+(MODE==="new"?"new data":"keeping data current");
+document.getElementById("desc").textContent=fig.desc;document.getElementById("note").textContent=fig.note;
+document.getElementById("lgT").textContent=fig.title;
+const lis=fig.legend.map(L=>{const li=document.createElement("li");li.tabIndex=0;li.innerHTML=L.sw+`<span>${L.t}</span>`;li.dataset.k=L.k;document.getElementById("lgL").appendChild(li);return li});
+// fit the figure's window into the frame, keeping its centre in view
+function fit(){const[x,y,w,h]=fig.vb,r=stage.clientWidth/stage.clientHeight,ar=w/h;let W=w,H=h;
+  if(r>ar)W=h*r;else H=w/r;
+  // labels: never smaller than about 13 px (titles) and 11 px (second lines) on screen
+  const k=W/stage.clientWidth,small=k>1.5;LABS.forEach(e=>{const b=+e.dataset.sz,sub=b<19;e.style.display=small&&sub?"none":"";e.setAttribute("font-size",Math.max(b,12.5*k).toFixed(1));e.style.strokeWidth=Math.max(5,3*k)+"px"});
+  S.setAttribute("viewBox",`${(x+w/2-W/2).toFixed(1)} ${(y+h/2-H/2).toFixed(1)} ${W.toFixed(1)} ${H.toFixed(1)}`)}
+base();const run=fig.build();addEventListener("resize",fit);
+const keys=run.keys||fig.legend.map(l=>l.k),F=run.F;
+// legend hover/focus spotlights a feature
+fit();
+lis.forEach(li=>{const k=li.dataset.k,on=()=>{if(!li.classList.contains("on"))return;stage.dataset.f=k;
+    const group=(run.extra&&Object.entries(run.extra).find(([,v])=>v.includes(k)))?.[0];
+    Object.entries(F).forEach(([n,g])=>g.classList&&g.classList.toggle("hi",!!(n===k||n===group||(run.extra&&run.extra[k]&&run.extra[k].includes(n)))))},
+  off=()=>{delete stage.dataset.f};li.addEventListener("pointerenter",on);li.addEventListener("pointerleave",off);li.addEventListener("focus",on);li.addEventListener("blur",off)});
+let token=0;
+async function play(){const me=++token;rep.classList.remove("on");run.reset();lis.forEach(l=>l.classList.remove("on"));
+  const legendFor=i=>{const k=keys[i];lis.forEach(l=>{if(l.dataset.k===k||(run.extra&&run.extra[k]&&run.extra[k].includes(l.dataset.k)))l.classList.add("on")})};
+  await wait(350);
+  for(let i=0;i<run.steps.length;i++){if(me!==token)return;legendFor(i);await run.steps[i]();await wait(450)}
+  if(me===token)rep.classList.add("on")}
+async function finish(){FAST=true;run.reset();lis.forEach(l=>l.classList.add("on"));for(const f of run.steps)await f();FAST=false;rep.classList.add("on")}
+rep.onclick=()=>play();
+document.fonts.load('700 19px "Avenir Next World"').catch(()=>{}).then(()=>{
+  if(OPT.auto==="off"||REDUCE){finish();return}
+  new IntersectionObserver((es,o)=>{if(es[0].isIntersecting){o.disconnect();play()}},{threshold:.35}).observe(stage)});
+addEventListener("hashchange",()=>location.reload());
+</script>
+</body>
+</html>

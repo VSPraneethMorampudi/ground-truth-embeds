@@ -118,3 +118,9 @@ OVERVIEW PEN MARKS (v14 · 6 Oct 2026)
   Pen arrow from the highlighted line to a hand-drawn ring round the village (ring only on phones).
   Larger type; blocks hug the map at a fixed gap; title and number share one cap line. Frozen: versions/v14/
   v14.1 (in place): the left block types itself in, line by line, then the arrow and ring draw.
+
+EXPRESS-STYLE MAPS (v15 · 6 Oct 2026)
+  expressmaps.html#new      new data: drone survey area, road traced from a satellite photo, new houses, GPS-located centre
+  expressmaps.html#update   keeping it current: road widened, school moved (old site → new site), building demolished
+  Base roads hand-traced from OpenStreetMap (© OpenStreetMap contributors). Overlays are illustrative.
+  &auto=off shows the finished map. Frozen copy: versions/v15/expressmaps.html
