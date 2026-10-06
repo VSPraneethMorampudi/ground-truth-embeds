@@ -124,3 +124,13 @@ EXPRESS-STYLE MAPS (v15 · 6 Oct 2026)
   expressmaps.html#update   keeping it current: road widened, school moved (old site → new site), building demolished
   Base roads hand-traced from OpenStreetMap (© OpenStreetMap contributors). Overlays are illustrative.
   &auto=off shows the finished map. Frozen copy: versions/v15/expressmaps.html
+
+CHAPTER SEPARATORS (separator.html, transparent, animates when scrolled into view)
+  separator.html#1   before "It all starts with knowing where things are"  (Data Creation)
+  separator.html#2   before "One safe home for every map layer"            (Geodatabase Creation)
+  separator.html#3   before the Geo Portal Development sidecar
+  separator.html#4   before the Mobile App sidecar
+  separator.html#5   before the Mapping & Cartography sidecar
+  separator.html#6   before the Maintenance sidecar
+  separator.html#7   before "From the ground, back to the ground"           (full cycle, loops back to 1)
+  Strip is 1100x150; it scales to the frame width and centres vertically. Reduced-motion users see the end state.

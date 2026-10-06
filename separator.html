@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter separator</title>
+<style>
+  /* Same Avenir Next World the story and the v8 embeds load from the portal */
+  @font-face{font-family:"Avenir Next World";font-weight:700;font-display:swap;src:local("Avenir Next World Bold"),local("AvenirNextWorld-Bold"),url("https://cogcg.cgstate.gov.in/portal/apps/storymaps/static/storymaps-website-common/fonts/Avenir_Next_World/074dfc70-6436-4f4b-9314-d1e69287aea1.woff2") format("woff2")}
+  /* Transparent so it sits on the story background. Usage: separator.html#1 … #6 for a stage, #7 for the full cycle. */
+  html,body{margin:0;height:100%;background:transparent;overflow:hidden}
+  body{display:flex;align-items:center;justify-content:center}
+  svg{width:100%;height:100%;max-height:100%;display:block}
+  .lbl{font-family:"Avenir Next World","Avenir Next",Avenir,"Segoe UI",Helvetica,Arial,sans-serif;font-weight:700}
+  .num{transition:opacity .25s ease}
+  .act{transform-box:fill-box;transform-origin:center;transform:scale(.55);opacity:0;transition:transform .45s cubic-bezier(.2,1.4,.4,1),opacity .2s ease}
+  .on .act{transform:scale(1);opacity:1}
+  .on .num.cur{opacity:0}
+  .name{opacity:0;transform:translateY(6px);transition:opacity .35s ease .15s,transform .35s ease .15s}
+  .on .name{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){.act,.name,.num{transition:none}}
+</style>
+</head>
+<body>
+<svg id="sv" viewBox="0 0 1100 150" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Story progress"></svg>
+<script>
+(function(){
+  var C={ink:'#28272d',orange:'#c95d2e',white:'#ffffff'}; // --n900 and --dv-orange-500 from the v8 embeds
+  var W=1100,H=150,R=11,RA=18;
+  var NAMES=['Data Creation','Geodatabase Creation','Geo Portal Development','Mobile App','Mapping and Cartography','Maintenance'];
+  var ICON=[
+   '<path d="M0 10 C-6 3 -7 -1 -7 -3.5 A7 7 0 0 1 7 -3.5 C7 -1 6 3 0 10Z"/><circle cx="0" cy="-3.5" r="2.4"/>',
+   '<path d="M0 -9 L9 -4.5 L0 0 L-9 -4.5Z"/><path d="M-9 0 L0 4.5 L9 0"/><path d="M-9 4.5 L0 9 L9 4.5"/>',
+   '<rect x="-9.5" y="-7.5" width="19" height="15" rx="2"/><path d="M-9.5 -3.5 H9.5"/><path d="M-6 4 L-2 0.5 L1 3 L5.5 -0.5"/>',
+   '<rect x="-6" y="-10" width="12" height="20" rx="2.5"/><path d="M-2 7.2 H2"/><path d="M0 2.5 C-2.6 -0.4 -3 -1.8 -3 -2.8 A3 3 0 0 1 3 -2.8 C3 -1.8 2.6 -0.4 0 2.5Z"/>',
+   '<path d="M-9.5 -7 L-3.2 -9 L3.2 -7 L9.5 -9 V7 L3.2 9 L-3.2 7 L-9.5 9Z"/><path d="M-3.2 -9 V7 M3.2 -7 V9"/>',
+   '<path d="M3.5 -8.5 A5 5 0 0 0 -1.5 -2 L-8 4.5 A1.9 1.9 0 0 0 -5.3 7.2 L1.2 0.7 A5 5 0 0 0 7.8 -4.3 L4.8 -1.3 L1.9 -1.8 L1.4 -4.7Z"/>'];
+
+  // stage from the URL hash: #1..#6, #7 = full cycle
+  var n=parseInt((location.hash||'').replace(/\D/g,''),10); if(!(n>=1&&n<=7)) n=1;
+  var i=n-1, full=i===6;
+
+  var A=[150,104],B=[550,40],D=[950,104];
+  function Q(t){return [(1-t)*(1-t)*A[0]+2*(1-t)*t*B[0]+t*t*D[0],(1-t)*(1-t)*A[1]+2*(1-t)*t*B[1]+t*t*D[1]];}
+  function T(k){return 0.06+k*0.176;}
+  function seg(t0,t1,m){m=m||24;var d='';for(var j=0;j<=m;j++){var p=Q(t0+(t1-t0)*j/m);d+=(j?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1);}return d;}
+  function gapA(k){return (k===i&&!full)?0.045:0.03;}
+
+  var s='<defs>'+
+    '<linearGradient id="fl" gradientUnits="userSpaceOnUse" x1="20" x2="'+(Q(T(0))[0]-R)+'"><stop offset="0" stop-color="'+C.ink+'" stop-opacity="0"/><stop offset="1" stop-color="'+C.ink+'" stop-opacity=".55"/></linearGradient>'+
+    '<linearGradient id="fr" gradientUnits="userSpaceOnUse" x1="'+(Q(T(5))[0]+R)+'" x2="'+(W-20)+'"><stop offset="0" stop-color="'+C.ink+'" stop-opacity=".55"/><stop offset="1" stop-color="'+C.ink+'" stop-opacity="0"/></linearGradient>'+
+    '<marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M2 1.5 L7 5 L2 8.5" fill="none" stroke="'+C.ink+'" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></marker>'+
+    '<marker id="ao" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M2 1.5 L7 5 L2 8.5" fill="none" stroke="'+C.orange+'" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>'+
+    '</defs>';
+  s+='<path d="'+seg(-0.16,T(0)-0.03)+'" fill="none" stroke="url(#fl)" stroke-width="1"/>';
+  s+='<path d="'+seg(T(5)+0.03,1.16)+'" fill="none" stroke="url(#fr)" stroke-width="1"/>';
+
+  // base path: grey ink everywhere; orange for stages already passed before this chapter
+  for(var k=0;k<5;k++){
+    var a=T(k)+gapA(k), b=T(k+1)-gapA(k+1), m=(a+b)/2;
+    var pre=!full && k<i-1;              // travelled before this chapter
+    var col=pre?C.orange:C.ink, w=pre?1.6:1, op=pre?1:.7, mk=pre?'ao':'ah';
+    s+='<path class="sg" data-k="'+k+'" d="'+seg(a,m,12)+'" fill="none" stroke="'+col+'" stroke-width="'+w+'" stroke-opacity="'+op+'" marker-end="url(#'+mk+')"/>';
+    s+='<path class="sg" data-k="'+k+'" d="'+seg(m,b,12)+'" fill="none" stroke="'+col+'" stroke-width="'+w+'" stroke-opacity="'+op+'"/>';
+  }
+  // animated orange overlay: the leg travelled in this chapter (or the whole route for the cycle)
+  var drawFrom = full?T(0):(i===0?-0.16:T(i-1)), drawTo = full?T(5):T(i);
+  s+='<path id="trail" d="'+seg(drawFrom,drawTo,60)+'" fill="none" stroke="'+C.orange+'" stroke-width="1.6" stroke-linecap="round"/>';
+  if(full){
+    var p6=Q(T(5)),p1=Q(T(0));
+    s+='<path id="ret" d="M'+(p6[0]-4)+' '+(p6[1]+R+4)+' C '+(p6[0]-60)+' '+(H-6)+', '+(p1[0]+60)+' '+(H-6)+', '+(p1[0]+5)+' '+(p1[1]+R+5)+'" fill="none" stroke="'+C.orange+'" stroke-width="1.4"/>';
+  }
+
+  // nodes
+  for(k=0;k<6;k++){
+    var p=Q(T(k)), cur=(k===i&&!full);
+    s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+R+'" fill="'+C.white+'" stroke="'+C.ink+'" stroke-width="1.2"/>';
+    s+='<text class="lbl num'+(cur?' cur':'')+'" x="'+p[0]+'" y="'+(p[1]+3.6)+'" text-anchor="middle" font-size="10" fill="'+C.ink+'">'+(k+1)+'</text>';
+    if(cur){
+      s+='<g class="act"><circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+RA+'" fill="'+C.ink+'"/>'+
+         '<g transform="translate('+p[0]+' '+p[1]+') scale(.9)" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+ICON[k]+'</g></g>';
+      s+='<text class="lbl name" x="'+p[0]+'" y="'+(p[1]+RA+27)+'" text-anchor="middle" font-size="10.5" fill="'+C.ink+'">'+NAMES[k]+'</text>';
+    }
+  }
+  s+='<circle id="mk" r="4" fill="'+C.orange+'" stroke="#fff" stroke-width="1.6"/>';
+  var sv=document.getElementById('sv'); sv.innerHTML=s;
+  sv.setAttribute('aria-label', full?'All six stages complete; the cycle begins again':'Stage '+n+' of 6: '+NAMES[i]);
+
+  var trail=document.getElementById('trail'), ret=document.getElementById('ret'), mk=document.getElementById('mk');
+  var L=trail.getTotalLength(), LR=ret?ret.getTotalLength():0;
+  var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var raf=null, legs=[].slice.call(sv.querySelectorAll('.sg'));
+  var firstLeg = full?0:i-1; // legs that turn orange during this animation: firstLeg .. lastLeg
+  var lastLeg = full?4:i-1;
+  function paint(k,on){legs.forEach(function(p){if(+p.getAttribute('data-k')!==k)return;
+    p.setAttribute('stroke',on?C.orange:C.ink);p.setAttribute('stroke-width',on?1.6:1);p.setAttribute('stroke-opacity',on?1:.7);
+    if(p.hasAttribute('marker-end'))p.setAttribute('marker-end','url(#'+(on?'ao':'ah')+')');});}
+  function paintUpTo(t){for(var k=firstLeg;k<=lastLeg;k++){if(k<0)continue;paint(k,t>=T(k+1)-0.03);}}
+
+  function restMarker(){ // where the marker sits when the animation ends
+    if(full){var p=Q(T(0));mk.setAttribute('cx',p[0]);mk.setAttribute('cy',p[1]+R+7);}
+    else{var q=Q(T(i));mk.setAttribute('cx',q[0]);mk.setAttribute('cy',q[1]+RA+7);}
+  }
+  function reset(){
+    if(raf)cancelAnimationFrame(raf);
+    sv.classList.remove('on'); for(var k=firstLeg;k<=lastLeg;k++){if(k>=0)paint(k,false);} trail.style.opacity=1;
+    trail.style.strokeDasharray=L;trail.style.strokeDashoffset=L;
+    if(ret){ret.style.strokeDasharray=LR;ret.style.strokeDashoffset=LR;}
+    var p=Q(drawFrom);mk.setAttribute('cx',p[0]);mk.setAttribute('cy',p[1]);mk.style.opacity=i===0&&!full?0:1;
+  }
+  function finish(){
+    trail.style.strokeDashoffset=0; paintUpTo(9); trail.style.opacity=0; if(ret){ret.style.strokeDasharray='4 4';ret.style.strokeDashoffset=0;}
+    restMarker(); mk.style.opacity=1; sv.classList.add('on');
+  }
+  function ease(x){return x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;}
+  function play(){
+    reset(); if(reduce){finish();return;}
+    var dur=full?1800:900, t0=null;
+    function step(ts){
+      if(t0===null)t0=ts; var x=Math.min(1,(ts-t0)/dur), e=ease(x);
+      trail.style.strokeDashoffset=L*(1-e);
+      var pt=trail.getPointAtLength(L*e); mk.setAttribute('cx',pt.x); mk.setAttribute('cy',pt.y); mk.style.opacity=1; paintUpTo(drawFrom+(drawTo-drawFrom)*e);
+      if(x<1){raf=requestAnimationFrame(step);return;}
+      if(full&&ret){ // then loop back from 6 to 1
+        var t1=null;
+        var back=function(ts2){ if(t1===null)t1=ts2; var y=Math.min(1,(ts2-t1)/900), f=ease(y);
+          ret.style.strokeDashoffset=LR*(1-f); var q=ret.getPointAtLength(LR*f); mk.setAttribute('cx',q.x); mk.setAttribute('cy',q.y);
+          if(y<1){raf=requestAnimationFrame(back);}else{finish();} };
+        raf=requestAnimationFrame(back); return;
+      }
+      // settle the marker under the node and switch the node to its icon
+      mk.setAttribute('cy',pt.y); sv.classList.add('on'); paintUpTo(9); trail.style.transition='opacity .3s'; trail.style.opacity=0;
+      var q=Q(T(i)), y0=pt.y, y1=q[1]+RA+7, t2=null;
+      var drop=function(ts3){ if(t2===null)t2=ts3; var z=Math.min(1,(ts3-t2)/250); mk.setAttribute('cx',q[0]); mk.setAttribute('cy',y0+(y1-y0)*ease(z)); if(z<1)raf=requestAnimationFrame(drop); };
+      raf=requestAnimationFrame(drop);
+    }
+    raf=requestAnimationFrame(step);
+  }
+
+  reset();
+  // Play when the separator scrolls into view in the story; reset once it is fully out of view, so it replays next time.
+  if('IntersectionObserver' in window){
+    var played=false;
+    new IntersectionObserver(function(es){es.forEach(function(e){
+      if(e.isIntersecting&&e.intersectionRatio>=0.6&&!played){played=true;play();}
+      else if(!e.isIntersecting&&played){played=false;reset();}
+    });},{threshold:[0,0.6]}).observe(document.documentElement);
+  }else{finish();}
+})();
+</script>
+</body>
+</html>
