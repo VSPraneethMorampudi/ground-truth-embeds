@@ -32,12 +32,12 @@ html,body{margin:0;height:100%;background:var(--page);color:var(--text);font-fam
 svg.map{position:absolute;inset:0;width:100%;height:100%;display:block}
 .lab{font-family:var(--font);font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:5px;stroke-linejoin:round}
 .lab.sub{font-weight:400}
-.legend{position:absolute;left:12px;bottom:12px;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:8px;padding:9px 12px 8px;box-shadow:0 1px 3px rgba(0,0,0,.06);font-size:13px;line-height:1.25;max-width:calc(100% - 24px)}
-.legend b{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:6px}
-.legend ul{list-style:none;margin:0;padding:0;display:grid;gap:5px}
-.legend li{display:flex;align-items:center;gap:8px;color:var(--ink);opacity:.25;transition:opacity .35s;cursor:default}
+.legend{position:absolute;left:12px;bottom:12px;background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:8px;padding:10px 14px 10px 10px;box-shadow:0 1px 4px rgba(0,0,0,.08);font-size:14px;line-height:1.3;max-width:calc(100% - 24px)}
+.legend b{display:block;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0 0 7px 4px}
+.legend ul{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.legend li{display:grid;grid-template-columns:28px 1fr;align-items:center;column-gap:10px;min-height:22px;padding:0 4px;color:var(--ink);opacity:.3;transition:opacity .35s;cursor:default}
 .legend li.on{opacity:1}
-.legend svg{flex:none}
+.legend svg{display:block;overflow:visible}
 .legend li:focus-visible{outline:2px solid var(--pin);outline-offset:2px;border-radius:3px}
 .foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 2px 0;font-size:12.5px;color:var(--muted);line-height:1.4}
 .rep{flex:none;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;color:var(--text);font:500 13px var(--font);border-radius:6px;padding:5px 10px;cursor:pointer;opacity:0;transition:opacity .3s;pointer-events:none}
@@ -48,7 +48,7 @@ svg.map{position:absolute;inset:0;width:100%;height:100%;display:block}
 .stage[data-f] .f{opacity:.18}
 .stage[data-f] .f.hi{opacity:1}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-@media (max-width:560px){.legend{font-size:12px;padding:7px 9px}.legend b{font-size:11px}.foot{font-size:11.5px}}
+@media (max-width:560px){.legend{font-size:12.5px;padding:8px 10px 8px 6px}.legend b{font-size:10.5px}.legend li{grid-template-columns:24px 1fr;column-gap:8px;min-height:20px}.legend svg{width:24px;height:18px}.foot{font-size:11.5px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -147,10 +147,10 @@ const FIG={
   vb:[760,250,800,520],title:"Added to the map",
   note:"Base roads traced from OpenStreetMap. The new road, houses, survey area and centre are illustrative.",
   desc:"An open block on the base map, next to the main road. A drone survey covers the block. A new road is traced across it from a satellite photo, five new houses are drawn beside the road, and a new Anganwadi centre is placed from a GPS field visit.",
-  legend:[{k:"survey",t:"Drone survey area",sw:'<svg width="22" height="14"><rect x="1.5" y="1.5" width="19" height="11" fill="rgba(15,124,138,.15)" stroke="#0f7c8a" stroke-width="2" stroke-dasharray="4 3"/></svg>'},
-          {k:"road",t:"New road, traced from a satellite photo",sw:'<svg width="22" height="14"><path d="M1,9 L21,5" stroke="#c2521f" stroke-width="4" stroke-linecap="round"/></svg>'},
-          {k:"houses",t:"New houses",sw:'<svg width="22" height="14"><rect x="5" y="2.5" width="12" height="9" fill="rgba(224,118,61,.42)" stroke="#c2521f" stroke-width="1.8"/></svg>'},
-          {k:"gps",t:"New centre, located on a GPS visit",sw:'<svg width="22" height="16" viewBox="-11 -16 22 18"><path d="M0,0 C-6,-8 -7,-11 -7,-13 A7,7 0 1 1 7,-13 C7,-11 6,-8 0,0Z" fill="#3b5bdb"/><circle cx="0" cy="-13" r="2.6" fill="#fff"/></svg>'}],
+  legend:[{k:"survey",t:"Drone survey area",sw:'<svg width="28" height="20" viewBox="0 0 28 20"><rect x="2.5" y="3.5" width="23" height="13" rx="1" fill="rgba(15,124,138,.15)" stroke="#0f7c8a" stroke-width="2" stroke-dasharray="4 3"/></svg>'},
+          {k:"road",t:"New road, traced from a satellite photo",sw:'<svg width="28" height="20" viewBox="0 0 28 20"><path d="M3,10 L25,10" stroke="#fff" stroke-width="8" stroke-linecap="round"/><path d="M3,10 L25,10" stroke="#c2521f" stroke-width="4.5" stroke-linecap="round"/></svg>'},
+          {k:"houses",t:"New houses",sw:'<svg width="28" height="20" viewBox="0 0 28 20"><rect x="3" y="5" width="10" height="9" fill="rgba(224,118,61,.42)" stroke="#c2521f" stroke-width="1.8"/><rect x="15" y="6" width="10" height="9" fill="rgba(224,118,61,.42)" stroke="#c2521f" stroke-width="1.8"/></svg>'},
+          {k:"gps",t:"New centre, located on a GPS visit",sw:'<svg width="28" height="20" viewBox="-14 -21 28 22"><path d="M0,0 C-5,-7 -7,-10 -7,-13.5 A7,7 0 1 1 7,-13.5 C7,-10 5,-7 0,0Z" fill="#3b5bdb"/><circle cx="0" cy="-13.5" r="2.6" fill="#fff"/></svg>'}],
   build(){const o=ovl(),F={};
    F.survey=el("g",{class:"f",opacity:0},o);
    el("path",{d:"M930,342 L1428,424 L1452,512 L1308,690 L874,638 L892,470 Z",fill:"var(--survey-fill)",stroke:"var(--survey)","stroke-width":3,"stroke-dasharray":"12 8","stroke-linejoin":"round"},F.survey);
@@ -175,10 +175,10 @@ const FIG={
   vb:[150,170,880,500],title:"Changed on the map",
   note:"Base roads traced from OpenStreetMap. The changes shown are illustrative.",
   desc:"A built-up area already on the map. One road is widened from two lanes to four. A school moves from its old site to a new site in the next block, shown with an arrow. A small building is demolished and removed from the map.",
-  legend:[{k:"road",t:"Road widened, 2 → 4 lanes",sw:'<svg width="22" height="14"><path d="M2,7 L20,7" stroke="rgba(194,82,31,.55)" stroke-width="9" stroke-linecap="round"/><path d="M2,7 L20,7" stroke="#c2521f" stroke-width="1.6"/></svg>'},
-          {k:"moved",t:"School moved to a new site",sw:'<svg width="22" height="16" viewBox="-11 -16 22 18"><path d="M0,0 C-6,-8 -7,-11 -7,-13 A7,7 0 1 1 7,-13 C7,-11 6,-8 0,0Z" fill="#3b5bdb"/><circle cx="0" cy="-13" r="2.6" fill="#fff"/></svg>'},
-          {k:"old",t:"Old site",sw:'<svg width="22" height="16"><circle cx="11" cy="8" r="6.5" fill="rgba(110,110,110,.12)" stroke="#6b6b6b" stroke-width="1.8" stroke-dasharray="3 2"/></svg>'},
-          {k:"gone",t:"Building demolished, removed",sw:'<svg width="22" height="14"><rect x="4" y="2" width="14" height="10" fill="none" stroke="#c8261a" stroke-width="1.6" stroke-dasharray="3 2"/><path d="M7,4 L15,10 M15,4 L7,10" stroke="#c8261a" stroke-width="1.8" stroke-linecap="round"/></svg>'}],
+  legend:[{k:"road",t:"Road widened, 2 → 4 lanes",sw:'<svg width="28" height="20" viewBox="0 0 28 20"><path d="M4,10 L24,10" stroke="rgba(194,82,31,.5)" stroke-width="10" stroke-linecap="round"/><path d="M4,10 L24,10" stroke="#c2521f" stroke-width="1.8" stroke-linecap="round"/></svg>'},
+          {k:"moved",t:"School moved to a new site",sw:'<svg width="28" height="20" viewBox="-14 -21 28 22"><path d="M0,0 C-5,-7 -7,-10 -7,-13.5 A7,7 0 1 1 7,-13.5 C7,-10 5,-7 0,0Z" fill="#3b5bdb"/><circle cx="0" cy="-13.5" r="2.6" fill="#fff"/></svg>'},
+          {k:"old",t:"Old site",sw:'<svg width="28" height="20" viewBox="0 0 28 20"><circle cx="14" cy="10" r="7.5" fill="rgba(110,110,110,.14)" stroke="#6b6b6b" stroke-width="1.8" stroke-dasharray="3.2 2.4"/></svg>'},
+          {k:"gone",t:"Building demolished, removed",sw:'<svg width="28" height="20" viewBox="0 0 28 20"><rect x="5.5" y="3.5" width="17" height="13" fill="none" stroke="#c8261a" stroke-width="1.5" stroke-dasharray="3 2"/><path d="M10,7 L18,13 M18,7 L10,13" stroke="#c8261a" stroke-width="2" stroke-linecap="round"/></svg>'}],
   build(){const o=ovl(),F={};
    F.road=el("g",{class:"f"},o);
    const band=el("path",{d:"M250,401 L400,419 L545,438",fill:"none",stroke:"rgba(194,82,31,.5)","stroke-width":13,"stroke-linecap":"round","stroke-linejoin":"round"},F.road);
