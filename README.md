@@ -104,3 +104,8 @@ AUTOSLIDE (v11 · 6 Oct 2026)
   A try-it step can demo itself when nothing else drives the figure (e.g. &nav=off&step=N in a sidecar).
   Data Creation step 2: the scanner sweeps across the sheet and back, looping, until the reader grabs it.
   index.html#create&bare&nav=off&step=1      &auto=off keeps it still.   Frozen copy: versions/v11/
+
+OVERVIEW ON HOVER (v12 · 6 Oct 2026)
+  #overview keeps two points in Avenir Next World: "The work: merge it all" and "162 layers".
+  The four source notes are gone from the resting view; hover the map (tap on phones, Enter on keyboard)
+  and it separates into four labelled copies. Frozen copy: versions/v12/ (also has v11's autoslide).
