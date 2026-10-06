@@ -33,7 +33,15 @@ svg.map{position:absolute;inset:0;width:100%;height:100%;display:block}
 .lab{font-family:var(--font);font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:5px;stroke-linejoin:round}
 .lab.sub{font-weight:400}
 .legend{position:absolute;left:12px;bottom:12px;background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:8px;padding:10px 14px 10px 10px;box-shadow:0 1px 4px rgba(0,0,0,.08);font-size:14px;line-height:1.3;max-width:calc(100% - 24px)}
-.legend b{display:block;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0 0 7px 4px}
+.legend b{display:block;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.lgh{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin:0 0 7px;padding:2px 4px;border:0;background:none;font:inherit;color:var(--muted);cursor:pointer;border-radius:4px;text-align:left}
+.lgh:hover b,.lgh:hover{color:var(--ink)}
+.lgh:focus-visible{outline:2px solid var(--pin);outline-offset:2px}
+.lgh .chev{flex:none;transition:transform .2s}
+.legend.closed{padding:7px 10px}
+.legend.closed .lgh{margin:0}
+.legend.closed .chev{transform:rotate(-90deg)}
+.legend.closed ul{display:none}
 .legend ul{list-style:none;margin:0;padding:0;display:grid;gap:4px}
 .legend li{display:grid;grid-template-columns:28px 1fr;align-items:center;column-gap:10px;min-height:22px;padding:0 4px;color:var(--ink);opacity:.3;transition:opacity .35s;cursor:default}
 .legend li.on{opacity:1}
@@ -48,7 +56,7 @@ svg.map{position:absolute;inset:0;width:100%;height:100%;display:block}
 .stage[data-f] .f{opacity:.18}
 .stage[data-f] .f.hi{opacity:1}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-@media (max-width:560px){.legend{font-size:12.5px;padding:8px 10px 8px 6px}.legend b{font-size:10.5px}.legend li{grid-template-columns:24px 1fr;column-gap:8px;min-height:20px}.legend svg{width:24px;height:18px}.foot{font-size:11.5px}}
+@media (max-width:560px){.legend{font-size:12.5px;padding:8px 10px 8px 6px}.legend b{font-size:10.5px}.legend.closed{padding:6px 8px}.legend li{grid-template-columns:24px 1fr;column-gap:8px;min-height:20px}.legend svg{width:24px;height:18px}.foot{font-size:11.5px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -56,7 +64,7 @@ svg.map{position:absolute;inset:0;width:100%;height:100%;display:block}
 <div class="fig">
   <div class="stage" id="stage">
     <svg class="map" id="map" role="img" aria-labelledby="desc"></svg>
-    <div class="legend" id="legend"><b id="lgT"></b><ul id="lgL"></ul></div>
+    <div class="legend" id="legend"><button class="lgh" id="lgBtn" type="button" aria-expanded="true" aria-controls="lgL"><b id="lgT"></b><svg class="chev" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 L6 7.5 L9 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><ul id="lgL"></ul></div>
   </div>
   <div class="foot"><span id="note"></span><button class="rep" id="rep" type="button"><svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 2.5v3h-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Replay</button></div>
   <p class="sr" id="desc"></p>
@@ -209,6 +217,11 @@ const fig=FIG[MODE],stage=document.getElementById("stage"),rep=document.getEleme
 document.title="Ground Truth · "+(MODE==="new"?"new data":"keeping data current");
 document.getElementById("desc").textContent=fig.desc;document.getElementById("note").textContent=fig.note;
 document.getElementById("lgT").textContent=fig.title;
+// the legend folds away to its title; it starts folded on small frames, where it would cover the map
+const lg=document.getElementById("legend"),lgBtn=document.getElementById("lgBtn");
+function setLegend(open){lg.classList.toggle("closed",!open);lgBtn.setAttribute("aria-expanded",open);lgBtn.title=open?"Hide legend":"Show legend"}
+lgBtn.onclick=()=>setLegend(lg.classList.contains("closed"));
+setLegend(OPT.legend==="off"?false:OPT.legend==="on"?true:stage.clientWidth>=480);
 const lis=fig.legend.map(L=>{const li=document.createElement("li");li.tabIndex=0;li.innerHTML=L.sw+`<span>${L.t}</span>`;li.dataset.k=L.k;document.getElementById("lgL").appendChild(li);return li});
 // fit the figure's window into the frame, keeping its centre in view
 function fit(){const[x,y,w,h]=fig.vb,r=stage.clientWidth/stage.clientHeight,ar=w/h;let W=w,H=h;
