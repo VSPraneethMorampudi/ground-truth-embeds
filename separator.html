@@ -27,6 +27,7 @@
 (function(){
   var C={ink:'#28272d',orange:'#c95d2e',white:'#ffffff'}; // --n900 and --dv-orange-500 from the v8 embeds
   var W=1100,H=150,R=11,RA=18;
+  var CYCLE='<path d="M7.5 -3 A8 8 0 0 0 -7 -3.5"/><path d="M-7.5 3 A8 8 0 0 0 7 3.5"/><path d="M-7 -8 V-3.5 H-2.5"/><path d="M7 8 V3.5 H2.5"/>';
   var NAMES=['Data Creation','Geodatabase Creation','Geo Portal Development','Mobile App','Mapping and Cartography','Maintenance'];
   var ICON=[
    '<path d="M0 10 C-6 3 -7 -1 -7 -3.5 A7 7 0 0 1 7 -3.5 C7 -1 6 3 0 10Z"/><circle cx="0" cy="-3.5" r="2.4"/>',
@@ -38,7 +39,8 @@
 
   // stage from the URL hash: #1..#6, #7 = full cycle
   var n=parseInt((location.hash||'').replace(/\D/g,''),10); if(!(n>=1&&n<=7)) n=1;
-  var i=n-1, full=i===6;
+  var i=n-1, full=i===6, OUT=null;
+  if(full){H=205;document.getElementById('sv').setAttribute('viewBox','0 0 1100 205');}
 
   var A=[150,104],B=[550,40],D=[950,104];
   function Q(t){return [(1-t)*(1-t)*A[0]+2*(1-t)*t*B[0]+t*t*D[0],(1-t)*(1-t)*A[1]+2*(1-t)*t*B[1]+t*t*D[1]];}
@@ -68,7 +70,14 @@
   s+='<path id="trail" d="'+seg(drawFrom,drawTo,60)+'" fill="none" stroke="'+C.orange+'" stroke-width="1.6" stroke-linecap="round"/>';
   if(full){
     var p6=Q(T(5)),p1=Q(T(0));
-    s+='<path id="ret" d="M'+(p6[0]-4)+' '+(p6[1]+R+4)+' C '+(p6[0]-60)+' '+(H-6)+', '+(p1[0]+60)+' '+(H-6)+', '+(p1[0]+5)+' '+(p1[1]+R+5)+'" fill="none" stroke="'+C.orange+'" stroke-width="1.4"/>';
+    var lowY=150; // control-point depth of the return loop
+    s+='<path id="ret" d="M'+(p6[0]-4)+' '+(p6[1]+R+4)+' C '+(p6[0]-60)+' '+lowY+', '+(p1[0]+60)+' '+lowY+', '+(p1[0]+5)+' '+(p1[1]+R+5)+'" fill="none" stroke="'+C.orange+'" stroke-width="1.4"/>';
+    // the closing stage sits on the loop: dark node with a cycle icon, labelled like the nav ("Output")
+    var mx=(p6[0]-4+3*(p6[0]-60)+3*(p1[0]+60)+p1[0]+5)/8, my=((p6[1]+R+4)+3*lowY+3*lowY+(p1[1]+R+5))/8;
+    s+='<g class="act"><circle cx="'+mx+'" cy="'+my+'" r="'+RA+'" fill="'+C.ink+'"/>'+
+       '<g transform="translate('+mx+' '+my+') scale(.9)" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+CYCLE+'</g></g>';
+    s+='<text class="lbl name" x="'+mx+'" y="'+(my+RA+27)+'" text-anchor="middle" font-size="10.5" fill="'+C.ink+'">Output</text>';
+    OUT=[mx,my];
   }
 
   // nodes
@@ -84,7 +93,7 @@
   }
   s+='<circle id="mk" r="4" fill="'+C.orange+'" stroke="#fff" stroke-width="1.6"/>';
   var sv=document.getElementById('sv'); sv.innerHTML=s;
-  sv.setAttribute('aria-label', full?'All six stages complete; the cycle begins again':'Stage '+n+' of 6: '+NAMES[i]);
+  sv.setAttribute('aria-label', full?'Output: all six stages complete, and the cycle begins again':'Stage '+n+' of 6: '+NAMES[i]);
 
   var trail=document.getElementById('trail'), ret=document.getElementById('ret'), mk=document.getElementById('mk');
   var L=trail.getTotalLength(), LR=ret?ret.getTotalLength():0;
@@ -98,7 +107,7 @@
   function paintUpTo(t){for(var k=firstLeg;k<=lastLeg;k++){if(k<0)continue;paint(k,t>=T(k+1)-0.03);}}
 
   function restMarker(){ // where the marker sits when the animation ends
-    if(full){var p=Q(T(0));mk.setAttribute('cx',p[0]);mk.setAttribute('cy',p[1]+R+7);}
+    if(full){mk.setAttribute('cx',OUT[0]);mk.setAttribute('cy',OUT[1]+RA+7);}
     else{var q=Q(T(i));mk.setAttribute('cx',q[0]);mk.setAttribute('cy',q[1]+RA+7);}
   }
   function reset(){
@@ -124,7 +133,7 @@
       if(full&&ret){ // then loop back from 6 to 1
         var t1=null;
         var back=function(ts2){ if(t1===null)t1=ts2; var y=Math.min(1,(ts2-t1)/900), f=ease(y);
-          ret.style.strokeDashoffset=LR*(1-f); var q=ret.getPointAtLength(LR*f); mk.setAttribute('cx',q.x); mk.setAttribute('cy',q.y);
+          ret.style.strokeDashoffset=LR*(1-f/2); var q=ret.getPointAtLength(LR*f/2); mk.setAttribute('cx',q.x); mk.setAttribute('cy',q.y);
           if(y<1){raf=requestAnimationFrame(back);}else{finish();} };
         raf=requestAnimationFrame(back); return;
       }

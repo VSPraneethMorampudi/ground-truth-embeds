@@ -132,5 +132,5 @@ CHAPTER SEPARATORS (separator.html, transparent, animates when scrolled into vie
   separator.html#4   before the Mobile App sidecar
   separator.html#5   before the Mapping & Cartography sidecar
   separator.html#6   before the Maintenance sidecar
-  separator.html#7   before "From the ground, back to the ground"           (full cycle, loops back to 1)
+  separator.html#7   before "From the ground, back to the ground"           (full cycle + Output node; frame height ~180)
   Strip is 1100x150; it scales to the frame width and centres vertically. Reduced-motion users see the end state.
