@@ -402,7 +402,7 @@ body.framed .sketch.port{min-height:0;justify-content:flex-start}
   <div class="hd"><h1 id="ov-h">One base, many departments</h1></div>
   <svg id="ovSvg" role="img" aria-labelledby="ov-h ov-d"></svg>
   <div class="sr" id="ov-d">Spatial data reaches the State Geoportal from departments across Chhattisgarh. The Revenue Department supplies the base: district, tehsil, block and village boundaries for the whole state. Every other department's data arrives on top of that base, each source in its own format and to its own schedule. Mining, Anganwadi and BharatNet are three of them. The work is to merge those submissions onto one set of boundaries and one coordinate system, so that a village means the same village in every layer. Today that merge holds 162 layers from 42 departments, published to one standard. Three applications already run on it: Mining, Anganwadi and BharatNet.</div>
-  <p class="ovcap"><span>This is the pipeline that brings them together, and the checks that keep what reaches the map dependable.</span><span class="hand" aria-hidden="true">starts at Intake<svg width="24" height="30" viewBox="0 0 24 30" style="overflow:visible"><path d="M8 2 C 14 9, 4 16, 12 26 M6.5 20.5 L12.2 26.4 L15.6 19.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></p>
+  
   <button class="ovrep" id="ovRep" type="button"><svg class="ic sm"><use href="#i-retry"/></svg>Replay</button>
 </section>
 
@@ -571,16 +571,17 @@ INIT.overview=()=>{
     {k:"awc",c:"var(--dv-blue-700)",sw:"awc",t:"Anganwadi",b:["centres arrive as points","on the same base"]},
     {k:"bn",c:"var(--dv-aqua-700)",sw:"bn",t:"BharatNet",b:["fibre routes and GP nodes,","one more source on top"]}];
   const POINTS={
-    vil:{t:"The work: merge it all",b:["Every department’s data is fitted","onto one set of boundaries and","one coordinate system, so a village",{hl:"is the same village in every layer."}]},
-    num:{big:"162",bigU:"layers",b:["from 42 departments,","published to one standard."],tag:"Already running on it",tagB:"Mining · Anganwadi · BharatNet"}};
+    vil:{t:"Merged onto one base",b:["Each department sends its own data.","We fit it all to the same boundaries","and the same coordinates, so",{hl:"a village is the same in every layer."}]},
+    num:{big:"162",bigU:"layers",b:["from 42 departments,","all published to one standard."]}};
   const CAN_HOVER=matchMedia("(hover: hover)").matches;
   const L={
     land:{vb:[1280,720],m:[354,8,1.1],sk:.56,sy:128,gap:24,fade:true,
-      pts:{vil:[44,250,"start"],num:[1236,230,"end"]},ts:27,fs:18,lh:27,big:76,lab:[17,14,19]},
+      pts:{vil:[52,0,"start"],num:[952,0,"start"]},ts:27,fs:18,lh:27,big:76,lab:[17,14,19]},
     wide:{vb:[1400,610],m:[453,-10,.95],sk:.58,sy:56,gap:30,fade:true,
-      pts:{vil:[60,214,"start"],num:[1340,196,"end"]},ts:27,fs:18,lh:27,big:76,lab:[17,14,19]},
-    port:{vb:[640,1250],m:[66,24,.98],sk:.5,grid:[[40,30],[340,30],[40,436],[340,436]],fade:true,
-      pts:{vil:[34,770,"start"],num:[34,1000,"start"]},ts:34,fs:25,lh:35,big:84,lab:[24,19,25]}};
+      pts:{vil:[88,0,"start"],num:[1010,0,"start"]},ts:27,fs:18,lh:27,big:76,lab:[17,14,19]},
+    port:{vb:[640,1170],m:[66,24,.98],sk:.5,grid:[[40,30],[340,30],[40,436],[340,436]],fade:true,
+      pts:{vil:[34,770,"start"],num:[34,1010,"start"]},ts:34,fs:25,lh:35,big:84,lab:[24,19,25]}};
+  const M0y=m=>m.m[1]+G.H*m.m[2]/2;
   const pick=()=>innerWidth<700?"port":innerWidth/innerHeight>1.9?"wide":"land";
   const lerp=(a,b,t)=>a+(b-a)*t;
   let mode,P,st,cancel=[],run=0,sCancel=null;
@@ -592,7 +593,7 @@ INIT.overview=()=>{
       st.cnt=n;yy+=m.big*.62+m.lh*1.25}
     p.b.forEach(l=>{if(typeof l==="string")txt({x,y:yy,class:"u","font-size":m.fs,"text-anchor":an},g,l);
       else{const e=txt({x,y:yy,class:"u hlt","font-size":m.fs,"text-anchor":an},g,l.hl)
-        const b=e.getBBox();g.insertBefore(el("rect",{x:b.x-5,y:b.y+b.height*.34,width:b.width+10,height:b.height*.58,rx:3,fill:"rgba(247,214,90,.75)"}),e)}
+        const b=e.getBBox();g.insertBefore(el("rect",{x:b.x-1,y:b.y+b.height*.34,width:b.width+6,height:b.height*.58,rx:3,fill:"rgba(247,214,90,.75)"}),e)}
       yy+=m.lh});
     if(p.tag){yy+=m.lh*.45;txt({x,y:yy,class:"u tag","font-size":m.fs*.72,"text-anchor":an},g,p.tag.toUpperCase());yy+=m.lh*1.02;
       txt({x,y:yy,class:"u t2","font-size":m.fs,"text-anchor":an},g,p.tagB)}
@@ -608,6 +609,9 @@ INIT.overview=()=>{
     else{const tot=4*w+3*m.gap,x0=(VW-tot)/2;pos=LAYERS.map((_,i)=>[x0+i*(w+m.gap),m.sy,m.sk])}
     // the two points
     const pts={};for(const k in POINTS)pts[k]=block(el("g",{class:"pt"},S),k,m);
+    // line the two blocks up: same top, and together centred on the map
+    if(mode!=="port"){const bb={};for(const k in pts)bb[k]=pts[k].getBBox();const H=Math.max(bb.vil.height,bb.num.height),cy=M0y(m),top=cy-H/2-20;
+      for(const k in pts){const g=el("g",{transform:`translate(0 ${(top-bb[k].y).toFixed(1)})`},S);g.appendChild(pts[k]);pts[k]=g}}
     // the map: one copy per source, stacked
     const mapG=el("g",{class:"ovmap",tabindex:0,role:"button","aria-expanded":"false","aria-label":"The four sources, one base. Show them separately"},S);
     const hit=el("rect",{fill:"transparent"},mapG);
@@ -637,7 +641,8 @@ INIT.overview=()=>{
       if(Ly.k==="bn"){el("path",{d:`M${sx-7},${sy+4} L${sx+7},${sy-4}`,stroke:"var(--dv-aqua-600)","stroke-width":2.2},g);el("circle",{cx:sx+7,cy:sy-4,r:2.8,fill:"#fff",stroke:"var(--dv-aqua-600)","stroke-width":1.5},g)}
       return g});
     // a quiet cue saying the map can be opened up
-    const [hx,hy]=mode==="port"?[VW/2,M0[1]+G.H*M0[2]+44]:[m.pts.vil[0],m.pts.vil[1]+m.lh*6.7];
+    const vb=pts.vil.getBBox(),vt=pts.vil.transform.baseVal.consolidate(),vdy=vt?vt.matrix.f:0;
+    const [hx,hy]=mode==="port"?[VW/2,M0[1]+G.H*M0[2]+44]:[m.pts.vil[0],vb.y+vdy+vb.height+m.lh*1.6];
     const hint=txt({x:hx,y:hy,class:"u cue","font-size":m.fs*.8,"text-anchor":mode==="port"?"middle":"start"},S,(CAN_HOVER?"Hover over":"Tap")+" the map to see each source on its own");
     P={m,M0,pos,pts,mapG,hit,copies,vilG,labs,hint,VW,VH};
     // hover, tap and keyboard all open the same view

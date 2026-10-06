@@ -109,3 +109,7 @@ OVERVIEW ON HOVER (v12 · 6 Oct 2026)
   #overview keeps two points in Avenir Next World: "The work: merge it all" and "162 layers".
   The four source notes are gone from the resting view; hover the map (tap on phones, Enter on keyboard)
   and it separates into four labelled copies. Frozen copy: versions/v12/ (also has v11's autoslide).
+
+OVERVIEW TEXT (v13 · 6 Oct 2026)
+  Drops the "Already running on it" row and the caption under the overview. Two left-aligned blocks,
+  same top, centred on the map: "Merged onto one base" and "162 layers". Frozen copy: versions/v13/
