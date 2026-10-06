@@ -625,7 +625,13 @@ SPEC.cycle={W:640,H:600,portH:600,foot:"The six stages of the story. The state o
   setup(A,done,ui){const s=A.st;let x=84;A.pulse([84,300],26);
    A.drag(s.knob,{move:p=>{x=clamp(p[0],0,560);s.setSw(x)},end:()=>{if(x>470){A.tw(300,t=>s.setSw(lerp(x,560,t))).then(()=>done())}else ui.say("Keep going: take it all the way across",true)}});
    s.knob.style.cursor="ew-resize"},
-  solve:async A=>{const s=A.st,x0=+s.sw.getAttribute("width");await A.tw(1300,t=>s.setSw(lerp(x0,560,t)))}};
+  solve:async A=>{const s=A.st,x0=+s.sw.getAttribute("width");await A.tw(1300,t=>s.setSw(lerp(x0,560,t)))},
+  // v11: autoslide. Until the reader grabs the knob, the scanner sweeps across and back on its own,
+  // like a before/after slider: paper on the left, digital on the right. It stops short of the edges
+  // so the knob stays in view.
+  demo:async A=>{const s=A.st,x0=+s.sw.getAttribute("width");
+   await A.tw(5200,t=>s.setSw(lerp(x0,532,t)));await A.wait(3200);
+   await A.tw(5200,t=>s.setSw(lerp(532,44,t)));await A.wait(2200)}};
  // the steps after start from a fully scanned sheet, whatever the reader did
 }
 // geodatabase: tap our centre to open its record
