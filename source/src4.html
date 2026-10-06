@@ -122,6 +122,7 @@ b,strong{font-weight:700;color:var(--ink)}
 #ovSvg text.u.t2{font-weight:600;fill:var(--n900)}
 #ovSvg text.u.cue{fill:var(--n600);font-style:italic}
 #ovSvg .ovmap{cursor:zoom-in;outline:none}
+#ovSvg .pen{pointer-events:none}
 #ovSvg .ovmap[aria-expanded=true]{cursor:default}
 #ovSvg .ovmap:focus-visible>rect{stroke:var(--n800);stroke-width:2;stroke-dasharray:6 5;rx:10}
 .base .dist{transition:stroke .25s}
@@ -576,9 +577,9 @@ INIT.overview=()=>{
   const CAN_HOVER=matchMedia("(hover: hover)").matches;
   const L={
     land:{vb:[1280,720],m:[354,8,1.1],sk:.56,sy:128,gap:24,fade:true,
-      pts:{vil:[52,0,"start"],num:[952,0,"start"]},ts:27,fs:18,lh:27,big:76,lab:[17,14,19]},
+      pts:{vil:[0,0,"start"],num:[0,0,"start"]},ts:31,fs:19.5,lh:30,big:100,gapT:56,minX:40,lab:[17,14,19]},
     wide:{vb:[1400,610],m:[453,-10,.95],sk:.58,sy:56,gap:30,fade:true,
-      pts:{vil:[88,0,"start"],num:[1010,0,"start"]},ts:27,fs:18,lh:27,big:76,lab:[17,14,19]},
+      pts:{vil:[0,0,"start"],num:[0,0,"start"]},ts:31,fs:19.5,lh:30,big:100,gapT:64,minX:60,lab:[17,14,19]},
     port:{vb:[640,1170],m:[66,24,.98],sk:.5,grid:[[40,30],[340,30],[40,436],[340,436]],fade:true,
       pts:{vil:[34,770,"start"],num:[34,1010,"start"]},ts:34,fs:25,lh:35,big:84,lab:[24,19,25]}};
   const M0y=m=>m.m[1]+G.H*m.m[2]/2;
@@ -593,7 +594,7 @@ INIT.overview=()=>{
       st.cnt=n;yy+=m.big*.62+m.lh*1.25}
     p.b.forEach(l=>{if(typeof l==="string")txt({x,y:yy,class:"u","font-size":m.fs,"text-anchor":an},g,l);
       else{const e=txt({x,y:yy,class:"u hlt","font-size":m.fs,"text-anchor":an},g,l.hl)
-        const b=e.getBBox();g.insertBefore(el("rect",{x:b.x-1,y:b.y+b.height*.34,width:b.width+6,height:b.height*.58,rx:3,fill:"rgba(247,214,90,.75)"}),e)}
+        g._hl=e;const b=e.getBBox();g.insertBefore(el("rect",{x:b.x-1,y:b.y+b.height*.34,width:b.width+6,height:b.height*.58,rx:3,fill:"rgba(247,214,90,.75)"}),e)}
       yy+=m.lh});
     if(p.tag){yy+=m.lh*.45;txt({x,y:yy,class:"u tag","font-size":m.fs*.72,"text-anchor":an},g,p.tag.toUpperCase());yy+=m.lh*1.02;
       txt({x,y:yy,class:"u t2","font-size":m.fs,"text-anchor":an},g,p.tagB)}
@@ -601,7 +602,7 @@ INIT.overview=()=>{
 
   function build(){
     const m=L[mode=pick()],[VW,VH]=m.vb;S.innerHTML="";S.setAttribute("viewBox",`0 0 ${VW} ${VH}`);S.classList.toggle("port",mode==="port");
-    st=st||{d:0,min:0,awc:0,bn:0,vil:0,p1:0,p2:0,s:0};
+    st=st||{d:0,min:0,awc:0,bn:0,vil:0,p1:0,p2:0,pen:0,ring:0,s:0};
     const defs=el("defs",{},S);defs.innerHTML='<filter id="ovSoft" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="7"/></filter>';
     // where each copy sits when merged and when separated
     const M0=m.m,w=G.W*m.sk;let pos;
@@ -609,9 +610,7 @@ INIT.overview=()=>{
     else{const tot=4*w+3*m.gap,x0=(VW-tot)/2;pos=LAYERS.map((_,i)=>[x0+i*(w+m.gap),m.sy,m.sk])}
     // the two points
     const pts={};for(const k in POINTS)pts[k]=block(el("g",{class:"pt"},S),k,m);
-    // line the two blocks up: same top, and together centred on the map
-    if(mode!=="port"){const bb={};for(const k in pts)bb[k]=pts[k].getBBox();const H=Math.max(bb.vil.height,bb.num.height),cy=M0y(m),top=cy-H/2-20;
-      for(const k in pts){const g=el("g",{transform:`translate(0 ${(top-bb[k].y).toFixed(1)})`},S);g.appendChild(pts[k]);pts[k]=g}}
+
     // the map: one copy per source, stacked
     const mapG=el("g",{class:"ovmap",tabindex:0,role:"button","aria-expanded":"false","aria-label":"The four sources, one base. Show them separately"},S);
     const hit=el("rect",{fill:"transparent"},mapG);
@@ -640,11 +639,36 @@ INIT.overview=()=>{
       if(Ly.k==="awc")el("circle",{cx:sx,cy:sy,r:4.2,fill:"var(--dv-blue-500)"},g);
       if(Ly.k==="bn"){el("path",{d:`M${sx-7},${sy+4} L${sx+7},${sy-4}`,stroke:"var(--dv-aqua-600)","stroke-width":2.2},g);el("circle",{cx:sx+7,cy:sy-4,r:2.8,fill:"#fff",stroke:"var(--dv-aqua-600)","stroke-width":1.5},g)}
       return g});
-    // a quiet cue saying the map can be opened up
-    const vb=pts.vil.getBBox(),vt=pts.vil.transform.baseVal.consolidate(),vdy=vt?vt.matrix.f:0;
-    const [hx,hy]=mode==="port"?[VW/2,M0[1]+G.H*M0[2]+44]:[m.pts.vil[0],vb.y+vdy+vb.height+m.lh*1.6];
-    const hint=txt({x:hx,y:hy,class:"u cue","font-size":m.fs*.8,"text-anchor":mode==="port"?"middle":"start"},S,(CAN_HOVER?"Hover over":"Tap")+" the map to see each source on its own");
-    P={m,M0,pos,pts,mapG,hit,copies,vilG,labs,hint,VW,VH};
+    // v14 layout: each block sits a fixed gap off the map's edge; the title's cap height and the
+    // number's cap height share one line, and the pair is centred on the map
+    const cueTxt=(CAN_HOVER?"Hover over":"Tap")+" the map to see each source on its own";let hint,hl0;
+    if(mode!=="port"){
+      const bb={vil:pts.vil.getBBox(),num:pts.num.getBBox()},sb=copies[0].fill.getBBox();
+      const mapL=M0[0]+sb.x*M0[2],mapR=M0[0]+(sb.x+sb.width)*M0[2];
+      const xv=Math.max(m.minX,mapL-m.gapT-bb.vil.width),xn=mapR+m.gapT;
+      const capV=-.71*m.ts,capN=m.big*.62-.72*m.big,cue=m.lh*1.75;
+      const hV=bb.vil.y+bb.vil.height-capV+cue,hN=bb.num.y+bb.num.height-capN,H=Math.max(hV,hN);
+      const top=M0y(m)-H/2-6,tyV=top-capV,tyN=top-capN;
+      const wv=el("g",{transform:`translate(${xv.toFixed(1)} ${tyV.toFixed(1)})`},S);wv.appendChild(pts.vil);
+      const wn=el("g",{transform:`translate(${xn.toFixed(1)} ${tyN.toFixed(1)})`},S);wn.appendChild(pts.num);
+      const hg=el("g",{transform:`translate(${xv.toFixed(1)} ${tyV.toFixed(1)})`},S);
+      hint=txt({x:0,y:bb.vil.y+bb.vil.height+cue,class:"u cue","font-size":m.fs*.82},hg,cueTxt);
+      const hb=pts.vil._hl.getBBox();hl0=[xv+hb.x+hb.width+12,tyV+hb.y+hb.height*.55]}
+    else hint=txt({x:VW/2,y:M0[1]+G.H*M0[2]+44,class:"u cue","font-size":m.fs*.8,"text-anchor":"middle"},S,cueTxt);
+    // pen marks: a loose ring round the village, and (beside the map) an arrow to it from the highlighted line
+    let seed=11;const Rn=()=>(seed=seed*16807%2147483647)/2147483647;
+    const pen=el("g",{class:"pen"},S),pin=[M0[0]+ST.pin[0]*M0[2],M0[1]+ST.pin[1]*M0[2]],rr=24;
+    let d="";for(let i=0;i<=48;i++){const a=-2.3+i/48*(Math.PI*2+.75),r=rr*(1+.07*Math.sin(a*3+.6)+i*.0024);d+=(i?"L":"M")+(pin[0]+Math.cos(a)*r*1.18).toFixed(1)+","+(pin[1]+Math.sin(a)*r).toFixed(1)}
+    const ring=el("path",{d,fill:"none",stroke:"var(--n900)","stroke-width":2.2,"stroke-linecap":"round","stroke-linejoin":"round",pathLength:1,"stroke-dasharray":1,"stroke-dashoffset":1},pen);
+    let arw=null;
+    if(hl0){const a=hl0,dx0=pin[0]-a[0],dy0=pin[1]-a[1],d0=Math.hypot(dx0,dy0),b=[pin[0]-dx0/d0*(rr*1.18+8),pin[1]-dy0/d0*(rr+8)];
+      const dx=b[0]-a[0],dy=b[1]-a[1],dd=Math.hypot(dx,dy),nx=-dy/dd,ny=dx/dd,w=-.2*dd;
+      const c1=[a[0]+dx*.3+nx*w,a[1]+dy*.3+ny*w],c2=[a[0]+dx*.75+nx*w*.35,a[1]+dy*.75+ny*w*.35];
+      const ex=b[0]-c2[0],ey=b[1]-c2[1],l=Math.hypot(ex,ey),ux=ex/l,uy=ey/l,f=q=>q.map(v=>v.toFixed(1)).join(",");
+      const h=(t,k)=>[b[0]-k*(ux*Math.cos(t)-uy*Math.sin(t)),b[1]-k*(uy*Math.cos(t)+ux*Math.sin(t))];
+      arw={sh:el("path",{d:`M${f(a)} C${f(c1)} ${f(c2)} ${f(b)}`,fill:"none",stroke:"var(--n800)","stroke-width":2,"stroke-linecap":"round",pathLength:1,"stroke-dasharray":1,"stroke-dashoffset":1},pen),
+        hd:el("path",{d:`M${f(h(.5,13))} L${f(b)} L${f(h(-.45,11))}`,fill:"none",stroke:"var(--n800)","stroke-width":2,"stroke-linecap":"round","stroke-linejoin":"round",opacity:0},pen)}}
+    P={m,M0,pos,pts,mapG,hit,copies,vilG,labs,hint,VW,VH,pen,ring,arw};
     // hover, tap and keyboard all open the same view
     let ptype="mouse";
     mapG.addEventListener("pointerdown",e=>{ptype=e.pointerType});
@@ -667,6 +691,8 @@ INIT.overview=()=>{
     const fade=m.fade?Math.max(0,1-s*2.2):1;
     p.pts.vil.setAttribute("opacity",st.p1*fade);p.pts.num.setAttribute("opacity",st.p2*fade);
     p.hint.setAttribute("opacity",st.p2*Math.max(0,1-s*2.2)*.95);
+    p.pen.setAttribute("opacity",Math.max(0,1-s*2.2));p.ring.setAttribute("stroke-dashoffset",1-st.ring);
+    if(p.arw){p.arw.sh.setAttribute("stroke-dashoffset",1-st.pen);p.arw.hd.setAttribute("opacity",st.pen>.97?1:0)}
     // the hit area grows with the copies so the pointer can travel between them
     if(s>.01){const x0=Math.min(...p.pos.map(q=>q[0]))-16,x1=Math.max(...p.pos.map(q=>q[0]+G.W*q[2]))+16,y0=Math.min(...p.pos.map(q=>q[1]))-16,y1=Math.max(...p.pos.map(q=>q[1]+G.H*q[2]))+m.lab[2]*3+30;
       Object.entries({x:x0,y:y0,width:x1-x0,height:y1-y0}).forEach(([a,v])=>p.hit.setAttribute(a,v))}
@@ -677,19 +703,21 @@ INIT.overview=()=>{
 
   const tw=(ms,fn)=>new Promise(r=>{cancel.push(tween(ms,fn,r))});
   async function play(){cancel.forEach(c=>c());cancel=[];const me=++run,alive=()=>run===me;rep.classList.remove("on");
-    Object.assign(st,{d:0,min:0,awc:0,bn:0,vil:0,p1:0,p2:0});st.cnt&&(st.cnt.textContent="0");render();
-    const fin=()=>{Object.assign(st,{d:1,min:1,awc:1,bn:1,vil:1,p1:1,p2:1});P&&(P.pts.num.querySelector("tspan").textContent="162");render();rep.classList.add("on")};
+    Object.assign(st,{d:0,min:0,awc:0,bn:0,vil:0,p1:0,p2:0,pen:0,ring:0});st.cnt&&(st.cnt.textContent="0");render();
+    const fin=()=>{Object.assign(st,{d:1,min:1,awc:1,bn:1,vil:1,p1:1,p2:1,pen:1,ring:1});P&&(P.pts.num.querySelector("tspan").textContent="162");render();rep.classList.add("on")};
     if(REDUCE)return fin();
     await tw(1100,t=>{st.d=t;render()});if(!alive())return;
     for(const k of["min","awc","bn"]){await tw(420,t=>{st[k]=t;render()});if(!alive())return;await wait(120)}
-    tw(500,t=>{st.vil=t;st.p1=t;render()});await wait(700);if(!alive())return;
+    await tw(500,t=>{st.vil=t;st.p1=t;render()});if(!alive())return;
+    if(P.arw){await tw(560,t=>{st.pen=t;render()});if(!alive())return}
+    await tw(480,t=>{st.ring=t;render()});await wait(250);if(!alive())return;
     const n=P.pts.num.querySelector("tspan");tw(500,t=>{st.p2=t;render()});await tw(1300,t=>{n.textContent=Math.round(162*t)});if(!alive())return;
     rep.classList.add("on")}
   rep.onclick=()=>{split(0);play()};
-  const faces=['700 27px "Avenir Next World"','400 18px "Avenir Next World"'];
+  const faces=['700 31px "Avenir Next World"','400 19.5px "Avenir Next World"','500 32px "Avenir Next World"'];
   Promise.all(faces.map(f=>document.fonts.load(f).catch(()=>{}))).then(()=>{build();
     new IntersectionObserver((es,o)=>{if(es[0].isIntersecting){o.disconnect();setTimeout(play,250)}},{threshold:.35}).observe(S)});
-  let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(pick()!==mode){const done=rep.classList.contains("on");build();if(done){P.pts.num.querySelector("tspan").textContent="162"}render()}},150)})};
+  let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(pick()!==mode){const done=rep.classList.contains("on");build();if(done){P.pts.num.querySelector("tspan").textContent="162";Object.assign(st,{pen:1,ring:1})}render()}},150)})};
 
 /* ============================================================ FLOW (vertical, scroll-driven) */
 INIT.flow=()=>{
