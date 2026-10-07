@@ -6,129 +6,204 @@
 <title>Chhattisgarh in 0s and 1s</title>
 <style>
 @font-face{font-family:"GitLab Mono";src:url("fonts/GitLabMono-sub.woff2") format("woff2");font-display:swap}
-html,body{margin:0;height:100%;background:#06120f;overflow:hidden}
+html,body{margin:0;height:100%;background:#040e0b;overflow:hidden}
 canvas{display:block;width:100vw;height:100vh}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 </style>
 </head>
 <body>
-<canvas id="c" role="img" aria-label="Rows from an Excel sheet, features from GeoJSON and tables from PostGIS stream out as 0s and 1s and settle into the outline of Chhattisgarh, with its district boundaries."></canvas>
-<p class="sr">Three data sources, an Excel sheet, a GeoJSON file and a PostGIS database, send streams of binary digits that come together as one map of Chhattisgarh.</p>
+<canvas id="c" role="img" aria-label="Rows from an Excel sheet, features from GeoJSON and tables from PostGIS stream out as 0s and 1s and assemble, district by district, into the map of Chhattisgarh."></canvas>
+<p class="sr">Three data sources, an Excel sheet, a GeoJSON file and a PostGIS database, send streams of binary digits that come together as one map of Chhattisgarh, district by district.</p>
 <script>
-/* Real geometry: the state and its 27 districts (2011 census), in the state's Lambert projection,
-   the same outline every other Ground Truth figure uses. */
+/* v11 · the flat binary map, finished to a game standard.
+   Art direction: keep the flat green world, the three icon cards and the three stream colours; add depth
+   (bloom, vignette, grain, parallax data in the air, a slow camera push), feel (trails, landing ripples,
+   districts lighting up as they complete) and a finish (target outline, progress readout, light sweep,
+   title card). Real geometry: the state and its 27 districts (2011 census) in the state's Lambert
+   projection. Options: ?labels=0 no text · ?still finished frame · ?poster mid-formation frame. */
 const GEO=/*GEO*/null;
 const Q=new URLSearchParams(location.search+"&"+location.hash.slice(1));
-const SHOW_LABELS=Q.get("labels")!=="0";
-// ?poster: one still frame of the formation itself, half built, with the three streams in flight
-const POSTER=Q.has("poster");let seed=11;if(POSTER)Math.random=()=>(seed=seed*16807%2147483647)/2147483647;
-const REDUCE=(matchMedia("(prefers-reduced-motion: reduce)").matches&&!POSTER)||Q.has("still");
+const POSTER=Q.has("poster"),STILL=Q.has("still"),TEXT=Q.get("labels")!=="0";
+let seed=11;if(POSTER||STILL)Math.random=()=>(seed=seed*16807%2147483647)/2147483647;
+const REDUCE=(matchMedia("(prefers-reduced-motion: reduce)").matches&&!POSTER)||STILL;
 const SRC=[
-  {key:"xls", name:"Excel sheet", sub:"rows and columns", col:"#2fbf71"},
-  {key:"geo", name:"GeoJSON",     sub:"features",         col:"#f2b544"},
-  {key:"pg",  name:"PostGIS",     sub:"spatial tables",   col:"#6aa8ff"}];
-const LAND="#5fe3b3",EDGE="#c9ffe9",BG0="#06120f",BG1="#0d2620";
+  {key:"xls",name:"Excel sheet",sub:"rows and columns",col:"#34d27f",rgb:"52,210,127"},
+  {key:"geo",name:"GeoJSON",    sub:"features",        col:"#f6b847",rgb:"246,184,71"},
+  {key:"pg", name:"PostGIS",    sub:"spatial tables",  col:"#6fa9ff",rgb:"111,169,255"}];
+const LAND="#5fe3b3",EDGE="#dcfff1",INK="#e8f5ef",BG0="#030b09",BG1="#0c2a22";
+const FONT='"Avenir Next World","Avenir Next",system-ui,sans-serif',MONO='"GitLab Mono",ui-monospace,Menlo,Consolas,monospace';
 const cv=document.getElementById("c"),cx=cv.getContext("2d");
-let sent=0,W,H,DPR,L,cells=[],flying=[],t0=performance.now(),last=t0,done=false,glyph={},statePath,distPaths,mapT;
-
-const rnd=(a,b)=>a+Math.random()*(b-a);const clamp3=v=>Math.max(0,Math.min(2,v));
-function srcEdge(s){const lx=W/H>1.05;return lx?[s.x+s.r*1.3,s.y+rnd(-s.r*.5,s.r*.5)]:[s.x+rnd(-s.r*.6,s.r*.6),s.y+s.r*1.05+(SHOW_LABELS?s.r*1.2:0)]}
-const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
-function path(d){return new Path2D(d)}
+const gl=document.createElement("canvas"),gx=gl.getContext("2d");          // the bloom buffer, a third of the size
+let W,H,DPR,L,mapT,cells=[],fly=[],rip=[],air=[],dists=[],sent=0,landed=0,done=false,formedAt=0,t0=performance.now(),last=t0;
+let glyph={},statePath,distPaths,outlineLen=0,vign,grain,land;
+const rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,easeOut=t=>1-Math.pow(1-t,3);
+const quad=(a,c,b,t)=>{const m=1-t;return[m*m*a[0]+2*m*t*c[0]+t*t*b[0],m*m*a[1]+2*m*t*c[1]+t*t*b[1]]};
 
 function layout(){
-  DPR=Math.min(2,window.devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;cx.setTransform(DPR,0,0,DPR,0,0);
-  const land=W/H>1.05,bb={x:79.11,y:24,w:361.78,h:592},pad=Math.max(16,Math.min(W,H)*.05);
-  // map box and source column/row
-  let mx,my,mw,mh,srcPos=[];
-  if(land){const colW=Math.min(260,W*.26);mx=pad+colW+pad;my=pad;mw=W-mx-pad;mh=H-2*pad;
-    SRC.forEach((s,i)=>srcPos.push({x:pad+colW/2,y:H*(.25+i*.25)}))}
-  else{const rowH=Math.min(150,H*.2);mx=pad;my=pad+rowH;mw=W-2*pad;mh=H-my-pad;
-    SRC.forEach((s,i)=>srcPos.push({x:W*(.2+i*.3),y:pad+rowH*.45}))}
-  const k=Math.min(mw/bb.w,mh/bb.h);mapT={k,ox:mx+(mw-bb.w*k)/2-bb.x*k,oy:my+(mh-bb.h*k)/2-bb.y*k};
-  SRC.forEach((s,i)=>{s.x=srcPos[i].x;s.y=srcPos[i].y;s.r=Math.max(26,Math.min(44,Math.min(W,H)*.055))});
-  statePath=path(GEO.state);distPaths=GEO.districts.map(d=>path(d.d));
-  // the grid of digits: every cell whose centre falls inside the state
+  DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;gl.width=Math.ceil(W/3);gl.height=Math.ceil(H/3);
+  land=W/H>1.05;const bb={x:79.11,y:24,w:361.78,h:592},pad=Math.max(16,Math.min(W,H)*.05);
+  let mx,my,mw,mh;
+  if(land){const colW=Math.min(260,W*.24);mx=pad+colW+pad*1.5;my=pad;mw=W-mx-pad;mh=H-2*pad;SRC.forEach((s,i)=>Object.assign(s,{x:pad+colW/2,y:H*(.26+i*.24)}))}
+  else{const rowH=Math.min(150,H*.19);mx=pad;my=pad+rowH;mw=W-2*pad;mh=H-my-pad*2.2;SRC.forEach((s,i)=>Object.assign(s,{x:W*(.18+i*.32),y:pad+rowH*.4}))}
+  const k=Math.min(mw/bb.w,mh/bb.h);mapT={k,ox:mx+(mw-bb.w*k)/2-bb.x*k,oy:my+(mh-bb.h*k)/2-bb.y*k,mx,my,mw,mh,bb};
+  SRC.forEach(s=>{s.r=Math.max(24,Math.min(44,Math.min(W,H)*.055));s.count=0});
+  statePath=new Path2D(GEO.state);distPaths=GEO.districts.map(d=>new Path2D(d.d));
+  // the outline's length, for the target trace
+  outlineLen=0;GEO.state.split("M").filter(Boolean).forEach(r=>{const P=r.replace(/Z/g,"").split("L").map(v=>v.split(",").map(Number));for(let i=1;i<=P.length;i++){const a=P[i-1],b=P[i%P.length];outlineLen+=Math.hypot(b[0]-a[0],b[1]-a[1])}});
+  const off=new OffscreenCanvas(1,1).getContext("2d"),toMap=(x,y)=>[(x-mapT.ox)/k,(y-mapT.oy)/k];
   const areaPx=bb.w*bb.h*k*k*.47,cs=Math.max(9,Math.sqrt(areaPx/1300));L={cs,font:Math.round(cs*1.02)};
-  const off=new OffscreenCanvas(1,1).getContext("2d"),inside=(x,y)=>off.isPointInPath(statePath,(x-mapT.ox)/k,(y-mapT.oy)/k);
-  const next=[],grid=new Map();
-  for(let y=my+cs/2;y<my+mh;y+=cs)for(let x=mx+cs/2;x<mx+mw;x+=cs)if(inside(x,y)){const c={x,y,b:Math.random()<.5?1:0,src:Math.floor(Math.random()*3),on:0,land:0,edge:false};next.push(c);grid.set(Math.round(x/cs)+","+Math.round(y/cs),c)}
-  next.forEach(c=>{const gx=Math.round(c.x/cs),gy=Math.round(c.y/cs);c.edge=[[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>!grid.has((gx+a)+","+(gy+b)))});
-  // keep what had already landed when the window is resized
-  const keep=done||cells.some(c=>c.on);cells=next;flying=[];sent=keep||REDUCE?next.length:0;
-  // order of arrival: a soft sweep from the sources' side, with noise, so the state fills in, not pops in
-  cells.forEach(c=>{const band=land?(c.y-my)/mh:(c.x-mx)/mw;c.src=clamp3(Math.floor(band*3+(Math.random()-.5)*.5));
+  cells=[];const grid=new Set();
+  for(let y=my+cs/2;y<my+mh;y+=cs)for(let x=mx+cs/2;x<mx+mw;x+=cs){const m=toMap(x,y);if(off.isPointInPath(statePath,m[0],m[1])){
+    const di=distPaths.findIndex(p=>off.isPointInPath(p,m[0],m[1]));cells.push({x,y,b:Math.random()<.5?1:0,on:0,heat:0,di,tw:Math.random()*6.28});grid.add(Math.round(x/cs)+","+Math.round(y/cs))}}
+  cells.forEach(c=>{const gxx=Math.round(c.x/cs),gyy=Math.round(c.y/cs);c.edge=[[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>!grid.has((gxx+a)+","+(gyy+b)));
+    const band=land?(c.y-my)/mh:(c.x-mx)/mw;c.src=clamp(Math.floor(band*3+(Math.random()-.5)*.5),0,2);
     c.order=(land?(c.x-mx)/mw:(c.y-my)/mh)*.7+Math.random()*.3});
   cells.sort((a,b)=>a.order-b.order);
-  if(POSTER){done=false;sent=cells.length;const cut=.5;
-    cells.forEach(c=>{c.on=c.order<cut?1:0;c.land=1});
-    // the rest are on their way: placed along their flight paths, nearer the map the closer they are to landing
-    const wait=cells.filter(c=>!c.on);for(let k=0;k<wait.length*1.6;k++){const c=wait[Math.floor(Math.random()*wait.length)],s=SRC[c.src],e=srcEdge(s);
-      flying.push({c,s,sx:e[0],sy:e[1],mx:(e[0]+c.x)/2+rnd(-22,22),my:(e[1]+c.y)/2+rnd(-30,30),u:Math.random()*.9+.05,b:Math.random()<.5?1:0})}}
-  else if(keep||REDUCE){cells.forEach(c=>{c.on=1;c.land=1});done=true}
+  // districts: how many cells each holds, and where its name goes
+  dists=GEO.districts.map((d,i)=>{const mine=cells.filter(c=>c.di===i);return{n:d.n,total:mine.length,got:0,done:0,at:mine.length?[mine.reduce((a,c)=>a+c.x,0)/mine.length,mine.reduce((a,c)=>a+c.y,0)/mine.length]:null}});
+  // data in the air: two depths of faint digits drifting down
+  air=Array.from({length:Math.round(W*H/5200)},(_,i)=>{const z=i%3===0?1:.5;return{x:Math.random()*W,y:Math.random()*H,z,v:(z>.9?10:5)*rnd(.6,1.4),b:Math.random()<.5?1:0,a:rnd(.04,z>.9?.14:.07)}});
+  // vignette and grain, made once
+  vign=document.createElement("canvas");vign.width=W;vign.height=H;{const v=vign.getContext("2d"),g=v.createRadialGradient(W*.58,H*.5,Math.min(W,H)*.25,W*.58,H*.5,Math.hypot(W,H)*.62);
+    g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(0,0,0,.62)");v.fillStyle=g;v.fillRect(0,0,W,H)}
+  grain=document.createElement("canvas");grain.width=grain.height=192;{const g=grain.getContext("2d"),d=g.createImageData(192,192);for(let i=0;i<d.data.length;i+=4){const n=Math.random()*255;d.data[i]=d.data[i+1]=d.data[i+2]=n;d.data[i+3]=22}g.putImageData(d,0,0)}
+  fly=[];rip=[];sent=0;landed=0;done=false;
+  if(REDUCE){cells.forEach(c=>c.on=1);sent=landed=cells.length;dists.forEach(d=>{d.got=d.total;d.done=-1e9});done=true;formedAt=-1e9;SRC.forEach(s=>s.count=Math.round(cells.length/3))}
+  if(POSTER){const cut=.5;cells.forEach(c=>{if(c.order<cut){c.on=1;landed++;if(c.di>=0)dists[c.di].got++}});sent=cells.length;
+    dists.forEach(d=>{if(d.total&&d.got>=d.total)d.done=-1e9});SRC.forEach((s,i)=>s.count=cells.filter(c=>c.on&&c.src===i).length);
+    const wait=cells.filter(c=>!c.on);for(let i=0;i<wait.length*1.5;i++){const c=wait[Math.floor(Math.random()*wait.length)];fly.push(mkFly(c,0,Math.random()*.9+.05))}}
   makeGlyphs()}
 
-function makeGlyphs(){glyph={};const f=L.font;
-  [LAND,EDGE,...SRC.map(s=>s.col)].forEach(col=>{["0","1"].forEach(ch=>{const g=new OffscreenCanvas(Math.ceil(f*1.2*DPR),Math.ceil(f*1.4*DPR)),c=g.getContext("2d");
-    c.scale(DPR,DPR);c.fillStyle=col;c.font=`${f}px "GitLab Mono",ui-monospace,Menlo,Consolas,monospace`;c.textAlign="center";c.textBaseline="middle";c.fillText(ch,f*.6,f*.72);glyph[col+ch]=g})})}
-function digit(col,b,x,y,a){const g=glyph[col+b];if(!g)return;cx.globalAlpha=a;cx.drawImage(g,x-L.font*.6,y-L.font*.72,g.width/DPR,g.height/DPR)}
+function portOf(s){return land?[s.x+s.r*1.3,s.y+rnd(-s.r*.45,s.r*.45)]:[s.x+rnd(-s.r*.55,s.r*.55),s.y+s.r*1.05+(TEXT?s.r*1.25:0)]}
+function mkFly(c,now,u){const s=SRC[c.src],a=portOf(s);return{c,a,m:[(a[0]+c.x)/2+rnd(-24,24),(a[1]+c.y)/2+rnd(-34,34)],t:now,d:rnd(1100,1700),u,b:Math.random()<.5?1:0}}
 
-/* the three sources, drawn as small cards */
-function drawSource(s,a){
-  const r=s.r;cx.save();cx.globalAlpha=a;cx.translate(s.x,s.y);
-  cx.fillStyle="rgba(255,255,255,.04)";cx.strokeStyle=s.col;cx.lineWidth=1.5;
-  rr(-r*1.25,-r,r*2.5,r*2,10);cx.fill();cx.stroke();cx.strokeStyle=s.col;cx.fillStyle=s.col;cx.lineWidth=1.6;
-  if(s.key==="xls"){const w=r*1.5,h=r*1.1;cx.strokeRect(-w/2,-h/2,w,h);for(let i=1;i<3;i++){cx.beginPath();cx.moveTo(-w/2+w*i/3,-h/2);cx.lineTo(-w/2+w*i/3,h/2);cx.stroke()}
-    for(let j=1;j<4;j++){cx.beginPath();cx.moveTo(-w/2,-h/2+h*j/4);cx.lineTo(w/2,-h/2+h*j/4);cx.stroke()}cx.globalAlpha=a*.35;cx.fillRect(-w/2,-h/2,w,h/4)}
-  if(s.key==="geo"){cx.font=`700 ${r*.9}px "GitLab Mono",ui-monospace,monospace`;cx.textAlign="center";cx.textBaseline="middle";cx.fillText("{ }",0,-r*.05);
-    cx.globalAlpha=a*.6;cx.font=`${r*.26}px "GitLab Mono",ui-monospace,monospace`;cx.fillText('"Polygon"',0,r*.6)}
-  if(s.key==="pg"){const w=r*.75,h=r*.22;for(let i=0;i<3;i++){const y=-r*.45+i*r*.42;cx.beginPath();cx.ellipse(0,y,w,h,0,0,Math.PI*2);cx.stroke()}
-    cx.beginPath();cx.moveTo(-w,-r*.45);cx.lineTo(-w,r*.39);cx.moveTo(w,-r*.45);cx.lineTo(w,r*.39);cx.stroke()}
-  if(SHOW_LABELS){cx.globalAlpha=a;cx.fillStyle="#e8f5ef";cx.textAlign="center";cx.textBaseline="top";cx.font=`600 ${Math.max(12,r*.36)}px "Avenir Next World","Avenir Next",system-ui,sans-serif`;cx.fillText(s.name,0,r*1.15);
-    cx.globalAlpha=a*.6;cx.font=`${Math.max(10.5,r*.28)}px "Avenir Next World","Avenir Next",system-ui,sans-serif`;cx.fillText(s.sub,0,r*1.15+Math.max(15,r*.42))}
-  cx.restore()}
+function makeGlyphs(){glyph={};const f=L.font,sizes=[f,Math.round(f*.72)];
+  [LAND,EDGE,...SRC.map(s=>s.col)].forEach(col=>sizes.forEach(z=>["0","1"].forEach(ch=>{const g=new OffscreenCanvas(Math.ceil(z*1.25*DPR),Math.ceil(z*1.45*DPR)),c=g.getContext("2d");
+    c.scale(DPR,DPR);c.fillStyle=col;c.font=`600 ${z}px ${MONO}`;c.textAlign="center";c.textBaseline="middle";c.fillText(ch,z*.62,z*.74);glyph[col+z+ch]=g})))}
+function digit(col,z,b,x,y,a){const g=glyph[col+z+b];if(!g||a<=.01)return;cx.globalAlpha=a;cx.drawImage(g,x-z*.62,y-z*.74,g.width/DPR,g.height/DPR)}
+function blob(x,y,r,col,a){gx.globalAlpha=a;gx.fillStyle=col;gx.beginPath();gx.arc(x/3,y/3,r/3,0,6.283);gx.fill()}
+
+/* source cards: they draw themselves in, breathe, and count what they have sent */
+function card(s,i,T){
+  const born=REDUCE||POSTER?1:clamp((T-.15-i*.18)/.7,0,1);if(born<=0)return;const r=s.r,e=easeOut(born);
+  cx.save();cx.translate(s.x,s.y);
+  const w=r*2.5,h=r*2,breathe=REDUCE?.5:.5+.5*Math.sin(T*2+i*1.3);
+  cx.globalAlpha=e;cx.fillStyle=`rgba(${s.rgb},.07)`;rr(-w/2,-h/2,w,h,12);cx.fill();
+  cx.shadowColor=s.col;cx.shadowBlur=10+12*breathe;cx.strokeStyle=s.col;cx.lineWidth=1.6;
+  const per=2*(w+h);cx.setLineDash([per*e,per]);rr(-w/2,-h/2,w,h,12);cx.stroke();cx.setLineDash([]);cx.shadowBlur=0;
+  // a scan line passing through the card while it is sending
+  if(!done&&!REDUCE&&!POSTER&&T>1){const sy=-h/2+((T*.8+i*.33)%1)*h;cx.save();rr(-w/2,-h/2,w,h,12);cx.clip();const g=cx.createLinearGradient(0,sy-10,0,sy+10);g.addColorStop(0,`rgba(${s.rgb},0)`);g.addColorStop(.5,`rgba(${s.rgb},.22)`);g.addColorStop(1,`rgba(${s.rgb},0)`);cx.fillStyle=g;cx.fillRect(-w/2,sy-10,w,20);cx.restore()}
+  cx.strokeStyle=s.col;cx.fillStyle=s.col;cx.lineWidth=1.7;cx.globalAlpha=e;
+  if(s.key==="xls"){const iw=r*1.45,ih=r*1.05;cx.strokeRect(-iw/2,-ih/2,iw,ih);for(let k=1;k<3;k++){cx.beginPath();cx.moveTo(-iw/2+iw*k/3,-ih/2);cx.lineTo(-iw/2+iw*k/3,ih/2);cx.stroke()}
+    for(let j=1;j<4;j++){cx.beginPath();cx.moveTo(-iw/2,-ih/2+ih*j/4);cx.lineTo(iw/2,-ih/2+ih*j/4);cx.stroke()}cx.globalAlpha=e*.35;cx.fillRect(-iw/2,-ih/2,iw,ih/4);
+    if(!REDUCE&&!POSTER){const cell=Math.floor(T*3)%9,cxx=cell%3,cyy=1+Math.floor(cell/3);cx.globalAlpha=e*.5*breathe;cx.fillRect(-iw/2+iw*cxx/3,-ih/2+ih*cyy/4,iw/3,ih/4)}}
+  if(s.key==="geo"){cx.font=`700 ${r*.88}px ${MONO}`;cx.textAlign="center";cx.textBaseline="middle";cx.fillText("{ }",0,-r*.06);cx.globalAlpha=e*.65;cx.font=`${r*.25}px ${MONO}`;cx.fillText('"Polygon"',0,r*.6)}
+  if(s.key==="pg"){const ew=r*.74,eh=r*.21;for(let k=0;k<3;k++){const y=-r*.45+k*r*.42;cx.beginPath();cx.ellipse(0,y,ew,eh,0,0,6.283);cx.stroke();if(!REDUCE&&!POSTER&&Math.floor(T*2.5)%3===k){cx.globalAlpha=e*.25;cx.fill();cx.globalAlpha=e}}
+    cx.beginPath();cx.moveTo(-ew,-r*.45);cx.lineTo(-ew,r*.39);cx.moveTo(ew,-r*.45);cx.lineTo(ew,r*.39);cx.stroke()}
+  if(TEXT){cx.globalAlpha=e;cx.textAlign="center";cx.textBaseline="top";cx.fillStyle=INK;cx.font=`600 ${Math.max(12,r*.36)}px ${FONT}`;cx.fillText(s.name,0,r*1.15);
+    cx.globalAlpha=e*.62;cx.font=`${Math.max(10.5,r*.27)}px ${FONT}`;cx.fillText(s.sub,0,r*1.15+Math.max(15,r*.42));
+    cx.globalAlpha=e*.85;cx.fillStyle=s.col;cx.font=`${Math.max(10,r*.25)}px ${MONO}`;cx.fillText(String(s.count).padStart(4,"0")+" sent",0,r*1.15+Math.max(30,r*.8))}
+  cx.restore();
+  blob(s.x,s.y,r*1.5,s.col,.12*e*(.6+.4*breathe))}
 function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
 
-/* emission: every cell is fetched once by a digit flying from its source */
-function emit(now,dt){
-  const T=(now-t0)/1000;if(T<.9||sent>=cells.length)return;
-  const rate=cells.length/6.2,n=Math.min(cells.length-sent,Math.ceil(rate*dt/1000*1.0+Math.random()));
-  for(let i=0;i<n;i++){const c=cells[sent++],s=SRC[c.src];
-    const mxp=(s.x+c.x)/2+rnd(-30,30),myp=(s.y+c.y)/2+rnd(-45,45);
-    const lx=W/H>1.05,ex=lx?s.x+s.r*1.3:s.x+rnd(-s.r,s.r),ey=lx?s.y+rnd(-s.r*.8,s.r*.8):s.y+s.r*1.05+(SHOW_LABELS?s.r*1.2:0);
-    flying.push({c,s,sx:ex,sy:ey,mx:mxp,my:myp,t:now,d:rnd(1000,1700),b:Math.random()<.5?1:0})}}
+function land1(c,now){c.on=1;c.heat=1;landed++;SRC[c.src].count++;
+  if(rip.length<70)rip.push({x:c.x,y:c.y,t:now,col:SRC[c.src].col});
+  if(c.di>=0){const d=dists[c.di];d.got++;if(!d.done&&d.got>=d.total)d.done=now}}
 
 function frame(now){
   const dt=Math.min(64,now-last);last=now;const T=(now-t0)/1000;
+  cx.setTransform(DPR,0,0,DPR,0,0);cx.globalCompositeOperation="source-over";cx.globalAlpha=1;
+  gx.setTransform(1,0,0,1,0,0);gx.globalCompositeOperation="source-over";gx.clearRect(0,0,gl.width,gl.height);gx.globalCompositeOperation="lighter";
   // background
-  const g=cx.createRadialGradient(W*.62,H*.52,0,W*.62,H*.52,Math.max(W,H)*.75);g.addColorStop(0,BG1);g.addColorStop(1,BG0);cx.globalAlpha=1;cx.fillStyle=g;cx.fillRect(0,0,W,H);
-  // a faint lattice: the grid every digit sits on
-  cx.globalAlpha=.05;cx.strokeStyle="#9fe8cc";cx.lineWidth=1;cx.beginPath();for(let x=L.cs*4;x<W;x+=L.cs*4){cx.moveTo(x,0);cx.lineTo(x,H)}for(let y=L.cs*4;y<H;y+=L.cs*4){cx.moveTo(0,y);cx.lineTo(W,y)}cx.stroke();
-  const srcA=REDUCE?1:Math.min(1,T/.8);
-  if(!done&&!REDUCE)emit(now,dt);
-  // landed digits; a few flip each frame, the map is live data, not a picture
-  const flips=REDUCE?0:Math.ceil(cells.length*.0025);for(let i=0;i<flips;i++){const c=cells[Math.floor(Math.random()*cells.length)];if(c.land)c.b^=1,c.flash=1}
-  for(const c of cells){if(!c.on)continue;const a=c.edge?1:.62+((c.x*7+c.y*13)%10)/32;
-    if(c.land<1){c.land=Math.min(1,c.land+dt/350)}if(POSTER&&c.order>.4&&c.order<.5){digit(SRC[c.src].col,c.b,c.x,c.y,.9);continue}
-    const col=c.land<1?SRC[c.src].col:(c.edge?EDGE:LAND);digit(col,c.b,c.x,c.y,a*(c.flash?1:1));if(c.flash){c.flash=Math.max(0,c.flash-dt/400);if(c.flash>0)digit(EDGE,c.b,c.x,c.y,c.flash*.8)}}
-  // digits in flight, coloured by the source they came from
-  for(let i=flying.length-1;i>=0;i--){const f=flying[i];let u=f.u!==undefined?f.u:(now-f.t)/f.d;if(u>=1){f.c.on=1;f.c.b=f.b;flying.splice(i,1);continue}
-    const e=ease(u),x=(1-e)*(1-e)*f.sx+2*(1-e)*e*f.mx+e*e*f.c.x,y=(1-e)*(1-e)*f.sy+2*(1-e)*e*f.my+e*e*f.c.y;
-    digit(f.s.col,f.u!==undefined?f.b:((u*12|0)%2?f.b:1-f.b),x,y,f.u!==undefined?.6+.4*Math.sin(u*Math.PI):.35+.65*Math.sin(u*Math.PI))}
-  if(!done&&sent>=cells.length&&!flying.length){done=true;window.__formed=now}
-  // once the map has formed: the real state outline and district lines come up
-  const fa=done?(REDUCE?1:Math.min(1,(now-(window.__formed||now))/1500)):0;
-  if(fa>0){cx.save();cx.setTransform(DPR*mapT.k,0,0,DPR*mapT.k,DPR*mapT.ox,DPR*mapT.oy);
-    cx.globalAlpha=.22*fa;cx.strokeStyle="#bff5df";cx.lineWidth=.9/mapT.k;distPaths.forEach(p=>cx.stroke(p));
-    cx.globalAlpha=.85*fa;cx.strokeStyle=EDGE;cx.lineWidth=1.6/mapT.k;cx.shadowColor=LAND;cx.shadowBlur=12;cx.stroke(statePath);cx.restore()}
-  if(!done||POSTER){cx.save();cx.setTransform(DPR*mapT.k,0,0,DPR*mapT.k,DPR*mapT.ox,DPR*mapT.oy);cx.globalAlpha=POSTER?.5:.25*Math.min(1,T/1.5);cx.strokeStyle=EDGE;cx.lineWidth=1.2/mapT.k;cx.setLineDash([4/mapT.k,5/mapT.k]);cx.stroke(statePath);cx.restore()}
-  SRC.forEach(s=>drawSource(s,POSTER?1:srcA*(done?.85:1)));
-  // after it forms, the sources keep sending small updates, as the portal does
-  if(done&&!REDUCE&&Math.random()<dt/260){const c=cells[Math.floor(Math.random()*cells.length)];const s=SRC[Math.floor(Math.random()*3)];c.src=SRC.indexOf(s);
-    const lx=W/H>1.05;flying.push({c,s,sx:lx?s.x+s.r*1.3:s.x,sy:lx?s.y:s.y+s.r*1.05+(SHOW_LABELS?s.r*1.2:0),mx:(s.x+c.x)/2+rnd(-60,60),my:(s.y+c.y)/2+rnd(-90,90),t:now,d:rnd(1200,1800),b:Math.random()<.5?1:0});c.land=0}
+  const bg=cx.createRadialGradient(W*.6,H*.5,0,W*.6,H*.5,Math.max(W,H)*.75);bg.addColorStop(0,BG1);bg.addColorStop(1,BG0);cx.fillStyle=bg;cx.fillRect(0,0,W,H);
+  // data in the air, two depths
+  const sm=Math.round(L.font*.72);for(const p of air){if(!REDUCE&&!POSTER){p.y+=p.v*dt/1000;if(p.y>H+10){p.y=-10;p.x=Math.random()*W}if(Math.random()<.002)p.b^=1}
+    digit(LAND,p.z>.9?L.font:sm,p.b,p.x,p.y,p.a)}
+  // faint lattice
+  cx.globalAlpha=.045;cx.strokeStyle="#9fe8cc";cx.lineWidth=1;cx.beginPath();for(let x=L.cs*4;x<W;x+=L.cs*4){cx.moveTo(x,0);cx.lineTo(x,H)}for(let y=L.cs*4;y<H;y+=L.cs*4){cx.moveTo(0,y);cx.lineTo(W,y)}cx.stroke();
+  // camera: a slow push towards the map while it forms, and a breath after
+  const prog=cells.length?landed/cells.length:1,push=REDUCE?1:POSTER?.5:ease(prog),z=1+.035*push+(done&&!REDUCE?.004*Math.sin(T*.6):0);
+  const fx=mapT.ox+mapT.k*(mapT.bb.x+mapT.bb.w/2),fy=mapT.oy+mapT.k*(mapT.bb.y+mapT.bb.h/2);
+  cx.save();cx.translate(fx,fy);cx.scale(z,z);cx.translate(-fx,-fy);
+  gx.save();gx.translate(fx/3,fy/3);gx.scale(z,z);gx.translate(-fx/3,-fy/3);
+
+  // 1 · target: the outline traces itself before anything arrives
+  cx.save();cx.setTransform(DPR*z*mapT.k,0,0,DPR*z*mapT.k,DPR*(fx-z*(fx-mapT.ox)),DPR*(fy-z*(fy-mapT.oy)));
+  const trace=REDUCE||POSTER?1:clamp((T-.3)/1.4,0,1),fa=done?clamp((now-formedAt)/1200,0,1):0;
+  if(fa<1){cx.globalAlpha=(1-fa)*(POSTER?.5:.42);cx.strokeStyle=EDGE;cx.lineWidth=1.3/mapT.k;
+    if(trace<1){cx.setLineDash([outlineLen*easeOut(trace),outlineLen]);cx.stroke(statePath)}else{cx.setLineDash([4/mapT.k,5/mapT.k]);cx.stroke(statePath)}cx.setLineDash([])}
+  // districts that have completed light up, then settle to a faint line
+  dists.forEach((d,i)=>{if(!d.done)return;const age=(now-d.done)/1000,glow=age<1.4?1-age/1.4:0;
+    cx.globalAlpha=.16+.6*glow;cx.strokeStyle=glow>0?EDGE:"#bff5df";cx.lineWidth=(1+1.6*glow)/mapT.k;cx.stroke(distPaths[i])});
+  if(fa>0){cx.globalAlpha=fa;cx.strokeStyle=EDGE;cx.lineWidth=2/mapT.k;cx.stroke(statePath)}
+  cx.restore();
+
+  // 2 · emission
+  if(!REDUCE&&!POSTER&&T>1.5){if(sent<cells.length){const n=Math.ceil(cells.length/6*dt/1000)+1;for(let i=0;i<n&&sent<cells.length;i++)fly.push(mkFly(cells[sent++],now))}
+    else if(Math.random()<dt/220){const c=cells[Math.floor(Math.random()*cells.length)];fly.push(mkFly(c,now))}}
+  // 3 · the map, digit by digit
+  for(const c of cells){if(!c.on)continue;const tw=REDUCE?0:.12*Math.sin(T*1.4+c.tw),a=(c.edge?1:.58+((c.x*7+c.y*13)%10)/34)+tw;
+    digit(c.edge?EDGE:LAND,L.font,c.b,c.x,c.y,clamp(a,.25,1));
+    if(c.heat>0){digit(EDGE,L.font,c.b,c.x,c.y,c.heat);blob(c.x,c.y,L.cs*1.1,SRC[c.src].col,.35*c.heat);c.heat=Math.max(0,c.heat-dt/420)}
+    else if(c.edge&&fa>0)blob(c.x,c.y,L.cs*.9,LAND,.08*fa)}
+  if(!REDUCE&&!POSTER){const flips=Math.ceil(cells.length*.002);for(let i=0;i<flips;i++){const c=cells[Math.floor(Math.random()*cells.length)];if(c.on){c.b^=1;c.heat=Math.max(c.heat,.45)}}}
+  // 4 · digits in flight, with a short trail
+  for(let i=fly.length-1;i>=0;i--){const f=fly[i],fixed=f.u!==undefined,u=fixed?f.u:(now-f.t)/f.d;
+    if(u>=1){if(f.c.on){f.c.b=f.b;f.c.heat=1;SRC[f.c.src].count++}else land1(f.c,now);f.c.b=f.b;fly.splice(i,1);continue}
+    const e=fixed?u:ease(u),s=SRC[f.c.src],p=quad(f.a,f.m,[f.c.x,f.c.y],e),zz=e>.55?L.font:sm,a=.35+.65*Math.sin(Math.min(1,u*1.2)*Math.PI*.5);
+    for(let k=1;k<=2;k++){const q=quad(f.a,f.m,[f.c.x,f.c.y],Math.max(0,e-.035*k));digit(s.col,sm,f.b,q[0],q[1],a*.22/k)}
+    digit(s.col,zz,fixed?f.b:((u*12|0)%2?f.b:1-f.b),p[0],p[1],a);blob(p[0],p[1],L.cs*.7,s.col,.18*a)}
+  // 5 · landing ripples
+  for(let i=rip.length-1;i>=0;i--){const r=rip[i],u=(now-r.t)/480;if(u>=1){rip.splice(i,1);continue}
+    cx.globalAlpha=.5*(1-u);cx.strokeStyle=r.col;cx.lineWidth=1.2;cx.beginPath();cx.arc(r.x,r.y,L.cs*(.3+1.4*easeOut(u)),0,6.283);cx.stroke()}
+  // 6 · the finish: a band of light sweeps across the state, and keeps returning now and then
+  if(done&&!REDUCE){const since=(now-formedAt)/1000,cyc=since<3?since:((since-3)%9);
+    if(cyc<1.6){const u=cyc/1.6,bx=mapT.mx-120+(mapT.mw+240)*u;
+      cx.save();cx.setTransform(DPR*z*mapT.k,0,0,DPR*z*mapT.k,DPR*(fx-z*(fx-mapT.ox)),DPR*(fy-z*(fy-mapT.oy)));cx.clip(statePath);cx.setTransform(DPR,0,0,DPR,0,0);
+      cx.translate(fx,fy);cx.scale(z,z);cx.translate(-fx,-fy);const g=cx.createLinearGradient(bx-90,0,bx+90,0);g.addColorStop(0,"rgba(220,255,241,0)");g.addColorStop(.5,"rgba(220,255,241,.22)");g.addColorStop(1,"rgba(220,255,241,0)");
+      cx.globalAlpha=1;cx.fillStyle=g;cx.fillRect(bx-90,0,180,H);cx.restore()}}
+  // district names, briefly, as each one completes
+  if(TEXT){cx.textAlign="center";cx.textBaseline="middle";cx.font=`700 ${Math.max(9.5,L.cs*.95)}px ${FONT}`;
+    const live=dists.filter(d=>d.done>0&&d.at&&(now-d.done)<2200).sort((a,b)=>b.done-a.done).slice(0,3);
+    live.forEach(d=>{const age=(now-d.done)/1000,a=age<.25?age/.25:age>1.6?1-(age-1.6)/.6:1,lift=(1-easeOut(Math.min(1,age/.5)))*L.cs*.8,t=d.n.toUpperCase(),w=cx.measureText(t).width;
+      cx.globalAlpha=a;cx.shadowColor="#020806";cx.shadowBlur=8;cx.fillStyle=EDGE;cx.fillText(t,d.at[0],d.at[1]+lift);cx.shadowBlur=0;
+      cx.globalAlpha=a*.7;cx.fillStyle=LAND;cx.fillRect(d.at[0]-w/2*easeOut(Math.min(1,age/.4)),d.at[1]+L.cs*.62+lift,w*easeOut(Math.min(1,age/.4)),1)})}
+  cx.restore();gx.restore();
+
+  // 7 · source cards, above the streams
+  SRC.forEach((s,i)=>card(s,i,T));
+  // 8 · bloom: the glow buffer, upscaled, added on top
+  cx.globalCompositeOperation="lighter";cx.globalAlpha=1;cx.imageSmoothingEnabled=true;cx.drawImage(gl,0,0,W,H);cx.globalAlpha=.6;cx.drawImage(gl,-W*.01,-H*.01,W*1.02,H*1.02);cx.globalCompositeOperation="source-over";
+  // 9 · HUD and title
+  if(TEXT)hud(now,T,prog,fa);
+  // 10 · lens: vignette and grain
+  cx.globalAlpha=1;cx.drawImage(vign,0,0);if(!REDUCE){cx.globalAlpha=.5;const ox=Math.random()*192|0,oy=Math.random()*192|0;cx.fillStyle=cx.createPattern(grain,"repeat");cx.save();cx.translate(-ox,-oy);cx.fillRect(ox,oy,W,H);cx.restore()}
+  if(!done&&landed>=cells.length){done=true;formedAt=now}
   if(!REDUCE&&!POSTER)requestAnimationFrame(frame)}
 
-let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{layout();if(REDUCE)frame(performance.now())},150)});
+function hud(now,T,prog,fa){
+  const a=REDUCE||POSTER?1:clamp((T-.6)/.6,0,1);if(a<=0)return;
+  const bw=Math.min(220,W*.3),bx=land?SRC[0].x-bw/2:W/2-bw/2,by=land?H-Math.max(28,H*.06):H-Math.max(22,H*.035);
+  const fin=done&&!POSTER,lab=fin?(bw<200?"MAP READY":"MAP READY · 27 DISTRICTS"):"ASSEMBLING MAP",pct=Math.round(prog*100);
+  cx.globalAlpha=a*(fin?.75:1);cx.textBaseline="bottom";cx.font=`600 10.5px ${MONO}`;cx.fillStyle=fin?EDGE:"#9fe8cc";cx.textAlign="left";cx.fillText(lab,bx,by-6);cx.textAlign="right";cx.fillText(pct+"%",bx+bw,by-6);
+  cx.fillStyle="rgba(159,232,204,.15)";cx.fillRect(bx,by,bw,2);let x=bx;SRC.forEach((s,i)=>{const share=cells.filter(c=>c.on&&c.src===i).length/cells.length;cx.fillStyle=s.col;cx.fillRect(x,by,bw*share,2);x+=bw*share});
+  // title card when the map is complete: beside the map when there is room, otherwise a lower-third banner
+  if(fin||REDUCE){const u=REDUCE?1:clamp((now-formedAt-600)/900,0,1);if(u<=0)return;const e=easeOut(u),k=mapT.k;
+    const mr=mapT.ox+k*(mapT.bb.x+mapT.bb.w),room=W-mr-56,T1="CHHATTISGARH",T2="3 sources · 27 districts · one map";
+    const fit=(max,avail)=>{cx.font=`700 ${max}px ${FONT}`;const w=cx.measureText(T1).width*1.2+max*.18*11;return Math.max(14,Math.min(max,max*avail/w))};
+    let big,tx,ty,side=land&&room>=180;
+    if(side){big=fit(44,room);tx=mr+32;ty=mapT.oy+k*(mapT.bb.y+mapT.bb.h*.62);cx.textAlign="left"}
+    else{const mc=land?mapT.ox+k*(mapT.bb.x+mapT.bb.w/2):W/2,span=land?Math.min(W-48,k*mapT.bb.w*1.3):W-48;big=fit(34,span);tx=clamp(mc,span/2+24,W-span/2-24);ty=land?mapT.oy+k*(mapT.bb.y+mapT.bb.h*.86):H*.83;cx.textAlign="center";
+      cx.save();cx.translate(tx,ty-big*.2);cx.scale(span*.62,big*1.9);const g=cx.createRadialGradient(0,0,0,0,0,1);g.addColorStop(0,"rgba(3,11,9,.85)");g.addColorStop(.6,"rgba(3,11,9,.6)");g.addColorStop(1,"rgba(3,11,9,0)");cx.globalAlpha=e;cx.fillStyle=g;cx.beginPath();cx.arc(0,0,1,0,6.283);cx.fill();cx.restore()}
+    cx.textBaseline="alphabetic";cx.globalAlpha=e*.8;cx.font=`600 ${Math.max(9,big*.26)}px ${MONO}`;cx.fillStyle=LAND;cx.fillText("LOCATION FORMED",tx,ty-big*1.05);
+    cx.globalAlpha=e;cx.fillStyle=INK;cx.font=`700 ${big}px ${FONT}`;
+    if("letterSpacing" in cx)cx.letterSpacing=(big*.18*(1+(1-e)*1.5))+"px";cx.shadowColor=LAND;cx.shadowBlur=18;cx.fillText(T1,tx,ty);cx.shadowBlur=0;const tw=cx.measureText(T1).width;if("letterSpacing" in cx)cx.letterSpacing="0px";
+    const rw=Math.min(tw,W-32)*e,rx=side?tx:tx-rw/2;cx.globalAlpha=e*.8;const rg=cx.createLinearGradient(rx,0,rx+rw,0);rg.addColorStop(0,side?LAND:"rgba(95,227,179,0)");rg.addColorStop(.5,LAND);rg.addColorStop(1,"rgba(95,227,179,0)");cx.fillStyle=rg;cx.fillRect(rx,ty+big*.28,rw,1.2);
+    cx.globalAlpha=e*.75;cx.fillStyle=INK;cx.font=`${Math.max(11,big*.32)}px ${FONT}`;cx.fillText(T2,tx,ty+big*.28+Math.max(14,big*.5))}}
+
+let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{layout();last=performance.now();if(REDUCE||POSTER)frame(performance.now())},150)});
 document.fonts.load('16px "GitLab Mono"').catch(()=>{}).finally(()=>{layout();requestAnimationFrame(frame)});
 </script>
 </body>
