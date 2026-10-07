@@ -188,20 +188,7 @@ function hud(now,T,prog,fa){
   const bw=Math.min(220,W*.3),bx=land?SRC[0].x-bw/2:W/2-bw/2,by=land?H-Math.max(28,H*.06):H-Math.max(22,H*.035);
   const fin=done&&!POSTER,lab=fin?(bw<200?"MAP READY":"MAP READY · 27 DISTRICTS"):"ASSEMBLING MAP",pct=Math.round(prog*100);
   cx.globalAlpha=a*(fin?.75:1);cx.textBaseline="bottom";cx.font=`600 10.5px ${MONO}`;cx.fillStyle=fin?EDGE:"#9fe8cc";cx.textAlign="left";cx.fillText(lab,bx,by-6);cx.textAlign="right";cx.fillText(pct+"%",bx+bw,by-6);
-  cx.fillStyle="rgba(159,232,204,.15)";cx.fillRect(bx,by,bw,2);let x=bx;SRC.forEach((s,i)=>{const share=cells.filter(c=>c.on&&c.src===i).length/cells.length;cx.fillStyle=s.col;cx.fillRect(x,by,bw*share,2);x+=bw*share});
-  // title card when the map is complete: beside the map when there is room, otherwise a lower-third banner
-  if(fin||REDUCE){const u=REDUCE?1:clamp((now-formedAt-600)/900,0,1);if(u<=0)return;const e=easeOut(u),k=mapT.k;
-    const mr=mapT.ox+k*(mapT.bb.x+mapT.bb.w),room=W-mr-56,T1="CHHATTISGARH",T2="3 sources · 27 districts · one map";
-    const fit=(max,avail)=>{cx.font=`700 ${max}px ${FONT}`;const w=cx.measureText(T1).width*1.2+max*.18*11;return Math.max(14,Math.min(max,max*avail/w))};
-    let big,tx,ty,side=land&&room>=180;
-    if(side){big=fit(44,room);tx=mr+32;ty=mapT.oy+k*(mapT.bb.y+mapT.bb.h*.62);cx.textAlign="left"}
-    else{const mc=land?mapT.ox+k*(mapT.bb.x+mapT.bb.w/2):W/2,span=land?Math.min(W-48,k*mapT.bb.w*1.3):W-48;big=fit(34,span);tx=clamp(mc,span/2+24,W-span/2-24);ty=land?mapT.oy+k*(mapT.bb.y+mapT.bb.h*.86):H*.83;cx.textAlign="center";
-      cx.save();cx.translate(tx,ty-big*.2);cx.scale(span*.62,big*1.9);const g=cx.createRadialGradient(0,0,0,0,0,1);g.addColorStop(0,"rgba(3,11,9,.85)");g.addColorStop(.6,"rgba(3,11,9,.6)");g.addColorStop(1,"rgba(3,11,9,0)");cx.globalAlpha=e;cx.fillStyle=g;cx.beginPath();cx.arc(0,0,1,0,6.283);cx.fill();cx.restore()}
-    cx.textBaseline="alphabetic";cx.globalAlpha=e*.8;cx.font=`600 ${Math.max(9,big*.26)}px ${MONO}`;cx.fillStyle=LAND;cx.fillText("LOCATION FORMED",tx,ty-big*1.05);
-    cx.globalAlpha=e;cx.fillStyle=INK;cx.font=`700 ${big}px ${FONT}`;
-    if("letterSpacing" in cx)cx.letterSpacing=(big*.18*(1+(1-e)*1.5))+"px";cx.shadowColor=LAND;cx.shadowBlur=18;cx.fillText(T1,tx,ty);cx.shadowBlur=0;const tw=cx.measureText(T1).width;if("letterSpacing" in cx)cx.letterSpacing="0px";
-    const rw=Math.min(tw,W-32)*e,rx=side?tx:tx-rw/2;cx.globalAlpha=e*.8;const rg=cx.createLinearGradient(rx,0,rx+rw,0);rg.addColorStop(0,side?LAND:"rgba(95,227,179,0)");rg.addColorStop(.5,LAND);rg.addColorStop(1,"rgba(95,227,179,0)");cx.fillStyle=rg;cx.fillRect(rx,ty+big*.28,rw,1.2);
-    cx.globalAlpha=e*.75;cx.fillStyle=INK;cx.font=`${Math.max(11,big*.32)}px ${FONT}`;cx.fillText(T2,tx,ty+big*.28+Math.max(14,big*.5))}}
+  cx.fillStyle="rgba(159,232,204,.15)";cx.fillRect(bx,by,bw,2);let x=bx;SRC.forEach((s,i)=>{const share=cells.filter(c=>c.on&&c.src===i).length/cells.length;cx.fillStyle=s.col;cx.fillRect(x,by,bw*share,2);x+=bw*share});}
 
 let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{layout();last=performance.now();if(REDUCE||POSTER)frame(performance.now())},150)});
 document.fonts.load('16px "GitLab Mono"').catch(()=>{}).finally(()=>{layout();requestAnimationFrame(frame)});
