@@ -39,7 +39,7 @@ const TOWNS=[["Raipur",81.6296,21.2514,0],["Bhilai",81.38,21.21,1],["Bilaspur",8
   ["Kondagaon",81.66,19.59,2],["Narayanpur",81.25,19.72,2],["Mungeli",81.69,22.07,2],["Baikunthpur",82.56,23.26,2],["Jashpur Nagar",84.14,22.89,2],["Balod",81.20,20.73,2],["Bemetara",81.53,21.71,2],["Gariaband",82.06,20.63,2]];
 const cv=document.getElementById("c"),cx=cv.getContext("2d");
 const gl=document.createElement("canvas"),gx=gl.getContext("2d");
-let W,H,DPR,L,land,nodes,panel,fr,vp,mapT,tiles=[],pk=[],P=[],hero,carto,labels,bin,air=[],vign,grain,glyph={},statePath,distPaths,ctxStates,t0=performance.now(),last=t0,lastLive=0;
+let stateS,W,H,DPR,L,land,nodes,panel,fr,vp,mapT,tiles=[],pk=[],P=[],hero,carto,labels,bin,air=[],vign,grain,glyph={},statePath,distPaths,ctxStates,t0=performance.now(),last=t0,lastLive=0;
 let seed=13;const R=()=>(seed=seed*16807%2147483647)/2147483647;
 const rnd=(a,b)=>a+R()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),lerp=(a,b,t)=>a+(b-a)*t;
 const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,easeOut=t=>1-Math.pow(1-t,3);
@@ -69,12 +69,12 @@ function layout(){
   else{const ph=clamp(H*.36,230,300);panel={x:pad,y:pad,w:W-2*pad,h:ph};fr={x:pad,y:pad*2+ph,w:W-2*pad,h:H-ph-pad*3-Math.max(34,H*.05)};
     const y1=panel.y+r+30,y2=y1+ph*.44;nodes={xls:[W*.3,y1],geo:[W*.7,y1],pg:[W*.3,y2],rnd:[W*.7,y2]}}
   Object.entries(nodes).forEach(([k,p])=>Object.assign(N[k],{x:p[0],y:p[1],r}));
-  const bar=Math.max(26,Math.min(34,H*.045));vp={x:fr.x,y:fr.y+bar,w:fr.w,h:fr.h-bar,bar};
+  vp={x:fr.x,y:fr.y,w:fr.w,h:fr.h-(TEXT?18:0)};
   // the map view: the state with its neighbours around it, like a slippy map at zoom ~7
-  const bb={x:79.11,y:24,w:361.78,h:592},k=Math.min(vp.w*.86/bb.w,vp.h*.9/bb.h);
+  const bb={x:79.11,y:24,w:361.78,h:592},k=Math.min(vp.w*.94/bb.w,vp.h*.96/bb.h);
   mapT={k,ox:vp.x+vp.w/2-(bb.x+bb.w/2)*k,oy:vp.y+vp.h/2-(bb.y+bb.h/2)*k,bb};
   const S=p=>[mapT.ox+k*p[0],mapT.oy+k*p[1]];
-  statePath=new Path2D(GEO.state);distPaths=GEO.districts.map(d=>new Path2D(d.d));ctxStates=GEO.ctx.states.map(s=>new Path2D(s.d));
+  statePath=new Path2D(GEO.state);stateS=new Path2D();stateS.addPath(statePath,new DOMMatrix([k,0,0,k,mapT.ox,mapT.oy]));distPaths=GEO.districts.map(d=>new Path2D(d.d));ctxStates=GEO.ctx.states.map(s=>new Path2D(s.d));
   L={cs:clamp(Math.min(W,H)*.017,9,13)};L.font=Math.round(L.cs);L.sm=Math.round(L.cs*.75);
   const off=new OffscreenCanvas(1,1).getContext("2d");
 
@@ -123,32 +123,30 @@ function mkp(n,a,b,t1,dur,bits,rec,toTile){const m=[(a[0]+b[0])/2+rnd(-30,30),(a
 
 /* the street-style map: cream land, blue rivers, orange highways, grey rail, purple dashed boundaries, town labels */
 function drawCarto(c,lc){const k=mapT.k;c.scale(DPR,DPR);c.translate(-vp.x,-vp.y);
-  c.fillStyle=OSM.out;c.fillRect(vp.x,vp.y,vp.w,vp.h);
   c.save();c.translate(mapT.ox,mapT.oy);c.scale(k,k);const px=1/k;
-  ctxStates.forEach(p=>{c.fillStyle=OSM.out;c.fill(p)});c.fillStyle=OSM.bg;c.fill(statePath);
+  c.fillStyle=OSM.bg;c.fill(statePath);c.save();c.clip(statePath);
   // a little relief so it doesn't read flat: soft shading on the hilly north and south
   c.save();c.clip(statePath);[[300,120,120],[230,560,110],[120,470,80]].forEach(([x,y,r])=>{const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,"rgba(173,209,158,.45)");g.addColorStop(1,"rgba(173,209,158,0)");c.fillStyle=g;c.fillRect(x-r,y-r,2*r,2*r)});c.restore();
   c.lineJoin=c.lineCap="round";
   GEO.ctx.rivers.forEach(rv=>{c.strokeStyle=OSM.water;c.lineWidth=(rv.r<=6?2.6:rv.r<=8?1.9:1.4)*px;c.stroke(new Path2D(rv.d))});
-  ctxStates.forEach(p=>{c.strokeStyle=OSM.adminLight;c.lineWidth=1.2*px;c.setLineDash([6*px,3*px,1.5*px,3*px]);c.stroke(p)});c.setLineDash([]);
   const rail=new Path2D(GEO.ctx.rail);c.strokeStyle=OSM.rail;c.lineWidth=2.2*px;c.stroke(rail);c.strokeStyle="#fff";c.lineWidth=1*px;c.setLineDash([4*px,4*px]);c.stroke(rail);c.setLineDash([]);
   const roads=new Path2D(GEO.ctx.roads);c.strokeStyle=OSM.trunkCase;c.lineWidth=3*px;c.stroke(roads);c.strokeStyle=OSM.trunk;c.lineWidth=1.9*px;c.stroke(roads);
   distPaths.forEach(p=>{c.strokeStyle=OSM.adminLight;c.lineWidth=1*px;c.setLineDash([4*px,3*px]);c.stroke(p)});c.setLineDash([]);
-  c.strokeStyle="rgba(160,139,189,.35)";c.lineWidth=5*px;c.stroke(statePath);c.strokeStyle=OSM.admin;c.lineWidth=1.6*px;c.setLineDash([7*px,3*px,2*px,3*px]);c.stroke(statePath);c.setLineDash([]);
+  c.restore();c.save();c.clip(statePath);c.strokeStyle="rgba(160,139,189,.35)";c.lineWidth=7*px;c.stroke(statePath);c.restore();c.strokeStyle=OSM.admin;c.lineWidth=1.6*px;c.setLineDash([7*px,3*px,2*px,3*px]);c.stroke(statePath);c.setLineDash([]);
   c.restore();
   // towns: the state's towns by size, and the big cities just outside it
   c=lc;c.scale(DPR,DPR);c.translate(-vp.x,-vp.y);const placed=[],S=(lo,la)=>{const m=ll2xy(lo,la);return[mapT.ox+k*m[0],mapT.oy+k*m[1]]};
-  const list=TOWNS.map(t=>({n:t[0],p:S(t[1],t[2]),tier:t[3]}));GEO.ctx.cities.filter(t=>!t.cg&&t.p>400000).forEach(t=>list.push({n:t.n,p:[mapT.ox+k*t.xy[0],mapT.oy+k*t.xy[1]],tier:2,out:1}));
-  const fs=clamp(k*3.4,9.5,13);list.forEach(t=>{if(t.p[0]<vp.x+8||t.p[0]>vp.x+vp.w-60||t.p[1]<vp.y+10||t.p[1]>vp.y+vp.h-10)return;
+  const list=TOWNS.map(t=>({n:t[0],p:S(t[1],t[2]),tier:t[3]}));
+  const fs=clamp(k*3.4,9.5,13);list.forEach(t=>{
     const size=t.tier===0?fs*1.22:t.tier===1?fs:fs*.86;c.font=`${t.tier===0?700:t.tier===1?600:400} ${size}px ${MAPFONT}`;const w=c.measureText(t.n).width,box=[t.p[0]+5,t.p[1]-size*.6,w,size*1.2];
     if(placed.some(b=>box[0]<b[0]+b[2]+4&&box[0]+box[2]+4>b[0]&&box[1]<b[1]+b[3]&&box[1]+box[3]>b[1]))return;placed.push(box);
     c.fillStyle=t.out?"#777":"#fff";c.strokeStyle="#444";c.lineWidth=1;c.beginPath();c.arc(t.p[0],t.p[1],t.tier===0?3.6:t.tier===1?2.8:2.1,0,6.283);c.fill();c.stroke();
     c.textBaseline="middle";c.lineJoin="round";c.strokeStyle=OSM.halo;c.lineWidth=3;c.strokeText(t.n,t.p[0]+5,t.p[1]);c.fillStyle=t.out?"#6d6d6d":OSM.town;c.fillText(t.n,t.p[0]+5,t.p[1])})}
 /* the same view as the renderer holds it before drawing: bits, brighter where the state is */
-function drawBin(c,off){c.scale(DPR,DPR);c.translate(-vp.x,-vp.y);c.fillStyle="#071512";c.fillRect(vp.x,vp.y,vp.w,vp.h);
+function drawBin(c,off){c.scale(DPR,DPR);c.translate(-vp.x,-vp.y);c.fillStyle="#071512";c.save();c.translate(mapT.ox,mapT.oy);c.scale(mapT.k,mapT.k);c.fill(statePath);c.restore();
   const cs=L.cs*.95,bits=P.map(p=>f64bits(p.ll[0])+f64bits(p.ll[1])).join("");let i=0;c.font=`600 ${Math.round(cs*.92)}px ${MONO}`;c.textAlign="center";c.textBaseline="middle";
   for(let y=vp.y+cs/2;y<vp.y+vp.h;y+=cs)for(let x=vp.x+cs*.35;x<vp.x+vp.w;x+=cs*.7){const m=[(x-mapT.ox)/mapT.k,(y-mapT.oy)/mapT.k],inS=off.isPointInPath(statePath,m[0],m[1]);
-    c.fillStyle=inS?"rgba(95,227,179,.85)":"rgba(95,227,179,.22)";c.fillText(bits[(i++*5)%bits.length],x,y)}}
+    if(!inS)continue;c.fillStyle="rgba(95,227,179,.85)";c.fillText(bits[(i++*5)%bits.length],x,y)}}
 
 function makeGlyphs(){glyph={};[LAND,EDGE,...Object.values(N).map(s=>s.col)].forEach(col=>[L.font,L.sm].forEach(z=>["0","1"].forEach(ch=>{const g=new OffscreenCanvas(Math.ceil(z*1.25*DPR),Math.ceil(z*1.45*DPR)),c=g.getContext("2d");
   c.scale(DPR,DPR);c.fillStyle=col;c.font=`600 ${z}px ${MONO}`;c.textAlign="center";c.textBaseline="middle";c.fillText(ch,z*.62,z*.74);glyph[col+z+ch]=g})))}
@@ -198,7 +196,7 @@ function frame(now){
   // pipes between the nodes
   const pipe=(a,b,col,on)=>{const A=[N[a].x,N[a].y],B=b.length?b:[N[b].x,N[b].y];cx.globalAlpha=on?.32:.12;cx.strokeStyle=col;cx.lineWidth=1.2;cx.setLineDash([3,5]);cx.lineDashOffset=moving&&on?-T*18:0;cx.beginPath();cx.moveTo(A[0],A[1]);cx.lineTo(B[0],B[1]);cx.stroke();cx.setLineDash([])};
   const on=k=>T>=ACTIVE[k][0]&&T<=ACTIVE[k][1];
-  pipe("xls","pg",N.xls.col,on("xls"));pipe("geo","pg",N.geo.col,on("geo"));pipe("pg","rnd",N.pg.col,on("pg"));pipe("rnd",land?[fr.x,N.rnd.y]:[N.rnd.x,fr.y],N.rnd.col,on("rnd"));
+  pipe("xls","pg",N.xls.col,on("xls"));pipe("geo","pg",N.geo.col,on("geo"));pipe("pg","rnd",N.pg.col,on("pg"));pipe("rnd",land?[mapT.ox+mapT.k*90,N.rnd.y]:[N.rnd.x,mapT.oy+mapT.k*40],N.rnd.col,on("rnd"));
 
   // packets: compute who is where; tile-bound packets are drawn later, over the browser
   const info={xls:{},geo:{},pg:{},rnd:{}},late=[],heroes=[];let nx=0,ng=0,np=0;
@@ -225,44 +223,46 @@ function flight(p,u,moving,overMap){const s=N[p.n],e=ease(u),a=.35+.65*Math.sin(
   const q=quad(p.a,p.m,p.b,e);if(overMap){cx.globalAlpha=.35*a;cx.fillStyle=s.col;cx.beginPath();cx.arc(q[0],q[1],L.cs*.5,0,6.283);cx.fill()}else blob(q[0],q[1],L.cs*.7,s.col,.16*a)}
 
 function browser(T,done,moving,now){
-  const born=REDUCE||POSTER?1:clamp((T-.4)/.8,0,1);if(born<=0)return;const e=easeOut(born);
-  cx.save();cx.globalAlpha=e;cx.translate(0,(1-e)*14);
-  cx.shadowColor="rgba(0,0,0,.55)";cx.shadowBlur=30;cx.shadowOffsetY=10;cx.fillStyle="#e9e6df";rr(cx,fr.x,fr.y,fr.w,fr.h,12);cx.fill();cx.shadowColor="transparent";
-  // window bar
-  cx.save();rr(cx,fr.x,fr.y,fr.w,fr.h,12);cx.clip();cx.fillStyle="#d9d5cc";cx.fillRect(fr.x,fr.y,fr.w,vp.bar);
-  ["#ec6a5e","#f4bf4f","#61c554"].forEach((c,i)=>{cx.fillStyle=c;cx.beginPath();cx.arc(fr.x+16+i*15,fr.y+vp.bar/2,4.5,0,6.283);cx.fill()});
-  if(TEXT){const tw=Math.min(fr.w*.5,260),tx=fr.x+fr.w/2-tw/2;cx.fillStyle="#f6f4ef";rr(cx,tx,fr.y+5,tw,vp.bar-10,(vp.bar-10)/2);cx.fill();cx.fillStyle="#555";cx.font=`500 ${clamp(vp.bar*.38,10,12)}px ${FONT}`;cx.textAlign="center";cx.textBaseline="middle";cx.fillText("State Geo Portal · Map",fr.x+fr.w/2,fr.y+vp.bar/2+.5)}
-  // the map view, tile by tile
-  cx.beginPath();cx.rect(vp.x,vp.y,vp.w,vp.h);cx.clip();cx.fillStyle="#dcd8cf";cx.fillRect(vp.x,vp.y,vp.w,vp.h);
-  if(moving&&done&&now-lastLive>4200){lastLive=now;const t=tiles[Math.floor(Math.random()*tiles.length)];t.lb=T;}   // live: a tile refreshes now and then
+  const born=REDUCE||POSTER?1:clamp((T-.4)/.8,0,1);if(born<=0)return;const e=easeOut(born),allIn=T>=TL.tile1+.8,lit=clamp((T-TL.tile1)/1,0,1);
+  cx.save();cx.globalAlpha=e;
+  // the state, waiting: a faint fill and a dashed outline that traces itself
+  cx.fillStyle="rgba(95,227,179,.035)";cx.fill(stateS);
+  const tr=REDUCE||POSTER?1:clamp((T-.4)/1.4,0,1);cx.globalAlpha=e*(1-lit)*.5;cx.strokeStyle=EDGE;cx.lineWidth=1.2;cx.setLineDash(tr<1?[4000*easeOut(tr),4000]:[4,5]);cx.stroke(stateS);cx.setLineDash([]);
+  // lift: a soft shadow under the finished map
+  if(lit>0){cx.globalAlpha=lit;cx.shadowColor="rgba(0,0,0,.6)";cx.shadowBlur=28;cx.shadowOffsetY=10;cx.fillStyle="#1c2a25";cx.fill(stateS);cx.shadowColor="transparent";cx.shadowBlur=0;cx.shadowOffsetY=0}
+  // the map, tile by tile, only inside Chhattisgarh
+  cx.save();cx.clip(stateS);cx.globalAlpha=1;
+  if(moving&&done&&now-lastLive>4200){lastLive=now;const t=tiles[Math.floor(Math.random()*tiles.length)];t.lb=T;}
   for(const t of tiles){let b0=t.b0,r0=t.r0,r1=t.r1;if(t.lb!==undefined&&T<t.lb+.9){b0=t.lb;r0=t.lb+.35;r1=t.lb+.8}
     const sx=(t.x-vp.x)*DPR,sy=(t.y-vp.y)*DPR,S=t.ts*DPR;
-    if(T<b0){cx.globalAlpha=1;cx.strokeStyle="rgba(0,0,0,.06)";cx.lineWidth=1;cx.strokeRect(t.x+.5,t.y+.5,t.ts-1,t.ts-1);continue}
-    if(T<r0){const f=(T-b0)/(r0-b0),hh=t.ts*f;cx.globalAlpha=1;cx.drawImage(bin,sx,sy,S,hh*DPR,t.x,t.y,t.ts,hh);continue}
-    if(T<r1){const f=easeOut((T-r0)/(r1-r0)),hh=t.ts*f;cx.globalAlpha=1;cx.drawImage(bin,sx,sy,S,S,t.x,t.y,t.ts,t.ts);cx.drawImage(carto,sx,sy,S,hh*DPR,t.x,t.y,t.ts,hh);
+    if(T<b0){cx.globalAlpha=e*.5;cx.strokeStyle="rgba(159,232,204,.12)";cx.lineWidth=1;cx.strokeRect(t.x+.5,t.y+.5,t.ts-1,t.ts-1);continue}
+    cx.globalAlpha=1;
+    if(T<r0){const f=(T-b0)/(r0-b0),hh=t.ts*f;cx.drawImage(bin,sx,sy,S,hh*DPR,t.x,t.y,t.ts,hh);continue}
+    if(T<r1){const f=easeOut((T-r0)/(r1-r0)),hh=t.ts*f;cx.drawImage(bin,sx,sy,S,S,t.x,t.y,t.ts,t.ts);cx.drawImage(carto,sx,sy,S,hh*DPR,t.x,t.y,t.ts,hh);
       cx.fillStyle="rgba(95,227,179,.9)";cx.fillRect(t.x,t.y+hh-1,t.ts,2);continue}
-    cx.globalAlpha=1;cx.drawImage(carto,sx,sy,S,S,t.x,t.y,t.ts,t.ts);const fl=T-r1;if(fl<.35){cx.globalAlpha=.3*(1-fl/.35);cx.fillStyle="#fff";cx.fillRect(t.x,t.y,t.ts,t.ts)}}
-  const allIn=T>=TL.tile1+1;if(!allIn){cx.globalAlpha=.5;cx.strokeStyle="rgba(255,255,255,.35)";cx.lineWidth=1;for(const t of tiles)if(T>=t.b0)cx.strokeRect(t.x+.5,t.y+.5,t.ts-1,t.ts-1)}
-  // Anganwadi centres, drawn on top of the tiles from PostGIS
-  const pr=clamp(mapT.k*1.1,2.2,3.6);
-  for(const p of P){if(T<p.tp)continue;const age=T-p.tp,pop=age<.3?easeOut(age/.3):1;cx.globalAlpha=1;cx.fillStyle="#fff";cx.beginPath();cx.arc(p.s[0],p.s[1],(pr+1.3)*pop,0,6.283);cx.fill();
+    cx.drawImage(carto,sx,sy,S,S,t.x,t.y,t.ts,t.ts);const fl=T-r1;if(fl<.35){cx.globalAlpha=.3*(1-fl/.35);cx.fillStyle="#fff";cx.fillRect(t.x,t.y,t.ts,t.ts)}}
+  if(!allIn){cx.globalAlpha=.6;cx.strokeStyle="rgba(255,255,255,.35)";cx.lineWidth=1;for(const t of tiles)if(T>=t.b0)cx.strokeRect(t.x+.5,t.y+.5,t.ts-1,t.ts-1)}
+  // Anganwadi centres, on top of the tiles
+  const pr=clamp(mapT.k*.85,2,3.4);
+  for(const p of P){if(T<p.tp)continue;const age=T-p.tp,pop=age<.3?easeOut(age/.3):1;cx.globalAlpha=1;cx.fillStyle="#fff";cx.beginPath();cx.arc(p.s[0],p.s[1],(pr+1.2)*pop,0,6.283);cx.fill();
     cx.fillStyle=OSM.poi;cx.beginPath();cx.arc(p.s[0],p.s[1],pr*pop,0,6.283);cx.fill()}
-  for(const t of tiles){const sx=(t.x-vp.x)*DPR,sy=(t.y-vp.y)*DPR,S=t.ts*DPR;if(T>=t.r1&&!(t.lb!==undefined&&T<t.lb+.8)){cx.globalAlpha=1;cx.drawImage(labels,sx,sy,S,S,t.x,t.y,t.ts,t.ts)}}
   if(moving&&done&&Math.random()<dt2(T)){const p=P[Math.floor(Math.random()*P.length)];p.ping=T}
   for(const p of P){if(p.ping===undefined||T>p.ping+.9)continue;const u=(T-p.ping)/.9;cx.globalAlpha=.7*(1-u);cx.strokeStyle=OSM.poi;cx.lineWidth=1.4;cx.beginPath();cx.arc(p.s[0],p.s[1],pr+10*u,0,6.283);cx.stroke()}
-  // controls, scale bar, attribution: the furniture of a real web map
-  const cb=clamp(vp.bar*.95,22,28);cx.globalAlpha=1;cx.fillStyle="#fff";cx.strokeStyle="rgba(0,0,0,.25)";cx.lineWidth=1;rr(cx,vp.x+10,vp.y+10,cb,cb*2,4);cx.fill();cx.stroke();
-  cx.beginPath();cx.moveTo(vp.x+10,vp.y+10+cb);cx.lineTo(vp.x+10+cb,vp.y+10+cb);cx.stroke();cx.fillStyle="#333";cx.font=`700 ${cb*.62}px ${FONT}`;cx.textAlign="center";cx.textBaseline="middle";cx.fillText("+",vp.x+10+cb/2,vp.y+10+cb/2+1);cx.fillText("−",vp.x+10+cb/2,vp.y+10+cb*1.5+1);
-  const km=100,sw=km*GEO.kmPx*mapT.k,sx0=vp.x+12,sy0=vp.y+vp.h-14;cx.fillStyle="rgba(255,255,255,.7)";cx.fillRect(sx0-4,sy0-14,sw+8,18);cx.strokeStyle="#444";cx.lineWidth=1.5;cx.beginPath();cx.moveTo(sx0,sy0-6);cx.lineTo(sx0,sy0);cx.lineTo(sx0+sw,sy0);cx.lineTo(sx0+sw,sy0-6);cx.stroke();
-  cx.fillStyle="#333";cx.font=`600 10px ${FONT}`;cx.textAlign="left";cx.textBaseline="bottom";cx.fillText("100 km",sx0+3,sy0-2);
-  if(TEXT){const at="Data: CGGIS · rendered from PostGIS";cx.font=`10px ${FONT}`;const aw=cx.measureText(at).width+10;cx.fillStyle="rgba(255,255,255,.75)";cx.fillRect(vp.x+vp.w-aw,vp.y+vp.h-16,aw,16);cx.fillStyle="#555";cx.textAlign="right";cx.textBaseline="middle";cx.fillText(at,vp.x+vp.w-5,vp.y+vp.h-8)}
-  // the centre we followed from the sheet, now a pin you could click
-  if(TEXT&&T>=TL.popup){const a=easeOut(clamp((T-TL.popup)/.45,0,1)),p=hero.s;popup(p,a)}
-  cx.restore();cx.restore()}
+  cx.restore();
+  // the state edge, crisp, once the map is in
+  if(lit>0){cx.globalAlpha=lit;cx.strokeStyle=EDGE;cx.lineWidth=1.6;cx.shadowColor=LAND;cx.shadowBlur=12;cx.stroke(stateS);cx.shadowBlur=0;cx.shadowColor="transparent"}
+  // town names sit above everything on the map, and may run past the border
+  for(const t of tiles){const sx=(t.x-vp.x)*DPR,sy=(t.y-vp.y)*DPR,S=t.ts*DPR;if(T>=t.r1&&!(t.lb!==undefined&&T<t.lb+.8)){cx.globalAlpha=1;cx.drawImage(labels,sx,sy,S,S,t.x,t.y,t.ts,t.ts)}}
+  // scale and credit, quietly, under the map
+  const sw=100*GEO.kmPx*mapT.k,sx0=vp.x+4,sy0=vp.y+vp.h+(TEXT?12:-6);cx.globalAlpha=e*.75;cx.strokeStyle="#9fe8cc";cx.lineWidth=1.3;cx.beginPath();cx.moveTo(sx0,sy0-5);cx.lineTo(sx0,sy0);cx.lineTo(sx0+sw,sy0);cx.lineTo(sx0+sw,sy0-5);cx.stroke();
+  cx.fillStyle="#9fe8cc";cx.font=`600 10px ${MONO}`;cx.textAlign="left";cx.textBaseline="bottom";cx.fillText("100 km",sx0+4,sy0-3);
+  if(TEXT){cx.textAlign="right";cx.fillText("DATA: CGGIS · RENDERED FROM POSTGIS",vp.x+vp.w-4,sy0)}
+  if(TEXT&&T>=TL.popup){const a=easeOut(clamp((T-TL.popup)/.45,0,1));popup(hero.s,a)}
+  cx.restore()}
 function dt2(T){return .016}
 function popup(p,a){const lines=[["Anganwadi Centre",`700 13px ${MAPFONT}`,"#222"],[hero.id,`600 11px ${MONO}`,"#2a7d4f"],[deg(hero.ll[0],hero.ll[1]),`11px ${MAPFONT}`,"#444"],["Raipur district",`11px ${MAPFONT}`,"#666"]];
   cx.font=lines[0][1];let w=0;lines.forEach(l=>{cx.font=l[1];w=Math.max(w,cx.measureText(l[0]).width)});w+=22;const h=lines.length*17+14;
-  let x=clamp(p[0]-w/2,vp.x+8,vp.x+vp.w-w-8),y=p[1]-h-14-(1-a)*8;if(y<vp.y+8)y=p[1]+16;
+  let x=clamp(p[0]-w/2,8,W-w-8),y=p[1]-h-14-(1-a)*8;if(y<8)y=p[1]+16;
   cx.globalAlpha=1;cx.strokeStyle="#fff";cx.lineWidth=3;cx.fillStyle=OSM.poi;cx.beginPath();cx.arc(p[0],p[1],5.5,0,6.283);cx.fill();cx.stroke();
   cx.globalAlpha=a;cx.shadowColor="rgba(0,0,0,.3)";cx.shadowBlur=14;cx.shadowOffsetY=3;cx.fillStyle="#fff";rr(cx,x,y,w,h,8);cx.fill();
   if(y<p[1]){cx.beginPath();cx.moveTo(p[0]-8,y+h-1);cx.lineTo(p[0],y+h+9);cx.lineTo(p[0]+8,y+h-1);cx.fill()}cx.shadowColor="transparent";
