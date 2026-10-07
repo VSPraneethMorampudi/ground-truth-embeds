@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>From data to map</title>
+<style>
+@font-face{font-family:"GitLab Mono";src:url("fonts/GitLabMono-sub.woff2") format("woff2");font-display:swap}
+html,body{margin:0;height:100%;background:#040e0b;overflow:hidden}
+canvas{display:block;width:100vw;height:100vh}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<canvas id="c" role="img" aria-label="On the backend, an Excel sheet and a GeoJSON file are read as 0s and 1s and stored in PostGIS. A map renderer turns the stored data into map tiles, and the browser shows them as a street-style map of Chhattisgarh with roads, rivers, towns, district boundaries and Anganwadi centres."></canvas>
+<p class="sr">Backend: the Excel sheet of Anganwadi centres and the GeoJSON file of district boundaries are read as binary and stored in a PostGIS database. The map renderer reads PostGIS and draws square map tiles. Frontend: the browser loads the tiles one by one until a street-style map of Chhattisgarh appears, with the Anganwadi centres on top. One centre is followed all the way, from its row in the Excel sheet to its pin on the map.</p>
+<script>
+/* v13 · backend → browser.  READ → STORE → RENDER → SHOW
+   The real web-map stack (the one OpenStreetMap itself runs): files are loaded into PostGIS, a renderer draws
+   the stored data into square tiles, the browser shows the tiles. The dark panel is the backend; the light window
+   is what the user sees. Every 0 and 1 is real: IEEE-754 bits of the coordinates being moved, EWKB in PostGIS.
+   Map data: the state and districts (2011 census), rivers, rail, national highways, neighbouring states and towns.
+   Options: ?labels=0 no text · ?still finished frame · ?poster mid-build frame. Reduced motion shows the finished frame. */
+const GEO=/*GEO*/null;
+const Q=new URLSearchParams(location.search+"&"+location.hash.slice(1));
+const POSTER=Q.has("poster"),STILL=Q.has("still"),TEXT=Q.get("labels")!=="0";
+const REDUCE=(matchMedia("(prefers-reduced-motion: reduce)").matches&&!POSTER)||STILL;
+const N={
+  xls:{name:"Excel sheet", role:"Anganwadi centres", col:"#34d27f",rgb:"52,210,127"},
+  geo:{name:"GeoJSON",     role:"district boundaries",col:"#f6b847",rgb:"246,184,71"},
+  pg: {name:"PostGIS",     role:"stores everything", col:"#6fa9ff",rgb:"111,169,255"},
+  rnd:{name:"Map renderer",role:"draws map tiles",   col:"#5fe3b3",rgb:"95,227,179"}};
+const LAND="#5fe3b3",EDGE="#dcfff1",INK="#e8f5ef",BG0="#030b09",BG1="#0c2a22",PILL="rgba(3,12,10,.88)";
+const OSM={bg:"#f2efe9",out:"#e6e2da",water:"#aad3df",waterLine:"#8fbfcf",trunk:"#f9b29c",trunkCase:"#cf7f63",rail:"#8f8f8f",admin:"#a08bbd",adminLight:"#b9a7cf",town:"#333",halo:"rgba(242,239,233,.92)",poi:"#2a9d5c"};
+const FONT='"Avenir Next World","Avenir Next",system-ui,sans-serif',MAPFONT='"Noto Sans","Open Sans","Helvetica Neue",Arial,sans-serif',MONO='"GitLab Mono",ui-monospace,Menlo,Consolas,monospace';
+const TL={read0:1.6,store1:6.4,rend0:5.4,tile0:6.3,tile1:9.7,poi0:10.6,poi1:12.0,popup:12.5};TL.end=TL.popup+.9;
+const TOWNS=[["Raipur",81.6296,21.2514,0],["Bhilai",81.38,21.21,1],["Bilaspur",82.14,22.08,1],["Korba",82.68,22.35,1],["Rajnandgaon",81.03,21.10,1],["Jagdalpur",82.02,19.08,1],["Ambikapur",83.20,23.12,1],["Raigarh",83.40,21.90,1],
+  ["Dhamtari",81.55,20.71,2],["Kanker",81.49,20.27,2],["Mahasamund",82.10,21.11,2],["Janjgir",82.58,22.01,2],["Kawardha",81.23,22.01,2],["Dantewada",81.35,18.90,2],["Bijapur",80.82,18.79,2],["Sukma",81.66,18.39,2],
+  ["Kondagaon",81.66,19.59,2],["Narayanpur",81.25,19.72,2],["Mungeli",81.69,22.07,2],["Baikunthpur",82.56,23.26,2],["Jashpur Nagar",84.14,22.89,2],["Balod",81.20,20.73,2],["Bemetara",81.53,21.71,2],["Gariaband",82.06,20.63,2]];
+const cv=document.getElementById("c"),cx=cv.getContext("2d");
+const gl=document.createElement("canvas"),gx=gl.getContext("2d");
+let W,H,DPR,L,land,nodes,panel,fr,vp,mapT,tiles=[],pk=[],P=[],hero,carto,labels,bin,air=[],vign,grain,glyph={},statePath,distPaths,ctxStates,t0=performance.now(),last=t0,lastLive=0;
+let seed=13;const R=()=>(seed=seed*16807%2147483647)/2147483647;
+const rnd=(a,b)=>a+R()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),lerp=(a,b,t)=>a+(b-a)*t;
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,easeOut=t=>1-Math.pow(1-t,3);
+const quad=(a,c,b,t)=>{const m=1-t;return[m*m*a[0]+2*m*t*c[0]+t*t*b[0],m*m*a[1]+2*m*t*c[1]+t*t*b[1]]};
+
+/* ── real encodings and the projection ─────────────────────────── */
+const LT=GEO.lt;
+function ll2xy(lon,lat){const fx=(lon-LT.lon0)/LT.step,fy=(lat-LT.lat0)/LT.step;const i=clamp(Math.floor(fx),0,LT.nx-2),j=clamp(Math.floor(fy),0,LT.ny-2),u=fx-i,v=fy-j;
+  const p=(a,b)=>LT.xy[b*LT.nx+a];const a=p(i,j),b=p(i+1,j),c=p(i,j+1),d=p(i+1,j+1);
+  return[lerp(lerp(a[0],b[0],u),lerp(c[0],d[0],u),v),lerp(lerp(a[1],b[1],u),lerp(c[1],d[1],u),v)]}
+function xy2ll(x,y){let lon=82.3,lat=21;for(let k=0;k<12;k++){const p=ll2xy(lon,lat),q=ll2xy(lon+.01,lat),r=ll2xy(lon,lat+.01);
+  const a=(q[0]-p[0])/.01,b=(r[0]-p[0])/.01,c=(q[1]-p[1])/.01,d=(r[1]-p[1])/.01,det=a*d-b*c;const dx=x-p[0],dy=y-p[1];lon+=(d*dx-b*dy)/det;lat+=(-c*dx+a*dy)/det}return[lon,lat]}
+const dv=new DataView(new ArrayBuffer(8));
+function f64bits(v){dv.setFloat64(0,v);let s="";for(let i=0;i<8;i++)s+=dv.getUint8(i).toString(2).padStart(8,"0");return s}
+function f64hexLE(v){dv.setFloat64(0,v,true);let s="";for(let i=0;i<8;i++)s+=dv.getUint8(i).toString(16).padStart(2,"0");return s.toUpperCase()}
+const EWKB_PT="0101000020E6100000",EWKB_MPOLY="0106000020E6100000";
+const deg=(lo,la)=>`${la.toFixed(4)}° N, ${lo.toFixed(4)}° E`;
+function tileId(lon,lat,z){const n=2**z,x=Math.floor((lon+180)/360*n),r=lat*Math.PI/180,y=Math.floor((1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*n);return`${z}/${x}/${y}`}
+
+/* ── layout ────────────────────────────────────────────────────── */
+function layout(){
+  seed=13;DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;gl.width=Math.ceil(W/3);gl.height=Math.ceil(H/3);
+  land=W/H>1.05;const pad=Math.max(14,Math.min(W,H)*.04),r=clamp(Math.min(W,H)*.042,19,32);
+  if(land){const pw=clamp(W*.3,250,380);panel={x:pad,y:pad,w:pw,h:H-2*pad};fr={x:pad*2+pw,y:pad,w:W-pw-pad*3,h:H-2*pad};
+    const cxp=panel.x+pw/2,top=panel.y+H*.1;
+    nodes={xls:[panel.x+pw*.26,top+r],geo:[panel.x+pw*.74,top+r],pg:[cxp,top+r+H*.27],rnd:[cxp,top+r+H*.52]}}
+  else{const ph=clamp(H*.36,230,300);panel={x:pad,y:pad,w:W-2*pad,h:ph};fr={x:pad,y:pad*2+ph,w:W-2*pad,h:H-ph-pad*3-Math.max(34,H*.05)};
+    const y1=panel.y+r+30,y2=y1+ph*.44;nodes={xls:[W*.3,y1],geo:[W*.7,y1],pg:[W*.3,y2],rnd:[W*.7,y2]}}
+  Object.entries(nodes).forEach(([k,p])=>Object.assign(N[k],{x:p[0],y:p[1],r}));
+  const bar=Math.max(26,Math.min(34,H*.045));vp={x:fr.x,y:fr.y+bar,w:fr.w,h:fr.h-bar,bar};
+  // the map view: the state with its neighbours around it, like a slippy map at zoom ~7
+  const bb={x:79.11,y:24,w:361.78,h:592},k=Math.min(vp.w*.86/bb.w,vp.h*.9/bb.h);
+  mapT={k,ox:vp.x+vp.w/2-(bb.x+bb.w/2)*k,oy:vp.y+vp.h/2-(bb.y+bb.h/2)*k,bb};
+  const S=p=>[mapT.ox+k*p[0],mapT.oy+k*p[1]];
+  statePath=new Path2D(GEO.state);distPaths=GEO.districts.map(d=>new Path2D(d.d));ctxStates=GEO.ctx.states.map(s=>new Path2D(s.d));
+  L={cs:clamp(Math.min(W,H)*.017,9,13)};L.font=Math.round(L.cs);L.sm=Math.round(L.cs*.75);
+  const off=new OffscreenCanvas(1,1).getContext("2d");
+
+  // Anganwadi centres (real positions), and the one we follow from the sheet to the map
+  P=GEO.aw.filter(m=>off.isPointInPath(statePath,m[0],m[1])).map(m=>({m,s:S(m),ll:xy2ll(m[0],m[1])}));
+  const rp=ll2xy(81.6296,21.2514);hero=P.reduce((a,p)=>Math.hypot(p.m[0]-rp[0],p.m[1]-rp[1])<Math.hypot(a.m[0]-rp[0],a.m[1]-rp[1])?p:a,P[0]);
+  hero.id="AWC-RPR-00412";const vc=[vp.x+vp.w/2,vp.y+vp.h/2],md=Math.hypot(vp.w,vp.h)/2;
+  P.forEach(p=>p.tp=TL.poi0+clamp(Math.hypot(p.s[0]-vc[0],p.s[1]-vc[1])/md,0,1)*(TL.poi1-TL.poi0));hero.tp=Math.min(hero.tp,TL.poi0+.4);
+
+  // tiles: a grid anchored on the view's centre, loaded centre-out like a real slippy map
+  const ts=Math.round(clamp(Math.min(vp.w,vp.h)/3.4,80,190));tiles=[];
+  const gx0=vc[0]-Math.ceil((vc[0]-vp.x)/ts)*ts,gy0=vc[1]-Math.ceil((vc[1]-vp.y)/ts)*ts;
+  for(let y=gy0;y<vp.y+vp.h;y+=ts)for(let x=gx0;x<vp.x+vp.w;x+=ts)tiles.push({x,y,ts,d:Math.hypot(x+ts/2-vc[0],y+ts/2-vc[1])+R()*ts*.3});
+  tiles.sort((a,b)=>a.d-b.d);const tileDeg=ts/k/GEO.kmPx/104,z=clamp(Math.round(Math.log2(360/tileDeg)),5,12);
+  tiles.forEach((t,i)=>{t.b0=TL.tile0+i/(tiles.length-1||1)*(TL.tile1-TL.tile0);t.r0=t.b0+.55;t.r1=t.r0+.45;const ll=xy2ll((t.x+ts/2-mapT.ox)/k,(t.y+ts/2-mapT.oy)/k);t.id=tileId(ll[0],ll[1],z)});
+
+  // packets along the backend: every one carries a real value and shows its real bits
+  pk=[];const port=(n,side)=>{const s=N[n],j=()=>rnd(-s.r*.45,s.r*.45);return side==="out"?(land?[s.x+j(),s.y+s.r]:[s.x+j(),s.y+s.r]):[s.x+j(),s.y-s.r*.9]};
+  const into=(n)=>{const s=N[n];return[s.x+rnd(-s.r*.5,s.r*.5),s.y+rnd(-s.r*.35,s.r*.35)]};
+  const code=n=>n.replace(/[^A-Za-z]/g,"").slice(0,3).toUpperCase(),dists=GEO.districts;
+  for(let i=0;i<64;i++){const p=P[Math.floor(i*P.length/64)],t1=TL.read0+.4+i/63*(TL.store1-TL.read0-.8)+rnd(-.05,.05);
+    pk.push(mkp("xls",port("xls","out"),into("pg"),t1,rnd(1,1.3),f64bits(p.ll[1]).slice(12,28),`${p.ll[1].toFixed(4)}, ${p.ll[0].toFixed(4)}`))}
+  for(let i=0;i<54;i++){const d=dists[i%27],pts=d.d.slice(1).split(/[LMZ]/).filter(Boolean),v=pts[Math.floor(R()*pts.length)].split(",").map(Number),ll=xy2ll(v[0],v[1]);
+    const t1=TL.read0+.8+i/53*(TL.store1-TL.read0-.6)+rnd(-.05,.05);pk.push(mkp("geo",port("geo","out"),into("pg"),t1,rnd(1,1.3),f64bits(ll[0]).slice(12,28),`[${ll[0].toFixed(4)}, ${ll[1].toFixed(4)}]`))}
+  for(let i=0;i<40;i++){const d=dists[i%27],c=xy2ll(d.c[0],d.c[1]),t1=TL.rend0+.6+i/39*(TL.tile1-TL.rend0-.4);
+    pk.push(mkp("pg",[N.pg.x+(land?rnd(-N.pg.r*.4,N.pg.r*.4):N.pg.r*.9),N.pg.y+(land?N.pg.r:rnd(-N.pg.r*.3,N.pg.r*.3))],into("rnd"),t1,rnd(.9,1.2),f64bits(c[0]).slice(12,28),(EWKB_MPOLY+f64hexLE(c[0])).slice(0,22)+"…"))}
+  tiles.forEach(t=>{for(let j=0;j<3;j++){const t1=t.b0+(j+.5)/3*(t.r0-t.b0),to=[t.x+rnd(.2,.8)*t.ts,t.y+rnd(.2,.8)*t.ts];
+    pk.push(mkp("rnd",[N.rnd.x+(land?N.rnd.r*1.2:rnd(-N.rnd.r*.4,N.rnd.r*.4)),N.rnd.y+(land?rnd(-N.rnd.r*.4,N.rnd.r*.4):N.rnd.r)],to,t1,rnd(.7,1),f64bits(t.x*13.7+t.y).slice(12,28),`tile ${t.id}.png`,true))}});
+  // three values we follow, one at a time, all the way through
+  const hx=pk.filter(p=>p.n==="xls"&&p.t1>3)[0];Object.assign(hx,{hero:1,dur:2.5,t0:hx.t1-2.5,s0:`${hero.id}  ${hero.ll[1].toFixed(4)}, ${hero.ll[0].toFixed(4)}`,s1:f64bits(hero.ll[1]).slice(12,32),s2:"stored · table anganwadi, row 412"});
+  const hg=pk.filter(p=>p.n==="geo"&&p.t1>5)[0];const ri=dists.findIndex(d=>d.n==="Raipur"),rc=xy2ll(dists[ri].c[0],dists[ri].c[1]);
+  Object.assign(hg,{hero:1,dur:2.5,t0:hg.t1-2.5,s0:`"Raipur": [${rc[0].toFixed(4)}, ${rc[1].toFixed(4)}]`,s1:f64bits(rc[0]).slice(12,32),s2:"stored · table districts, Raipur"});
+  const hp=pk.filter(p=>p.n==="pg"&&p.t1>7.6)[0],ht=tiles[0];Object.assign(hp,{hero:1,dur:2.5,t0:hp.t1-2.5,s0:(EWKB_PT+f64hexLE(hero.ll[0])).slice(0,24),s1:f64bits(hero.ll[0]).slice(12,32),s2:`drawn into tile ${ht.id}`});
+  pk.sort((a,b)=>a.t0-b.t0);
+
+  // pre-render the finished map (what the browser shows) and the binary tiles (what the renderer is filling)
+  carto=new OffscreenCanvas(Math.ceil(vp.w*DPR),Math.ceil(vp.h*DPR));labels=new OffscreenCanvas(carto.width,carto.height);drawCarto(carto.getContext("2d"),labels.getContext("2d"));
+  bin=new OffscreenCanvas(Math.ceil(vp.w*DPR),Math.ceil(vp.h*DPR));drawBin(bin.getContext("2d"),off);
+
+  air=Array.from({length:Math.round(panel.w*panel.h/5200)},(_,i)=>{const zz=i%3===0?1:.5;return{x:panel.x+Math.random()*panel.w,y:panel.y+Math.random()*panel.h,z:zz,v:(zz>.9?9:4.5)*(.6+Math.random()*.8),b:Math.random()<.5?1:0,a:(zz>.9?.1:.05)*(.5+Math.random()*.5)}});
+  vign=document.createElement("canvas");vign.width=W;vign.height=H;{const v=vign.getContext("2d"),g=v.createRadialGradient(W*.5,H*.5,Math.min(W,H)*.35,W*.5,H*.5,Math.hypot(W,H)*.65);
+    g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(0,0,0,.5)");v.fillStyle=g;v.fillRect(0,0,W,H)}
+  grain=document.createElement("canvas");grain.width=grain.height=192;{const g=grain.getContext("2d"),d=g.createImageData(192,192);for(let i=0;i<d.data.length;i+=4){const n=Math.random()*255;d.data[i]=d.data[i+1]=d.data[i+2]=n;d.data[i+3]=18}g.putImageData(d,0,0)}
+  makeGlyphs()}
+function mkp(n,a,b,t1,dur,bits,rec,toTile){const m=[(a[0]+b[0])/2+rnd(-30,30),(a[1]+b[1])/2+rnd(-30,30)];return{n,a,m,b,t1,dur,t0:t1-dur,bits,rec,toTile}}
+
+/* the street-style map: cream land, blue rivers, orange highways, grey rail, purple dashed boundaries, town labels */
+function drawCarto(c,lc){const k=mapT.k;c.scale(DPR,DPR);c.translate(-vp.x,-vp.y);
+  c.fillStyle=OSM.out;c.fillRect(vp.x,vp.y,vp.w,vp.h);
+  c.save();c.translate(mapT.ox,mapT.oy);c.scale(k,k);const px=1/k;
+  ctxStates.forEach(p=>{c.fillStyle=OSM.out;c.fill(p)});c.fillStyle=OSM.bg;c.fill(statePath);
+  // a little relief so it doesn't read flat: soft shading on the hilly north and south
+  c.save();c.clip(statePath);[[300,120,120],[230,560,110],[120,470,80]].forEach(([x,y,r])=>{const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,"rgba(173,209,158,.45)");g.addColorStop(1,"rgba(173,209,158,0)");c.fillStyle=g;c.fillRect(x-r,y-r,2*r,2*r)});c.restore();
+  c.lineJoin=c.lineCap="round";
+  GEO.ctx.rivers.forEach(rv=>{c.strokeStyle=OSM.water;c.lineWidth=(rv.r<=6?2.6:rv.r<=8?1.9:1.4)*px;c.stroke(new Path2D(rv.d))});
+  ctxStates.forEach(p=>{c.strokeStyle=OSM.adminLight;c.lineWidth=1.2*px;c.setLineDash([6*px,3*px,1.5*px,3*px]);c.stroke(p)});c.setLineDash([]);
+  const rail=new Path2D(GEO.ctx.rail);c.strokeStyle=OSM.rail;c.lineWidth=2.2*px;c.stroke(rail);c.strokeStyle="#fff";c.lineWidth=1*px;c.setLineDash([4*px,4*px]);c.stroke(rail);c.setLineDash([]);
+  const roads=new Path2D(GEO.ctx.roads);c.strokeStyle=OSM.trunkCase;c.lineWidth=3*px;c.stroke(roads);c.strokeStyle=OSM.trunk;c.lineWidth=1.9*px;c.stroke(roads);
+  distPaths.forEach(p=>{c.strokeStyle=OSM.adminLight;c.lineWidth=1*px;c.setLineDash([4*px,3*px]);c.stroke(p)});c.setLineDash([]);
+  c.strokeStyle="rgba(160,139,189,.35)";c.lineWidth=5*px;c.stroke(statePath);c.strokeStyle=OSM.admin;c.lineWidth=1.6*px;c.setLineDash([7*px,3*px,2*px,3*px]);c.stroke(statePath);c.setLineDash([]);
+  c.restore();
+  // towns: the state's towns by size, and the big cities just outside it
+  c=lc;c.scale(DPR,DPR);c.translate(-vp.x,-vp.y);const placed=[],S=(lo,la)=>{const m=ll2xy(lo,la);return[mapT.ox+k*m[0],mapT.oy+k*m[1]]};
+  const list=TOWNS.map(t=>({n:t[0],p:S(t[1],t[2]),tier:t[3]}));GEO.ctx.cities.filter(t=>!t.cg&&t.p>400000).forEach(t=>list.push({n:t.n,p:[mapT.ox+k*t.xy[0],mapT.oy+k*t.xy[1]],tier:2,out:1}));
+  const fs=clamp(k*3.4,9.5,13);list.forEach(t=>{if(t.p[0]<vp.x+8||t.p[0]>vp.x+vp.w-60||t.p[1]<vp.y+10||t.p[1]>vp.y+vp.h-10)return;
+    const size=t.tier===0?fs*1.22:t.tier===1?fs:fs*.86;c.font=`${t.tier===0?700:t.tier===1?600:400} ${size}px ${MAPFONT}`;const w=c.measureText(t.n).width,box=[t.p[0]+5,t.p[1]-size*.6,w,size*1.2];
+    if(placed.some(b=>box[0]<b[0]+b[2]+4&&box[0]+box[2]+4>b[0]&&box[1]<b[1]+b[3]&&box[1]+box[3]>b[1]))return;placed.push(box);
+    c.fillStyle=t.out?"#777":"#fff";c.strokeStyle="#444";c.lineWidth=1;c.beginPath();c.arc(t.p[0],t.p[1],t.tier===0?3.6:t.tier===1?2.8:2.1,0,6.283);c.fill();c.stroke();
+    c.textBaseline="middle";c.lineJoin="round";c.strokeStyle=OSM.halo;c.lineWidth=3;c.strokeText(t.n,t.p[0]+5,t.p[1]);c.fillStyle=t.out?"#6d6d6d":OSM.town;c.fillText(t.n,t.p[0]+5,t.p[1])})}
+/* the same view as the renderer holds it before drawing: bits, brighter where the state is */
+function drawBin(c,off){c.scale(DPR,DPR);c.translate(-vp.x,-vp.y);c.fillStyle="#071512";c.fillRect(vp.x,vp.y,vp.w,vp.h);
+  const cs=L.cs*.95,bits=P.map(p=>f64bits(p.ll[0])+f64bits(p.ll[1])).join("");let i=0;c.font=`600 ${Math.round(cs*.92)}px ${MONO}`;c.textAlign="center";c.textBaseline="middle";
+  for(let y=vp.y+cs/2;y<vp.y+vp.h;y+=cs)for(let x=vp.x+cs*.35;x<vp.x+vp.w;x+=cs*.7){const m=[(x-mapT.ox)/mapT.k,(y-mapT.oy)/mapT.k],inS=off.isPointInPath(statePath,m[0],m[1]);
+    c.fillStyle=inS?"rgba(95,227,179,.85)":"rgba(95,227,179,.22)";c.fillText(bits[(i++*5)%bits.length],x,y)}}
+
+function makeGlyphs(){glyph={};[LAND,EDGE,...Object.values(N).map(s=>s.col)].forEach(col=>[L.font,L.sm].forEach(z=>["0","1"].forEach(ch=>{const g=new OffscreenCanvas(Math.ceil(z*1.25*DPR),Math.ceil(z*1.45*DPR)),c=g.getContext("2d");
+  c.scale(DPR,DPR);c.fillStyle=col;c.font=`600 ${z}px ${MONO}`;c.textAlign="center";c.textBaseline="middle";c.fillText(ch,z*.62,z*.74);glyph[col+z+ch]=g})))}
+function digit(col,z,b,x,y,a){const g=glyph[col+z+b];if(!g||a<=.01)return;cx.globalAlpha=Math.min(1,a);cx.drawImage(g,x-z*.62,y-z*.74,g.width/DPR,g.height/DPR)}
+function blob(x,y,r,col,a){if(a<=.004)return;gx.globalAlpha=Math.min(1,a);gx.fillStyle=col;gx.beginPath();gx.arc(x/3,y/3,r/3,0,6.283);gx.fill()}
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+function morph(p,u){const S=[p.s0,p.s1,p.s2],cut=[.36,.7];const seg=u<cut[0]?0:u<cut[1]?1:2,st=seg?cut[seg-1]:0,en=seg<2?cut[seg]:1.0001,loc=(u-st)/(en-st);
+  const cur=S[seg];if(seg===2||loc<.6)return cur;const nxt=S[seg+1],mix=(loc-.6)/.4,n=Math.max(cur.length,nxt.length);let out="";
+  for(let i=0;i<n;i++){const f=i/n;out+=f<mix-.12?(nxt[i]||""):f<mix?"01"[(i+(performance.now()/60|0))%2]:(cur[i]||"")}return out}
+function pill(text,x,y,col,a){cx.font=`600 ${Math.max(10,L.cs*.9)}px ${MONO}`;const w=cx.measureText(text).width+14,h=Math.max(18,L.cs*1.55);
+  const lx=clamp(x-w/2,6,W-w-6),ly=clamp(y-h,6,H-h-6);cx.globalAlpha=a;cx.fillStyle=PILL;rr(cx,lx,ly,w,h,4);cx.fill();cx.fillStyle=col;cx.fillRect(lx,ly+3,2,h-6);
+  cx.fillStyle=INK;cx.textAlign="left";cx.textBaseline="middle";cx.fillText(text,lx+9,ly+h/2+.5)}
+
+/* ── backend nodes ─────────────────────────────────────────────── */
+const ACTIVE={xls:[TL.read0-.2,TL.store1],geo:[TL.read0,TL.store1+.2],pg:[TL.read0+.6,TL.tile1],rnd:[TL.rend0+.3,TL.tile1+.6]};
+function node(key,i,T,info){const s=N[key],born=REDUCE||POSTER?1:clamp((T-.15-i*.15)/.7,0,1);if(born<=0)return;const r=s.r,e=easeOut(born);
+  const active=T>=ACTIVE[key][0]&&T<=ACTIVE[key][1],idle=T>ACTIVE[key][1]?.6:1,breathe=REDUCE?.5:.5+.5*Math.sin(T*2+i*1.3);
+  cx.save();cx.translate(s.x,s.y);const w=r*2.5,h=r*2;cx.globalAlpha=e;cx.fillStyle=`rgba(${s.rgb},${active?.11:.05})`;rr(cx,-w/2,-h/2,w,h,11);cx.fill();
+  cx.shadowColor=s.col;cx.shadowBlur=active?10+12*breathe:5;cx.strokeStyle=s.col;cx.lineWidth=1.6;cx.globalAlpha=e*idle;const per=2*(w+h);cx.setLineDash([per*e,per]);rr(cx,-w/2,-h/2,w,h,11);cx.stroke();cx.setLineDash([]);cx.shadowBlur=0;
+  if(active&&!REDUCE&&!POSTER){const sy=-h/2+((T*.8+i*.3)%1)*h;cx.save();rr(cx,-w/2,-h/2,w,h,11);cx.clip();const g=cx.createLinearGradient(0,sy-9,0,sy+9);g.addColorStop(0,`rgba(${s.rgb},0)`);g.addColorStop(.5,`rgba(${s.rgb},.24)`);g.addColorStop(1,`rgba(${s.rgb},0)`);cx.fillStyle=g;cx.fillRect(-w/2,sy-9,w,18);cx.restore()}
+  cx.strokeStyle=s.col;cx.fillStyle=s.col;cx.lineWidth=1.6;cx.globalAlpha=e*idle;
+  if(key==="xls"){const iw=r*1.45,ih=r*1.05;cx.strokeRect(-iw/2,-ih/2,iw,ih);for(let q=1;q<3;q++){cx.beginPath();cx.moveTo(-iw/2+iw*q/3,-ih/2);cx.lineTo(-iw/2+iw*q/3,ih/2);cx.stroke()}
+    for(let j=1;j<4;j++){cx.beginPath();cx.moveTo(-iw/2,-ih/2+ih*j/4);cx.lineTo(iw/2,-ih/2+ih*j/4);cx.stroke()}cx.globalAlpha=e*.35*idle;cx.fillRect(-iw/2,-ih/2,iw,ih/4);
+    if(active&&!POSTER){const row=1+(Math.floor(T*4)%3);cx.globalAlpha=e*.45;cx.fillRect(-iw/2,-ih/2+ih*row/4,iw,ih/4)}}
+  if(key==="geo"){cx.font=`700 ${r*.86}px ${MONO}`;cx.textAlign="center";cx.textBaseline="middle";cx.fillText("{ }",0,-r*.06);cx.globalAlpha=e*.65*idle;cx.font=`${r*.25}px ${MONO}`;cx.fillText('"Polygon"',0,r*.6)}
+  if(key==="pg"){const ew=r*.74,eh=r*.21;for(let q=0;q<3;q++){const y=-r*.45+q*r*.42;cx.beginPath();cx.ellipse(0,y,ew,eh,0,0,6.283);cx.stroke();if(active&&!POSTER&&Math.floor(T*2.5)%3===q){cx.globalAlpha=e*.25;cx.fill();cx.globalAlpha=e*idle}}
+    cx.beginPath();cx.moveTo(-ew,-r*.45);cx.lineTo(-ew,r*.39);cx.moveTo(ew,-r*.45);cx.lineTo(ew,r*.39);cx.stroke()}
+  if(key==="rnd"){const q=r*.5;for(let a=0;a<2;a++)for(let b=0;b<2;b++){cx.strokeRect(-q+a*q,-q+b*q,q,q)}if(active&&!POSTER){const f=Math.floor(T*3)%4;cx.globalAlpha=e*.4;cx.fillRect(-q+(f%2)*q,-q+(f>>1)*q,q,q)}}
+  if(TEXT){const y0=r*1.1,fs=Math.max(11.5,r*.42),fm=Math.max(9,Math.min(11,r*.32));cx.textAlign="center";cx.textBaseline="top";
+    cx.globalAlpha=e;cx.fillStyle=INK;cx.font=`600 ${fs}px ${FONT}`;cx.fillText(s.name,0,y0);
+    cx.globalAlpha=e*.6;cx.font=`${Math.max(10,r*.33)}px ${FONT}`;cx.fillText(s.role,0,y0+fs*1.22);
+    let t=info.rec||"";cx.font=`${fm}px ${MONO}`;const maxW=land?panel.w*.46:panel.w*.42;while(t.length>4&&cx.measureText(t+"…").width>maxW)t=t.slice(0,-1);if(t!==(info.rec||""))t+="…";
+    cx.globalAlpha=e*(active?.95:.4);cx.fillStyle=s.col;cx.fillText(t,0,y0+fs*1.22+fm*1.6);
+    cx.globalAlpha=e*.55;cx.fillStyle=INK;cx.fillText(info.count||"",0,y0+fs*1.22+fm*3.1)}
+  cx.restore();blob(s.x,s.y,r*1.5,s.col,(active?.14:.05)*e*(.6+.4*breathe))}
+
+/* ── frame: a pure function of time T ──────────────────────────── */
+function frame(now){
+  const dt=Math.min(64,now-last);last=now;const T=REDUCE?TL.end+3:POSTER?8.3:(now-t0)/1000,done=T>=TL.end,moving=!REDUCE&&!POSTER;
+  cx.setTransform(DPR,0,0,DPR,0,0);cx.globalCompositeOperation="source-over";cx.globalAlpha=1;
+  gx.setTransform(1,0,0,1,0,0);gx.globalCompositeOperation="source-over";gx.clearRect(0,0,gl.width,gl.height);gx.globalCompositeOperation="lighter";
+  const bg=cx.createRadialGradient(panel.x+panel.w/2,H*.5,0,panel.x+panel.w/2,H*.5,Math.max(W,H)*.8);bg.addColorStop(0,BG1);bg.addColorStop(1,BG0);cx.fillStyle=bg;cx.fillRect(0,0,W,H);
+  for(const p of air){if(moving){p.y+=p.v*dt/1000;if(p.y>panel.y+panel.h){p.y=panel.y;p.x=panel.x+Math.random()*panel.w}if(Math.random()<.002)p.b^=1}digit(LAND,p.z>.9?L.font:L.sm,p.b,p.x,p.y,p.a)}
+  // the backend panel
+  cx.globalAlpha=1;cx.strokeStyle="rgba(159,232,204,.14)";cx.lineWidth=1;rr(cx,panel.x+.5,panel.y+.5,panel.w-1,panel.h-1,14);cx.stroke();
+  if(TEXT){cx.font=`600 10px ${MONO}`;cx.fillStyle="rgba(159,232,204,.55)";cx.textAlign="left";cx.textBaseline="top";cx.fillText("BACKEND · SERVER",panel.x+14,panel.y+12)}
+  // pipes between the nodes
+  const pipe=(a,b,col,on)=>{const A=[N[a].x,N[a].y],B=b.length?b:[N[b].x,N[b].y];cx.globalAlpha=on?.32:.12;cx.strokeStyle=col;cx.lineWidth=1.2;cx.setLineDash([3,5]);cx.lineDashOffset=moving&&on?-T*18:0;cx.beginPath();cx.moveTo(A[0],A[1]);cx.lineTo(B[0],B[1]);cx.stroke();cx.setLineDash([])};
+  const on=k=>T>=ACTIVE[k][0]&&T<=ACTIVE[k][1];
+  pipe("xls","pg",N.xls.col,on("xls"));pipe("geo","pg",N.geo.col,on("geo"));pipe("pg","rnd",N.pg.col,on("pg"));pipe("rnd",land?[fr.x,N.rnd.y]:[N.rnd.x,fr.y],N.rnd.col,on("rnd"));
+
+  // packets: compute who is where; tile-bound packets are drawn later, over the browser
+  const info={xls:{},geo:{},pg:{},rnd:{}},late=[],heroes=[];let nx=0,ng=0,np=0;
+  for(const p of pk){if(T<p.t0)break;info[p.n].rec=p.rec;if(T>=p.t1){p.n==="xls"?nx++:p.n==="geo"?ng++:p.n==="pg"?np++:0;if(p.hero&&T<p.t1+1.2)heroes.push({p,u:1,after:T-p.t1});continue}
+    const u=(T-p.t0)/p.dur;if(p.hero){heroes.push({p,u,after:-1});continue}if(p.toTile){late.push([p,u]);continue}flight(p,u,moving)}
+  const rendered=tiles.filter(t=>T>=t.r1).length;
+  info.xls.count=`${Math.round(nx/64*P.length)} of ${P.length} rows read`;info.geo.count=`${Math.round(ng/54*27)} of 27 features read`;
+  info.pg.count=`${Math.round(nx/64*P.length)+Math.round(ng/54*27)} rows stored`;info.rnd.count=`${rendered} of ${tiles.length} tiles drawn`;
+  heroes.forEach(({p,u,after})=>{if(after<0){const q=quad(p.a,p.m,p.b,ease(u));blob(q[0],q[1],L.cs*1.8,N[p.n].col,.5);cx.globalAlpha=1;cx.fillStyle=N[p.n].col;cx.beginPath();cx.arc(q[0],q[1],2.6,0,6.283);cx.fill()}});
+  ["xls","geo","pg","rnd"].forEach((k,i)=>node(k,i,T,info[k]));
+  cx.globalCompositeOperation="lighter";cx.globalAlpha=1;cx.imageSmoothingEnabled=true;cx.drawImage(gl,0,0,W,H);cx.globalAlpha=.55;cx.drawImage(gl,-W*.01,-H*.01,W*1.02,H*1.02);cx.globalCompositeOperation="source-over";
+
+  // the browser: what the user sees
+  cx.globalAlpha=1;cx.drawImage(vign,0,0);if(moving){cx.globalAlpha=.4;const ox=Math.random()*192|0,oy=Math.random()*192|0;cx.fillStyle=cx.createPattern(grain,"repeat");cx.save();cx.translate(-ox,-oy);cx.fillRect(ox,oy,W,H);cx.restore()}
+  browser(T,done,moving,now);
+  for(const [p,u] of late)flight(p,u,moving,true);
+  if(TEXT)heroes.forEach(({p,u,after})=>{if(after>=0){const a=after<.8?1:1-(after-.8)/.4;pill(p.s2,p.b[0],p.b[1]-L.cs*1.2,N[p.n].col,a*.95);return}
+    const q=quad(p.a,p.m,p.b,ease(u));pill(morph(p,u),q[0],q[1]-L.cs*1.1,N[p.n].col,Math.min(1,u*5)*.95)});
+  if(TEXT)hud(T,done);
+  if(moving)requestAnimationFrame(frame)}
+
+function flight(p,u,moving,overMap){const s=N[p.n],e=ease(u),a=.35+.65*Math.sin(Math.min(1,u*1.3)*Math.PI*.5);
+  for(let k=0;k<4;k++){const q=quad(p.a,p.m,p.b,Math.max(0,e-.03*k));digit(s.col,k?L.sm:(e>.6?L.font:L.sm),+p.bits[(k+(moving?(u*10|0):0))%16],q[0],q[1],a*(k?.55/k:1))}
+  const q=quad(p.a,p.m,p.b,e);if(overMap){cx.globalAlpha=.35*a;cx.fillStyle=s.col;cx.beginPath();cx.arc(q[0],q[1],L.cs*.5,0,6.283);cx.fill()}else blob(q[0],q[1],L.cs*.7,s.col,.16*a)}
+
+function browser(T,done,moving,now){
+  const born=REDUCE||POSTER?1:clamp((T-.4)/.8,0,1);if(born<=0)return;const e=easeOut(born);
+  cx.save();cx.globalAlpha=e;cx.translate(0,(1-e)*14);
+  cx.shadowColor="rgba(0,0,0,.55)";cx.shadowBlur=30;cx.shadowOffsetY=10;cx.fillStyle="#e9e6df";rr(cx,fr.x,fr.y,fr.w,fr.h,12);cx.fill();cx.shadowColor="transparent";
+  // window bar
+  cx.save();rr(cx,fr.x,fr.y,fr.w,fr.h,12);cx.clip();cx.fillStyle="#d9d5cc";cx.fillRect(fr.x,fr.y,fr.w,vp.bar);
+  ["#ec6a5e","#f4bf4f","#61c554"].forEach((c,i)=>{cx.fillStyle=c;cx.beginPath();cx.arc(fr.x+16+i*15,fr.y+vp.bar/2,4.5,0,6.283);cx.fill()});
+  if(TEXT){const tw=Math.min(fr.w*.5,260),tx=fr.x+fr.w/2-tw/2;cx.fillStyle="#f6f4ef";rr(cx,tx,fr.y+5,tw,vp.bar-10,(vp.bar-10)/2);cx.fill();cx.fillStyle="#555";cx.font=`500 ${clamp(vp.bar*.38,10,12)}px ${FONT}`;cx.textAlign="center";cx.textBaseline="middle";cx.fillText("State Geo Portal · Map",fr.x+fr.w/2,fr.y+vp.bar/2+.5)}
+  // the map view, tile by tile
+  cx.beginPath();cx.rect(vp.x,vp.y,vp.w,vp.h);cx.clip();cx.fillStyle="#dcd8cf";cx.fillRect(vp.x,vp.y,vp.w,vp.h);
+  if(moving&&done&&now-lastLive>4200){lastLive=now;const t=tiles[Math.floor(Math.random()*tiles.length)];t.lb=T;}   // live: a tile refreshes now and then
+  for(const t of tiles){let b0=t.b0,r0=t.r0,r1=t.r1;if(t.lb!==undefined&&T<t.lb+.9){b0=t.lb;r0=t.lb+.35;r1=t.lb+.8}
+    const sx=(t.x-vp.x)*DPR,sy=(t.y-vp.y)*DPR,S=t.ts*DPR;
+    if(T<b0){cx.globalAlpha=1;cx.strokeStyle="rgba(0,0,0,.06)";cx.lineWidth=1;cx.strokeRect(t.x+.5,t.y+.5,t.ts-1,t.ts-1);continue}
+    if(T<r0){const f=(T-b0)/(r0-b0),hh=t.ts*f;cx.globalAlpha=1;cx.drawImage(bin,sx,sy,S,hh*DPR,t.x,t.y,t.ts,hh);continue}
+    if(T<r1){const f=easeOut((T-r0)/(r1-r0)),hh=t.ts*f;cx.globalAlpha=1;cx.drawImage(bin,sx,sy,S,S,t.x,t.y,t.ts,t.ts);cx.drawImage(carto,sx,sy,S,hh*DPR,t.x,t.y,t.ts,hh);
+      cx.fillStyle="rgba(95,227,179,.9)";cx.fillRect(t.x,t.y+hh-1,t.ts,2);continue}
+    cx.globalAlpha=1;cx.drawImage(carto,sx,sy,S,S,t.x,t.y,t.ts,t.ts);const fl=T-r1;if(fl<.35){cx.globalAlpha=.3*(1-fl/.35);cx.fillStyle="#fff";cx.fillRect(t.x,t.y,t.ts,t.ts)}}
+  const allIn=T>=TL.tile1+1;if(!allIn){cx.globalAlpha=.5;cx.strokeStyle="rgba(255,255,255,.35)";cx.lineWidth=1;for(const t of tiles)if(T>=t.b0)cx.strokeRect(t.x+.5,t.y+.5,t.ts-1,t.ts-1)}
+  // Anganwadi centres, drawn on top of the tiles from PostGIS
+  const pr=clamp(mapT.k*1.1,2.2,3.6);
+  for(const p of P){if(T<p.tp)continue;const age=T-p.tp,pop=age<.3?easeOut(age/.3):1;cx.globalAlpha=1;cx.fillStyle="#fff";cx.beginPath();cx.arc(p.s[0],p.s[1],(pr+1.3)*pop,0,6.283);cx.fill();
+    cx.fillStyle=OSM.poi;cx.beginPath();cx.arc(p.s[0],p.s[1],pr*pop,0,6.283);cx.fill()}
+  for(const t of tiles){const sx=(t.x-vp.x)*DPR,sy=(t.y-vp.y)*DPR,S=t.ts*DPR;if(T>=t.r1&&!(t.lb!==undefined&&T<t.lb+.8)){cx.globalAlpha=1;cx.drawImage(labels,sx,sy,S,S,t.x,t.y,t.ts,t.ts)}}
+  if(moving&&done&&Math.random()<dt2(T)){const p=P[Math.floor(Math.random()*P.length)];p.ping=T}
+  for(const p of P){if(p.ping===undefined||T>p.ping+.9)continue;const u=(T-p.ping)/.9;cx.globalAlpha=.7*(1-u);cx.strokeStyle=OSM.poi;cx.lineWidth=1.4;cx.beginPath();cx.arc(p.s[0],p.s[1],pr+10*u,0,6.283);cx.stroke()}
+  // controls, scale bar, attribution: the furniture of a real web map
+  const cb=clamp(vp.bar*.95,22,28);cx.globalAlpha=1;cx.fillStyle="#fff";cx.strokeStyle="rgba(0,0,0,.25)";cx.lineWidth=1;rr(cx,vp.x+10,vp.y+10,cb,cb*2,4);cx.fill();cx.stroke();
+  cx.beginPath();cx.moveTo(vp.x+10,vp.y+10+cb);cx.lineTo(vp.x+10+cb,vp.y+10+cb);cx.stroke();cx.fillStyle="#333";cx.font=`700 ${cb*.62}px ${FONT}`;cx.textAlign="center";cx.textBaseline="middle";cx.fillText("+",vp.x+10+cb/2,vp.y+10+cb/2+1);cx.fillText("−",vp.x+10+cb/2,vp.y+10+cb*1.5+1);
+  const km=100,sw=km*GEO.kmPx*mapT.k,sx0=vp.x+12,sy0=vp.y+vp.h-14;cx.fillStyle="rgba(255,255,255,.7)";cx.fillRect(sx0-4,sy0-14,sw+8,18);cx.strokeStyle="#444";cx.lineWidth=1.5;cx.beginPath();cx.moveTo(sx0,sy0-6);cx.lineTo(sx0,sy0);cx.lineTo(sx0+sw,sy0);cx.lineTo(sx0+sw,sy0-6);cx.stroke();
+  cx.fillStyle="#333";cx.font=`600 10px ${FONT}`;cx.textAlign="left";cx.textBaseline="bottom";cx.fillText("100 km",sx0+3,sy0-2);
+  if(TEXT){const at="Data: CGGIS · rendered from PostGIS";cx.font=`10px ${FONT}`;const aw=cx.measureText(at).width+10;cx.fillStyle="rgba(255,255,255,.75)";cx.fillRect(vp.x+vp.w-aw,vp.y+vp.h-16,aw,16);cx.fillStyle="#555";cx.textAlign="right";cx.textBaseline="middle";cx.fillText(at,vp.x+vp.w-5,vp.y+vp.h-8)}
+  // the centre we followed from the sheet, now a pin you could click
+  if(TEXT&&T>=TL.popup){const a=easeOut(clamp((T-TL.popup)/.45,0,1)),p=hero.s;popup(p,a)}
+  cx.restore();cx.restore()}
+function dt2(T){return .016}
+function popup(p,a){const lines=[["Anganwadi Centre",`700 13px ${MAPFONT}`,"#222"],[hero.id,`600 11px ${MONO}`,"#2a7d4f"],[deg(hero.ll[0],hero.ll[1]),`11px ${MAPFONT}`,"#444"],["Raipur district",`11px ${MAPFONT}`,"#666"]];
+  cx.font=lines[0][1];let w=0;lines.forEach(l=>{cx.font=l[1];w=Math.max(w,cx.measureText(l[0]).width)});w+=22;const h=lines.length*17+14;
+  let x=clamp(p[0]-w/2,vp.x+8,vp.x+vp.w-w-8),y=p[1]-h-14-(1-a)*8;if(y<vp.y+8)y=p[1]+16;
+  cx.globalAlpha=1;cx.strokeStyle="#fff";cx.lineWidth=3;cx.fillStyle=OSM.poi;cx.beginPath();cx.arc(p[0],p[1],5.5,0,6.283);cx.fill();cx.stroke();
+  cx.globalAlpha=a;cx.shadowColor="rgba(0,0,0,.3)";cx.shadowBlur=14;cx.shadowOffsetY=3;cx.fillStyle="#fff";rr(cx,x,y,w,h,8);cx.fill();
+  if(y<p[1]){cx.beginPath();cx.moveTo(p[0]-8,y+h-1);cx.lineTo(p[0],y+h+9);cx.lineTo(p[0]+8,y+h-1);cx.fill()}cx.shadowColor="transparent";
+  lines.forEach((l,i)=>{cx.font=l[1];cx.fillStyle=l[2];cx.textAlign="left";cx.textBaseline="top";cx.fillText(l[0],x+11,y+9+i*17)})}
+
+function hud(T,done){const a=REDUCE||POSTER?1:clamp((T-.5)/.6,0,1);if(a<=0)return;
+  const bw=Math.min(panel.w-28,260),bx=panel.x+(panel.w-bw)/2,by=land?panel.y+panel.h-34:H-Math.max(16,H*.02)-12,prog=clamp(T/TL.end,0,1);
+  cx.globalAlpha=a;cx.textBaseline="bottom";cx.font=`600 10px ${MONO}`;cx.fillStyle=done?EDGE:"#9fe8cc";cx.textAlign="left";cx.fillText(done?"MAP LIVE":"BUILDING THE MAP",bx,by-6);cx.textAlign="right";cx.fillText(Math.round(prog*100)+"%",bx+bw,by-6);
+  cx.fillStyle="rgba(159,232,204,.15)";cx.fillRect(bx,by,bw,2);const g=cx.createLinearGradient(bx,0,bx+bw,0);g.addColorStop(0,N.xls.col);g.addColorStop(.35,N.geo.col);g.addColorStop(.7,N.pg.col);g.addColorStop(1,N.rnd.col);cx.fillStyle=g;cx.fillRect(bx,by,bw*prog,2);
+  const steps=[["READ",.5],["STORE",TL.read0+1],["RENDER",TL.tile0],["SHOW",TL.poi0]];let cur=-1;steps.forEach((s,i)=>{if(T>=s[1])cur=i});
+  cx.textBaseline="top";cx.font=`600 10px ${MONO}`;const slot=bw/4;
+  steps.forEach((s,i)=>{const x=bx+slot*i,lit=T>=s[1],nw=i===cur&&!done;cx.textAlign="left";cx.globalAlpha=a*(lit?(nw?1:.7):.28);cx.fillStyle=nw?LAND:INK;if(nw){cx.shadowColor=LAND;cx.shadowBlur=8}
+    cx.fillText(s[0],x,by+8);cx.shadowBlur=0;if(i<3){const tw=cx.measureText(s[0]).width;cx.globalAlpha=a*.3;cx.fillStyle=INK;cx.textAlign="center";cx.fillText("›",(x+tw+x+slot)/2,by+8)}})}
+
+let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{layout();last=performance.now();if(REDUCE||POSTER)frame(performance.now())},150)});
+document.fonts.load('16px "GitLab Mono"').catch(()=>{}).finally(()=>{layout();requestAnimationFrame(frame)});
+</script>
+</body>
+</html>
