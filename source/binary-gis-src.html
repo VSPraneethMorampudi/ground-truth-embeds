@@ -24,10 +24,10 @@ canvas{display:block;width:100vw;height:100vh}
    district's geometry as PostGIS stores it (EWKB, SRID 4326). Each source plays its real role:
    GeoJSON draws the 27 district boundaries, the Excel sheet places 260 Anganwadi centres, PostGIS stores the
    districts as binary rows and runs the spatial join (centre → district).
-   Options: ?labels=0 no text · ?still finished frame · ?poster mid-formation frame. Reduced motion shows the finished frame. */
+   Options: ?nograin no film grain (for video capture) · ?labels=0 no text · ?still finished frame · ?poster mid-formation frame. Reduced motion shows the finished frame. */
 const GEO=/*GEO*/null;
 const Q=new URLSearchParams(location.search+"&"+location.hash.slice(1));
-const POSTER=Q.has("poster"),STILL=Q.has("still"),TEXT=Q.get("labels")!=="0";
+const POSTER=Q.has("poster"),STILL=Q.has("still"),TEXT=Q.get("labels")!=="0",GRAIN=!Q.has("nograin");
 const REDUCE=(matchMedia("(prefers-reduced-motion: reduce)").matches&&!POSTER)||STILL;
 const SRC=[
   {key:"xls",name:"Excel sheet",role:"Anganwadi points",col:"#34d27f",rgb:"52,210,127"},
@@ -281,7 +281,7 @@ function frame(now){
   NODES.forEach((s,i)=>card(s,i,T));
   cx.globalCompositeOperation="lighter";cx.globalAlpha=1;cx.imageSmoothingEnabled=true;cx.drawImage(gl,0,0,W,H);cx.globalAlpha=.6;cx.drawImage(gl,-W*.01,-H*.01,W*1.02,H*1.02);cx.globalCompositeOperation="source-over";
   if(TEXT)hud(T,prog,done);
-  cx.globalAlpha=1;cx.drawImage(vign,0,0);if(moving){cx.globalAlpha=.5;const ox=Math.random()*192|0,oy=Math.random()*192|0;cx.fillStyle=cx.createPattern(grain,"repeat");cx.save();cx.translate(-ox,-oy);cx.fillRect(ox,oy,W,H);cx.restore()}
+  cx.globalAlpha=1;cx.drawImage(vign,0,0);if(moving&&GRAIN){cx.globalAlpha=.5;const ox=Math.random()*192|0,oy=Math.random()*192|0;cx.fillStyle=cx.createPattern(grain,"repeat");cx.save();cx.translate(-ox,-oy);cx.fillRect(ox,oy,W,H);cx.restore()}
   if(moving)requestAnimationFrame(frame)}
 
 /* the backend: the stack, its pipes, and the LOAD (files → GIS DB) and SERVE (GIS DB → map service) streams */
