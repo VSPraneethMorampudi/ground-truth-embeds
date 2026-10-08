@@ -13,3 +13,6 @@ geo13["ctx"]={"states":[{"n":s["n"],"d":s["d"]} for s in c["states"]],"rivers":c
 open("../binary-osm.html","w").write(open("binary-osm-src.html").read().replace("/*GEO*/null",json.dumps(geo13,separators=(",",":"))))
 # v14 (binary-gis): the v12 map with the GIS stack on the left
 open("../binary-gis.html","w").write(open("binary-gis-src.html").read().replace("/*GEO*/null",geo12))
+# v16 (binary-atlas): the GIS stack redrawn as a cartographic instrument; needs kmPx for the scale bar
+geo16=json.loads(geo12);geo16["kmPx"]=G["kmPx"]
+open("../binary-atlas.html","w").write(open("binary-atlas-src.html").read().replace("/*GEO*/null",json.dumps(geo16,separators=(",",":"))))
