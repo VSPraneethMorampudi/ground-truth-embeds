@@ -11,3 +11,5 @@ open("../binary-flat-v12.html","w").write(open("binary-flat-v12-src.html").read(
 c=G["ctx"];geo13=json.loads(geo12);geo13["kmPx"]=G["kmPx"]
 geo13["ctx"]={"states":[{"n":s["n"],"d":s["d"]} for s in c["states"]],"rivers":c["rivers"],"rail":c["rail"],"roads":c["roads"],"cities":c["cities"]}
 open("../binary-osm.html","w").write(open("binary-osm-src.html").read().replace("/*GEO*/null",json.dumps(geo13,separators=(",",":"))))
+# v14 (binary-gis): the v12 map with the GIS stack on the left
+open("../binary-gis.html","w").write(open("binary-gis-src.html").read().replace("/*GEO*/null",geo12))

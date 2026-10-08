@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chhattisgarh from a GIS database</title>
+<style>
+@font-face{font-family:"GitLab Mono";src:url("fonts/GitLabMono-sub.woff2") format("woff2");font-display:swap}
+html,body{margin:0;height:100%;background:#040e0b;overflow:hidden}
+canvas{display:block;width:100vw;height:100vh}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<canvas id="c" role="img" aria-label="On the backend, an Excel sheet of Anganwadi centres and a GeoJSON file of district boundaries are read as binary and loaded into a GIS database as two layers. A map service publishes the layers, and the map of Chhattisgarh forms: district boundaries, Anganwadi centres, and the stored geometry. Finally the GIS database joins every centre to the district it falls in."></canvas>
+<p class="sr">Read: the Excel sheet and the GeoJSON file are read as 0s and 1s. Load: they are stored in the GIS database as two layers, anganwadi_centres (points) and districts (polygons). Serve: the map service publishes the layers and the map draws them. Join: the GIS database matches each centre to the district it falls in.</p>
+<script>
+/* v14 · the GIS stack.  READ → LOAD → SERVE → JOIN
+   Built the way a GIS developer would: the files are never drawn directly. They are loaded into a GIS database
+   (PostgreSQL + PostGIS, SRID 4326) as two layers, anganwadi_centres (POINT) and districts (MULTIPOLYGON); a map
+   service publishes the layers; the map draws what the service sends; the spatial join (ST_Within) runs in the DB.
+   (v12 notes follow.)
+   Every 0 and 1 on screen is real: the IEEE-754 bits of the coordinate a packet carries, or the bytes of the
+   district's geometry as PostGIS stores it (EWKB, SRID 4326). Each source plays its real role:
+   GeoJSON draws the 27 district boundaries, the Excel sheet places 260 Anganwadi centres, PostGIS stores the
+   districts as binary rows and runs the spatial join (centre → district).
+   Options: ?labels=0 no text · ?still finished frame · ?poster mid-formation frame. Reduced motion shows the finished frame. */
+const GEO=/*GEO*/null;
+const Q=new URLSearchParams(location.search+"&"+location.hash.slice(1));
+const POSTER=Q.has("poster"),STILL=Q.has("still"),TEXT=Q.get("labels")!=="0";
+const REDUCE=(matchMedia("(prefers-reduced-motion: reduce)").matches&&!POSTER)||STILL;
+const SRC=[
+  {key:"xls",name:"Excel sheet",role:"Anganwadi points",col:"#34d27f",rgb:"52,210,127"},
+  {key:"geo",name:"GeoJSON",    role:"district boundaries",col:"#f6b847",rgb:"246,184,71"},
+  {key:"pg", name:"GIS DB",     role:"spatial database",col:"#6fa9ff",rgb:"111,169,255"}];
+const SVC={key:"svc",name:"Map service",role:"publishes layers",col:"#b9a3ff",rgb:"185,163,255"};
+const NODES=[SRC[0],SRC[1],SRC[2],SVC];
+const LAND="#5fe3b3",EDGE="#dcfff1",INK="#e8f5ef",BG0="#030b09",BG1="#0c2a22",PILL="rgba(3,12,10,.86)";
+const FONT='"Avenir Next World","Avenir Next",system-ui,sans-serif',MONO='"GitLab Mono",ui-monospace,Menlo,Consolas,monospace';
+// timeline, in seconds
+const TL={ing0:1.1,ing1:5.0,geo0:4.3,geoStep:.15,geoDur:1.0,xls0:5.4,xls1:10.4,pg0:7.8,pgStep:.15,pgDur:.85,join:12.6,joinDur:1.6};
+TL.end=TL.join+TL.joinDur+.3;
+const cv=document.getElementById("c"),cx=cv.getContext("2d");
+const gl=document.createElement("canvas"),gx=gl.getContext("2d");
+let panel,ing=[],feed=[],W,H,DPR,L,mapT,land,cells=[],air=[],D=[],P=[],pk=[[],[],[]],statePath,distPaths,outlineLen=0,vign,grain,glyph={},raipur,maxR,t0=performance.now(),last=t0;
+let seed=12;const R=()=>(seed=seed*16807%2147483647)/2147483647;
+const rnd=(a,b)=>a+R()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,easeOut=t=>1-Math.pow(1-t,3);
+const quad=(a,c,b,t)=>{const m=1-t;return[m*m*a[0]+2*m*t*c[0]+t*t*b[0],m*m*a[1]+2*m*t*c[1]+t*t*b[1]]};
+
+/* ── the real encodings ─────────────────────────────────────────── */
+const LT=GEO.lt,lerp=(a,b,t)=>a+(b-a)*t;
+function ll2xy(lon,lat){const fx=(lon-LT.lon0)/LT.step,fy=(lat-LT.lat0)/LT.step;const i=clamp(Math.floor(fx),0,LT.nx-2),j=clamp(Math.floor(fy),0,LT.ny-2),u=fx-i,v=fy-j;
+  const p=(a,b)=>LT.xy[b*LT.nx+a];const a=p(i,j),b=p(i+1,j),c=p(i,j+1),d=p(i+1,j+1);
+  return[lerp(lerp(a[0],b[0],u),lerp(c[0],d[0],u),v),lerp(lerp(a[1],b[1],u),lerp(c[1],d[1],u),v)]}
+function xy2ll(x,y){let lon=82.3,lat=21;for(let k=0;k<12;k++){const p=ll2xy(lon,lat),q=ll2xy(lon+.01,lat),r=ll2xy(lon,lat+.01);
+  const a=(q[0]-p[0])/.01,b=(r[0]-p[0])/.01,c=(q[1]-p[1])/.01,d=(r[1]-p[1])/.01,det=a*d-b*c;const dx=x-p[0],dy=y-p[1];lon+=(d*dx-b*dy)/det;lat+=(-c*dx+a*dy)/det}return[lon,lat]}
+const dv=new DataView(new ArrayBuffer(8));
+function f64bits(v){dv.setFloat64(0,v);let s="";for(let i=0;i<8;i++)s+=dv.getUint8(i).toString(2).padStart(8,"0");return s}   // big-endian, as the bits are usually written
+function f64hexLE(v){dv.setFloat64(0,v,true);let s="";for(let i=0;i<8;i++)s+=dv.getUint8(i).toString(16).padStart(2,"0");return s.toUpperCase()}
+const EWKB_PT="0101000020E6100000",EWKB_MPOLY="0106000020E6100000";   // little-endian · Point / MultiPolygon · has SRID · 4326
+function ewkbBits(rings){const bytes=[];const u32=v=>{for(let i=0;i<4;i++)bytes.push((v>>>(8*i))&255)};const f=v=>{dv.setFloat64(0,v,true);for(let i=0;i<8;i++)bytes.push(dv.getUint8(i))};
+  bytes.push(1);u32(0x20000006);u32(4326);u32(1);bytes.push(1);u32(3);u32(rings.length);rings.forEach(r=>{u32(r.length);r.forEach(p=>{f(p.ll[0]);f(p.ll[1])})});
+  return bytes.map(b=>b.toString(2).padStart(8,"0")).join("")}
+const deg=(lo,la)=>`${la.toFixed(4)}° N, ${lo.toFixed(4)}° E`;
+
+/* ── layout and the schedule ────────────────────────────────────── */
+function layout(){
+  seed=12;
+  DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;gl.width=Math.ceil(W/3);gl.height=Math.ceil(H/3);
+  land=W/H>1.05;const bb={x:79.11,y:24,w:361.78,h:592},pad=Math.max(16,Math.min(W,H)*.05);
+  let mx,my,mw,mh;
+  const r0=clamp(Math.min(W,H)*.045,20,34);NODES.forEach(s=>s.r=r0);
+  if(land){const pw=clamp(W*.28,250,360);panel={x:pad*.6,y:pad*.6,w:pw,h:H-pad*1.2};mx=panel.x+pw+pad*1.4;my=pad;mw=W-mx-pad;mh=H-2*pad;
+    const top=panel.y+Math.max(46,H*.07)+r0,gap=Math.max(r0*3.4,(panel.y+panel.h-60-(r0+78)-top)/2);
+    Object.assign(SRC[0],{x:panel.x+pw*.27,y:top});Object.assign(SRC[1],{x:panel.x+pw*.73,y:top});Object.assign(SRC[2],{x:panel.x+pw/2,y:top+gap});Object.assign(SVC,{x:panel.x+pw/2,y:top+gap*2})}
+  else{const ph=clamp(H*.36,236,300);panel={x:pad*.6,y:pad*.6,w:W-pad*1.2,h:ph};mx=pad;my=panel.y+ph+pad*.6;mw=W-2*pad;mh=H-my-Math.max(64,H*.085);
+    const y1=panel.y+r0+30,y2=y1+ph*.45;Object.assign(SRC[0],{x:W*.28,y:y1});Object.assign(SRC[1],{x:W*.72,y:y1});Object.assign(SRC[2],{x:W*.28,y:y2});Object.assign(SVC,{x:W*.72,y:y2})}
+  const k=Math.min(mw/bb.w,mh/bb.h);mapT={k,ox:mx+(mw-bb.w*k)/2-bb.x*k,oy:my+(mh-bb.h*k)/2-bb.y*k,mx,my,mw,mh,bb};
+  const S=p=>[mapT.ox+k*p[0],mapT.oy+k*p[1]];
+  statePath=new Path2D(GEO.state);distPaths=GEO.districts.map(d=>new Path2D(d.d));
+  outlineLen=0;GEO.state.split("M").filter(Boolean).forEach(r=>{const Pp=r.replace(/Z/g,"").split("L").map(v=>v.split(",").map(Number));for(let i=1;i<=Pp.length;i++){const a=Pp[i-1],b=Pp[i%Pp.length];outlineLen+=Math.hypot(b[0]-a[0],b[1]-a[1])}});
+  const off=new OffscreenCanvas(1,1).getContext("2d");
+  const areaPx=bb.w*bb.h*k*k*.47,cs=Math.max(9,Math.sqrt(areaPx/1300));L={cs,font:Math.round(cs*1.02),sm:Math.round(cs*1.02*.72)};
+
+  // districts: rings in map units and on screen, real lon/lat for every vertex, north → south order
+  D=GEO.districts.map((d,i)=>{const rings=d.d.split("M").filter(Boolean).map(r=>{const pts=r.replace(/Z/g,"").split("L").map(v=>v.split(",").map(Number));pts.push(pts[0]);return pts.map(p=>({m:p,s:S(p),ll:xy2ll(p[0],p[1])}))});
+    let len=0;rings.forEach(r=>{for(let j=1;j<r.length;j++){len+=Math.hypot(r[j].s[0]-r[j-1].s[0],r[j].s[1]-r[j-1].s[1]);r[j].L=len}r[0].L=r===rings[0]?0:rings[rings.indexOf(r)-1].at(-1).L});
+    const cll=xy2ll(d.c[0],d.c[1]);return{i,n:d.n,rings,len,c:S(d.c),cll,cells:[],bits:""}});
+  [...D].sort((a,b)=>(a.c[1]-b.c[1])||(a.c[0]-b.c[0])).forEach((d,o)=>{d.o=o;d.gs=TL.geo0+o*TL.geoStep;d.ge=d.gs+TL.geoDur;d.ps=TL.pg0+o*TL.pgStep;d.pe=d.ps+TL.pgDur});
+  D.forEach(d=>d.bits=ewkbBits(d.rings));
+
+  // the binary texture: cells inside the state, each in a district, filled in storage (row) order
+  cells=[];const grid=new Set();
+  for(let y=my+cs/2;y<my+mh;y+=cs)for(let x=mx+cs/2;x<mx+mw;x+=cs){const m=[(x-mapT.ox)/k,(y-mapT.oy)/k];if(off.isPointInPath(statePath,m[0],m[1])){
+    const di=distPaths.findIndex(p=>off.isPointInPath(p,m[0],m[1]));const c={x,y,di,tw:R()*6.28,b:0,tOn:1e9};cells.push(c);grid.add(Math.round(x/cs)+","+Math.round(y/cs));if(di>=0)D[di].cells.push(c)}}
+  cells.forEach(c=>{const a=Math.round(c.x/cs),b=Math.round(c.y/cs);c.edge=[[1,0],[-1,0],[0,1],[0,-1]].some(([u,v])=>!grid.has((a+u)+","+(b+v)))});
+  const orphans=cells.filter(c=>c.di<0);orphans.forEach(c=>{let best=0,bd=1e9;D.forEach((d,i)=>{const q=Math.hypot(d.c[0]-c.x,d.c[1]-c.y);if(q<bd){bd=q;best=i}});c.di=best;D[best].cells.push(c)});
+  D.forEach(d=>{d.cells.sort((a,b)=>(a.y-b.y)||(a.x-b.x));d.cells.forEach((c,j)=>{c.b=+d.bits[(j*7)%d.bits.length];c.tOn=d.ps+(j/Math.max(1,d.cells.length))*TL.pgDur})});
+
+  // Anganwadi centres: real positions, real lon/lat, their district
+  P=GEO.aw.map(m=>({m,s:S(m),ll:xy2ll(m[0],m[1])})).filter(p=>off.isPointInPath(statePath,p.m[0],p.m[1]));
+  P.forEach(p=>{p.di=Math.max(0,distPaths.findIndex(q=>off.isPointInPath(q,p.m[0],p.m[1])))});
+  const code=n=>n.replace(/[^A-Za-z]/g,"").slice(0,3).toUpperCase();
+  [...P].sort((a,b)=>land?a.s[0]-b.s[0]:a.s[1]-b.s[1]).forEach((p,r,arr)=>{p.tl=TL.xls0+r/(arr.length-1)*(TL.xls1-TL.xls0)+rnd(-.08,.08);p.id=`AWC-${code(D[p.di].n)}-${String(410+r*7).padStart(5,"0")}`;p.r=r});
+  raipur=(D.find(d=>d.n==="Raipur")||D[0]).c;maxR=Math.max(...cells.map(c=>Math.hypot(c.x-raipur[0],c.y-raipur[1])))+cs;
+  P.forEach(p=>p.tj=TL.join+Math.hypot(p.s[0]-raipur[0],p.s[1]-raipur[1])/maxR*TL.joinDur);
+  D.forEach(d=>d.tj=TL.join+Math.hypot(d.c[0]-raipur[0],d.c[1]-raipur[1])/maxR*TL.joinDur);
+
+  // packets: every one carries a real value, and shows its real bits
+  pk=[[],[],[]];
+  P.forEach(p=>{const dur=rnd(1.05,1.45),hero=false;pk[0].push(mk(0,p.s,p.tl,dur,p.ll,{
+    rec:`/collections/anganwadi_centres/items`,s0:`POINT(${p.ll[0].toFixed(4)} ${p.ll[1].toFixed(4)})`,s2:deg(p.ll[0],p.ll[1]),hero}))});
+  D.forEach(d=>{const n=clamp(Math.round(d.len/(cs*2.6)),6,20),pts=d.rings.flat();for(let j=0;j<n;j++){const f=(j+.5)/n,at=atLen(d,f*d.len),v=nearest(pts,at);
+      const hero=false,dur=rnd(.9,1.3);pk[1].push(mk(1,at,d.gs+f*TL.geoDur,dur,v.ll,{
+      rec:`/collections/districts/items`,s0:`MULTIPOLYGON((${v.ll[0].toFixed(3)} ${v.ll[1].toFixed(3)},…`,s2:deg(v.ll[0],v.ll[1]),hero}))}
+    const step=5;d.cells.forEach((c,j)=>{if(j%step)return;const hero=false,dur=rnd(.8,1.2),vx=d.rings[0][(j*3)%d.rings[0].length].ll;
+      pk[2].push(mk(2,[c.x,c.y],c.tOn,dur,d.cll,{bits:f64bits(vx[(j/step)%2|0]).slice(12,28),
+      rec:`/tiles/districts/geom`,s0:(EWKB_MPOLY+f64hexLE(d.rings[0][0].ll[0])).slice(0,16),s2:`${d.n.toUpperCase()} · ROW ${String(d.o+1).padStart(2,"0")}`,hero}))})});
+  // one followed value at a time, taking turns between the sources, so each one can be read
+  const HD=2.4;let turn=0;for(let t=TL.geo0+.4;t<TL.pg0+26*TL.pgStep;t+=1.45){for(let k=0;k<3;k++){const si=(turn+k)%3,c=pk[si].filter(p=>p.t1-HD>=t&&p.t1-HD<t+1);
+      if(c.length){const p=c[Math.floor(c.length/2)];p.hero=true;p.dur=HD;p.t0=p.t1-HD;turn=si+1;break}}}
+  pk.forEach(a=>a.sort((x,y)=>x.t0-y.t0));
+  // LOAD: the files are read and inserted into the GIS DB as two layers
+  ing=[];const DB=SRC[2];
+  for(let i=0;i<64;i++){const p=P[Math.floor(i*P.length/64)],t1=TL.ing0+.5+i/63*(TL.ing1-TL.ing0-.9);
+    ing.push(mk2(0,SRC[0],DB,t1,rnd(.9,1.2),f64bits(p.ll[1]).slice(12,28),`${p.id}, ${p.ll[1].toFixed(4)}, ${p.ll[0].toFixed(4)}`))}
+  for(let i=0;i<54;i++){const d=D[i%27],v=d.rings[0][(i*7)%d.rings[0].length].ll,t1=TL.ing0+.8+i/53*(TL.ing1-TL.ing0-.8);
+    ing.push(mk2(1,SRC[1],DB,t1,rnd(.9,1.2),f64bits(v[0]).slice(12,28),`[${v[0].toFixed(4)}, ${v[1].toFixed(4)}]`))}
+  const hx=ing.filter(p=>p.si===0&&p.t1>2.2)[0],hp=P.reduce((a,p)=>p.id&&Math.abs(p.ll[1]-21.25)+Math.abs(p.ll[0]-81.63)<Math.abs(a.ll[1]-21.25)+Math.abs(a.ll[0]-81.63)?p:a,P[0]);
+  Object.assign(hx,{hero:true,dur:2.0,t0:hx.t1-2.0,s0:`${hp.id}, ${hp.ll[1].toFixed(4)}, ${hp.ll[0].toFixed(4)}`,s1:f64bits(hp.ll[1]).slice(12,28),s2:"INSERT · anganwadi_centres"});
+  const rd=D.find(d=>d.n==="Raipur")||D[0],hg=ing.filter(p=>p.si===1&&p.t1>4.75)[0];
+  Object.assign(hg,{hero:true,dur:2.0,t0:hg.t1-2.0,s0:`"Raipur": [${rd.cll[0].toFixed(4)}, ${rd.cll[1].toFixed(4)}]`,s1:f64bits(rd.cll[0]).slice(12,28),s2:"INSERT · districts"});
+  ing.sort((a,b)=>a.t0-b.t0);
+  // SERVE: the GIS DB feeds the map service, layer by layer
+  feed=[];const lastMap=Math.max(...pk.flat().map(p=>p.t1));
+  for(let i=0;i<44;i++){const si=i%3,t1=TL.geo0-.6+i/43*(lastMap-TL.geo0-.2);feed.push(mk2(si,DB,SVC,t1,rnd(.7,.95),f64bits(81+i*.137).slice(12,28),""))}
+  // when each node is busy
+  SRC[0].win=[TL.ing0-.2,TL.ing1];SRC[1].win=[TL.ing0,TL.ing1];SRC[2].win=[TL.ing0+.6,lastMap];SVC.win=[TL.geo0-.6,lastMap];
+
+  air=Array.from({length:Math.round(W*H/6400)},(_,i)=>{const z=i%3===0?1:.5;return{x:Math.random()*W,y:Math.random()*H,z,v:(z>.9?9:4.5)*(.6+Math.random()*.8),b:Math.random()<.5?1:0,a:(z>.9?.11:.06)*(.5+Math.random()*.5)}});
+  vign=document.createElement("canvas");vign.width=W;vign.height=H;{const v=vign.getContext("2d"),g=v.createRadialGradient(W*.58,H*.5,Math.min(W,H)*.25,W*.58,H*.5,Math.hypot(W,H)*.62);
+    g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(0,0,0,.62)");v.fillStyle=g;v.fillRect(0,0,W,H)}
+  grain=document.createElement("canvas");grain.width=grain.height=192;{const g=grain.getContext("2d"),d=g.createImageData(192,192);for(let i=0;i<d.data.length;i+=4){const n=Math.random()*255;d.data[i]=d.data[i+1]=d.data[i+2]=n;d.data[i+3]=22}g.putImageData(d,0,0)}
+  makeGlyphs()}
+
+function atLen(d,len){for(const r of d.rings)for(let j=1;j<r.length;j++)if(r[j].L>=len){const a=r[j-1],b=r[j],u=clamp((len-a.L)/Math.max(1e-6,b.L-a.L),0,1);return[lerp(a.s[0],b.s[0],u),lerp(a.s[1],b.s[1],u)]}const z=d.rings.at(-1).at(-1);return z.s.slice()}
+function nearest(pts,at){let best=pts[0],bd=1e9;for(const p of pts){const q=(p.s[0]-at[0])**2+(p.s[1]-at[1])**2;if(q<bd){bd=q;best=p}}return best}
+function port(si){const s=SVC;return land?[s.x+s.r*1.35,s.y+rnd(-s.r*.4,s.r*.4)]:[s.x+rnd(-s.r*.5,s.r*.5),s.y+s.r*1.05]}
+function inside(n){return[n.x+rnd(-n.r*.5,n.r*.5),n.y+rnd(-n.r*.3,n.r*.3)]}
+function out(n,to){const dx=to.x-n.x,dy=to.y-n.y;return Math.abs(dy)>Math.abs(dx)?[n.x+rnd(-n.r*.45,n.r*.45),n.y+Math.sign(dy)*n.r]:[n.x+Math.sign(dx)*n.r*1.25,n.y+rnd(-n.r*.4,n.r*.4)]}
+function mk2(si,from,to,t1,dur,bits,rec,o){const a=out(from,to),b=inside(to),m=[(a[0]+b[0])/2+rnd(-14,14),(a[1]+b[1])/2+rnd(-14,14)];return Object.assign({si,a,m,b,t1,t0:t1-dur,dur,bits,rec,s1:bits},o||{})}
+function mk(si,to,t1,dur,ll,o){const a=port(si),b=to,m=[(a[0]+b[0])/2+rnd(-28,28),(a[1]+b[1])/2+rnd(-40,40)];
+  const bits=o.bits||f64bits(ll[1]).slice(12,28);return Object.assign({si,a,m,b,t1,t0:t1-dur,dur,ll,bits,s1:bits},o)}
+
+function makeGlyphs(){glyph={};[LAND,EDGE,...NODES.map(s=>s.col)].forEach(col=>[L.font,L.sm].forEach(z=>["0","1"].forEach(ch=>{const g=new OffscreenCanvas(Math.ceil(z*1.25*DPR),Math.ceil(z*1.45*DPR)),c=g.getContext("2d");
+  c.scale(DPR,DPR);c.fillStyle=col;c.font=`600 ${z}px ${MONO}`;c.textAlign="center";c.textBaseline="middle";c.fillText(ch,z*.62,z*.74);glyph[col+z+ch]=g})))}
+function digit(col,z,b,x,y,a){const g=glyph[col+z+b];if(!g||a<=.01)return;cx.globalAlpha=Math.min(1,a);cx.drawImage(g,x-z*.62,y-z*.74,g.width/DPR,g.height/DPR)}
+function blob(x,y,r,col,a){if(a<=.004)return;gx.globalAlpha=Math.min(1,a);gx.fillStyle=col;gx.beginPath();gx.arc(x/3,y/3,r/3,0,6.283);gx.fill()}
+function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
+
+/* a hero packet's text: source form → bits → decoded value, wiping left to right */
+function morph(p,u){const S=[p.s0,p.s1,p.s2],cut=[.36,.72];const seg=u<cut[0]?0:u<cut[1]?1:2,st=seg?cut[seg-1]:0,en=seg<2?cut[seg]:1.0001,loc=(u-st)/(en-st);
+  const cur=S[seg];if(seg===2||loc<.62)return cur;const nxt=S[seg+1],mix=(loc-.62)/.38,n=Math.max(cur.length,nxt.length);let out="";
+  for(let i=0;i<n;i++){const f=i/n;out+=f<mix-.12?(nxt[i]||""):f<mix?"01"[(i+(performance.now()/60|0))%2]:(cur[i]||"")}return out}
+function pill(text,x,y,col,a,align){cx.font=`600 ${Math.max(10,L.cs*.86)}px ${MONO}`;const w=cx.measureText(text).width+14,h=Math.max(17,L.cs*1.5);
+  let lx=align==="left"?x:x-w/2;lx=clamp(lx,6,W-w-6);const ly=clamp(y-h,6,H-h-6);
+  cx.globalAlpha=a;cx.fillStyle=PILL;rr(lx,ly,w,h,4);cx.fill();cx.fillStyle=col;cx.fillRect(lx,ly+3,2,h-6);cx.fillStyle=INK;cx.textAlign="left";cx.textBaseline="middle";cx.fillText(text,lx+9,ly+h/2+.5)}
+
+/* ── source cards ──────────────────────────────────────────────── */
+function card(s,i,T){
+  const born=REDUCE||POSTER?1:clamp((T-.15-i*.18)/.7,0,1);if(born<=0)return;const r=s.r,e=easeOut(born);
+  const active=(T>=s.win[0]&&T<=s.win[1])||(s.key==="pg"&&T>=TL.join-.2&&T<=TL.end),idle=active||T<s.win[0]?1:.62;
+  cx.save();cx.translate(s.x,s.y);const w=r*2.5,h=r*2,breathe=REDUCE?.5:.5+.5*Math.sin(T*2+i*1.3);
+  cx.globalAlpha=e;cx.fillStyle=`rgba(${s.rgb},${active?.1:.05})`;rr(-w/2,-h/2,w,h,12);cx.fill();
+  cx.shadowColor=s.col;cx.shadowBlur=active?10+14*breathe:6;cx.strokeStyle=s.col;cx.lineWidth=1.6;cx.globalAlpha=e*idle;
+  const per=2*(w+h);cx.setLineDash([per*e,per]);rr(-w/2,-h/2,w,h,12);cx.stroke();cx.setLineDash([]);cx.shadowBlur=0;
+  if(active&&!REDUCE&&!POSTER){const sy=-h/2+((T*.8+i*.33)%1)*h;cx.save();rr(-w/2,-h/2,w,h,12);cx.clip();const g=cx.createLinearGradient(0,sy-10,0,sy+10);g.addColorStop(0,`rgba(${s.rgb},0)`);g.addColorStop(.5,`rgba(${s.rgb},.24)`);g.addColorStop(1,`rgba(${s.rgb},0)`);cx.fillStyle=g;cx.fillRect(-w/2,sy-10,w,20);cx.restore()}
+  cx.strokeStyle=s.col;cx.fillStyle=s.col;cx.lineWidth=1.7;cx.globalAlpha=e*idle;
+  if(s.key==="xls"){const iw=r*1.45,ih=r*1.05;cx.strokeRect(-iw/2,-ih/2,iw,ih);for(let k=1;k<3;k++){cx.beginPath();cx.moveTo(-iw/2+iw*k/3,-ih/2);cx.lineTo(-iw/2+iw*k/3,ih/2);cx.stroke()}
+    for(let j=1;j<4;j++){cx.beginPath();cx.moveTo(-iw/2,-ih/2+ih*j/4);cx.lineTo(iw/2,-ih/2+ih*j/4);cx.stroke()}cx.globalAlpha=e*.35*idle;cx.fillRect(-iw/2,-ih/2,iw,ih/4);
+    if(active&&!POSTER){const row=1+(Math.floor(T*4)%3);cx.globalAlpha=e*.45;cx.fillRect(-iw/2,-ih/2+ih*row/4,iw,ih/4)}}
+  if(s.key==="geo"){cx.font=`700 ${r*.88}px ${MONO}`;cx.textAlign="center";cx.textBaseline="middle";cx.fillText("{ }",0,-r*.06);cx.globalAlpha=e*.65*idle;cx.font=`${r*.25}px ${MONO}`;cx.fillText('"Polygon"',0,r*.6)}
+  if(s.key==="pg"){const ew=r*.62,eh=r*.18,ox=-r*.18;for(let k=0;k<3;k++){const y=-r*.45+k*r*.42;cx.beginPath();cx.ellipse(ox,y,ew,eh,0,0,6.283);cx.stroke();if(active&&!POSTER&&Math.floor(T*2.5)%3===k){cx.globalAlpha=e*.25;cx.fill();cx.globalAlpha=e*idle}}
+    cx.beginPath();cx.moveTo(ox-ew,-r*.45);cx.lineTo(ox-ew,r*.39);cx.moveTo(ox+ew,-r*.45);cx.lineTo(ox+ew,r*.39);cx.stroke();
+    // a map pin on the drum: this database understands geometry
+    const px=r*.58,py=r*.02,pr=r*.26;cx.globalAlpha=e*idle;cx.fillStyle="#061411";cx.beginPath();cx.arc(px,py,pr+3,0,6.283);cx.fill();cx.fillStyle=s.col;cx.beginPath();cx.arc(px,py-pr*.15,pr,Math.PI*.85,Math.PI*2.15);cx.lineTo(px,py+pr*1.25);cx.closePath();cx.fill();cx.fillStyle="#061411";cx.beginPath();cx.arc(px,py-pr*.15,pr*.38,0,6.283);cx.fill()}
+  if(s.key==="svc"){const lw=r*.78,lh=r*.3;for(let k=2;k>=0;k--){const y=-r*.32+k*r*.3;cx.beginPath();cx.moveTo(0,y-lh);cx.lineTo(lw,y);cx.lineTo(0,y+lh);cx.lineTo(-lw,y);cx.closePath();
+      const on=active&&!POSTER&&Math.floor(T*3)%3===k;cx.fillStyle="#061411";cx.fill();if(on){cx.globalAlpha=e*.35;cx.fillStyle=s.col;cx.fill();cx.globalAlpha=e*idle}cx.stroke()}}
+  if(TEXT){const y0=r*1.12,fs=Math.max(12,r*.38),fm=Math.max(9.5,Math.min(11.5,r*.28));cx.textAlign="center";cx.textBaseline="top";
+    cx.globalAlpha=e;cx.fillStyle=INK;cx.font=`600 ${fs}px ${FONT}`;cx.fillText(s.name,0,y0);
+    cx.globalAlpha=e*.62;cx.font=`${Math.max(10.5,r*.29)}px ${FONT}`;cx.fillText(s.role,0,y0+fs*1.25);
+    // the record being read right now, as it looks inside that format
+    const rec=s.rec||"";cx.font=`${fm}px ${MONO}`;let t=rec;const maxW=land?panel.w*.44:W*.42;while(t.length>4&&cx.measureText(t).width>maxW)t=t.slice(0,-2);if(t!==rec)t=t.slice(0,-1)+"…";
+    cx.globalAlpha=e*(active?.95:.45);cx.fillStyle=s.col;cx.fillText(t,0,y0+fs*1.25+fm*1.75);
+    cx.globalAlpha=e*.55;cx.fillStyle=INK;cx.fillText(s.count||"",0,y0+fs*1.25+fm*3.35)}
+  cx.restore();blob(s.x,s.y,r*1.5,s.col,(active?.14:.06)*e*(.6+.4*breathe))}
+
+/* ── one frame, a pure function of time T ──────────────────────── */
+function frame(now){
+  const dt=Math.min(64,now-last);last=now;
+  const T=REDUCE?TL.end+2.5:POSTER?8.9:(now-t0)/1000,done=T>=TL.end,moving=!REDUCE&&!POSTER;
+  cx.setTransform(DPR,0,0,DPR,0,0);cx.globalCompositeOperation="source-over";cx.globalAlpha=1;
+  gx.setTransform(1,0,0,1,0,0);gx.globalCompositeOperation="source-over";gx.clearRect(0,0,gl.width,gl.height);gx.globalCompositeOperation="lighter";
+  const bg=cx.createRadialGradient(W*.6,H*.5,0,W*.6,H*.5,Math.max(W,H)*.75);bg.addColorStop(0,BG1);bg.addColorStop(1,BG0);cx.fillStyle=bg;cx.fillRect(0,0,W,H);
+  for(const p of air){if(moving){p.y+=p.v*dt/1000;if(p.y>H+10){p.y=-10;p.x=Math.random()*W}if(Math.random()<.002)p.b^=1}digit(LAND,p.z>.9?L.font:L.sm,p.b,p.x,p.y,p.a)}
+  cx.globalAlpha=.045;cx.strokeStyle="#9fe8cc";cx.lineWidth=1;cx.beginPath();for(let x=L.cs*4;x<W;x+=L.cs*4){cx.moveTo(x,0);cx.lineTo(x,H)}for(let y=L.cs*4;y<H;y+=L.cs*4){cx.moveTo(0,y);cx.lineTo(W,y)}cx.stroke();
+
+  const bh=[];backend(T,moving,bh);
+  const prog=clamp(T/TL.end,0,1),z=1+.035*ease(prog)+(done&&moving?.004*Math.sin(T*.6):0);
+  const fx=mapT.ox+mapT.k*(mapT.bb.x+mapT.bb.w/2),fy=mapT.oy+mapT.k*(mapT.bb.y+mapT.bb.h/2);
+  cx.save();cx.translate(fx,fy);cx.scale(z,z);cx.translate(-fx,-fy);gx.save();gx.translate(fx/3,fy/3);gx.scale(z,z);gx.translate(-fx/3,-fy/3);
+  const mapM=()=>cx.setTransform(DPR*z*mapT.k,0,0,DPR*z*mapT.k,DPR*(fx-z*(fx-mapT.ox)),DPR*(fy-z*(fy-mapT.oy)));
+
+  // 1 · target outline: traces itself, then waits as a dashed line until the map is whole
+  cx.save();mapM();const trace=clamp((T-.3)/1.4,0,1),fa=clamp((T-TL.end+.3)/1,0,1);
+  if(fa<1){cx.globalAlpha=(1-fa)*.4;cx.strokeStyle=EDGE;cx.lineWidth=1.3/mapT.k;if(trace<1){cx.setLineDash([outlineLen*easeOut(trace),outlineLen])}else cx.setLineDash([4/mapT.k,5/mapT.k]);cx.stroke(statePath);cx.setLineDash([])}
+  cx.restore();
+
+  // 2 · PostGIS: the stored bytes of each district, written row by row
+  for(const c of cells){if(T<c.tOn)continue;const age=T-c.tOn,heat=age<.5?1-age/.5:0,tw=moving?.1*Math.sin(T*1.4+c.tw):0;
+    const base=(c.edge?.9:.38+((c.x*7+c.y*13)%10)/40)+tw;digit(c.edge?EDGE:LAND,L.font,c.b,c.x,c.y,clamp(base,.18,1));
+    if(heat>0){digit(SRC[2].col,L.font,c.b,c.x,c.y,heat);blob(c.x,c.y,L.cs*.9,SRC[2].col,.12*heat)}}
+  if(done&&moving){const n=Math.ceil(cells.length*.0015);for(let i=0;i<n;i++){const c=cells[Math.floor(Math.random()*cells.length)];c.b^=1}}
+
+  // 3 · GeoJSON: district boundaries drawn vertex by vertex
+  cx.lineJoin="round";cx.lineCap="round";
+  for(const d of D){if(T<d.gs)continue;
+    if(T<d.ge){const f=(T-d.gs)/TL.geoDur,len=d.len*easeOut(f);cx.globalAlpha=.95;cx.strokeStyle=SRC[1].col;cx.lineWidth=1.7;cx.beginPath();
+      outer:for(const r of d.rings){cx.moveTo(r[0].s[0],r[0].s[1]);for(let j=1;j<r.length;j++){if(r[j].L>len){const a=r[j-1],b=r[j],u=(len-a.L)/Math.max(1e-6,b.L-a.L);if(u>0)cx.lineTo(lerp(a.s[0],b.s[0],u),lerp(a.s[1],b.s[1],u));break outer}cx.lineTo(r[j].s[0],r[j].s[1])}}
+      cx.stroke();const h=atLen(d,len);blob(h[0],h[1],L.cs*1.3,SRC[1].col,.5);cx.fillStyle=EDGE;cx.beginPath();cx.arc(h[0],h[1],2,0,6.283);cx.fill()}
+    else{const g1=Math.max(0,1-(T-d.ge)/1.2),g2=T>=d.tj?Math.max(0,1-(T-d.tj)/1):0,g=Math.max(g1,g2*.8);
+      cx.save();mapM();cx.globalAlpha=.34+.6*g;cx.strokeStyle=g1>g2?(g1>.5?SRC[1].col:EDGE):EDGE;cx.lineWidth=(1.05+1.6*g)/mapT.k;cx.stroke(distPaths[d.i]);cx.restore()}}
+  if(fa>0){cx.save();mapM();cx.globalAlpha=fa;cx.strokeStyle=EDGE;cx.lineWidth=2/mapT.k;cx.stroke(statePath);cx.restore();
+    for(const c of cells)if(c.edge)blob(c.x,c.y,L.cs*.9,LAND,.07*fa)}
+
+  // 4 · PostGIS spatial join: a wave from Raipur; every centre is matched to the district it falls in
+  if(T>=TL.join&&T<TL.end+1.2){const u=(T-TL.join)/TL.joinDur,rad=u*maxR;
+    if(u<1.05){cx.save();mapM();cx.clip(statePath);cx.setTransform(DPR,0,0,DPR,0,0);cx.translate(fx,fy);cx.scale(z,z);cx.translate(-fx,-fy);
+      cx.globalAlpha=.55*(1-u);cx.strokeStyle=SRC[2].col;cx.lineWidth=2;cx.beginPath();cx.arc(raipur[0],raipur[1],rad,0,6.283);cx.stroke();
+      const g=cx.createRadialGradient(raipur[0],raipur[1],Math.max(0,rad-40),raipur[0],raipur[1],rad);g.addColorStop(0,"rgba(111,169,255,0)");g.addColorStop(1,"rgba(111,169,255,.12)");cx.globalAlpha=1-u;cx.fillStyle=g;cx.fillRect(raipur[0]-rad,raipur[1]-rad,rad*2,rad*2);cx.restore()}
+    cx.lineWidth=1;for(const p of P){if(T<p.tj||T>p.tj+1.3)continue;const a=1-(T-p.tj)/1.3,c=D[p.di].c;cx.globalAlpha=.55*a;cx.strokeStyle=SRC[2].col;cx.beginPath();cx.moveTo(p.s[0],p.s[1]);cx.lineTo(c[0],c[1]);cx.stroke()}
+    for(const d of D){if(T<d.tj||T>d.tj+1.3)continue;const a=1-(T-d.tj)/1.3;cx.globalAlpha=a;cx.fillStyle=SRC[2].col;cx.beginPath();cx.arc(d.c[0],d.c[1],2.6+3*(1-a),0,6.283);cx.fill();blob(d.c[0],d.c[1],L.cs*1.6,SRC[2].col,.35*a)}}
+
+  // 5 · Excel: Anganwadi centres placed at their real coordinates
+  const pr=Math.max(1.8,L.cs*.2);
+  for(const p of P){if(T<p.tl)continue;const age=T-p.tl,fl=age<.55?1-age/.55:0,jf=T>=p.tj&&T<p.tj+.6?1-(T-p.tj)/.6:0,f=Math.max(fl,jf);
+    cx.globalAlpha=.9;cx.fillStyle="#03100c";cx.beginPath();cx.arc(p.s[0],p.s[1],pr+1.5,0,6.283);cx.fill();
+    cx.globalAlpha=1;cx.fillStyle=f>0?EDGE:"#c9ffe6";cx.beginPath();cx.arc(p.s[0],p.s[1],pr*(1+.7*f),0,6.283);cx.fill();
+    blob(p.s[0],p.s[1],L.cs*(.55+.8*f),SRC[0].col,.06+.22*f);
+    if(fl>0){cx.globalAlpha=.6*fl;cx.strokeStyle=SRC[0].col;cx.lineWidth=1.2;cx.beginPath();cx.arc(p.s[0],p.s[1],pr+L.cs*1.6*(1-fl),0,6.283);cx.stroke()}}
+  if(done&&moving&&Math.random()<dt/600){const p=P[Math.floor(Math.random()*P.length)];p.tl=T-.05}   // live: a centre reports in now and then
+
+  // 6 · packets in flight: each carries a real coordinate and shows its real bits
+  const heroes=[...bh];
+  pk.forEach((list,si)=>{const s=SRC[si];let latest=null,landedN=0;
+    for(const p of list){if(T<p.t0)break;latest=p;if(T>=p.t1){landedN++;if(p.hero&&T<p.t1+1.1)heroes.push({p,u:1,after:T-p.t1});continue}
+      const u=(T-p.t0)/p.dur,e=ease(u),a=.35+.65*Math.sin(Math.min(1,u*1.3)*Math.PI*.5);
+      if(p.hero){heroes.push({p,u,after:-1});const q=quad(p.a,p.m,p.b,e);blob(q[0],q[1],L.cs*1.6,s.col,.45);cx.globalAlpha=1;cx.fillStyle=s.col;cx.beginPath();cx.arc(q[0],q[1],2.4,0,6.283);cx.fill();continue}
+      for(let k=0;k<4;k++){const q=quad(p.a,p.m,p.b,Math.max(0,e-.028*k));digit(s.col,k?L.sm:(e>.6?L.font:L.sm),+p.bits[(k+(moving?(u*10|0):0))%16],q[0],q[1],a*(k?.55/k:1))}
+      const q=quad(p.a,p.m,p.b,e);blob(q[0],q[1],L.cs*.7,s.col,.16*a)}
+    if(latest&&(!SVC.recT||latest.t0>=SVC.recT)){SVC.rec=latest.rec;SVC.recT=latest.t0}SVC.served=(SVC.served||0)+landedN});
+  SVC.count=`${SVC.served} features served`;SVC.served=0;SVC.recT=0;
+  if(T>=TL.join-.2)SRC[2].rec="ST_Within(centre, district)";else if(T>TL.ing1)SRC[2].rec="2 layers · SRID 4326";
+
+  // 7 · district names as each boundary closes
+  if(TEXT){cx.textAlign="center";cx.textBaseline="middle";cx.font=`700 ${Math.max(9.5,L.cs*.92)}px ${FONT}`;
+    D.filter(d=>T>=d.ge&&T<d.ge+2.1).sort((a,b)=>b.ge-a.ge).slice(0,2).forEach(d=>{const age=T-d.ge,a=age<.25?age/.25:age>1.5?1-(age-1.5)/.6:1,lift=(1-easeOut(Math.min(1,age/.5)))*L.cs*.8,t=d.n.toUpperCase(),w=cx.measureText(t).width;
+      cx.globalAlpha=a;cx.shadowColor="#020806";cx.shadowBlur=8;cx.fillStyle=EDGE;cx.fillText(t,d.c[0],d.c[1]+lift);cx.shadowBlur=0;cx.globalAlpha=a*.7;cx.fillStyle=SRC[1].col;const ww=w*easeOut(Math.min(1,age/.4));cx.fillRect(d.c[0]-ww/2,d.c[1]+L.cs*.62+lift,ww,1)})}
+
+  // 8 · the finish: a band of light, now and then
+  if(done&&moving){const since=T-TL.end,cyc=since<3?since:((since-3)%9);
+    if(cyc<1.6){const u=cyc/1.6,bx=mapT.mx-120+(mapT.mw+240)*u;cx.save();mapM();cx.clip(statePath);cx.setTransform(DPR,0,0,DPR,0,0);cx.translate(fx,fy);cx.scale(z,z);cx.translate(-fx,-fy);
+      const g=cx.createLinearGradient(bx-90,0,bx+90,0);g.addColorStop(0,"rgba(220,255,241,0)");g.addColorStop(.5,"rgba(220,255,241,.2)");g.addColorStop(1,"rgba(220,255,241,0)");cx.globalAlpha=1;cx.fillStyle=g;cx.fillRect(bx-90,0,180,H);cx.restore()}}
+  cx.restore();gx.restore();
+
+  // 9 · hero labels: one value, followed from the file to the map
+  if(TEXT)heroes.forEach(({p,u,after})=>{const s=SRC[p.si];if(after>=0){const a=after<.7?1:1-(after-.7)/.4;pill(p.s2,p.b[0],p.b[1]-L.cs*.9,s.col,a*.95);return}
+    const q=quad(p.a,p.m,p.b,ease(u)),a=Math.min(1,u*5);pill(morph(p,u),q[0],q[1]-L.cs*.9,s.col,a*.95)});
+
+  NODES.forEach((s,i)=>card(s,i,T));
+  cx.globalCompositeOperation="lighter";cx.globalAlpha=1;cx.imageSmoothingEnabled=true;cx.drawImage(gl,0,0,W,H);cx.globalAlpha=.6;cx.drawImage(gl,-W*.01,-H*.01,W*1.02,H*1.02);cx.globalCompositeOperation="source-over";
+  if(TEXT)hud(T,prog,done);
+  cx.globalAlpha=1;cx.drawImage(vign,0,0);if(moving){cx.globalAlpha=.5;const ox=Math.random()*192|0,oy=Math.random()*192|0;cx.fillStyle=cx.createPattern(grain,"repeat");cx.save();cx.translate(-ox,-oy);cx.fillRect(ox,oy,W,H);cx.restore()}
+  if(moving)requestAnimationFrame(frame)}
+
+/* the backend: the stack, its pipes, and the LOAD (files → GIS DB) and SERVE (GIS DB → map service) streams */
+function pipe(A,B,col,on,T,moving){cx.globalAlpha=on?.34:.12;cx.strokeStyle=col;cx.lineWidth=1.2;cx.setLineDash([3,5]);cx.lineDashOffset=moving&&on?-T*18:0;cx.beginPath();cx.moveTo(A.x,A.y);cx.lineTo(B.x,B.y);cx.stroke();cx.setLineDash([])}
+function backend(T,moving,heroes){
+  cx.globalAlpha=1;cx.fillStyle="rgba(5,18,14,.55)";rr(panel.x,panel.y,panel.w,panel.h,14);cx.fill();cx.strokeStyle="rgba(159,232,204,.15)";cx.lineWidth=1;cx.stroke();
+  if(TEXT){cx.font=`600 10px ${MONO}`;cx.fillStyle="rgba(159,232,204,.55)";cx.textAlign="left";cx.textBaseline="top";cx.fillText("BACKEND · SERVER",panel.x+14,panel.y+12)}
+  const on=n=>T>=n.win[0]&&T<=n.win[1],DB=SRC[2];
+  pipe(SRC[0],DB,SRC[0].col,on(SRC[0]),T,moving);pipe(SRC[1],DB,SRC[1].col,on(SRC[1]),T,moving);pipe(DB,SVC,DB.col,on(SVC),T,moving);
+  pipe(SVC,land?{x:mapT.ox+mapT.k*95,y:SVC.y}:{x:SVC.x,y:mapT.oy+mapT.k*60},SVC.col,on(SVC),T,moving);
+  let nx=0,ng=0,lastIn=null;
+  const fly=(p)=>{const sc=SRC[p.si];if(T<p.t0)return;
+    if(T>=p.t1){if(p.rec){p.si===0?nx++:ng++;if(!lastIn||p.t1>lastIn.t1)lastIn=p}if(p.hero&&T<p.t1+1.1)heroes.push({p,u:1,after:T-p.t1});return}
+    if(p.rec)sc.rec=p.rec;const u=(T-p.t0)/p.dur,e=ease(u),a=.35+.65*Math.sin(Math.min(1,u*1.3)*Math.PI*.5);
+    if(p.hero){heroes.push({p,u,after:-1});const q=quad(p.a,p.m,p.b,e);blob(q[0],q[1],L.cs*1.6,sc.col,.45);cx.globalAlpha=1;cx.fillStyle=sc.col;cx.beginPath();cx.arc(q[0],q[1],2.4,0,6.283);cx.fill();return}
+    for(let k=0;k<4;k++){const q=quad(p.a,p.m,p.b,Math.max(0,e-.05*k));digit(sc.col,L.sm,+p.bits[(k+(moving?(u*10|0):0))%16],q[0],q[1],a*(k?.55/k:1))}
+    const q=quad(p.a,p.m,p.b,e);blob(q[0],q[1],L.cs*.6,sc.col,.14*a)};
+  ing.forEach(fly);feed.forEach(fly);
+  const rowsA=Math.round(nx/64*P.length),rowsD=Math.round(ng/54*27);
+  SRC[0].count=`${rowsA} of ${P.length} rows read`;SRC[1].count=`${rowsD} of 27 features read`;
+  DB.count=`${rowsA} centres · ${rowsD} districts`;
+  if(lastIn&&T<TL.ing1+.3)DB.rec=lastIn.si===0?"INSERT INTO anganwadi_centres":"INSERT INTO districts";else if(T<TL.ing0+.6)DB.rec=""}
+
+/* the pipeline, as four steps that light up in turn */
+function hud(T,prog,done){
+  const a=REDUCE||POSTER?1:clamp((T-.5)/.6,0,1);if(a<=0)return;
+  const bw=land?Math.min(panel.w-48,260):Math.min(300,W*.8),bx=land?panel.x+(panel.w-bw)/2:W/2-bw/2,by=land?panel.y+panel.h-36:H-Math.max(30,H*.045);
+  cx.globalAlpha=a;cx.textBaseline="bottom";cx.font=`600 10.5px ${MONO}`;cx.fillStyle=done?EDGE:"#9fe8cc";cx.textAlign="left";cx.fillText(done?"MAP READY":"BUILDING THE MAP",bx,by-6);
+  cx.textAlign="right";cx.fillText(Math.round(prog*100)+"%",bx+bw,by-6);
+  cx.fillStyle="rgba(159,232,204,.15)";cx.fillRect(bx,by,bw,2);const g=cx.createLinearGradient(bx,0,bx+bw,0);NODES.forEach((s,i)=>g.addColorStop(i/3,s.col));cx.fillStyle=g;cx.fillRect(bx,by,bw*prog,2);
+  const steps=[["READ",.5],["LOAD",TL.ing0+.9],["SERVE",TL.geo0],["JOIN",TL.join]];let cur=-1;steps.forEach((s,i)=>{if(T>=s[1])cur=i});
+  cx.textBaseline="top";cx.font=`600 10px ${MONO}`;const slot=bw/4;
+  steps.forEach((s,i)=>{const x=bx+slot*i,lit=T>=s[1],now=i===cur&&!done;cx.textAlign="left";cx.globalAlpha=a*(lit?(now?1:.7):.28);cx.fillStyle=now?LAND:INK;
+    if(now){cx.shadowColor=LAND;cx.shadowBlur=8}cx.fillText(s[0],x,by+8);cx.shadowBlur=0;if(i<3){const tw=cx.measureText(s[0]).width;cx.globalAlpha=a*.3;cx.fillStyle=INK;cx.textAlign="center";cx.fillText("›",(x+tw+x+slot)/2,by+8)}})}
+
+let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{layout();last=performance.now();if(REDUCE||POSTER)frame(performance.now())},150)});
+document.fonts.load('16px "GitLab Mono"').catch(()=>{}).finally(()=>{layout();requestAnimationFrame(frame)});
+</script>
+</body>
+</html>
