@@ -24,10 +24,10 @@ canvas{display:block;width:100vw;height:100vh}
    district's geometry as PostGIS stores it (EWKB, SRID 4326). Each source plays its real role:
    GeoJSON draws the 27 district boundaries, the Excel sheet places 260 Anganwadi centres, PostGIS stores the
    districts as binary rows and runs the spatial join (centre → district).
-   Options: ?nograin no film grain (for video capture) · ?labels=0 no text · ?still finished frame · ?poster mid-formation frame. Reduced motion shows the finished frame. */
+   Options: ?cover leaves the right side clear for a title · ?loop repeats seamlessly (for cover videos) · ?nograin no film grain (for video capture) · ?labels=0 no text · ?still finished frame · ?poster mid-formation frame. Reduced motion shows the finished frame. */
 const GEO=/*GEO*/null;
 const Q=new URLSearchParams(location.search+"&"+location.hash.slice(1));
-const POSTER=Q.has("poster"),STILL=Q.has("still"),TEXT=Q.get("labels")!=="0",GRAIN=!Q.has("nograin");
+const POSTER=Q.has("poster"),STILL=Q.has("still"),TEXT=Q.get("labels")!=="0",GRAIN=!Q.has("nograin"),COVER=Q.has("cover"),LOOP=Q.has("loop");
 const REDUCE=(matchMedia("(prefers-reduced-motion: reduce)").matches&&!POSTER)||STILL;
 const SRC=[
   {key:"xls",name:"Excel sheet",role:"Anganwadi points",col:"#34d27f",rgb:"52,210,127"},
@@ -39,7 +39,7 @@ const LAND="#5fe3b3",EDGE="#dcfff1",INK="#e8f5ef",BG0="#030b09",BG1="#0c2a22",PI
 const FONT='"Avenir Next World","Avenir Next",system-ui,sans-serif',MONO='"GitLab Mono",ui-monospace,Menlo,Consolas,monospace';
 // timeline, in seconds
 const TL={ing0:1.1,ing1:5.0,geo0:4.3,geoStep:.15,geoDur:1.0,xls0:5.4,xls1:10.4,pg0:7.8,pgStep:.15,pgDur:.85,join:12.6,joinDur:1.6};
-TL.end=TL.join+TL.joinDur+.3;
+TL.end=TL.join+TL.joinDur+.3;const CYCLE=22,FADE0=19.4;   // ?loop: build, hold, dissolve back to the start, repeat
 const cv=document.getElementById("c"),cx=cv.getContext("2d");
 const gl=document.createElement("canvas"),gx=gl.getContext("2d");
 let panel,ing=[],feed=[],W,H,DPR,L,mapT,land,cells=[],air=[],D=[],P=[],pk=[[],[],[]],statePath,distPaths,outlineLen=0,vign,grain,glyph={},raipur,maxR,t0=performance.now(),last=t0;
@@ -71,10 +71,10 @@ function layout(){
   land=W/H>1.05;const bb={x:79.11,y:24,w:361.78,h:592},pad=Math.max(16,Math.min(W,H)*.05);
   let mx,my,mw,mh;
   const r0=clamp(Math.min(W,H)*.045,20,34);NODES.forEach(s=>s.r=r0);
-  if(land){const pw=clamp(W*.28,250,360);panel={x:pad*.6,y:pad*.6,w:pw,h:H-pad*1.2};mx=panel.x+pw+pad*1.4;my=pad;mw=W-mx-pad;mh=H-2*pad;
+  if(land){const pw=COVER?clamp(W*.2,220,320):clamp(W*.28,250,360);panel={x:pad*.6,y:pad*.6,w:pw,h:H-pad*1.2};mx=panel.x+pw+pad*1.4;my=pad;mw=(COVER?W*.6:W-pad)-mx;mh=H-2*pad;
     const top=panel.y+Math.max(46,H*.07)+r0,gap=Math.max(r0*3.4,(panel.y+panel.h-60-(r0+78)-top)/2);
     Object.assign(SRC[0],{x:panel.x+pw*.27,y:top});Object.assign(SRC[1],{x:panel.x+pw*.73,y:top});Object.assign(SRC[2],{x:panel.x+pw/2,y:top+gap});Object.assign(SVC,{x:panel.x+pw/2,y:top+gap*2})}
-  else{const ph=clamp(H*.36,236,300);panel={x:pad*.6,y:pad*.6,w:W-pad*1.2,h:ph};mx=pad;my=panel.y+ph+pad*.6;mw=W-2*pad;mh=H-my-Math.max(64,H*.085);
+  else{const ph=clamp(H*.36,236,300);panel={x:pad*.6,y:pad*.6,w:W-pad*1.2,h:ph};mx=pad;my=panel.y+ph+pad*.6;mw=W-2*pad;mh=(COVER?H*.7:H)-my-Math.max(64,H*.085);
     const y1=panel.y+r0+30,y2=y1+ph*.45;Object.assign(SRC[0],{x:W*.28,y:y1});Object.assign(SRC[1],{x:W*.72,y:y1});Object.assign(SRC[2],{x:W*.28,y:y2});Object.assign(SVC,{x:W*.72,y:y2})}
   const k=Math.min(mw/bb.w,mh/bb.h);mapT={k,ox:mx+(mw-bb.w*k)/2-bb.x*k,oy:my+(mh-bb.h*k)/2-bb.y*k,mx,my,mw,mh,bb};
   const S=p=>[mapT.ox+k*p[0],mapT.oy+k*p[1]];
@@ -169,7 +169,7 @@ function pill(text,x,y,col,a,align){cx.font=`600 ${Math.max(10,L.cs*.86)}px ${MO
 
 /* ── source cards ──────────────────────────────────────────────── */
 function card(s,i,T){
-  const born=REDUCE||POSTER?1:clamp((T-.15-i*.18)/.7,0,1);if(born<=0)return;const r=s.r,e=easeOut(born);
+  const born=REDUCE||POSTER||LOOP?1:clamp((T-.15-i*.18)/.7,0,1);if(born<=0)return;const r=s.r,e=easeOut(born);
   const active=(T>=s.win[0]&&T<=s.win[1])||(s.key==="pg"&&T>=TL.join-.2&&T<=TL.end),idle=active||T<s.win[0]?1:.62;
   cx.save();cx.translate(s.x,s.y);const w=r*2.5,h=r*2,breathe=REDUCE?.5:.5+.5*Math.sin(T*2+i*1.3);
   cx.globalAlpha=e;cx.fillStyle=`rgba(${s.rgb},${active?.1:.05})`;rr(-w/2,-h/2,w,h,12);cx.fill();
@@ -199,7 +199,7 @@ function card(s,i,T){
 /* ── one frame, a pure function of time T ──────────────────────── */
 function frame(now){
   const dt=Math.min(64,now-last);last=now;
-  const T=REDUCE?TL.end+2.5:POSTER?8.9:(now-t0)/1000,done=T>=TL.end,moving=!REDUCE&&!POSTER;
+  const T=REDUCE?TL.end+2.5:POSTER?8.9:LOOP?((now-t0)/1000)%CYCLE:(now-t0)/1000,done=T>=TL.end,moving=!REDUCE&&!POSTER;
   cx.setTransform(DPR,0,0,DPR,0,0);cx.globalCompositeOperation="source-over";cx.globalAlpha=1;
   gx.setTransform(1,0,0,1,0,0);gx.globalCompositeOperation="source-over";gx.clearRect(0,0,gl.width,gl.height);gx.globalCompositeOperation="lighter";
   const bg=cx.createRadialGradient(W*.6,H*.5,0,W*.6,H*.5,Math.max(W,H)*.75);bg.addColorStop(0,BG1);bg.addColorStop(1,BG0);cx.fillStyle=bg;cx.fillRect(0,0,W,H);
@@ -213,7 +213,7 @@ function frame(now){
   const mapM=()=>cx.setTransform(DPR*z*mapT.k,0,0,DPR*z*mapT.k,DPR*(fx-z*(fx-mapT.ox)),DPR*(fy-z*(fy-mapT.oy)));
 
   // 1 · target outline: traces itself, then waits as a dashed line until the map is whole
-  cx.save();mapM();const trace=clamp((T-.3)/1.4,0,1),fa=clamp((T-TL.end+.3)/1,0,1);
+  cx.save();mapM();const trace=LOOP?1:clamp((T-.3)/1.4,0,1),fa=clamp((T-TL.end+.3)/1,0,1);
   if(fa<1){cx.globalAlpha=(1-fa)*.4;cx.strokeStyle=EDGE;cx.lineWidth=1.3/mapT.k;if(trace<1){cx.setLineDash([outlineLen*easeOut(trace),outlineLen])}else cx.setLineDash([4/mapT.k,5/mapT.k]);cx.stroke(statePath);cx.setLineDash([])}
   cx.restore();
 
@@ -249,7 +249,7 @@ function frame(now){
     cx.globalAlpha=1;cx.fillStyle=f>0?EDGE:"#c9ffe6";cx.beginPath();cx.arc(p.s[0],p.s[1],pr*(1+.7*f),0,6.283);cx.fill();
     blob(p.s[0],p.s[1],L.cs*(.55+.8*f),SRC[0].col,.06+.22*f);
     if(fl>0){cx.globalAlpha=.6*fl;cx.strokeStyle=SRC[0].col;cx.lineWidth=1.2;cx.beginPath();cx.arc(p.s[0],p.s[1],pr+L.cs*1.6*(1-fl),0,6.283);cx.stroke()}}
-  if(done&&moving&&Math.random()<dt/600){const p=P[Math.floor(Math.random()*P.length)];p.tl=T-.05}   // live: a centre reports in now and then
+  if(done&&moving&&!LOOP&&Math.random()<dt/600){const p=P[Math.floor(Math.random()*P.length)];p.tl=T-.05}   // live: a centre reports in now and then
 
   // 6 · packets in flight: each carries a real coordinate and shows its real bits
   const heroes=[...bh];
@@ -275,13 +275,16 @@ function frame(now){
   cx.restore();gx.restore();
 
   // 9 · hero labels: one value, followed from the file to the map
-  if(TEXT)heroes.forEach(({p,u,after})=>{const s=SRC[p.si];if(after>=0){const a=after<.7?1:1-(after-.7)/.4;pill(p.s2,p.b[0],p.b[1]-L.cs*.9,s.col,a*.95);return}
+  if(TEXT&&!COVER)heroes.forEach(({p,u,after})=>{const s=SRC[p.si];if(after>=0){const a=after<.7?1:1-(after-.7)/.4;pill(p.s2,p.b[0],p.b[1]-L.cs*.9,s.col,a*.95);return}
     const q=quad(p.a,p.m,p.b,ease(u)),a=Math.min(1,u*5);pill(morph(p,u),q[0],q[1]-L.cs*.9,s.col,a*.95)});
 
   NODES.forEach((s,i)=>card(s,i,T));
   cx.globalCompositeOperation="lighter";cx.globalAlpha=1;cx.imageSmoothingEnabled=true;cx.drawImage(gl,0,0,W,H);cx.globalAlpha=.6;cx.drawImage(gl,-W*.01,-H*.01,W*1.02,H*1.02);cx.globalCompositeOperation="source-over";
+  if(LOOP&&T>FADE0){const f=easeOut(clamp((T-FADE0)/(CYCLE-FADE0-.15),0,1));cx.save();cx.beginPath();land?cx.rect(panel.x+panel.w+1,0,W,H):cx.rect(0,panel.y+panel.h+1,W,H);cx.clip();
+    cx.globalAlpha=f;cx.fillStyle=bg;cx.fillRect(0,0,W,H);cx.globalAlpha=.045*f;cx.strokeStyle="#9fe8cc";cx.lineWidth=1;cx.beginPath();for(let x=L.cs*4;x<W;x+=L.cs*4){cx.moveTo(x,0);cx.lineTo(x,H)}for(let y=L.cs*4;y<H;y+=L.cs*4){cx.moveTo(0,y);cx.lineTo(W,y)}cx.stroke();
+    cx.setTransform(DPR*mapT.k,0,0,DPR*mapT.k,DPR*mapT.ox,DPR*mapT.oy);cx.globalAlpha=.4*f;cx.strokeStyle=EDGE;cx.lineWidth=1.3/mapT.k;cx.setLineDash([4/mapT.k,5/mapT.k]);cx.stroke(statePath);cx.setLineDash([]);cx.restore()}
   if(TEXT)hud(T,prog,done);
-  cx.globalAlpha=1;cx.drawImage(vign,0,0);if(moving&&GRAIN){cx.globalAlpha=.5;const ox=Math.random()*192|0,oy=Math.random()*192|0;cx.fillStyle=cx.createPattern(grain,"repeat");cx.save();cx.translate(-ox,-oy);cx.fillRect(ox,oy,W,H);cx.restore()}
+  cx.globalAlpha=1;cx.drawImage(vign,0,0);if(COVER){const g=land?cx.createLinearGradient(W*.5,0,W,0):cx.createLinearGradient(0,H*.6,0,H);g.addColorStop(0,"rgba(3,11,9,0)");g.addColorStop(.45,"rgba(3,11,9,.55)");g.addColorStop(1,"rgba(3,11,9,.82)");cx.fillStyle=g;cx.fillRect(0,0,W,H)}if(moving&&GRAIN){cx.globalAlpha=.5;const ox=Math.random()*192|0,oy=Math.random()*192|0;cx.fillStyle=cx.createPattern(grain,"repeat");cx.save();cx.translate(-ox,-oy);cx.fillRect(ox,oy,W,H);cx.restore()}
   if(moving)requestAnimationFrame(frame)}
 
 /* the backend: the stack, its pipes, and the LOAD (files → GIS DB) and SERVE (GIS DB → map service) streams */
@@ -307,7 +310,7 @@ function backend(T,moving,heroes){
 
 /* the pipeline, as four steps that light up in turn */
 function hud(T,prog,done){
-  const a=REDUCE||POSTER?1:clamp((T-.5)/.6,0,1);if(a<=0)return;
+  const a=REDUCE||POSTER||LOOP?1:clamp((T-.5)/.6,0,1);if(a<=0)return;
   const bw=land?Math.min(panel.w-48,260):Math.min(300,W*.8),bx=land?panel.x+(panel.w-bw)/2:W/2-bw/2,by=land?panel.y+panel.h-36:H-Math.max(30,H*.045);
   cx.globalAlpha=a;cx.textBaseline="bottom";cx.font=`600 10.5px ${MONO}`;cx.fillStyle=done?EDGE:"#9fe8cc";cx.textAlign="left";cx.fillText(done?"MAP READY":"BUILDING THE MAP",bx,by-6);
   cx.textAlign="right";cx.fillText(Math.round(prog*100)+"%",bx+bw,by-6);
