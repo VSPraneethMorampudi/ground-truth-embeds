@@ -409,7 +409,7 @@ body.framed .sketch.port{min-height:0;justify-content:flex-start}
 <section class="view" id="overview" aria-labelledby="ov-h">
   <div class="hd"><h1 id="ov-h">One base, many departments</h1></div>
   <svg id="ovSvg" role="img" aria-labelledby="ov-h ov-d"></svg>
-  <div class="sr" id="ov-d">What we do: we build one trusted map of Chhattisgarh. Collect: data from 42 departments. Check: errors fixed before it goes in. Fit: one base, one coordinate system. Publish: one map for everyone. Every layer lines up, village by village. How it works, in the sections below: data layers on one shared base; an API that serves them as live data services; the Geo Portal to view, search and download; use cases for planning and decisions; and a mobile app for viewing and editing in the field, whose updates feed back into the data layers. Spatial data reaches the State Geoportal from departments across Chhattisgarh. The Revenue Department supplies the base: district, tehsil, block and village boundaries for the whole state. Every other department's data arrives on top of that base, each source in its own format and to its own schedule. Mining, Anganwadi and BharatNet are three of them. The work is to merge those submissions onto one set of boundaries and one coordinate system, so that a village means the same village in every layer. Today that merge holds 162 layers from 42 departments, published to one standard. Three applications already run on it: Mining, Anganwadi and BharatNet. Hovering, tapping or pressing Enter on the map shows the story as six maps: Data Creation, traced, scanned and surveyed; Map Layers, every department on one base; Mobile App, the map in the field; Mapping and Cartography, data made readable; Maintenance, kept current with changes logged; and Output, prints, PDFs and web maps.</div>
+  <div class="sr" id="ov-d">What we do: we build one trusted map of Chhattisgarh. Collect: data from 42 departments. Check: errors fixed before it goes in. Fit: one base, one coordinate system. Publish: one map for everyone. Every layer lines up, village by village. How it works, in the sections below: data layers on one shared base; an API that serves them as live data services; the Geo Portal to view, search and download; use cases for planning and decisions; and a mobile app for viewing and editing in the field, whose updates feed back into the data layers. Spatial data reaches the State Geoportal from departments across Chhattisgarh. The Revenue Department supplies the base: district, tehsil, block and village boundaries for the whole state. Every other department's data arrives on top of that base, each source in its own format and to its own schedule. Mining, Anganwadi and BharatNet are three of them. The work is to merge those submissions onto one set of boundaries and one coordinate system, so that a village means the same village in every layer. Today that merge holds 162 layers from 42 departments, published to one standard. Three applications already run on it: Mining, Anganwadi and BharatNet. Hovering, tapping or pressing Enter on the map shows how it works in five steps: Create, by tracing, scanning and surveying; Store, every layer on one base; Map, data made readable; Maintain, kept current with changes logged; and Use, through the Geo Portal, the Mobile App and use cases. What people find in the field feeds back into the map.</div>
   
   <button class="ovrep" id="ovRep" type="button"><svg class="ic sm"><use href="#i-retry"/></svg>Replay</button>
 </section>
@@ -599,7 +599,7 @@ INIT.overview=()=>{
     {k:"bn",c:"var(--dv-aqua-700)",sw:"bn",t:"BharatNet",b:["fibre routes and GP nodes,","one more source on top"]}];
   const POINTS={
     vil:{eb:"What we do",t:["One trusted map","of Chhattisgarh"],flow:[["Collect","data from 42 departments"],["Check","errors fixed before it goes in"],["Fit","one base, one coordinate system"],["Publish","one map for everyone"]],bd:[{hl:"Every layer lines up, village by village."}],b:["We collect spatial data from every","department, check it, fit it to one","base, and publish it for everyone, so",{hl:"a village is the same in every layer."}]},
-    num:{big:"162",bigU:"layers",b:["from 42 departments,","all published to one standard."],steps:[["Data layers","one shared base"],["API","live data services"],["Geo Portal","view, search, download"],["Use cases","planning and decisions"],["Mobile app","field view and edits"]]}};
+    num:{big:"162",bigU:"layers",b:["from 42 departments,","all published to one standard."],steps:[["Create","traced, scanned, surveyed"],["Store","one database, one base"],["Map","data made readable"],["Maintain","kept current"],["Use","portal, app, decisions"]]}};
   const CAN_HOVER=matchMedia("(hover: hover)").matches;
   const L={
     land:{vb:[1280,720],m:[354,8,1.1],sk:.56,sy:128,gap:24,fade:true,
@@ -670,7 +670,7 @@ INIT.overview=()=>{
     const pts={};for(const k in POINTS)pts[k]=block(el("g",{class:"pt"},S),k,m);
 
     // the map: one copy per source, stacked
-    const mapG=el("g",{class:"ovmap",tabindex:0,role:"button","aria-expanded":"false","aria-label":"One map, six steps. Show each step"},S);
+    const mapG=el("g",{class:"ovmap",tabindex:0,role:"button","aria-expanded":"false","aria-label":"One map, five steps. Show how it works"},S);
     const hit=el("rect",{fill:"transparent"},mapG);
     const copies=LAYERS.map((Ly,i)=>{const g=el("g",{},mapG),o={g,Ly};
       o.sh=el("path",{d:G.state,fill:"rgba(60,50,40,.12)",transform:"translate(4 7)",filter:"url(#ovSoft)"},g);
@@ -689,7 +689,7 @@ INIT.overview=()=>{
     const six=buildSix(mapG,m);const labs=six.labs;
     // v14 layout: each block sits a fixed gap off the map's edge; the title's cap height and the
     // number's cap height share one line, and the pair is centred on the map
-    const cueTxt=(CAN_HOVER?"Hover over":"Tap")+" the map to see the six steps";let hint,hl0;
+    const cueTxt=(CAN_HOVER?"Hover over":"Tap")+" the map to see how it works";let hint,hl0;
     if(mode!=="port"){
       const bb={vil:pts.vil.getBBox(),num:pts.num.getBBox()},sb=copies[0].fill.getBBox();
       const mapL=M0[0]+sb.x*M0[2],mapR=M0[0]+(sb.x+sb.width)*M0[2];
@@ -730,58 +730,53 @@ INIT.overview=()=>{
 
   /* v16.5: hover shows the story as six maps, one per StoryMap section */
   function buildSix(par,m){const ST=G.stack,mode0=pick(),VW=m.vb[0],out={panels:[],labs:[],pos:[]};
-    let k,pos;if(mode0==="port"){k=.4;pos=[[40,30],[340,30],[40,390],[340,390],[40,750],[340,750]].map(([x,y])=>[x,y,k])}
-    else{k=mode0==="wide"?.31:.29;const cw=G.W*k+28,gap=(VW-40-6*cw)/5;const y0=Math.max(56,(m.vb[1]-(G.H*k+170))/2+18);pos=[0,1,2,3,4,5].map(i=>[20+14+i*(cw+gap),y0,k])}
+    const N=5;let k,pos;if(mode0==="port"){k=.4;pos=[[40,30],[340,30],[40,390],[340,390],[190,750]].map(([x,y])=>[x,y,k])}
+    else{k=mode0==="wide"?.36:.34;const cw=G.W*k+28,gap=(VW-60-N*cw)/(N-1);const y0=Math.max(56,(m.vb[1]-(G.H*k+170))/2+18);pos=[...Array(N).keys()].map(i=>[30+14+i*(cw+gap),y0,k])}
     out.pos=pos;
     const defs=S.querySelector("defs");defs.insertAdjacentHTML("beforeend",`<clipPath id="ovSixClip"><path d="${G.state}"/></clipPath>`);
-    // districts → number of Anganwadi centres, for the choropleth
     const oc=new OffscreenCanvas(1,1).getContext("2d"),dp=G.districts.map(d=>new Path2D(d.d)),cnt=dp.map(pp=>ST.aw.filter(q=>oc.isPointInPath(pp,q[0],q[1])).length),mx=Math.max(...cnt,1);
     const CH=["#eef1fb","#cdd7f6","#a3b4ec","#7088d8","#4a5fb4"];
-    const T=[["Data Creation","traced, scanned and surveyed"],["Map Layers","every department, one base"],["Mobile App","the map in the field"],["Mapping & Cartography","data made readable"],["Maintenance","kept current, changes logged"],["Output","prints, PDFs and web maps"]];
-    const near=ST.pin;
+    const T=[["cre","Create","traced, scanned, surveyed"],["sto","Store","every layer on one base"],["map","Map","data made readable"],["mnt","Maintain","kept current, changes logged"],["use","Use","portal, app and decisions"]];
     const W2=G.W*k,H2=G.H*k,CW=W2+28,CH2=H2+108,deco=el("g",{opacity:0},par);out.deco=deco;
-    // arrows between the cards, and the loop back from Output to Data Creation
-    if(mode0!=="port"){pos.slice(0,5).forEach(([x,y],i)=>{const ax=x+W2+14+(pos[i+1][0]-14-(x+W2+14))/2,ay=y+H2*.45;
+    if(mode0!=="port"){pos.slice(0,N-1).forEach(([x,y],i)=>{const ax=x+W2+14+(pos[i+1][0]-14-(x+W2+14))/2,ay=y+H2*.45;
         el("path",{d:`M${ax-6},${ay-7} l7,7 l-7,7`,fill:"none",stroke:"var(--n500)","stroke-width":2,"stroke-linecap":"round","stroke-linejoin":"round"},deco)});
-      const ly=pos[0][1]+CH2-2,xa=pos[5][0]+W2/2,xb=pos[0][0]+W2/2;
+      const ly=pos[0][1]+CH2-2,xa=pos[N-1][0]+W2/2,xb=pos[0][0]+W2/2;
       el("path",{d:`M${xa},${ly} C${xa},${ly+38} ${xa-60},${ly+38} ${(xa+xb)/2},${ly+38} S${xb},${ly+38} ${xb},${ly}`,fill:"none",stroke:"var(--dv-aqua-600)","stroke-width":1.8,"stroke-dasharray":"6 5"},deco);
       el("path",{d:`M${xb-6},${ly+8} L${xb},${ly} L${xb+6},${ly+8}`,fill:"none",stroke:"var(--dv-aqua-600)","stroke-width":1.8,"stroke-linecap":"round","stroke-linejoin":"round"},deco);
-      const lb=txt({x:(xa+xb)/2,y:ly+33,class:"u","font-size":13,"text-anchor":"middle",style:"fill:var(--dv-aqua-700);font-weight:600"},deco,"and back again: every update makes the next map better");
+      const lb=txt({x:(xa+xb)/2,y:ly+33,class:"u","font-size":13,"text-anchor":"middle",style:"fill:var(--dv-aqua-700);font-weight:600"},deco,"and back again: what people find in the field updates the map");
       const bb=lb.getBBox();deco.insertBefore(el("rect",{x:bb.x-10,y:bb.y-2,width:bb.width+20,height:bb.height+4,fill:"var(--page)"}),lb)}
-    T.forEach(([t,c],i)=>{const[x,y]=pos[i],g=el("g",{opacity:0},par);out.panels.push(g);
+    T.forEach(([key,t,c],i)=>{const[x,y]=pos[i],g=el("g",{opacity:0},par);out.panels.push(g);
       const card=el("g",{opacity:0},g);el("rect",{x:-14,y:-18,width:CW,height:CH2,rx:12,fill:"#fff",stroke:"var(--n200)","stroke-width":1.2},card);g._card=card;
       const mg=el("g",{transform:`scale(${k})`},g);
       el("path",{d:G.state,fill:"rgba(60,50,40,.12)",transform:"translate(4 7)",filter:"url(#ovSoft)"},mg);
-      el("path",{d:G.state,fill:i===3?"#fff":"#fbfaf8"},mg);const cl=el("g",{"clip-path":"url(#ovSixClip)"},mg);
+      el("path",{d:G.state,fill:key==="map"?"#fff":"#fbfaf8"},mg);const cl=el("g",{"clip-path":"url(#ovSixClip)"},mg);
       const dist=(st,w,dash)=>G.districts.forEach(d=>el("path",{d:d.d,fill:"none",stroke:st,"stroke-width":w,"stroke-dasharray":dash||"none"},cl));
-      if(i===0){dist("#cfc8bd",1.4,"6 5");el("path",{d:ST.fibre,fill:"none",stroke:"#f0b400","stroke-width":5,"stroke-linecap":"round","stroke-linejoin":"round"},cl);
+      const fur=el("g",{opacity:0},g);g._fur=fur;
+      if(key==="cre"){dist("#cfc8bd",1.4,"6 5");el("path",{d:ST.fibre,fill:"none",stroke:"#f0b400","stroke-width":5,"stroke-linecap":"round","stroke-linejoin":"round"},cl);
         ST.gp.forEach(q=>el("rect",{x:q[0]-6,y:q[1]-6,width:12,height:12,fill:"#fff",stroke:"#5a4a14","stroke-width":2.4},cl));
         ST.aw.filter((_,j)=>j%14===0).forEach(q=>{el("circle",{cx:q[0],cy:q[1],r:9,fill:"none",stroke:"var(--dv-orange-500)","stroke-width":3},cl);el("path",{d:`M${q[0]-16},${q[1]}h32M${q[0]},${q[1]-16}v32`,stroke:"var(--dv-orange-500)","stroke-width":2.4},cl)})}
-      if(i===1){dist("#b9b2a8",1.6);el("path",{d:ST.mines,fill:"var(--dv-orange-500)",stroke:"var(--dv-orange-700)","stroke-width":1.4},cl);ST.aw.forEach(q=>el("circle",{cx:q[0],cy:q[1],r:3.6,fill:"var(--dv-blue-500)"},cl));
+      if(key==="sto"){dist("#b9b2a8",1.6);el("path",{d:ST.mines,fill:"var(--dv-orange-500)",stroke:"var(--dv-orange-700)","stroke-width":1.4},cl);ST.aw.forEach(q=>el("circle",{cx:q[0],cy:q[1],r:3.6,fill:"var(--dv-blue-500)"},cl));
         el("path",{d:ST.fibre,fill:"none",stroke:"var(--dv-aqua-600)","stroke-width":3.4,"stroke-linecap":"round"},cl);ST.gp.forEach(q=>el("circle",{cx:q[0],cy:q[1],r:5.5,fill:"#fff",stroke:"var(--dv-aqua-600)","stroke-width":2.4},cl))}
-      if(i===2){dist("#ddd7cd",1.3);const R0=95;ST.aw.forEach(q=>{const dd=Math.hypot(q[0]-near[0],q[1]-near[1]);el("circle",{cx:q[0],cy:q[1],r:dd<R0?6:3.4,fill:dd<R0?"var(--dv-blue-500)":"#c3cbe8"},cl)});
-        el("circle",{cx:near[0],cy:near[1],r:R0,fill:"rgba(97,122,226,.08)",stroke:"var(--dv-blue-500)","stroke-width":2.4,"stroke-dasharray":"8 6"},mg);
-        el("rect",{x:near[0]-92,y:near[1]-168,width:184,height:336,rx:32,fill:"none",stroke:"var(--n900)","stroke-width":7},mg);el("rect",{x:near[0]-28,y:near[1]-158,width:56,height:12,rx:6,fill:"var(--n900)"},mg);
-        el("circle",{cx:near[0],cy:near[1],r:22,fill:"rgba(63,81,174,.2)"},mg);el("circle",{cx:near[0],cy:near[1],r:10,fill:"var(--dv-blue-700)",stroke:"#fff","stroke-width":4},mg)}
-      if(i===3){G.districts.forEach((d,j)=>el("path",{d:d.d,fill:CH[Math.min(4,Math.floor(cnt[j]/mx*4.999))],stroke:"#fff","stroke-width":2.2},cl))}
-      if(i===4){dist("#b9b2a8",1.6);[3,11].forEach(j=>{const d=G.districts[j%G.districts.length].d;el("path",{d,transform:"translate(10 -8)",fill:"none",stroke:"#9a948a","stroke-width":2.4,"stroke-dasharray":"8 6"},cl);
-          el("path",{d,fill:"rgba(201,93,46,.18)",stroke:"var(--dv-orange-500)","stroke-width":3.2},cl)})}
-      if(i===5){dist("#b9b2a8",1.4);ST.aw.forEach(q=>el("circle",{cx:q[0],cy:q[1],r:3,fill:"var(--dv-blue-500)"},cl))}
-      el("path",{d:G.state,fill:"none",stroke:i===3?"#7f8bb0":"#8f887e","stroke-width":2.6/1,"stroke-linejoin":"round"},mg);
-      // screen-unit furniture
-      const fur=el("g",{opacity:0},g);g._fur=fur;
-      if(i===3){CH.forEach((c,j)=>el("rect",{x:W2-58+j*10,y:H2-14,width:10,height:8,fill:c,stroke:"#fff","stroke-width":.6},fur));txt({x:W2-58,y:H2-18,class:"u","font-size":9.5,style:"fill:var(--n600)"},fur,"centres")}
-      if(i===4){const b=el("g",{transform:`translate(${W2-26} 18)`},fur);el("circle",{r:13,fill:"#fff",stroke:"var(--dv-orange-500)","stroke-width":1.6},b);el("path",{d:"M-6,-1 a6,6 0 1 1 1.6,5.2 M-6,-1 l-2.6,-3 M-6,-1 l3.4,-1.2",fill:"none",stroke:"var(--dv-orange-500)","stroke-width":1.6,"stroke-linecap":"round"},b);
+      if(key==="map"){G.districts.forEach((d,j)=>el("path",{d:d.d,fill:CH[Math.min(4,Math.floor(cnt[j]/mx*4.999))],stroke:"#fff","stroke-width":2.2},cl));
+        CH.forEach((cc,j)=>el("rect",{x:W2-58+j*10,y:H2-14,width:10,height:8,fill:cc,stroke:"#fff","stroke-width":.6},fur));txt({x:W2-58,y:H2-18,class:"u","font-size":9.5,style:"fill:var(--n600)"},fur,"centres")}
+      if(key==="mnt"){dist("#b9b2a8",1.6);[3,11].forEach(j=>{const d=G.districts[j%G.districts.length].d;el("path",{d,transform:"translate(10 -8)",fill:"none",stroke:"#9a948a","stroke-width":2.4,"stroke-dasharray":"8 6"},cl);
+          el("path",{d,fill:"rgba(201,93,46,.18)",stroke:"var(--dv-orange-500)","stroke-width":3.2},cl)});
+        const b=el("g",{transform:`translate(${W2-26} 18)`},fur);el("circle",{r:13,fill:"#fff",stroke:"var(--dv-orange-500)","stroke-width":1.6},b);el("path",{d:"M-6,-1 a6,6 0 1 1 1.6,5.2 M-6,-1 l-2.6,-3 M-6,-1 l3.4,-1.2",fill:"none",stroke:"var(--dv-orange-500)","stroke-width":1.6,"stroke-linecap":"round"},b);
         txt({x:W2-26,y:44,class:"u","font-size":10,"text-anchor":"middle",style:"font-weight:700;fill:var(--dv-orange-700)"},fur,"v7")}
-      if(i===5){fur.insertBefore(el("rect",{x:-6,y:-12,width:W2+12,height:H2+20,rx:2,fill:"none",stroke:"var(--n300)","stroke-width":1}),fur.firstChild);
-        txt({x:-1,y:-2,class:"u","font-size":8.5,style:"font-weight:700;letter-spacing:.08em;fill:var(--n900)"},fur,"CHHATTISGARH");
-        const nx=W2-6,ny=8;el("path",{d:`M${nx},${ny-9} l4,11 l-4,-3 l-4,3z`,fill:"var(--n900)"},fur);
-        el("rect",{x:2,y:H2-2,width:16,height:3,fill:"var(--n900)"},fur);el("rect",{x:18,y:H2-2,width:16,height:3,fill:"#fff",stroke:"var(--n900)","stroke-width":.6},fur);
-        [["var(--dv-blue-500)","centre"],["#b9b2a8","district"]].forEach(([c,l],j)=>{el("rect",{x:W2-50,y:H2-24+j*12,width:8,height:8,fill:c},fur);txt({x:W2-38,y:H2-17+j*12,class:"u","font-size":8.5,style:"fill:var(--n700)"},fur,l)})}
+      if(key==="use"){dist("#d6d0c6",1.3);ST.aw.forEach(q=>el("circle",{cx:q[0],cy:q[1],r:3.4,fill:"var(--dv-blue-500)"},cl));el("circle",{cx:ST.pin[0],cy:ST.pin[1],r:12,fill:"var(--dv-orange-500)",stroke:"#fff","stroke-width":4},mg);
+        // three ways the same map is used: a browser (Geo Portal), a phone (Mobile App), a chart (use cases)
+        const br=el("g",{transform:"translate(-8 -6)"},fur);el("rect",{x:0,y:0,width:58,height:40,rx:4,fill:"#fff",stroke:"var(--n700)","stroke-width":1.3},br);el("rect",{x:0,y:0,width:58,height:9,rx:4,fill:"var(--n100)"},br);
+          [5,10,15].forEach(cx=>el("circle",{cx,cy:4.5,r:1.6,fill:"var(--n500)"},br));el("path",{d:G.state,transform:"translate(19 10) scale(.045)",fill:"#fbfaf8",stroke:"var(--n700)","stroke-width":22},br);txt({x:29,y:52,class:"u","font-size":9,"text-anchor":"middle",style:"font-weight:700;fill:var(--n700)"},br,"Geo Portal");
+        const ph=el("g",{transform:`translate(${W2-40} ${H2*.38})`},fur);el("rect",{x:0,y:0,width:30,height:52,rx:6,fill:"#fff",stroke:"var(--n800)","stroke-width":1.5},ph);el("rect",{x:10,y:3,width:10,height:3,rx:1.5,fill:"var(--n800)"},ph);
+          el("circle",{cx:15,cy:28,r:6,fill:"rgba(97,122,226,.2)"},ph);el("circle",{cx:15,cy:28,r:2.6,fill:"var(--dv-blue-700)"},ph);txt({x:15,y:64,class:"u","font-size":9,"text-anchor":"middle",style:"font-weight:700;fill:var(--n700)"},ph,"Mobile App");
+        const ch=el("g",{transform:`translate(-8 ${H2-46})`},fur);el("rect",{x:0,y:0,width:50,height:36,rx:4,fill:"#fff",stroke:"var(--n700)","stroke-width":1.3},ch);
+          [[8,18],[19,10],[30,22],[41,14]].forEach(([bx,h])=>el("rect",{x:bx-3,y:30-h,width:6,height:h,fill:"var(--dv-aqua-600)"},ch));txt({x:25,y:48,class:"u","font-size":9,"text-anchor":"middle",style:"font-weight:700;fill:var(--n700)"},ch,"Use cases")}
+      el("path",{d:G.state,fill:"none",stroke:key==="map"?"#7f8bb0":"#8f887e","stroke-width":2.6,"stroke-linejoin":"round"},mg);
+      g.appendChild(fur);
       const lg=el("g",{},card),cx=W2/2;let yy=H2+30;
       txt({x:cx,y:yy,class:"u","font-size":11.5,"text-anchor":"middle",style:"font-weight:700;fill:var(--n500)"},lg,String(i+1).padStart(2,"0"));yy+=20;
-      txt({x:cx,y:yy,class:"u t","font-size":mode0==="port"?17:(t.length>14?13.5:14.5),"text-anchor":"middle"},lg,t);yy+=18;
-      txt({x:cx,y:yy,class:"u","font-size":mode0==="port"?14:12,"text-anchor":"middle",style:"fill:var(--n600)"},lg,c)});
+      txt({x:cx,y:yy,class:"u t","font-size":mode0==="port"?17:16,"text-anchor":"middle"},lg,t);yy+=18;
+      txt({x:cx,y:yy,class:"u","font-size":mode0==="port"?14:12.5,"text-anchor":"middle",style:"fill:var(--n600)"},lg,c)});
     return out}
 
   function render(){const p=P,s=st.s,m=p.m;
