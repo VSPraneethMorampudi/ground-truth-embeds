@@ -433,6 +433,18 @@ body.framed .sketch.port{min-height:0;justify-content:flex-start}
   <button class="ovrep" id="updatesRep" type="button"><svg class="ic sm"><use href="#i-retry"/></svg>Replay</button>
 </section>
 
+<section class="view ed" id="gdbrec" aria-labelledby="gdbrec-h">
+  <div class="hd"><h1 id="gdbrec-h">One safe home for every map layer</h1></div>
+  <svg class="edsvg" id="gdbrecSvg" role="img" aria-labelledby="gdbrec-h gdbrec-d"></svg>
+  <div class="sr" id="gdbrec-d">Every place carries its facts. Each Anganwadi centre is a point on the map and a row in the layer's table, with its ID, name, type, district and latitude and longitude. Selecting a row highlights its point on the map: the point and the row are one feature.</div>
+  <button class="ovrep" id="gdbrecRep" type="button"><svg class="ic sm"><use href="#i-retry"/></svg>Replay</button>
+</section>
+<section class="view ed" id="gdbrules" aria-labelledby="gdbrules-h">
+  <div class="hd"><h1 id="gdbrules-h">One safe home for every map layer</h1></div>
+  <svg class="edsvg" id="gdbrulesSvg" role="img" aria-labelledby="gdbrules-h gdbrules-d"></svg>
+  <div class="sr" id="gdbrules-d">Rules at the door. Every incoming record passes three checks before it is stored: it must fall inside its boundary, its geometry must be clean, and no field may be blank. Records that pass go into the geodatabase; records that fail are sent back to fix, with the reason.</div>
+  <button class="ovrep" id="gdbrulesRep" type="button"><svg class="ic sm"><use href="#i-retry"/></svg>Replay</button>
+</section>
 <!-- ============================================================ FLOW -->
 <section class="view" id="flow" aria-labelledby="fl-h">
   <div class="hd"><h1 id="fl-h">From many departments to one base</h1></div>
@@ -526,13 +538,13 @@ function xy2ll(x,y){let lon=82.3,lat=21;for(let k=0;k<12;k++){const p=ll2xy(lon,
   const a=(q[0]-p[0])/.01,b=(r[0]-p[0])/.01,c=(q[1]-p[1])/.01,d=(r[1]-p[1])/.01,det=a*d-b*c;const dx=x-p[0],dy=y-p[1];lon+=(d*dx-b*dy)/det;lat+=(-c*dx+a*dy)/det}return[lon,lat]}
 
 /* ---------------- router ---------------- */
-const VIEWS={flow:"The intro told top to bottom; arrows draw as the reader scrolls",overview:"The base map and the departments that build on it",intake:"Drag a pin; the four intake checks run live",conversion:"Drag to fix a duplicate, a dangle and a sliver",projection:"Measure a kilometre anywhere in four coordinate systems",storage:"Point at the stack; every layer answers for the same spot",publication:"Change one record; every consumer updates",cartography:"Zoom from state to street; each layer switches on when it becomes useful",provenance:"The metadata card, lineage, and three tiers of access",inuse:"An example query across two departments' layers",update:"Schedules, boundary changes, revisions and what follows",create:"v8 · Data Creation: old records, paper to digital, new data, keeping it current",geodatabase:"v8 · Geodatabase: layers, a record, rules at the door, one home",portal:"v8 · Geo Portal: layers, search, Ask AI, accessibility",mobile:"v8 · Mobile App: you are here, nearby, capture, send",mapping:"v8 · Mapping and cartography: raw data to a map that decides",maintain:"v8 · Maintenance: running, safe, current",cycle:"v8 · Closing: the six stages as one loop",legacy:"v16 · Data creation: old records converted to one GIS format",newdata:"v16 · Data creation: satellite, scanned maps and field survey",updates:"v16 · Data updates: one central database, every department"};
+const VIEWS={flow:"The intro told top to bottom; arrows draw as the reader scrolls",overview:"The base map and the departments that build on it",intake:"Drag a pin; the four intake checks run live",conversion:"Drag to fix a duplicate, a dangle and a sliver",projection:"Measure a kilometre anywhere in four coordinate systems",storage:"Point at the stack; every layer answers for the same spot",publication:"Change one record; every consumer updates",cartography:"Zoom from state to street; each layer switches on when it becomes useful",provenance:"The metadata card, lineage, and three tiers of access",inuse:"An example query across two departments' layers",update:"Schedules, boundary changes, revisions and what follows",create:"v8 · Data Creation: old records, paper to digital, new data, keeping it current",geodatabase:"v8 · Geodatabase: layers, a record, rules at the door, one home",portal:"v8 · Geo Portal: layers, search, Ask AI, accessibility",mobile:"v8 · Mobile App: you are here, nearby, capture, send",mapping:"v8 · Mapping and cartography: raw data to a map that decides",maintain:"v8 · Maintenance: running, safe, current",cycle:"v8 · Closing: the six stages as one loop",legacy:"v16 · Data creation: old records converted to one GIS format",newdata:"v16 · Data creation: satellite, scanned maps and field survey",updates:"v16 · Data updates: one central database, every department",gdbrec:"v16 · Geodatabase: map and table, one feature",gdbrules:"v16 · Geodatabase: rules at the door"};
 const OPT={};
 function parse(){const p=location.hash.slice(1).split("&");const v=p.shift();for(const k in OPT)delete OPT[k];p.forEach(x=>{const[a,b]=x.split("=");OPT[a]=b===undefined?true:decodeURIComponent(b)});return v}
 const INIT={},inited={};
 const framed=(()=>{try{return window.self!==window.top}catch(e){return true}})();
-const CREATE_ALIAS={"0":"legacy","2":"newdata","3":"updates"};
-function route(){let v=parse();if(v==="create"&&!OPT.orig&&CREATE_ALIAS[OPT.step])v=CREATE_ALIAS[OPT.step];const id=VIEWS[v]?v:"index";
+const CREATE_ALIAS={"0":"legacy","2":"newdata","3":"updates"},GDB_ALIAS={"1":"gdbrec","2":"gdbrules"};
+function route(){let v=parse();if(v==="create"&&!OPT.orig&&CREATE_ALIAS[OPT.step])v=CREATE_ALIAS[OPT.step];if(v==="geodatabase"&&!OPT.orig&&GDB_ALIAS[OPT.step])v=GDB_ALIAS[OPT.step];const id=VIEWS[v]?v:"index";
   document.body.classList.toggle("framed",framed);document.body.classList.toggle("head",!!OPT.head||!framed);
   $$(".view").forEach(s=>s.classList.toggle("on",s.id===id));document.title="Ground Truth · "+(VIEWS[id]?id:"figures");
   if(!inited[id]&&INIT[id]){INIT[id]();inited[id]=true}

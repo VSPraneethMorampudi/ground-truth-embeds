@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-build="1791542113">
+<html lang="en" data-build="1791543913">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -475,6 +475,18 @@ body.framed .sketch.port{min-height:0;justify-content:flex-start}
   <button class="ovrep" id="updatesRep" type="button"><svg class="ic sm"><use href="#i-retry"/></svg>Replay</button>
 </section>
 
+<section class="view ed" id="gdbrec" aria-labelledby="gdbrec-h">
+  <div class="hd"><h1 id="gdbrec-h">One safe home for every map layer</h1></div>
+  <svg class="edsvg" id="gdbrecSvg" role="img" aria-labelledby="gdbrec-h gdbrec-d"></svg>
+  <div class="sr" id="gdbrec-d">Every place carries its facts. Each Anganwadi centre is a point on the map and a row in the layer's table, with its ID, name, type, district and latitude and longitude. Selecting a row highlights its point on the map: the point and the row are one feature.</div>
+  <button class="ovrep" id="gdbrecRep" type="button"><svg class="ic sm"><use href="#i-retry"/></svg>Replay</button>
+</section>
+<section class="view ed" id="gdbrules" aria-labelledby="gdbrules-h">
+  <div class="hd"><h1 id="gdbrules-h">One safe home for every map layer</h1></div>
+  <svg class="edsvg" id="gdbrulesSvg" role="img" aria-labelledby="gdbrules-h gdbrules-d"></svg>
+  <div class="sr" id="gdbrules-d">Rules at the door. Every incoming record passes three checks before it is stored: it must fall inside its boundary, its geometry must be clean, and no field may be blank. Records that pass go into the geodatabase; records that fail are sent back to fix, with the reason.</div>
+  <button class="ovrep" id="gdbrulesRep" type="button"><svg class="ic sm"><use href="#i-retry"/></svg>Replay</button>
+</section>
 <!-- ============================================================ FLOW -->
 <section class="view" id="flow" aria-labelledby="fl-h">
   <div class="hd"><h1 id="fl-h">From many departments to one base</h1></div>
@@ -568,13 +580,13 @@ function xy2ll(x,y){let lon=82.3,lat=21;for(let k=0;k<12;k++){const p=ll2xy(lon,
   const a=(q[0]-p[0])/.01,b=(r[0]-p[0])/.01,c=(q[1]-p[1])/.01,d=(r[1]-p[1])/.01,det=a*d-b*c;const dx=x-p[0],dy=y-p[1];lon+=(d*dx-b*dy)/det;lat+=(-c*dx+a*dy)/det}return[lon,lat]}
 
 /* ---------------- router ---------------- */
-const VIEWS={flow:"The intro told top to bottom; arrows draw as the reader scrolls",overview:"The base map and the departments that build on it",intake:"Drag a pin; the four intake checks run live",conversion:"Drag to fix a duplicate, a dangle and a sliver",projection:"Measure a kilometre anywhere in four coordinate systems",storage:"Point at the stack; every layer answers for the same spot",publication:"Change one record; every consumer updates",cartography:"Zoom from state to street; each layer switches on when it becomes useful",provenance:"The metadata card, lineage, and three tiers of access",inuse:"An example query across two departments' layers",update:"Schedules, boundary changes, revisions and what follows",create:"v8 · Data Creation: old records, paper to digital, new data, keeping it current",geodatabase:"v8 · Geodatabase: layers, a record, rules at the door, one home",portal:"v8 · Geo Portal: layers, search, Ask AI, accessibility",mobile:"v8 · Mobile App: you are here, nearby, capture, send",mapping:"v8 · Mapping and cartography: raw data to a map that decides",maintain:"v8 · Maintenance: running, safe, current",cycle:"v8 · Closing: the six stages as one loop",legacy:"v16 · Data creation: old records converted to one GIS format",newdata:"v16 · Data creation: satellite, scanned maps and field survey",updates:"v16 · Data updates: one central database, every department"};
+const VIEWS={flow:"The intro told top to bottom; arrows draw as the reader scrolls",overview:"The base map and the departments that build on it",intake:"Drag a pin; the four intake checks run live",conversion:"Drag to fix a duplicate, a dangle and a sliver",projection:"Measure a kilometre anywhere in four coordinate systems",storage:"Point at the stack; every layer answers for the same spot",publication:"Change one record; every consumer updates",cartography:"Zoom from state to street; each layer switches on when it becomes useful",provenance:"The metadata card, lineage, and three tiers of access",inuse:"An example query across two departments' layers",update:"Schedules, boundary changes, revisions and what follows",create:"v8 · Data Creation: old records, paper to digital, new data, keeping it current",geodatabase:"v8 · Geodatabase: layers, a record, rules at the door, one home",portal:"v8 · Geo Portal: layers, search, Ask AI, accessibility",mobile:"v8 · Mobile App: you are here, nearby, capture, send",mapping:"v8 · Mapping and cartography: raw data to a map that decides",maintain:"v8 · Maintenance: running, safe, current",cycle:"v8 · Closing: the six stages as one loop",legacy:"v16 · Data creation: old records converted to one GIS format",newdata:"v16 · Data creation: satellite, scanned maps and field survey",updates:"v16 · Data updates: one central database, every department",gdbrec:"v16 · Geodatabase: map and table, one feature",gdbrules:"v16 · Geodatabase: rules at the door"};
 const OPT={};
 function parse(){const p=location.hash.slice(1).split("&");const v=p.shift();for(const k in OPT)delete OPT[k];p.forEach(x=>{const[a,b]=x.split("=");OPT[a]=b===undefined?true:decodeURIComponent(b)});return v}
 const INIT={},inited={};
 const framed=(()=>{try{return window.self!==window.top}catch(e){return true}})();
-const CREATE_ALIAS={"0":"legacy","2":"newdata","3":"updates"};
-function route(){let v=parse();if(v==="create"&&!OPT.orig&&CREATE_ALIAS[OPT.step])v=CREATE_ALIAS[OPT.step];const id=VIEWS[v]?v:"index";
+const CREATE_ALIAS={"0":"legacy","2":"newdata","3":"updates"},GDB_ALIAS={"1":"gdbrec","2":"gdbrules"};
+function route(){let v=parse();if(v==="create"&&!OPT.orig&&CREATE_ALIAS[OPT.step])v=CREATE_ALIAS[OPT.step];if(v==="geodatabase"&&!OPT.orig&&GDB_ALIAS[OPT.step])v=GDB_ALIAS[OPT.step];const id=VIEWS[v]?v:"index";
   document.body.classList.toggle("framed",framed);document.body.classList.toggle("head",!!OPT.head||!framed);
   $$(".view").forEach(s=>s.classList.toggle("on",s.id===id));document.title="Ground Truth · "+(VIEWS[id]?id:"figures");
   if(!inited[id]&&INIT[id]){INIT[id]();inited[id]=true}
@@ -3116,6 +3128,90 @@ INIT.updates=()=>edFig("updates",{
     await this.update(P,ctx,1);if(!alive())return;
     if(P.hl){const w=+P.hl.dataset.w;await tw(650,t=>P.hl.setAttribute("width",w*t))}},
   async idle(P,ctx){const order=[3,5,0,6,2,7,4,1];let k=0;while(ctx.alive()){await ctx.sleep(2600);if(!ctx.alive())return;await this.update(P,ctx,order[k++%order.length])}}});
+
+/* ============================================================ v16 · GEODATABASE, steps 1 and 2 (desktop)
+     #gdbrec    Every place carries its facts   map ⇄ attribute table, one feature selected at a time
+     #gdbrules  Rules at the door               records pass three checks; good ones stored, bad ones sent back */
+
+INIT.gdbrec=()=>edFig("gdbrec",{
+  L:{land:{vb:[1280,720],map:[56,40,.98],tab:[640,96],txt:[640,520],ts:26,fs:18.5,lh:28},port:{vb:[1280,720],map:[56,40,.98],tab:[640,96],txt:[640,520],ts:26,fs:18.5,lh:28}},
+  ROWS:[["Mana","Raipur"],["Saddu","Raipur"],["Kachna","Raipur"],["Tendua","Raipur"],["Amaseoni","Raipur"],["Labhandi","Raipur"]],
+  build(S,m){const ST=G.stack,P={rows:[]};const[mx,my,mk]=m.map;
+    const defs=el("defs",{},S);defs.innerHTML='<filter id="grSoft" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="7"/></filter>';
+    const mg=el("g",{transform:`translate(${mx} ${my}) scale(${mk})`},S);P.mg=mg;
+    el("path",{d:G.state,fill:"rgba(60,50,40,.12)",transform:"translate(4 7)",filter:"url(#grSoft)"},mg);el("path",{d:G.state,fill:"#fbfaf8"},mg);
+    G.districts.forEach(d=>el("path",{d:d.d,fill:"none",stroke:"#cfc8bd","stroke-width":1.1},mg));el("path",{d:G.state,fill:"none",stroke:"#8f887e","stroke-width":1.6},mg);
+    ST.aw.forEach(q=>el("circle",{cx:q[0],cy:q[1],r:3.1,fill:"var(--dv-blue-500)",opacity:.55},mg));
+    // six centres near Raipur become the rows
+    const pin=ST.pin,near=[...ST.aw].sort((a,b)=>Math.hypot(a[0]-pin[0],a[1]-pin[1])-Math.hypot(b[0]-pin[0],b[1]-pin[1])).slice(0,6);
+    const sel=el("g",{opacity:0},mg);P.ring=el("circle",{r:11,fill:"rgba(247,214,90,.35)",stroke:"var(--n950)","stroke-width":2},sel);P.dot=el("circle",{r:5,fill:"var(--dv-blue-700)",stroke:"#fff","stroke-width":2},sel);P.sel=sel;
+    // callout lens around the Raipur area
+    const lz=el("g",{},S),lx=mx+pin[0]*mk,ly=my+pin[1]*mk;el("circle",{cx:lx,cy:ly,r:46,fill:"none",stroke:"var(--n400)","stroke-width":1,"stroke-dasharray":"3 4"},lz);
+    // the attribute table
+    const[tx,ty]=m.tab,cols=[["ID",0],["Name",128],["Type",226],["District",340],["Lat, Long",440]],RW=36,TW=600;
+    const tg=el("g",{},S);txt({x:tx,y:ty-34,class:"u",style:"font-weight:600;letter-spacing:.08em;fill:var(--n600)","font-size":12},tg,"LAYER · ANGANWADI_CENTRES · 260 RECORDS");
+    el("rect",{x:tx,y:ty-22,width:TW,height:RW*7+4,rx:8,fill:"#fff",stroke:"var(--n200)"},tg);el("rect",{x:tx,y:ty-22,width:TW,height:RW,rx:8,fill:"var(--n100)"},tg);
+    cols.forEach(([c,x])=>txt({x:tx+14+x,y:ty+1,class:"u","font-size":13,style:"font-weight:700;fill:var(--n700)"},tg,c));
+    near.forEach((q,i)=>{const y=ty+RW*(i+1),ll=xy2ll(q[0],q[1]),r={q,ll,i};r.bg=el("rect",{x:tx+1,y:y-22,width:TW-2,height:RW,fill:"transparent"},tg);
+      el("line",{x1:tx,y1:y-22,x2:tx+TW,y2:y-22,stroke:"var(--n200)"},tg);
+      const v=[`AWC-RPR-${String(412+i*17).padStart(5,"0")}`,this.ROWS[i][0],"Anganwadi",this.ROWS[i][1],`${ll[1].toFixed(4)}, ${ll[0].toFixed(4)}`];
+      r.txt=v.map((s,j)=>txt({x:tx+14+cols[j][1],y:y+1,class:"u","font-size":13.5,style:`fill:var(--n800);${j===0||j===4?"font-family:ui-monospace,Menlo,monospace;font-size:12.5px":""}`},tg,s));P.rows.push(r)});
+    // the link: row ⇄ point
+    P.link=el("path",{d:"",fill:"none",stroke:"var(--n950)","stroke-width":1.4,"stroke-dasharray":"4 4"},S);P.m=m;P.TW=TW;
+    const B=edBlock(el("g",{},S),m.txt[0],m.txt[1],{t:"Every place carries its facts",b:["Each centre is a point on the map and a row","in its table: name, code, type, district and",{hl:"exact location, kept together as one feature."}]},m);P.hl=B.hl;
+    return P},
+  pick(P,i){const r=P.rows[i],[mx,my,mk]=P.m.map,[tx,ty]=P.m.tab;P.rows.forEach(o=>{o.bg.setAttribute("fill",o===r?"rgba(247,214,90,.35)":"transparent");o.txt.forEach(t=>t.style.fontWeight=o===r?"700":"")});
+    P.sel.setAttribute("opacity",1);[P.ring,P.dot].forEach(c=>{c.setAttribute("cx",r.q[0]);c.setAttribute("cy",r.q[1])});
+    const a=[mx+r.q[0]*mk+12,my+r.q[1]*mk],b=[tx-4,ty+36*(i+1)-4];P.link.setAttribute("d",`M${a[0]},${a[1]} C${a[0]+120},${a[1]} ${b[0]-120},${b[1]} ${b[0]},${b[1]}`)},
+  reset(P){P.sel.setAttribute("opacity",0);P.link.setAttribute("d","");P.rows.forEach(o=>{o.bg.setAttribute("fill","transparent");o.txt.forEach(t=>t.style.fontWeight="")});P.hl&&P.hl.setAttribute("width",0)},
+  fin(P){this.pick(P,0);P.hl&&P.hl.setAttribute("width",P.hl.dataset.w)},
+  async play(P,{tw,sleep,alive}){await sleep(500);for(let i=0;i<3;i++){this.pick(P,i);await tw(420,t=>P.ring.setAttribute("r",22-11*t));if(!alive())return;await sleep(900);if(!alive())return}
+    if(P.hl){const w=+P.hl.dataset.w;await tw(650,t=>P.hl.setAttribute("width",w*t))}},
+  async idle(P,{tw,sleep,alive}){let i=3;while(alive()){this.pick(P,i%6);await tw(420,t=>P.ring.setAttribute("r",22-11*t));await sleep(1700);i++}}});
+
+INIT.gdbrules=()=>edFig("gdbrules",{
+  L:{land:{vb:[1280,720],ts:26,fs:18.5,lh:28},port:{vb:[1280,720],ts:26,fs:18.5,lh:28}},
+  CHECKS:[["Inside its boundary","each centre inside its own village"],["Clean geometry","no gaps, overlaps or crossed lines"],["No blank fields","every record has a code and a name"]],
+  build(S,m){const P={};
+    const defs=el("defs",{},S);defs.innerHTML='<clipPath id="ruClip"><rect x="0" y="0" width="1280" height="720"/></clipPath>';
+    // the gate: three checks, stacked
+    const gx=470,gy=150,gw=330,gh=300;el("rect",{x:gx,y:gy,width:gw,height:gh,rx:14,fill:"#fff",stroke:"var(--n300)","stroke-width":1.4},S);
+    txt({x:gx+gw/2,y:gy-16,"text-anchor":"middle",class:"u",style:"font-weight:600;letter-spacing:.08em;fill:var(--n600)","font-size":12.5},S,"CHECKED BEFORE IT IS STORED");
+    P.checks=this.CHECKS.map(([t,d],i)=>{const y=gy+30+i*90,g=el("g",{},S),o={};o.bx=el("rect",{x:gx+20,y,width:gw-40,height:70,rx:10,fill:"var(--n100)",stroke:"transparent","stroke-width":1.6},g);
+      txt({x:gx+40,y:y+30,class:"u","font-size":16.5,style:"font-weight:700;fill:var(--n950)"},g,t);txt({x:gx+40,y:y+52,class:"u","font-size":13,style:"fill:var(--n600)"},g,d);
+      o.mk=el("g",{opacity:0},g);o.ok=el("path",{d:`M${gx+gw-52},${y+35} l6,6 l11,-12`,fill:"none",stroke:"#2f7d4f","stroke-width":3,"stroke-linecap":"round","stroke-linejoin":"round"},o.mk);
+      o.no=el("path",{d:`M${gx+gw-50},${y+27} l14,14 M${gx+gw-36},${y+27} l-14,14`,fill:"none",stroke:"#c0392b","stroke-width":3,"stroke-linecap":"round"},o.mk);return o});
+    // the database, to the right
+    const dx=1010,dy=220,db=el("g",{},S),dr={fill:"#fff",stroke:"var(--dv-blue-700)","stroke-width":2.4};
+    el("path",Object.assign({d:`M${dx-70},${dy} v120 a70,22 0 0 0 140,0 v-120`},dr),db);[0,40,80].forEach(o=>el("path",{d:`M${dx-70},${dy+o} a70,22 0 0 0 140,0`,fill:"none",stroke:"var(--dv-blue-700)","stroke-width":2.4,opacity:o?.5:1},db));
+    el("ellipse",Object.assign({cx:dx,cy:dy,rx:70,ry:22},dr),db);txt({x:dx,y:dy+180,"text-anchor":"middle",class:"u t","font-size":17},db,"Geodatabase");
+    P.acc=txt({x:dx,y:dy+204,"text-anchor":"middle",class:"u","font-size":14.5,style:"fill:#2f7d4f;font-weight:600"},db,"0 accepted");
+    // sent-back tray, below the gate
+    const sx=gx+gw/2,sy=560;el("rect",{x:sx-130,y:sy-30,width:260,height:86,rx:12,fill:"#fdf3f1",stroke:"#e7b8ae","stroke-dasharray":"6 4"},S);
+    txt({x:sx,y:sy-8,"text-anchor":"middle",class:"u","font-size":14,style:"font-weight:700;fill:#a2321f"},S,"Sent back to fix");P.why=txt({x:sx,y:sy+40,"text-anchor":"middle",class:"u","font-size":13,style:"fill:#a2321f"},S,"");
+    P.rej=txt({x:sx,y:sy+14,"text-anchor":"middle",class:"u","font-size":13,style:"fill:var(--n700)"},S,"0 records");
+    // incoming queue, to the left
+    txt({x:150,y:gy-16,"text-anchor":"middle",class:"u",style:"font-weight:600;letter-spacing:.08em;fill:var(--n600)","font-size":12.5},S,"INCOMING");
+    P.card=el("g",{},S);el("rect",{x:-62,y:-38,width:142,height:76,rx:9,fill:"#fff",stroke:"var(--n300)","stroke-width":1.4},P.card);
+    P.cmap=el("g",{transform:"translate(-50 -26) scale(.08)"},P.card);el("path",{d:G.state,fill:"#fbfaf8",stroke:"var(--n500)","stroke-width":14},P.cmap);
+    P.cid=txt({x:-6,y:-12,class:"u","font-size":11,style:"font-family:ui-monospace,Menlo,monospace;fill:var(--n800)"},P.card,"");P.cnm=txt({x:-6,y:6,class:"u","font-size":12.5,style:"font-weight:700;fill:var(--n950)"},P.card,"");
+    P.ccd=txt({x:-6,y:24,class:"u","font-size":11,style:"fill:var(--n600)"},P.card,"");
+    [0,1,2].forEach(i=>{const x=88-i*6,y=gy+40+i*80;el("rect",{x,y,width:124,height:76,rx:9,fill:"#fff",stroke:"var(--n200)"},S);[22,40,56].forEach((dy,j)=>el("rect",{x:x+14,y:y+dy,width:j?60:90,height:5,rx:2.5,fill:"var(--n200)"},S))});P.gx=gx;P.gw=gw;P.gy=gy;P.dx=dx;P.dy=dy;P.sx=sx;P.sy=sy;
+    const B=edBlock(el("g",{},S),88,gy+330,{t:"Rules at the door",b:["Every record is checked on the way in,",{hl:"so mistakes never reach the map."}]},m);P.hl=B.hl;
+    P.n={a:0,r:0};return P},
+  RECS:[["AWC-RPR-00412","Mana","code 412",-1,""],["AWC-RPR-00429","Saddu","code 429",-1,""],["AWC-DRG-00118","Bhilai Ward 7","",2,"blank code"],["AWC-BSR-00233","Sirgitti","code 233",-1,""],["AWC-RPR-00451","Tendua","code 451",0,"outside its village"],["AWC-KRB-00077","Darri","code 77",-1,""],["AWC-RJN-00310","Chhuria","code 310",1,"line crosses itself"]],
+  show(P,r){P.cid.textContent=r[0];P.cnm.textContent=r[1];P.ccd.textContent=r[2]?r[2]:"code —";P.ccd.style.fill=r[2]?"var(--n600)":"#c0392b"},
+  async one(P,{tw,sleep,alive},r){const pos=(x,y,s=1)=>P.card.setAttribute("transform",`translate(${x} ${y}) scale(${s})`);this.show(P,r);P.checks.forEach(c=>{c.mk.setAttribute("opacity",0);c.bx.setAttribute("stroke","transparent")});
+    const x0=150,y0=P.gy+118,xg=P.gx-84+230;P.card.setAttribute("opacity",1);await tw(600,t=>pos(edLerp(x0,xg-230,t),y0));if(!alive())return;
+    for(let i=0;i<3;i++){const c=P.checks[i],bad=r[3]===i;c.bx.setAttribute("stroke",bad?"#c0392b":"#2f7d4f");c.ok.style.display=bad?"none":"";c.no.style.display=bad?"":"none";c.mk.setAttribute("opacity",1);await sleep(330);if(!alive())return;if(bad)break}
+    if(r[3]<0){await tw(700,t=>pos(edLerp(xg-230,P.dx,t),edLerp(y0,P.dy+30,t)-Math.sin(t*Math.PI)*60,1-t*.6));P.card.setAttribute("opacity",0);P.n.a++;P.acc.textContent=P.n.a+" accepted"}
+    else{await tw(700,t=>pos(edLerp(xg-230,P.sx,t),edLerp(y0,P.sy+8,t),1-t*.5));P.card.setAttribute("opacity",0);P.n.r++;P.rej.textContent=P.n.r+(P.n.r>1?" records":" record");P.why.textContent="last: "+r[4]}
+    await sleep(250)},
+  reset(P){P.n={a:0,r:0};P.acc.textContent="0 accepted";P.rej.textContent="0 records";P.why.textContent="";P.card.setAttribute("opacity",0);P.checks.forEach(c=>c.mk.setAttribute("opacity",0));P.hl&&P.hl.setAttribute("width",0)},
+  fin(P){P.acc.textContent="47 accepted";P.rej.textContent="3 records";P.why.textContent="last: line crosses itself";P.hl&&P.hl.setAttribute("width",P.hl.dataset.w)},
+  async play(P,ctx){for(let i=0;i<3;i++){await this.one(P,ctx,this.RECS[i]);if(!ctx.alive())return}
+    if(P.hl){const w=+P.hl.dataset.w;await ctx.tw(650,t=>P.hl.setAttribute("width",w*t))}},
+  async idle(P,ctx){let i=3;while(ctx.alive()){await this.one(P,ctx,this.RECS[i%this.RECS.length]);i++;await ctx.sleep(400)}}});
 
 
 /* ============================================================ STORAGE */
