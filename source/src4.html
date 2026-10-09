@@ -531,7 +531,8 @@ const OPT={};
 function parse(){const p=location.hash.slice(1).split("&");const v=p.shift();for(const k in OPT)delete OPT[k];p.forEach(x=>{const[a,b]=x.split("=");OPT[a]=b===undefined?true:decodeURIComponent(b)});return v}
 const INIT={},inited={};
 const framed=(()=>{try{return window.self!==window.top}catch(e){return true}})();
-function route(){const v=parse(),id=VIEWS[v]?v:"index";
+const CREATE_ALIAS={"0":"legacy","2":"newdata","3":"updates"};
+function route(){let v=parse();if(v==="create"&&!OPT.orig&&CREATE_ALIAS[OPT.step])v=CREATE_ALIAS[OPT.step];const id=VIEWS[v]?v:"index";
   document.body.classList.toggle("framed",framed);document.body.classList.toggle("head",!!OPT.head||!framed);
   $$(".view").forEach(s=>s.classList.toggle("on",s.id===id));document.title="Ground Truth · "+(VIEWS[id]?id:"figures");
   if(!inited[id]&&INIT[id]){INIT[id]();inited[id]=true}
