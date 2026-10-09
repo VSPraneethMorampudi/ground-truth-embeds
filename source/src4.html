@@ -112,6 +112,12 @@ b,strong{font-weight:700;color:var(--ink)}
 @font-face{font-family:"Caveat";src:url("fonts/Caveat-400.woff2") format("woff2");font-weight:400;font-display:block}
 @font-face{font-family:"Caveat";src:url("fonts/Caveat-700.woff2") format("woff2");font-weight:700;font-display:block}
 #overview{max-width:1320px;gap:4px}
+.ed{max-width:1320px;gap:4px}
+.edsvg{width:100%;height:auto;max-height:calc(100vh - 74px);display:block;margin:0 auto}
+.edsvg text.u{font-family:var(--font);fill:var(--n800)}
+.edsvg text.u.t{font-weight:700;fill:var(--n950)}
+.edsvg text.u.hlt{fill:var(--n950)}
+@media (max-width:700px){.edsvg{max-height:none}}
 #ovSvg{width:100%;height:auto;max-height:calc(100vh - 74px);display:block;margin:0 auto}
 #ovSvg text.u{font-family:var(--font);fill:var(--n800)}
 #ovSvg text.u.t{font-weight:700;fill:var(--n950)}
@@ -408,6 +414,25 @@ body.framed .sketch.port{min-height:0;justify-content:flex-start}
   <button class="ovrep" id="ovRep" type="button"><svg class="ic sm"><use href="#i-retry"/></svg>Replay</button>
 </section>
 
+<section class="view ed" id="legacy" aria-labelledby="legacy-h">
+  <div class="hd"><h1 id="legacy-h">Old records, made GIS-ready</h1></div>
+  <svg class="edsvg" id="legacySvg" role="img" aria-labelledby="legacy-h legacy-d"></svg>
+  <div class="sr" id="legacy-d">Old maps on paper or scanned, Excel sheets with latitude and longitude, KML files from Google Earth, CAD drawings and older shapefiles are each converted: georeferenced, their geometry fixed, and put into one coordinate system. Each becomes a layer on the same map of Chhattisgarh: district boundaries, Anganwadi centres, fibre routes, mine leases and highways.</div>
+  <button class="ovrep" id="legacyRep" type="button"><svg class="ic sm"><use href="#i-retry"/></svg>Replay</button>
+</section>
+<section class="view ed" id="newdata" aria-labelledby="newdata-h">
+  <div class="hd"><h1 id="newdata-h">Three ways to map what's new</h1></div>
+  <svg class="edsvg" id="newdataSvg" role="img" aria-labelledby="newdata-h newdata-d"></svg>
+  <div class="sr" id="newdata-d">New map data is created in three ways. From satellite images, roads and buildings are traced on screen. From old paper maps, the map is scanned and pinned to real coordinates with control points, then traced. In the field, places are measured on the ground: a phone GPS to within metres, DGPS to centimetres, a total station to millimetres, and a drone covers a whole area quickly. All three feed the same map layer.</div>
+  <button class="ovrep" id="newdataRep" type="button"><svg class="ic sm"><use href="#i-retry"/></svg>Replay</button>
+</section>
+<section class="view ed" id="updates" aria-labelledby="updates-h">
+  <div class="hd"><h1 id="updates-h">One central copy, always current</h1></div>
+  <svg class="edsvg" id="updatesSvg" role="img" aria-labelledby="updates-h updates-d"></svg>
+  <div class="sr" id="updates-d">Before, each department kept its own copy of the map, at different versions. Now the data is centralised: every department sends its updates to one central GIS database, and the change reaches every department at once, so everyone sees the same version.</div>
+  <button class="ovrep" id="updatesRep" type="button"><svg class="ic sm"><use href="#i-retry"/></svg>Replay</button>
+</section>
+
 <!-- ============================================================ FLOW -->
 <section class="view" id="flow" aria-labelledby="fl-h">
   <div class="hd"><h1 id="fl-h">From many departments to one base</h1></div>
@@ -501,7 +526,7 @@ function xy2ll(x,y){let lon=82.3,lat=21;for(let k=0;k<12;k++){const p=ll2xy(lon,
   const a=(q[0]-p[0])/.01,b=(r[0]-p[0])/.01,c=(q[1]-p[1])/.01,d=(r[1]-p[1])/.01,det=a*d-b*c;const dx=x-p[0],dy=y-p[1];lon+=(d*dx-b*dy)/det;lat+=(-c*dx+a*dy)/det}return[lon,lat]}
 
 /* ---------------- router ---------------- */
-const VIEWS={flow:"The intro told top to bottom; arrows draw as the reader scrolls",overview:"The base map and the departments that build on it",intake:"Drag a pin; the four intake checks run live",conversion:"Drag to fix a duplicate, a dangle and a sliver",projection:"Measure a kilometre anywhere in four coordinate systems",storage:"Point at the stack; every layer answers for the same spot",publication:"Change one record; every consumer updates",cartography:"Zoom from state to street; each layer switches on when it becomes useful",provenance:"The metadata card, lineage, and three tiers of access",inuse:"An example query across two departments' layers",update:"Schedules, boundary changes, revisions and what follows",create:"v8 · Data Creation: old records, paper to digital, new data, keeping it current",geodatabase:"v8 · Geodatabase: layers, a record, rules at the door, one home",portal:"v8 · Geo Portal: layers, search, Ask AI, accessibility",mobile:"v8 · Mobile App: you are here, nearby, capture, send",mapping:"v8 · Mapping and cartography: raw data to a map that decides",maintain:"v8 · Maintenance: running, safe, current",cycle:"v8 · Closing: the six stages as one loop"};
+const VIEWS={flow:"The intro told top to bottom; arrows draw as the reader scrolls",overview:"The base map and the departments that build on it",intake:"Drag a pin; the four intake checks run live",conversion:"Drag to fix a duplicate, a dangle and a sliver",projection:"Measure a kilometre anywhere in four coordinate systems",storage:"Point at the stack; every layer answers for the same spot",publication:"Change one record; every consumer updates",cartography:"Zoom from state to street; each layer switches on when it becomes useful",provenance:"The metadata card, lineage, and three tiers of access",inuse:"An example query across two departments' layers",update:"Schedules, boundary changes, revisions and what follows",create:"v8 · Data Creation: old records, paper to digital, new data, keeping it current",geodatabase:"v8 · Geodatabase: layers, a record, rules at the door, one home",portal:"v8 · Geo Portal: layers, search, Ask AI, accessibility",mobile:"v8 · Mobile App: you are here, nearby, capture, send",mapping:"v8 · Mapping and cartography: raw data to a map that decides",maintain:"v8 · Maintenance: running, safe, current",cycle:"v8 · Closing: the six stages as one loop",legacy:"v16 · Data creation: old records converted to one GIS format",newdata:"v16 · Data creation: satellite, scanned maps and field survey",updates:"v16 · Data updates: one central database, every department"};
 const OPT={};
 function parse(){const p=location.hash.slice(1).split("&");const v=p.shift();for(const k in OPT)delete OPT[k];p.forEach(x=>{const[a,b]=x.split("=");OPT[a]=b===undefined?true:decodeURIComponent(b)});return v}
 const INIT={},inited={};
