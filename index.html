@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-build="1791540113">
+<html lang="en" data-build="1791540293">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -451,7 +451,7 @@ body.framed .sketch.port{min-height:0;justify-content:flex-start}
 <section class="view" id="overview" aria-labelledby="ov-h">
   <div class="hd"><h1 id="ov-h">One base, many departments</h1></div>
   <svg id="ovSvg" role="img" aria-labelledby="ov-h ov-d"></svg>
-  <div class="sr" id="ov-d">What we do: we build one trusted map of Chhattisgarh. We collect spatial data from every department, check it, fit it to one base, and publish it for everyone, so a village is the same in every layer. How it works, in the sections below: data layers on one shared base; an API that serves them as live data services; the Geo Portal to view, search and download; use cases for planning and decisions; and a mobile app for viewing and editing in the field, whose updates feed back into the data layers. Spatial data reaches the State Geoportal from departments across Chhattisgarh. The Revenue Department supplies the base: district, tehsil, block and village boundaries for the whole state. Every other department's data arrives on top of that base, each source in its own format and to its own schedule. Mining, Anganwadi and BharatNet are three of them. The work is to merge those submissions onto one set of boundaries and one coordinate system, so that a village means the same village in every layer. Today that merge holds 162 layers from 42 departments, published to one standard. Three applications already run on it: Mining, Anganwadi and BharatNet.</div>
+  <div class="sr" id="ov-d">What we do: we build one trusted map of Chhattisgarh. Collect: data from 42 departments. Check: errors fixed before it goes in. Fit: one base, one coordinate system. Publish: one map for everyone. So a village is the same in every layer. How it works, in the sections below: data layers on one shared base; an API that serves them as live data services; the Geo Portal to view, search and download; use cases for planning and decisions; and a mobile app for viewing and editing in the field, whose updates feed back into the data layers. Spatial data reaches the State Geoportal from departments across Chhattisgarh. The Revenue Department supplies the base: district, tehsil, block and village boundaries for the whole state. Every other department's data arrives on top of that base, each source in its own format and to its own schedule. Mining, Anganwadi and BharatNet are three of them. The work is to merge those submissions onto one set of boundaries and one coordinate system, so that a village means the same village in every layer. Today that merge holds 162 layers from 42 departments, published to one standard. Three applications already run on it: Mining, Anganwadi and BharatNet.</div>
   
   <button class="ovrep" id="ovRep" type="button"><svg class="ic sm"><use href="#i-retry"/></svg>Replay</button>
 </section>
@@ -640,7 +640,7 @@ INIT.overview=()=>{
     {k:"awc",c:"var(--dv-blue-700)",sw:"awc",t:"Anganwadi",b:["centres arrive as points","on the same base"]},
     {k:"bn",c:"var(--dv-aqua-700)",sw:"bn",t:"BharatNet",b:["fibre routes and GP nodes,","one more source on top"]}];
   const POINTS={
-    vil:{eb:"What we do",t:["One trusted map","of Chhattisgarh"],b:["We collect spatial data from every","department, check it, fit it to one","base, and publish it for everyone, so",{hl:"a village is the same in every layer."}]},
+    vil:{eb:"What we do",t:["One trusted map","of Chhattisgarh"],flow:[["Collect","data from 42 departments"],["Check","errors fixed before it goes in"],["Fit","one base, one coordinate system"],["Publish","one map for everyone"]],bd:[{hl:"So a village is the same in every layer."}],b:["We collect spatial data from every","department, check it, fit it to one","base, and publish it for everyone, so",{hl:"a village is the same in every layer."}]},
     num:{big:"162",bigU:"layers",b:["from 42 departments,","all published to one standard."],steps:[["Data layers","one shared base"],["API","live data services"],["Geo Portal","view, search, download"],["Use cases","planning and decisions"],["Mobile app","field view and edits"]]}};
   const CAN_HOVER=matchMedia("(hover: hover)").matches;
   const L={
@@ -661,7 +661,19 @@ INIT.overview=()=>{
     if(p.big){const t=txt({x,y:yy+m.big*.62,class:"u big","font-size":m.big,"text-anchor":an},g,"");
       const n=el("tspan",{},t);n.textContent="0";const u=el("tspan",{class:"unit","font-size":m.ts*1.05,dx:10},t);u.textContent=p.bigU;
       st.cnt=n;yy+=m.big*.62+m.lh*1.25}
-    p.b.forEach(l=>{if(typeof l==="string")txt({x,y:yy,class:"u","font-size":m.fs,"text-anchor":an},g,l);
+    if(p.flow&&mode!=="port"){const nodes=[],gap=m.lh*1.78,x0=x+8;yy+=m.lh*.15;
+      const rail=el("line",{x1:x0,y1:yy-m.fs*.35,x2:x0,y2:yy-m.fs*.35+gap*(p.flow.length-1),stroke:"var(--n300)","stroke-width":2},g);
+      const prog=el("line",{x1:x0,y1:yy-m.fs*.35,x2:x0,y2:yy-m.fs*.35,stroke:"var(--n950)","stroke-width":2},g);
+      p.flow.forEach(([t,d],i)=>{const cy=yy-m.fs*.35;const c=el("circle",{cx:x0,cy,r:7.5,fill:"var(--page)",stroke:"var(--n400)","stroke-width":2},g);
+        const ck=el("path",{d:`M${x0-3.5},${cy} l2.6,2.6 l4.6,-5.2`,fill:"none",stroke:"#fff","stroke-width":2,"stroke-linecap":"round","stroke-linejoin":"round",opacity:0},g);
+        const lab=txt({x:x0+22,y:yy,class:"u","font-size":m.fs*1.0,style:"font-weight:700;fill:var(--n950)"},g,t);
+        const cap=txt({x:x0+22,y:yy+m.lh*.78,class:"u","font-size":m.fs*.8,style:"fill:var(--n600)"},g,d);
+        nodes.push({c,ck,lab,cap,cy});yy+=gap});
+      g._flow={nodes,prog,set(k){nodes.forEach((n,i)=>{const on=i<k;n.c.setAttribute("fill",on?"var(--n950)":"var(--page)");n.c.setAttribute("stroke",on?"var(--n950)":"var(--n400)");n.ck.setAttribute("opacity",on?1:0)});
+        const j=Math.max(0,Math.min(nodes.length-1,k-1));prog.setAttribute("y2",k?nodes[j].cy:nodes[0].cy)}};
+      yy+=m.lh*.45;
+      p.bd.forEach(l=>{if(typeof l==="string")txt({x,y:yy,class:"u","font-size":m.fs},g,l);else{const e=txt({x,y:yy,class:"u hlt","font-size":m.fs},g,l.hl);g._hl=e;const b=e.getBBox();g.insertBefore(el("rect",{x:b.x-1,y:b.y+b.height*.34,width:b.width+6,height:b.height*.58,rx:3,fill:"rgba(247,214,90,.75)"}),e)}yy+=m.lh});
+    }else p.b.forEach(l=>{if(typeof l==="string")txt({x,y:yy,class:"u","font-size":m.fs,"text-anchor":an},g,l);
       else{const e=txt({x,y:yy,class:"u hlt","font-size":m.fs,"text-anchor":an},g,l.hl)
         g._hl=e;const b=e.getBBox();g.insertBefore(el("rect",{x:b.x-1,y:b.y+b.height*.34,width:b.width+6,height:b.height*.58,rx:3,fill:"rgba(247,214,90,.75)"}),e)}
       yy+=m.lh});
@@ -798,12 +810,12 @@ INIT.overview=()=>{
     const hl=P.pts.vil.querySelector("rect"),n=P.pts.num.querySelector("tspan");setTyped(true);
     if(hl){if(hl.dataset.w===undefined)hl.dataset.w=hl.getAttribute("width");hl.setAttribute("width",0)}
     Object.assign(st,{d:0,min:0,awc:0,bn:0,vil:0,p1:1,p2:1,pen:0,ring:0});n.textContent="0";render();
-    const fin=()=>{Object.assign(st,{d:1,min:1,awc:1,bn:1,vil:1,p1:1,p2:1,pen:1,ring:1});if(hl)hl.setAttribute("width",hl.dataset.w);n.textContent="162";render();rep.classList.add("on")};
+    const FL=P.pts.vil._flow;FL&&FL.set(0);const fin=()=>{FL&&FL.set(4);Object.assign(st,{d:1,min:1,awc:1,bn:1,vil:1,p1:1,p2:1,pen:1,ring:1});if(hl)hl.setAttribute("width",hl.dataset.w);n.textContent="162";render();rep.classList.add("on")};
     if(REDUCE)return fin();
     // the count runs alongside the map, settling as the last layer lands
     const count=new Promise(r=>{const t0=performance.now(),D=2400;const f=now=>{if(!alive())return r();const t=Math.min(1,(now-t0)/D),e=1-Math.pow(1-t,4);n.textContent=String(Math.round(162*e));t<1?requestAnimationFrame(f):r()};requestAnimationFrame(f)});
-    await tw(1100,t=>{st.d=t;render()});if(!alive())return;
-    for(const k of["min","awc","bn"]){await tw(420,t=>{st[k]=t;render()});if(!alive())return;await wait(120)}
+    FL&&FL.set(1);await tw(1100,t=>{st.d=t;render()});if(!alive())return;
+    let fi=1;for(const k of["min","awc","bn"]){FL&&FL.set(++fi);await tw(420,t=>{st[k]=t;render()});if(!alive())return;await wait(fi===4?120:320)}
     tw(400,t=>{st.vil=t;render()});
     if(hl){const w=+hl.dataset.w;await tw(650,t=>hl.setAttribute("width",w*t));if(!alive())return}
     if(P.arw){await tw(560,t=>{st.pen=t;render()});if(!alive())return}
@@ -813,7 +825,7 @@ INIT.overview=()=>{
   const faces=['700 31px "Avenir Next World"','400 19.5px "Avenir Next World"','500 32px "Avenir Next World"'];
   Promise.all(faces.map(f=>document.fonts.load(f).catch(()=>{}))).then(()=>{build();
     new IntersectionObserver((es,o)=>{if(es[0].isIntersecting){o.disconnect();setTimeout(play,250)}},{threshold:.35}).observe(S)});
-  let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(pick()!==mode){const done=rep.classList.contains("on");build();if(done){P.pts.num.querySelector("tspan").textContent="162";Object.assign(st,{pen:1,ring:1})}render()}},150)})};
+  let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(pick()!==mode){const done=rep.classList.contains("on");build();if(done){P.pts.num.querySelector("tspan").textContent="162";P.pts.vil._flow&&P.pts.vil._flow.set(4);Object.assign(st,{pen:1,ring:1})}render()}},150)})};
 
 /* ============================================================ FLOW (vertical, scroll-driven) */
 INIT.flow=()=>{
