@@ -129,6 +129,7 @@ b,strong{font-weight:700;color:var(--ink)}
 #ovSvg text.u.cue{fill:var(--n600);font-style:italic}
 #ovSvg .ovmap{cursor:zoom-in;outline:none}
 #ovSvg .pen{pointer-events:none}
+#ovSvg .ovdown{animation:ovDown 1.8s ease-in-out infinite}@keyframes ovDown{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}@media (prefers-reduced-motion:reduce){#ovSvg .ovdown{animation:none}}
 #ovSvg .caret{fill:var(--n500);font-weight:400}
 #ovSvg .ovmap[aria-expanded=true]{cursor:default}
 #ovSvg .ovmap:focus-visible>rect{stroke:var(--n800);stroke-width:2;stroke-dasharray:6 5;rx:10}
@@ -409,7 +410,7 @@ body.framed .sketch.port{min-height:0;justify-content:flex-start}
 <section class="view" id="overview" aria-labelledby="ov-h">
   <div class="hd"><h1 id="ov-h">One base, many departments</h1></div>
   <svg id="ovSvg" role="img" aria-labelledby="ov-h ov-d"></svg>
-  <div class="sr" id="ov-d">Spatial data reaches the State Geoportal from departments across Chhattisgarh. The Revenue Department supplies the base: district, tehsil, block and village boundaries for the whole state. Every other department's data arrives on top of that base, each source in its own format and to its own schedule. Mining, Anganwadi and BharatNet are three of them. The work is to merge those submissions onto one set of boundaries and one coordinate system, so that a village means the same village in every layer. Today that merge holds 162 layers from 42 departments, published to one standard. Three applications already run on it: Mining, Anganwadi and BharatNet.</div>
+  <div class="sr" id="ov-d">What we do: we build one trusted map of Chhattisgarh. We collect spatial data from every department, check it, fit it to one base, and publish it for everyone, so a village is the same in every layer. How it works, in the sections below: create the data, store it in one database, share it through the Geo Portal, and put it to work. Spatial data reaches the State Geoportal from departments across Chhattisgarh. The Revenue Department supplies the base: district, tehsil, block and village boundaries for the whole state. Every other department's data arrives on top of that base, each source in its own format and to its own schedule. Mining, Anganwadi and BharatNet are three of them. The work is to merge those submissions onto one set of boundaries and one coordinate system, so that a village means the same village in every layer. Today that merge holds 162 layers from 42 departments, published to one standard. Three applications already run on it: Mining, Anganwadi and BharatNet.</div>
   
   <button class="ovrep" id="ovRep" type="button"><svg class="ic sm"><use href="#i-retry"/></svg>Replay</button>
 </section>
@@ -598,8 +599,8 @@ INIT.overview=()=>{
     {k:"awc",c:"var(--dv-blue-700)",sw:"awc",t:"Anganwadi",b:["centres arrive as points","on the same base"]},
     {k:"bn",c:"var(--dv-aqua-700)",sw:"bn",t:"BharatNet",b:["fibre routes and GP nodes,","one more source on top"]}];
   const POINTS={
-    vil:{t:"Merged onto one base",b:["Each department sends its own data.","We fit it all to the same boundaries","and the same coordinates, so",{hl:"a village is the same in every layer."}]},
-    num:{big:"162",bigU:"layers",b:["from 42 departments,","all published to one standard."]}};
+    vil:{eb:"What we do",t:["One trusted map","of Chhattisgarh"],b:["We collect spatial data from every","department, check it, fit it to one","base, and publish it for everyone, so",{hl:"a village is the same in every layer."}]},
+    num:{big:"162",bigU:"layers",b:["from 42 departments,","all published to one standard."],steps:["Create the data","Store it in one database","Share it through the Geo Portal","Put it to work"]}};
   const CAN_HOVER=matchMedia("(hover: hover)").matches;
   const L={
     land:{vb:[1280,720],m:[354,8,1.1],sk:.56,sy:128,gap:24,fade:true,
@@ -614,7 +615,8 @@ INIT.overview=()=>{
   let mode,P,st,cancel=[],run=0,sCancel=null;
 
   function block(g,k,m){const p=POINTS[k],[x,y,an]=m.pts[k];let yy=y;
-    if(p.t){txt({x,y:yy,class:"u t","font-size":m.ts,"text-anchor":an},g,p.t);yy+=m.lh*1.35}
+    if(p.eb&&mode!=="port"){txt({x,y:yy-m.lh*1.45,class:"u tag","font-size":m.fs*.72,"text-anchor":an},g,p.eb.toUpperCase())}
+    if(p.t){[].concat(p.t).forEach((t,i)=>{if(i)yy+=m.ts*1.15;txt({x,y:yy,class:"u t","font-size":m.ts,"text-anchor":an},g,t)});yy+=m.lh*1.35}
     if(p.big){const t=txt({x,y:yy+m.big*.62,class:"u big","font-size":m.big,"text-anchor":an},g,"");
       const n=el("tspan",{},t);n.textContent="0";const u=el("tspan",{class:"unit","font-size":m.ts*1.05,dx:10},t);u.textContent=p.bigU;
       st.cnt=n;yy+=m.big*.62+m.lh*1.25}
@@ -622,6 +624,11 @@ INIT.overview=()=>{
       else{const e=txt({x,y:yy,class:"u hlt","font-size":m.fs,"text-anchor":an},g,l.hl)
         g._hl=e;const b=e.getBBox();g.insertBefore(el("rect",{x:b.x-1,y:b.y+b.height*.34,width:b.width+6,height:b.height*.58,rx:3,fill:"rgba(247,214,90,.75)"}),e)}
       yy+=m.lh});
+    if(p.steps&&mode!=="port"){yy+=m.lh*.9;txt({x,y:yy,class:"u tag","font-size":m.fs*.72,"text-anchor":an},g,"HOW IT WORKS, BELOW");yy+=m.lh*.35;
+      p.steps.forEach((t,i)=>{yy+=m.lh*1.12;el("line",{x1:x,y1:yy+m.lh*.4,x2:x+290,y2:yy+m.lh*.4,stroke:"var(--n200)"},g);
+        txt({x,y:yy,class:"u","font-size":m.fs*.8,style:"font-weight:700;fill:var(--n500)","text-anchor":an},g,String(i+1).padStart(2,"0"));
+        txt({x:x+34,y:yy,class:"u","font-size":m.fs*.92,style:"fill:var(--n900)","text-anchor":an},g,t)});
+      yy+=m.lh*.6;const a=txt({x,y:yy+m.lh*.6,class:"u","font-size":m.fs*1.1,style:"fill:var(--n500)"},g,"↓");a.classList.add("ovdown")}
     if(p.tag){yy+=m.lh*.45;txt({x,y:yy,class:"u tag","font-size":m.fs*.72,"text-anchor":an},g,p.tag.toUpperCase());yy+=m.lh*1.02;
       txt({x,y:yy,class:"u t2","font-size":m.fs,"text-anchor":an},g,p.tagB)}
     return g}
