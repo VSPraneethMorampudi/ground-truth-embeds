@@ -829,21 +829,32 @@ INIT.overview=()=>{
         el("rect",{x:0,y:0,width:12,height:9,fill:"rgba(201,93,46,.14)",stroke:"var(--dv-orange-500)","stroke-width":1.4},lg2);txt({x:16,y:8,class:"u","font-size":9,style:"fill:var(--n700)"},lg2,"polygons");
         el("path",{d:"M0,20 l6,-4 l6,3",fill:"none",stroke:"var(--n800)","stroke-width":1.6},lg2);txt({x:16,y:21,class:"u","font-size":9,style:"fill:var(--n700)"},lg2,"lines");
         el("circle",{cx:6,cy:30,r:3.4,fill:"none",stroke:"var(--dv-aqua-600)","stroke-width":1.6},lg2);txt({x:16,y:33,class:"u","font-size":9,style:"fill:var(--n700)"},lg2,"points")}
-      if(key==="sto"){const sc=.19,A=sc,B=.22*sc,C=-.55*sc,D=.36*sc,E=W2/2+10-sc*(520-352)/2,proj=(x,y,f)=>[A*x+C*y+E,B*x+D*y+f];
-        const SH=[["bn","BharatNet","var(--dv-aqua-700)"],["awc","Anganwadi","var(--dv-blue-700)"],["min","Mining","var(--dv-orange-700)"],["ref","Revenue base","var(--n900)"]],F0=14,GAP=Math.max(40,(H2-F0-64)/3),stk=el("g",{},g);
-        const pins=[];
-        [...SH].reverse().forEach(([lk,lab,col])=>{const i=SH.findIndex(z=>z[0]===lk),f=F0+i*GAP,sh=el("g",{transform:`matrix(${A} ${B} ${C} ${D} ${E} ${f})`},stk);
-          el("path",{d:G.state,fill:"rgba(60,50,40,.10)",transform:"translate(14 26)"},sh);
-          el("path",{d:G.state,fill:lk==="ref"?"#fbfaf8":"rgba(255,255,255,.93)",stroke:lk==="ref"?"#8f887e":"#b3ab9f","stroke-width":1.2,"vector-effect":"non-scaling-stroke"},sh);
-          if(lk==="ref")G.districts.forEach(d=>el("path",{d:d.d,fill:"none",stroke:"#9a948a","stroke-width":.8,"vector-effect":"non-scaling-stroke","clip-path":"url(#ovSixClip)"},sh));
-          if(lk==="min")el("path",{d:ST.mines,fill:"var(--dv-orange-500)",stroke:"var(--dv-orange-700)","stroke-width":.6,"vector-effect":"non-scaling-stroke"},sh);
-          if(lk==="awc")ST.aw.forEach(q=>el("circle",{cx:q[0],cy:q[1],r:5,fill:"var(--dv-blue-500)"},sh));
-          if(lk==="bn"){el("path",{d:ST.fibre,fill:"none",stroke:"var(--dv-aqua-600)","stroke-width":1.4,"vector-effect":"non-scaling-stroke"},sh);ST.gp.forEach(q=>el("circle",{cx:q[0],cy:q[1],r:7,fill:"#fff",stroke:"var(--dv-aqua-600)","stroke-width":1.2,"vector-effect":"non-scaling-stroke"},sh))}
-          pins[i]=proj(ST.pin[0],ST.pin[1],f);
-          txt({x:-6,y:f+4,class:"u","font-size":9.5,style:`font-weight:700;fill:${col}`},fur,lab)});
-        // the same spot, straight through every layer
-        el("path",{d:`M${pins[0][0]},${pins[0][1]}L${pins[3][0]},${pins[3][1]}`,stroke:"var(--dv-orange-500)","stroke-width":1.4,"stroke-dasharray":"3 3"},fur);
-        pins.forEach(q=>el("circle",{cx:q[0],cy:q[1],r:3.2,fill:"var(--dv-orange-500)",stroke:"#fff","stroke-width":1.2},fur))}
+      if(key==="sto"){const ns={"vector-effect":"non-scaling-stroke"};
+        // three departments' layers arrive as small maps and drop into one geodatabase
+        const IN=[["min","var(--dv-orange-500)"],["awc","var(--dv-blue-500)"],["bn","var(--dv-aqua-600)"]],mk=.1,mw=G.W*mk,gap=(W2+12-3*mw)/2,cx=W2/2,rx=72,ry=11,y0=104,bh=26,yb=y0+4*bh;
+        IN.forEach(([lk,col],i)=>{const x=-6+i*(mw+gap),m=el("g",{transform:`translate(${x} -6) scale(${mk})`},fur);
+          el("path",{d:G.state,fill:"#fff",stroke:"#a39c92","stroke-width":1.1,...ns},m);
+          if(lk==="min")el("path",{d:ST.mines,fill:col,stroke:"var(--dv-orange-700)","stroke-width":.5,...ns},m);
+          if(lk==="awc")ST.aw.forEach(q=>el("circle",{cx:q[0],cy:q[1],r:7,fill:col},m));
+          if(lk==="bn"){el("path",{d:ST.fibre,fill:"none",stroke:col,"stroke-width":1.2,...ns},m);ST.gp.forEach(q=>el("circle",{cx:q[0],cy:q[1],r:9,fill:"#fff",stroke:col,"stroke-width":1,...ns},m))}
+          const ax=x+mw/2,ay=-6+G.H*mk+4,tx=cx+(ax-cx)*.35;
+          el("path",{d:`M${ax},${ay} Q${ax},${y0-14} ${tx},${y0-ry+2}`,fill:"none",stroke:col,"stroke-width":1.5,"stroke-dasharray":"3 3"},fur);
+          el("path",{d:`M${tx-4},${y0-ry-4} L${tx},${y0-ry+2} L${tx+4},${y0-ry-3}`,fill:"none",stroke:col,"stroke-width":1.5,"stroke-linecap":"round","stroke-linejoin":"round"},fur)});
+        // the geodatabase: one shelf per layer, the Revenue base at the bottom
+        const db=el("g",{},fur);
+        el("path",{d:`M${cx-rx},${y0} L${cx-rx},${yb} A${rx} ${ry} 0 0 0 ${cx+rx},${yb} L${cx+rx},${y0} Z`,fill:"#fff",stroke:"var(--n500)","stroke-width":1.3},db);
+        el("path",{d:`M${cx-rx},${yb-bh} L${cx-rx},${yb} A${rx} ${ry} 0 0 0 ${cx+rx},${yb} L${cx+rx},${yb-bh} A${rx} ${ry} 0 0 1 ${cx-rx},${yb-bh} Z`,fill:"#efebe4"},db);
+        [1,2,3].forEach(j=>el("path",{d:`M${cx-rx},${y0+j*bh} A${rx} ${ry} 0 0 0 ${cx+rx},${y0+j*bh}`,fill:"none",stroke:"var(--n300)","stroke-width":1},db));
+        el("ellipse",{cx,cy:y0,rx,ry,fill:"#f7f5f1",stroke:"var(--n500)","stroke-width":1.3},db);
+        txt({x:cx,y:y0+3.5,class:"u","font-size":9,"text-anchor":"middle",style:"font-weight:700;fill:var(--n800)"},db,"Geodatabase");
+        const SH=[["bn","BharatNet","var(--dv-aqua-600)"],["awc","Anganwadi","var(--dv-blue-500)"],["min","Mining","var(--dv-orange-500)"],["ref","Revenue base","var(--n800)"]];
+        SH.forEach(([lk,lab,col],j)=>{const yy=y0+j*bh+ry+9,ix=cx-rx+16,ic=el("g",{transform:`translate(${ix} ${yy-4})`},db);
+          if(lk==="bn"){el("path",{d:"M-6,3 L-1,-2 L6,1",fill:"none",stroke:col,"stroke-width":1.8,"stroke-linecap":"round"},ic);el("circle",{cx:-1,cy:-2,r:1.8,fill:"#fff",stroke:col,"stroke-width":1.2},ic)}
+          if(lk==="awc")[[-4,0],[1,-3],[4,2]].forEach(([u,v])=>el("circle",{cx:u,cy:v,r:1.8,fill:col},ic));
+          if(lk==="min")el("path",{d:"M-6,-3 L3,-5 L6,3 L-4,4 Z",fill:col,stroke:"var(--dv-orange-700)","stroke-width":.8},ic);
+          if(lk==="ref")el("path",{d:"M-6,-4 h12 v8 h-12 Z M0,-4 v8 M-6,0 h12",fill:"none",stroke:col,"stroke-width":1.1},ic);
+          txt({x:ix+12,y:yy,class:"u","font-size":9.5,style:`font-weight:${lk==="ref"?700:600};fill:var(--n800)`},db,lab);
+          txt({x:cx+rx-10,y:yy,class:"u","font-size":8.5,"text-anchor":"end",style:"fill:var(--n500)"},db,lk==="ref"?"base":"layer")})}
       if(key==="map"){G.districts.forEach((d,j)=>el("path",{d:d.d,fill:CH[Math.min(4,Math.floor(cnt[j]/mx*4.999))],stroke:"#fff","stroke-width":2.2},cl));
         // title, district names, a key and a north arrow turn the colours into something anyone can read
         txt({x:-6,y:-4,class:"u","font-size":9.5,style:"font-weight:700;fill:var(--n800)"},fur,"Anganwadi centres");
