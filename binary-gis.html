@@ -71,7 +71,9 @@ function layout(){
   land=W/H>1.05;const bb={x:79.11,y:24,w:361.78,h:592},pad=Math.max(16,Math.min(W,H)*.05);
   let mx,my,mw,mh;
   const r0=clamp(Math.min(W,H)*.045,20,34);NODES.forEach(s=>s.r=r0);
-  if(land){const pw=COVER?clamp(W*.2,220,320):clamp(W*.28,250,360);panel={x:pad*.6,y:pad*.6,w:pw,h:H-pad*1.2};mx=panel.x+pw+pad*1.4;my=pad;mw=(COVER?W*.6:W-pad)-mx;mh=H-2*pad;
+  // cover: keep clear of the StoryMap header (top) and its scroll arrow (bottom); ?top=px / ?bottom=px override
+  const ST0=COVER?(+Q.get("top")||Math.max(100,H*.11)):0,SB0=COVER?(+Q.get("bottom")||Math.max(56,H*.07)):0;
+  if(land){const pw=COVER?clamp(W*.2,220,320):clamp(W*.28,250,360);panel={x:pad*.6,y:pad*.6+ST0,w:pw,h:H-pad*1.2-ST0-SB0};mx=panel.x+pw+pad*1.4;my=pad+ST0;mw=(COVER?W*.6:W-pad)-mx;mh=H-2*pad-ST0-SB0;
     const top=panel.y+Math.max(46,H*.07)+r0,gap=Math.max(r0*3.4,(panel.y+panel.h-60-(r0+78)-top)/2);
     Object.assign(SRC[0],{x:panel.x+pw*.27,y:top});Object.assign(SRC[1],{x:panel.x+pw*.73,y:top});Object.assign(SRC[2],{x:panel.x+pw/2,y:top+gap});Object.assign(SVC,{x:panel.x+pw/2,y:top+gap*2})}
   else{const ph=clamp(H*.36,236,300);panel={x:pad*.6,y:pad*.6,w:W-pad*1.2,h:ph};mx=pad;my=panel.y+ph+pad*.6;mw=W-2*pad;mh=(COVER?H*.7:H)-my-Math.max(64,H*.085);
@@ -207,7 +209,7 @@ function frame(now){
   cx.globalAlpha=.045;cx.strokeStyle="#9fe8cc";cx.lineWidth=1;cx.beginPath();for(let x=L.cs*4;x<W;x+=L.cs*4){cx.moveTo(x,0);cx.lineTo(x,H)}for(let y=L.cs*4;y<H;y+=L.cs*4){cx.moveTo(0,y);cx.lineTo(W,y)}cx.stroke();
 
   const bh=[];backend(T,moving,bh);
-  const prog=clamp(T/TL.end,0,1),z=1+.035*ease(prog)+(done&&moving?.004*Math.sin(T*.6):0);
+  const prog=clamp(T/TL.end,0,1),z=1+(COVER?.012:.035)*ease(prog)+(done&&moving?.004*Math.sin(T*.6):0);
   const fx=mapT.ox+mapT.k*(mapT.bb.x+mapT.bb.w/2),fy=mapT.oy+mapT.k*(mapT.bb.y+mapT.bb.h/2);
   cx.save();cx.translate(fx,fy);cx.scale(z,z);cx.translate(-fx,-fy);gx.save();gx.translate(fx/3,fy/3);gx.scale(z,z);gx.translate(-fx/3,-fy/3);
   const mapM=()=>cx.setTransform(DPR*z*mapT.k,0,0,DPR*z*mapT.k,DPR*(fx-z*(fx-mapT.ox)),DPR*(fy-z*(fy-mapT.oy)));
