@@ -224,25 +224,27 @@ function ndIcon(i,g){const s={fill:"none",stroke:"var(--n800)","stroke-width":1.
 
 /* ───────────────────────────────────────────── 3 · ONE CENTRAL COPY, ALWAYS CURRENT */
 INIT.updates=()=>edFig("updates",{
-  L:{land:{vb:[1280,720],hub:[880,372],k:.74,rx:332,ry:292,txt:[48,150],ts:30,fs:19,lh:29,cw:168},
-     port:{vb:[1280,720],hub:[880,372],k:.74,rx:332,ry:292,txt:[48,150],ts:30,fs:19,lh:29,cw:168}},
-  // department, what it sends, its colour, an update it makes later
+  L:{land:{vb:[1280,720],hub:[870,380],k:.6,txt:[48,150],ts:30,fs:19,lh:29,cw:168},port:{vb:[1280,720],hub:[870,380],k:.6,txt:[48,150],ts:30,fs:19,lh:29,cw:168}},
   D:[["Revenue","village boundaries","#6f675c","Village boundary revised"],["Forest","forest areas","#3f8a4f","Plantation area added"],["Mining","mine leases","#c95d2e","New lease approved"],["Health","health centres","#c0392b","PHC moved to new building"],
      ["Education","schools","#6f5bb5","New school opened"],["Women & Child","Anganwadi centres","#4a62b8","Centre location corrected"],["Rural Dev.","village roads","#a87c45","Road widened"],["Water Resources","rivers and canals","#3d8fc4","New check dam"]],
-  build(S,m){const P={deps:[],lay:[]},[hx,hy]=m.hub,k=m.k,ST=G.stack,x0=hx-G.W*k/2,y0=hy-G.H*k/2;P.hx=hx;P.hy=hy;P.k=k;P.x0=x0;P.y0=y0;
+  build(S,m){const P={deps:[],lay:[]},[hx,hy]=m.hub,k=m.k,ST=G.stack;
+    const mw=G.W*k,mh=G.H*k,pw=mw+56,ph=mh+96,px=hx-pw/2,py=hy-ph/2,x0=hx-mw/2,y0=py+70;P.k=k;P.x0=x0;P.y0=y0;P.px=px;P.pw=pw;
     const defs=el("defs",{},S);defs.innerHTML=`<clipPath id="upClip"><path d="${G.state}"/></clipPath><filter id="upSoft" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="7"/></filter>`;
-    // left column: the words, then the database's own record
-    const B=edBlock(el("g",{},S),m.txt[0],m.txt[1],{t:"One shared database",b:["Every department sends its data into","one central database, the one map.","After that, each change is made once,","in one place, so",{hl:"every department sees it at once."}]},m);P.hl=B.hl;
-    const ly=m.txt[1]+250,lg=el("g",{},S);el("rect",{x:m.txt[0],y:ly,width:400,height:150,rx:12,fill:"#fff",stroke:"var(--n200)"},lg);
-    const dr={fill:"none",stroke:"var(--dv-blue-700)","stroke-width":2};[0,9,18].forEach(o=>el("ellipse",Object.assign({cx:m.txt[0]+30,cy:ly+24+o,rx:12,ry:4},dr),lg));el("path",Object.assign({d:`M${m.txt[0]+18},${ly+24} v18 M${m.txt[0]+42},${ly+24} v18`},dr),lg);
-    txt({x:m.txt[0]+54,y:ly+33,class:"u t","font-size":15},lg,"Central GIS database");P.ver=txt({x:m.txt[0]+386,y:ly+33,"text-anchor":"end",class:"u","font-size":13,style:"font-weight:700;fill:var(--dv-blue-700)"},lg,"");
-    P.cnt=txt({x:m.txt[0]+54,y:ly+52,class:"u","font-size":12.5,style:"fill:var(--n600)"},lg,"");
-    el("line",{x1:m.txt[0]+16,y1:ly+66,x2:m.txt[0]+384,y2:ly+66,stroke:"var(--n200)"},lg);txt({x:m.txt[0]+16,y:ly+86,class:"u","font-size":11,style:"font-weight:700;letter-spacing:.06em;fill:var(--n500)"},lg,"CHANGE LOG");
-    P.log=[0,1,2].map(i=>txt({x:m.txt[0]+16,y:ly+106+i*19,class:"u","font-size":12.5,style:`fill:var(--n${[900,600,500][i]})`},lg,""));P.logs=[];
+    const B=edBlock(el("g",{},S),m.txt[0],m.txt[1],{t:"One shared database",b:["Every department sends its data into","one central GIS database.","After that, each change is made once,","in one place, so",{hl:"every department sees it at once."}]},m);P.hl=B.hl;
+    // change log, under the words
+    const ly=m.txt[1]+240,lg=el("g",{},S);el("rect",{x:m.txt[0],y:ly,width:380,height:118,rx:12,fill:"#fff",stroke:"var(--n200)"},lg);
+    txt({x:m.txt[0]+16,y:ly+26,class:"u","font-size":11.5,style:"font-weight:700;letter-spacing:.06em;fill:var(--n500)"},lg,"CHANGE LOG");
+    P.log=[0,1,2].map(i=>txt({x:m.txt[0]+16,y:ly+52+i*22,class:"u","font-size":13,style:`fill:var(--n${[900,600,500][i]})`},lg,""));P.logs=[];
     P.cap=txt({x:hx,y:34,"text-anchor":"middle",class:"u",style:"font-weight:700;letter-spacing:.08em;fill:var(--n700)","font-size":13.5},S,"");
     const sg=el("g",{},S);
-    // the one map, layer by layer
-    const mg=el("g",{transform:`translate(${x0} ${y0}) scale(${k})`},S);el("path",{d:G.state,fill:"rgba(60,50,40,.12)",transform:"translate(4 7)",filter:"url(#upSoft)"},mg);el("path",{d:G.state,fill:"#fbfaf8"},mg);
+    // the database: a panel whose content is the map
+    const dbg=el("g",{},S);P.ring=el("rect",{x:px-5,y:py-5,width:pw+10,height:ph+10,rx:20,fill:"none",stroke:"var(--dv-blue-500)","stroke-width":2.5,opacity:0},dbg);
+    el("rect",{x:px,y:py,width:pw,height:ph,rx:16,fill:"#fff",stroke:"var(--dv-blue-700)","stroke-width":1.8},dbg);
+    el("path",{d:`M${px},${py+16} a16,16 0 0 1 16,-16 h${pw-32} a16,16 0 0 1 16,16 v38 h${-pw} z`,fill:"#eef1fb"},dbg);el("line",{x1:px,y1:py+54,x2:px+pw,y2:py+54,stroke:"#cdd5f0"},dbg);
+    const dr={fill:"none",stroke:"var(--dv-blue-700)","stroke-width":2};[0,8,16].forEach(o=>el("ellipse",Object.assign({cx:px+28,cy:py+19+o,rx:11,ry:3.6},dr),dbg));el("path",Object.assign({d:`M${px+17},${py+19} v16 M${px+39},${py+19} v16`},dr),dbg);
+    txt({x:px+50,y:py+25,class:"u t","font-size":15},dbg,"Central GIS database");P.cnt=txt({x:px+50,y:py+43,class:"u","font-size":12,style:"fill:var(--n600)"},dbg,"");
+    P.ver=txt({x:px+pw-16,y:py+33,"text-anchor":"end",class:"u","font-size":14,style:"font-weight:700;fill:var(--dv-blue-700)"},dbg,"");
+    const mg=el("g",{transform:`translate(${x0} ${y0}) scale(${k})`},dbg);el("path",{d:G.state,fill:"#fbfaf8"},mg);
     const cl=el("g",{"clip-path":"url(#upClip)"},mg),L=i=>{const g=el("g",{opacity:0},cl);P.lay[i]=g;return g};
     {const g=L(0);G.districts.forEach(d=>el("path",{d:d.d,fill:"none",stroke:"#8f887e","stroke-width":1.6},g))}
     {const g=L(1);G.districts.forEach((d,j)=>{if([0,2,5,9,14,18,21,24,26].includes(j))el("path",{d:d.d,fill:"rgba(63,138,79,.22)",stroke:"none"},g)})}
@@ -253,18 +255,20 @@ INIT.updates=()=>edFig("updates",{
     {const g=L(6);el("path",{d:G.ctx.roads,fill:"none",stroke:"#a87c45","stroke-width":2.4},g)}
     {const g=L(7);G.ctx.rivers.forEach(r=>el("path",{d:r.d,fill:"none",stroke:"#3d8fc4","stroke-width":2.6},g))}
     el("path",{d:G.state,fill:"none",stroke:"#5f584f","stroke-width":2},mg);
-    // where each later update happens, in map units
     const mp=ST.mines.match(/-?[\d.]+/g).map(Number);
     P.spot=[G.districts[5].c,G.districts[12].c,[mp[0],mp[1]],ST.gp[3],ST.aw[42],ST.aw[101],[ST.pin[0]+14,ST.pin[1]+4],G.districts[20].c];
     P.mark=el("g",{opacity:0},S);P.mR=el("circle",{r:10,fill:"rgba(247,214,90,.35)",stroke:"var(--n950)","stroke-width":2},P.mark);
     P.mL=el("g",{},P.mark);P.mLR=el("rect",{x:14,y:-13,width:10,height:26,rx:6,fill:"var(--n950)"},P.mL);P.mLT=txt({x:24,y:4.5,class:"u","font-size":13,style:"font-weight:700;fill:#fff"},P.mL,"");
-    // the departments around it
-    this.D.forEach(([n,lay,col],i)=>{const a=-Math.PI/2+(i+.5)*Math.PI*2/8,x=hx+Math.cos(a)*m.rx,y=hy+Math.sin(a)*m.ry,g=el("g",{},S),o={x,y,a,n,lay,col};const w=m.cw,h=48;
+    // departments: four either side, each joined to the database edge by a full line
+    const w=m.cw,h=48,cxL=px-60-w/2,cxR=px+pw+60+w/2,rows=[0,1,2,3].map(r=>py+90+r*(ph-140)/3);
+    this.D.forEach(([n,lay,col],i)=>{const right=i<4,x=right?cxR:cxL,y=rows[i%4],g=el("g",{},S),o={x,y,n,lay,col};
       o.box=el("rect",{x:x-w/2,y:y-h/2,width:w,height:h,rx:10,fill:"#fff",stroke:"var(--n300)","stroke-width":1.3},g);
       el("circle",{cx:x-w/2+16,cy:y,r:6,fill:col},g);txt({x:x-w/2+30,y:y-3,class:"u","font-size":14,style:"font-weight:700;fill:var(--n900)"},g,n);txt({x:x-w/2+30,y:y+14,class:"u","font-size":11.5,style:"fill:var(--n600)"},g,lay);
       o.chip=el("g",{opacity:0},g);o.chipR=el("rect",{x:x+w/2-20,y:y-h/2-9,width:30,height:18,rx:9,fill:"#2f7d4f"},o.chip);o.chipT=txt({x:x+w/2-5,y:y-h/2+4,"text-anchor":"middle",class:"u","font-size":11,style:"font-weight:700;fill:#fff"},o.chip,"v1");
-      const s0=[hx+Math.cos(a)*160,hy+Math.sin(a)*205],s1=[x-Math.cos(a)*(w/2-4),y-Math.sin(a)*(h/2)];o.s0=s0;o.s1=s1;
-      o.spoke=edPath(`M${s0[0]},${s0[1]} L${s1[0]},${s1[1]}`,{stroke:col,"stroke-width":1.6,opacity:.55},sg);P.deps.push(o)});
+      o.s1=[right?x-w/2:x+w/2,y];o.s0=[right?px+pw:px,y];
+      el("line",{x1:o.s1[0],y1:y,x2:o.s0[0],y2:y,stroke:"var(--n200)","stroke-width":1.4},sg);
+      o.spoke=edPath(`M${o.s1[0]},${y} L${o.s0[0]},${y}`,{stroke:col,"stroke-width":2.2},sg);
+      el("circle",{cx:o.s0[0],cy:y,r:3.5,fill:"#fff",stroke:"var(--dv-blue-700)","stroke-width":1.6},sg);P.deps.push(o)});
     P.dot=el("circle",{r:6,opacity:0},S);P.out=this.D.map(()=>el("circle",{r:4.5,fill:"var(--dv-blue-500)",opacity:0},S));
     return P},
   logAdd(P,s){P.logs.unshift(s);P.log.forEach((t,i)=>t.textContent=P.logs[i]||"")},
@@ -277,13 +281,13 @@ INIT.updates=()=>edFig("updates",{
     await tw(520,t=>{edDraw(o.spoke,t);P.dot.setAttribute("cx",edLerp(o.s1[0],o.s0[0],t));P.dot.setAttribute("cy",edLerp(o.s1[1],o.s0[1],t))});if(!alive())return;P.dot.setAttribute("opacity",0);
     await tw(420,t=>P.lay[i].setAttribute("opacity",t));if(!alive())return;o.box.setAttribute("stroke","var(--n300)");o.box.setAttribute("stroke-width",1.3);P.cnt.textContent=`${i+1} of 8 departments in`},
   async update(P,{tw,sleep,alive},i){const o=P.deps[i],D=this.D[i],q=this.M(P,P.spot[i]);o.box.setAttribute("stroke","var(--dv-orange-500)");o.box.setAttribute("stroke-width",2.6);
-    P.dot.setAttribute("fill","var(--dv-orange-500)");P.dot.setAttribute("opacity",1);await tw(700,t=>{P.dot.setAttribute("cx",edLerp(o.s1[0],q[0],t));P.dot.setAttribute("cy",edLerp(o.s1[1],q[1],t))});if(!alive())return;P.dot.setAttribute("opacity",0);
+    P.dot.setAttribute("fill","var(--dv-orange-500)");P.dot.setAttribute("opacity",1);await tw(450,t=>{P.dot.setAttribute("cx",edLerp(o.s1[0],o.s0[0],t));P.dot.setAttribute("cy",o.s1[1])});if(!alive())return;await tw(450,t=>{P.dot.setAttribute("cx",edLerp(o.s0[0],q[0],t));P.dot.setAttribute("cy",edLerp(o.s0[1],q[1],t))});if(!alive())return;P.dot.setAttribute("opacity",0);
     // the change, where it happened
-    P.mLT.textContent=D[3];const w=P.mLT.getComputedTextLength()+20;P.mLR.setAttribute("width",w);const left=q[0]+w+30>P.x0+G.W*P.k+160;P.mL.setAttribute("transform",left?`translate(${-w-28} 0)`:"");
+    P.mLT.textContent=D[3];const w=P.mLT.getComputedTextLength()+20;P.mLR.setAttribute("width",w);const left=q[0]+w+30>P.px+P.pw-8;P.mL.setAttribute("transform",left?`translate(${-w-28} 0)`:"");
     P.mark.setAttribute("transform",`translate(${q[0]} ${q[1]})`);P.mark.setAttribute("opacity",1);await tw(500,t=>P.mR.setAttribute("r",26-16*t));if(!alive())return;
     P.v++;P.ver.textContent="version "+P.v;this.logAdd(P,`v${P.v} · ${o.n} · ${D[3]}`);await sleep(500);if(!alive())return;
     // and out to every department
-    P.out.forEach(c=>c.setAttribute("opacity",1));await tw(750,t=>P.deps.forEach((d,j)=>{P.out[j].setAttribute("cx",edLerp(q[0],d.s1[0],t));P.out[j].setAttribute("cy",edLerp(q[1],d.s1[1],t))}));if(!alive())return;
+    P.out.forEach(c=>c.setAttribute("opacity",1));await tw(800,t=>P.deps.forEach((d,j)=>{const u=Math.min(1,t*2),v=Math.max(0,t*2-1),a=t<.5?[edLerp(q[0],d.s0[0],u),edLerp(q[1],d.s0[1],u)]:[edLerp(d.s0[0],d.s1[0],v),d.s1[1]];P.out[j].setAttribute("cx",a[0]);P.out[j].setAttribute("cy",a[1])}));if(!alive())return;
     P.out.forEach(c=>c.setAttribute("opacity",0));P.deps.forEach(d=>{d.chipT.textContent="v"+P.v;d.chipR.setAttribute("fill","var(--dv-blue-700)")});await sleep(700);P.deps.forEach(d=>d.chipR.setAttribute("fill","#2f7d4f"));
     o.box.setAttribute("stroke","var(--n300)");o.box.setAttribute("stroke-width",1.3);await sleep(600);P.mark.setAttribute("opacity",0)},
   async play(P,ctx){const{sleep,tw,alive}=ctx;await sleep(400);
