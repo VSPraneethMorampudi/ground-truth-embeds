@@ -30,8 +30,8 @@ const Q=new URLSearchParams(location.search+"&"+location.hash.slice(1));
 const POSTER=Q.has("poster"),STILL=Q.has("still"),TEXT=Q.get("labels")!=="0",GRAIN=!Q.has("nograin"),COVER=Q.has("cover"),LOOP=Q.has("loop");
 const REDUCE=(matchMedia("(prefers-reduced-motion: reduce)").matches&&!POSTER)||STILL;
 const SRC=[
-  {key:"xls",name:"Excel sheet",role:"Anganwadi points",col:"#34d27f",rgb:"52,210,127"},
-  {key:"geo",name:"GeoJSON",    role:"district boundaries",col:"#f6b847",rgb:"246,184,71"},
+  {key:"xls",name:"Excel",role:"Anganwadi points",col:"#34d27f",rgb:"52,210,127",compact:1},
+  {key:"geo",name:"GeoJSON",    role:"district boundaries",col:"#f6b847",rgb:"246,184,71",compact:1},
   {key:"pg", name:"GIS DB",     role:"spatial database",col:"#6fa9ff",rgb:"111,169,255"}];
 const SVC={key:"svc",name:"Map service",role:"publishes layers",col:"#b9a3ff",rgb:"185,163,255"};
 const XTRA=[
@@ -74,15 +74,15 @@ function layout(){
   DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;gl.width=Math.ceil(W/3);gl.height=Math.ceil(H/3);
   land=W/H>1.05;const bb={x:79.11,y:24,w:361.78,h:592},pad=Math.max(16,Math.min(W,H)*.05);
   let mx,my,mw,mh;
-  const r0=clamp(Math.min(W,H)*.045,20,34);NODES.forEach(s=>s.r=r0);XTRA.forEach(s=>s.r=r0*.7);
+  const r0=clamp(Math.min(W,H)*.045,20,34);NODES.forEach(s=>s.r=r0);const rs=r0*.74;[SRC[0],SRC[1],...XTRA].forEach(s=>s.r=rs);const FIVE=[SRC[0],SRC[1],XTRA[0],XTRA[1],XTRA[2]];
   // cover: keep clear of the StoryMap header (top) and its scroll arrow (bottom); ?top=px / ?bottom=px override
   const ST0=COVER?(+Q.get("top")||Math.max(100,H*.11)):0,SB0=COVER?(+Q.get("bottom")||Math.max(56,H*.07)):0;
   if(land){const pw=COVER?clamp(W*.2,220,320):clamp(W*.28,250,360);panel={x:pad*.6,y:pad*.6+ST0,w:pw,h:H-pad*1.2-ST0-SB0};mx=panel.x+pw+pad*1.4;my=pad+ST0;mw=(COVER?W*.6:W-pad)-mx;mh=H-2*pad-ST0-SB0;
-    const top=panel.y+Math.max(46,H*.07)+r0,av=Math.max(r0*7.4,panel.y+panel.h-60-(r0+78)-top),ym=top+Math.max(r0*1.9+64,av*.34),yd=ym+Math.max(r0*1.75+44,(av-(ym-top))*.48);
-    Object.assign(SRC[0],{x:panel.x+pw*.27,y:top});Object.assign(SRC[1],{x:panel.x+pw*.73,y:top});XTRA.forEach((s,i)=>Object.assign(s,{x:panel.x+pw*(.18+.32*i),y:ym}));
+    const top=panel.y+Math.max(40,H*.06)+rs,av=Math.max(r0*7.4,panel.y+panel.h-60-(r0+78)-top),ym=top+Math.max(rs*2.2+58,av*.24),yd=ym+Math.max(rs*1.2+r0+66,(av-(ym-top))*.46);
+    FIVE.forEach((s,i)=>Object.assign(s,{x:panel.x+pw*(i<3?.18+.32*i:.34+.32*(i-3)),y:i<3?top:ym}));
     Object.assign(SRC[2],{x:panel.x+pw/2,y:yd});Object.assign(SVC,{x:panel.x+pw/2,y:Math.max(yd+r0*3.4,top+av)})}
-  else{const y1=pad*.6+r0+30,ym=y1+r0*1.82+80,y2=ym+r0*1.72+52,ph=y2-pad*.6+r0*1.12+70;panel={x:pad*.6,y:pad*.6,w:W-pad*1.2,h:ph};mx=pad;my=panel.y+ph+pad*.6;mw=W-2*pad;mh=(COVER?H*.7:H)-my-Math.max(64,H*.085);
-    Object.assign(SRC[0],{x:W*.28,y:y1});Object.assign(SRC[1],{x:W*.72,y:y1});XTRA.forEach((s,i)=>Object.assign(s,{x:W*(.2+.3*i),y:ym}));Object.assign(SRC[2],{x:W*.28,y:y2});Object.assign(SVC,{x:W*.72,y:y2})}
+  else{const y1=pad*.6+rs+30,ym=y1+rs*2.2+60,y2=ym+rs*1.2+r0+66,ph=y2-pad*.6+r0*1.12+70;panel={x:pad*.6,y:pad*.6,w:W-pad*1.2,h:ph};mx=pad;my=panel.y+ph+pad*.6;mw=W-2*pad;mh=(COVER?H*.7:H)-my-Math.max(64,H*.085);
+    FIVE.forEach((s,i)=>Object.assign(s,{x:i<3?W*(.2+.3*i):W*(.35+.3*(i-3)),y:i<3?y1:ym}));Object.assign(SRC[2],{x:W*.28,y:y2});Object.assign(SVC,{x:W*.72,y:y2})}
   const k=Math.min(mw/bb.w,mh/bb.h);mapT={k,ox:mx+(mw-bb.w*k)/2-bb.x*k,oy:my+(mh-bb.h*k)/2-bb.y*k,mx,my,mw,mh,bb};
   const S=p=>[mapT.ox+k*p[0],mapT.oy+k*p[1]];
   statePath=new Path2D(GEO.state);distPaths=GEO.districts.map(d=>new Path2D(d.d));
@@ -202,7 +202,8 @@ function card(s,i,T){
   if(s.key==="shp"){const q=r*.66,pts=[[-q,-q*.2],[-q*.25,-q*.85],[q*.85,-q*.5],[q*.6,q*.75],[-q*.6,q*.6]];cx.beginPath();pts.forEach((p,k)=>k?cx.lineTo(p[0],p[1]):cx.moveTo(p[0],p[1]));cx.closePath();
     cx.globalAlpha=e*.18*idle;cx.fill();cx.globalAlpha=e*idle;cx.stroke();const hot=active&&!POSTER?Math.floor(T*4)%5:-1;pts.forEach((p,k)=>{cx.fillStyle=k===hot?EDGE:s.col;cx.fillRect(p[0]-2,p[1]-2,4,4)})}
   if(TEXT&&s.compact){const y0=r*1.14,fs=Math.max(11.5,r*.5);cx.textAlign="center";cx.textBaseline="top";cx.globalAlpha=e;cx.fillStyle=INK;cx.font=`600 ${fs}px ${FONT}`;cx.fillText(s.name,0,y0);
-    cx.globalAlpha=e*.58;cx.font=`${Math.max(9.5,r*.36)}px ${MONO}`;cx.fillText(s.role,0,y0+fs*1.3)}
+    cx.globalAlpha=e*.58;cx.font=`${Math.max(10,r*.4)}px ${FONT}`;cx.fillText(s.role,0,y0+fs*1.3);
+    if(s.count){cx.globalAlpha=e*.5;cx.font=`${Math.max(9.5,r*.36)}px ${MONO}`;cx.fillText(s.count,0,y0+fs*1.3+Math.max(10,r*.4)*1.45)}}
   if(TEXT&&!s.compact){const y0=r*1.12,fs=Math.max(12,r*.38),fm=Math.max(9.5,Math.min(11.5,r*.28));cx.textAlign="center";cx.textBaseline="top";
     cx.globalAlpha=e;cx.fillStyle=INK;cx.font=`600 ${fs}px ${FONT}`;cx.fillText(s.name,0,y0);
     cx.globalAlpha=e*.62;cx.font=`${Math.max(10.5,r*.29)}px ${FONT}`;cx.fillText(s.role,0,y0+fs*1.25);
@@ -322,7 +323,7 @@ function backend(T,moving,heroes){
     const q=quad(p.a,p.m,p.b,e);blob(q[0],q[1],L.cs*.6,sc.col,.14*a)};
   ing.forEach(fly);feed.forEach(fly);
   const rowsA=Math.round(nx/64*P.length),rowsD=Math.round(ng/54*27);
-  SRC[0].count=`${rowsA} of ${P.length} rows read`;SRC[1].count=`${rowsD} of 27 features read`;
+  SRC[0].count=`${rowsA}/${P.length} rows`;SRC[1].count=`${rowsD}/27 features`;
   DB.count=`${rowsA} centres · ${rowsD} districts`;
   if(lastIn&&T<TL.ing1+.3)DB.rec=lastIn.si===0?"INSERT INTO anganwadi_centres":"INSERT INTO districts";else if(T<TL.ing0+.6)DB.rec=""}
 
