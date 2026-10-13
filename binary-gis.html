@@ -13,7 +13,7 @@ canvas{display:block;width:100vw;height:100vh}
 </head>
 <body>
 <canvas id="c" role="img" aria-label="On the backend, an Excel sheet of Anganwadi centres and a GeoJSON file of district boundaries are read as binary and loaded into a GIS database as two layers. A map service publishes the layers, and the map of Chhattisgarh forms: district boundaries, Anganwadi centres, and the stored geometry. Finally the GIS database joins every centre to the district it falls in."></canvas>
-<p class="sr">Read: the Excel sheet and the GeoJSON file are read as 0s and 1s. Load: they are stored in the GIS database as two layers, anganwadi_centres (points) and districts (polygons). Serve: the map service publishes the layers and the map draws them. Join: the GIS database matches each centre to the district it falls in.</p>
+<p class="sr">Read: the Excel sheet, the GeoJSON file, and KML, CAD and Shapefile sources are read as 0s and 1s. Load: they are stored in the GIS database as two layers, anganwadi_centres (points) and districts (polygons). Serve: the map service publishes the layers and the map draws them. Join: the GIS database matches each centre to the district it falls in.</p>
 <script>
 /* v14 · the GIS stack.  READ → LOAD → SERVE → JOIN
    Built the way a GIS developer would: the files are never drawn directly. They are loaded into a GIS database
@@ -34,6 +34,10 @@ const SRC=[
   {key:"geo",name:"GeoJSON",    role:"district boundaries",col:"#f6b847",rgb:"246,184,71"},
   {key:"pg", name:"GIS DB",     role:"spatial database",col:"#6fa9ff",rgb:"111,169,255"}];
 const SVC={key:"svc",name:"Map service",role:"publishes layers",col:"#b9a3ff",rgb:"185,163,255"};
+const XTRA=[
+  {key:"kml",name:"KML",      role:"placemarks",   col:"#5fd3ea",rgb:"95,211,234",compact:1},
+  {key:"cad",name:"CAD",      role:"DWG · DXF",    col:"#ff8a73",rgb:"255,138,115",compact:1},
+  {key:"shp",name:"Shapefile",role:".shp .dbf .prj",col:"#e494d6",rgb:"228,148,214",compact:1}];
 const NODES=[SRC[0],SRC[1],SRC[2],SVC];
 const LAND="#5fe3b3",EDGE="#dcfff1",INK="#e8f5ef",BG0="#030b09",BG1="#0c2a22",PILL="rgba(3,12,10,.86)";
 const FONT='"Avenir Next World","Avenir Next",system-ui,sans-serif',MONO='"GitLab Mono",ui-monospace,Menlo,Consolas,monospace';
@@ -70,14 +74,15 @@ function layout(){
   DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;gl.width=Math.ceil(W/3);gl.height=Math.ceil(H/3);
   land=W/H>1.05;const bb={x:79.11,y:24,w:361.78,h:592},pad=Math.max(16,Math.min(W,H)*.05);
   let mx,my,mw,mh;
-  const r0=clamp(Math.min(W,H)*.045,20,34);NODES.forEach(s=>s.r=r0);
+  const r0=clamp(Math.min(W,H)*.045,20,34);NODES.forEach(s=>s.r=r0);XTRA.forEach(s=>s.r=r0*.7);
   // cover: keep clear of the StoryMap header (top) and its scroll arrow (bottom); ?top=px / ?bottom=px override
   const ST0=COVER?(+Q.get("top")||Math.max(100,H*.11)):0,SB0=COVER?(+Q.get("bottom")||Math.max(56,H*.07)):0;
   if(land){const pw=COVER?clamp(W*.2,220,320):clamp(W*.28,250,360);panel={x:pad*.6,y:pad*.6+ST0,w:pw,h:H-pad*1.2-ST0-SB0};mx=panel.x+pw+pad*1.4;my=pad+ST0;mw=(COVER?W*.6:W-pad)-mx;mh=H-2*pad-ST0-SB0;
-    const top=panel.y+Math.max(46,H*.07)+r0,gap=Math.max(r0*3.4,(panel.y+panel.h-60-(r0+78)-top)/2);
-    Object.assign(SRC[0],{x:panel.x+pw*.27,y:top});Object.assign(SRC[1],{x:panel.x+pw*.73,y:top});Object.assign(SRC[2],{x:panel.x+pw/2,y:top+gap});Object.assign(SVC,{x:panel.x+pw/2,y:top+gap*2})}
-  else{const ph=clamp(H*.36,236,300);panel={x:pad*.6,y:pad*.6,w:W-pad*1.2,h:ph};mx=pad;my=panel.y+ph+pad*.6;mw=W-2*pad;mh=(COVER?H*.7:H)-my-Math.max(64,H*.085);
-    const y1=panel.y+r0+30,y2=y1+ph*.45;Object.assign(SRC[0],{x:W*.28,y:y1});Object.assign(SRC[1],{x:W*.72,y:y1});Object.assign(SRC[2],{x:W*.28,y:y2});Object.assign(SVC,{x:W*.72,y:y2})}
+    const top=panel.y+Math.max(46,H*.07)+r0,av=Math.max(r0*7.4,panel.y+panel.h-60-(r0+78)-top),ym=top+Math.max(r0*1.9+64,av*.34),yd=ym+Math.max(r0*1.75+44,(av-(ym-top))*.48);
+    Object.assign(SRC[0],{x:panel.x+pw*.27,y:top});Object.assign(SRC[1],{x:panel.x+pw*.73,y:top});XTRA.forEach((s,i)=>Object.assign(s,{x:panel.x+pw*(.18+.32*i),y:ym}));
+    Object.assign(SRC[2],{x:panel.x+pw/2,y:yd});Object.assign(SVC,{x:panel.x+pw/2,y:Math.max(yd+r0*3.4,top+av)})}
+  else{const y1=pad*.6+r0+30,ym=y1+r0*1.82+80,y2=ym+r0*1.72+52,ph=y2-pad*.6+r0*1.12+70;panel={x:pad*.6,y:pad*.6,w:W-pad*1.2,h:ph};mx=pad;my=panel.y+ph+pad*.6;mw=W-2*pad;mh=(COVER?H*.7:H)-my-Math.max(64,H*.085);
+    Object.assign(SRC[0],{x:W*.28,y:y1});Object.assign(SRC[1],{x:W*.72,y:y1});XTRA.forEach((s,i)=>Object.assign(s,{x:W*(.2+.3*i),y:ym}));Object.assign(SRC[2],{x:W*.28,y:y2});Object.assign(SVC,{x:W*.72,y:y2})}
   const k=Math.min(mw/bb.w,mh/bb.h);mapT={k,ox:mx+(mw-bb.w*k)/2-bb.x*k,oy:my+(mh-bb.h*k)/2-bb.y*k,mx,my,mw,mh,bb};
   const S=p=>[mapT.ox+k*p[0],mapT.oy+k*p[1]];
   statePath=new Path2D(GEO.state);distPaths=GEO.districts.map(d=>new Path2D(d.d));
@@ -138,7 +143,7 @@ function layout(){
   feed=[];const lastMap=Math.max(...pk.flat().map(p=>p.t1));
   for(let i=0;i<44;i++){const si=i%3,t1=TL.geo0-.6+i/43*(lastMap-TL.geo0-.2);feed.push(mk2(si,DB,SVC,t1,rnd(.7,.95),f64bits(81+i*.137).slice(12,28),""))}
   // when each node is busy
-  SRC[0].win=[TL.ing0-.2,TL.ing1];SRC[1].win=[TL.ing0,TL.ing1];SRC[2].win=[TL.ing0+.6,lastMap];SVC.win=[TL.geo0-.6,lastMap];
+  SRC[0].win=[TL.ing0-.2,TL.ing1];SRC[1].win=[TL.ing0,TL.ing1];SRC[2].win=[TL.ing0+.6,lastMap];SVC.win=[TL.geo0-.6,lastMap];XTRA.forEach((s,i)=>s.win=[TL.ing0+.2*i,TL.ing1]);
 
   air=Array.from({length:Math.round(W*H/6400)},(_,i)=>{const z=i%3===0?1:.5;return{x:Math.random()*W,y:Math.random()*H,z,v:(z>.9?9:4.5)*(.6+Math.random()*.8),b:Math.random()<.5?1:0,a:(z>.9?.11:.06)*(.5+Math.random()*.5)}});
   vign=document.createElement("canvas");vign.width=W;vign.height=H;{const v=vign.getContext("2d"),g=v.createRadialGradient(W*.58,H*.5,Math.min(W,H)*.25,W*.58,H*.5,Math.hypot(W,H)*.62);
@@ -155,7 +160,7 @@ function mk2(si,from,to,t1,dur,bits,rec,o){const a=out(from,to),b=inside(to),m=[
 function mk(si,to,t1,dur,ll,o){const a=port(si),b=to,m=[(a[0]+b[0])/2+rnd(-28,28),(a[1]+b[1])/2+rnd(-40,40)];
   const bits=o.bits||f64bits(ll[1]).slice(12,28);return Object.assign({si,a,m,b,t1,t0:t1-dur,dur,ll,bits,s1:bits},o)}
 
-function makeGlyphs(){glyph={};[LAND,EDGE,...NODES.map(s=>s.col)].forEach(col=>[L.font,L.sm].forEach(z=>["0","1"].forEach(ch=>{const g=new OffscreenCanvas(Math.ceil(z*1.25*DPR),Math.ceil(z*1.45*DPR)),c=g.getContext("2d");
+function makeGlyphs(){glyph={};[LAND,EDGE,...NODES.map(s=>s.col),...XTRA.map(s=>s.col)].forEach(col=>[L.font,L.sm].forEach(z=>["0","1"].forEach(ch=>{const g=new OffscreenCanvas(Math.ceil(z*1.25*DPR),Math.ceil(z*1.45*DPR)),c=g.getContext("2d");
   c.scale(DPR,DPR);c.fillStyle=col;c.font=`600 ${z}px ${MONO}`;c.textAlign="center";c.textBaseline="middle";c.fillText(ch,z*.62,z*.74);glyph[col+z+ch]=g})))}
 function digit(col,z,b,x,y,a){const g=glyph[col+z+b];if(!g||a<=.01)return;cx.globalAlpha=Math.min(1,a);cx.drawImage(g,x-z*.62,y-z*.74,g.width/DPR,g.height/DPR)}
 function blob(x,y,r,col,a){if(a<=.004)return;gx.globalAlpha=Math.min(1,a);gx.fillStyle=col;gx.beginPath();gx.arc(x/3,y/3,r/3,0,6.283);gx.fill()}
@@ -189,7 +194,16 @@ function card(s,i,T){
     const px=r*.58,py=r*.02,pr=r*.26;cx.globalAlpha=e*idle;cx.fillStyle="#061411";cx.beginPath();cx.arc(px,py,pr+3,0,6.283);cx.fill();cx.fillStyle=s.col;cx.beginPath();cx.arc(px,py-pr*.15,pr,Math.PI*.85,Math.PI*2.15);cx.lineTo(px,py+pr*1.25);cx.closePath();cx.fill();cx.fillStyle="#061411";cx.beginPath();cx.arc(px,py-pr*.15,pr*.38,0,6.283);cx.fill()}
   if(s.key==="svc"){const lw=r*.78,lh=r*.3;for(let k=2;k>=0;k--){const y=-r*.32+k*r*.3;cx.beginPath();cx.moveTo(0,y-lh);cx.lineTo(lw,y);cx.lineTo(0,y+lh);cx.lineTo(-lw,y);cx.closePath();
       const on=active&&!POSTER&&Math.floor(T*3)%3===k;cx.fillStyle="#061411";cx.fill();if(on){cx.globalAlpha=e*.35;cx.fillStyle=s.col;cx.fill();cx.globalAlpha=e*idle}cx.stroke()}}
-  if(TEXT){const y0=r*1.12,fs=Math.max(12,r*.38),fm=Math.max(9.5,Math.min(11.5,r*.28));cx.textAlign="center";cx.textBaseline="top";
+  if(s.key==="kml"){cx.font=`700 ${r*.62}px ${MONO}`;cx.textAlign="center";cx.textBaseline="middle";cx.fillText("< >",0,r*.32);
+    const pr=r*.3,py=-r*.3;cx.beginPath();cx.arc(0,py-pr*.15,pr,Math.PI*.85,Math.PI*2.15);cx.lineTo(0,py+pr*1.25);cx.closePath();cx.fill();cx.fillStyle="#061411";cx.beginPath();cx.arc(0,py-pr*.15,pr*.38,0,6.283);cx.fill()}
+  if(s.key==="cad"){const q=r*.62;cx.lineWidth=1.3;cx.beginPath();cx.moveTo(-q,q*.7);cx.lineTo(q,q*.7);cx.lineTo(-q,-q*.8);cx.closePath();cx.stroke();
+    cx.beginPath();cx.moveTo(-q,q*1.05);cx.lineTo(q,q*1.05);cx.moveTo(-q,q*.92);cx.lineTo(-q,q*1.18);cx.moveTo(q,q*.92);cx.lineTo(q,q*1.18);cx.stroke();
+    const cxh=q*.45,cyh=-q*.55;cx.beginPath();cx.moveTo(cxh-q*.32,cyh);cx.lineTo(cxh+q*.32,cyh);cx.moveTo(cxh,cyh-q*.32);cx.lineTo(cxh,cyh+q*.32);cx.stroke();cx.beginPath();cx.arc(cxh,cyh,q*.14,0,6.283);cx.stroke()}
+  if(s.key==="shp"){const q=r*.66,pts=[[-q,-q*.2],[-q*.25,-q*.85],[q*.85,-q*.5],[q*.6,q*.75],[-q*.6,q*.6]];cx.beginPath();pts.forEach((p,k)=>k?cx.lineTo(p[0],p[1]):cx.moveTo(p[0],p[1]));cx.closePath();
+    cx.globalAlpha=e*.18*idle;cx.fill();cx.globalAlpha=e*idle;cx.stroke();const hot=active&&!POSTER?Math.floor(T*4)%5:-1;pts.forEach((p,k)=>{cx.fillStyle=k===hot?EDGE:s.col;cx.fillRect(p[0]-2,p[1]-2,4,4)})}
+  if(TEXT&&s.compact){const y0=r*1.14,fs=Math.max(11.5,r*.5);cx.textAlign="center";cx.textBaseline="top";cx.globalAlpha=e;cx.fillStyle=INK;cx.font=`600 ${fs}px ${FONT}`;cx.fillText(s.name,0,y0);
+    cx.globalAlpha=e*.58;cx.font=`${Math.max(9.5,r*.36)}px ${MONO}`;cx.fillText(s.role,0,y0+fs*1.3)}
+  if(TEXT&&!s.compact){const y0=r*1.12,fs=Math.max(12,r*.38),fm=Math.max(9.5,Math.min(11.5,r*.28));cx.textAlign="center";cx.textBaseline="top";
     cx.globalAlpha=e;cx.fillStyle=INK;cx.font=`600 ${fs}px ${FONT}`;cx.fillText(s.name,0,y0);
     cx.globalAlpha=e*.62;cx.font=`${Math.max(10.5,r*.29)}px ${FONT}`;cx.fillText(s.role,0,y0+fs*1.25);
     // the record being read right now, as it looks inside that format
@@ -280,7 +294,7 @@ function frame(now){
   if(TEXT&&!COVER)heroes.forEach(({p,u,after})=>{const s=SRC[p.si];if(after>=0){const a=after<.7?1:1-(after-.7)/.4;pill(p.s2,p.b[0],p.b[1]-L.cs*.9,s.col,a*.95);return}
     const q=quad(p.a,p.m,p.b,ease(u)),a=Math.min(1,u*5);pill(morph(p,u),q[0],q[1]-L.cs*.9,s.col,a*.95)});
 
-  NODES.forEach((s,i)=>card(s,i,T));
+  NODES.forEach((s,i)=>card(s,i,T));XTRA.forEach((s,i)=>card(s,i+1,T));
   cx.globalCompositeOperation="lighter";cx.globalAlpha=1;cx.imageSmoothingEnabled=true;cx.drawImage(gl,0,0,W,H);cx.globalAlpha=.6;cx.drawImage(gl,-W*.01,-H*.01,W*1.02,H*1.02);cx.globalCompositeOperation="source-over";
   if(LOOP&&T>FADE0){const f=easeOut(clamp((T-FADE0)/(CYCLE-FADE0-.15),0,1));cx.save();cx.beginPath();land?cx.rect(panel.x+panel.w+1,0,W,H):cx.rect(0,panel.y+panel.h+1,W,H);cx.clip();
     cx.globalAlpha=f;cx.fillStyle=bg;cx.fillRect(0,0,W,H);cx.globalAlpha=.045*f;cx.strokeStyle="#9fe8cc";cx.lineWidth=1;cx.beginPath();for(let x=L.cs*4;x<W;x+=L.cs*4){cx.moveTo(x,0);cx.lineTo(x,H)}for(let y=L.cs*4;y<H;y+=L.cs*4){cx.moveTo(0,y);cx.lineTo(W,y)}cx.stroke();
@@ -296,6 +310,8 @@ function backend(T,moving,heroes){
   if(TEXT){cx.font=`600 10px ${MONO}`;cx.fillStyle="rgba(159,232,204,.55)";cx.textAlign="left";cx.textBaseline="top";cx.fillText("BACKEND · SERVER",panel.x+14,panel.y+12)}
   const on=n=>T>=n.win[0]&&T<=n.win[1],DB=SRC[2];
   pipe(SRC[0],DB,SRC[0].col,on(SRC[0]),T,moving);pipe(SRC[1],DB,SRC[1].col,on(SRC[1]),T,moving);pipe(DB,SVC,DB.col,on(SVC),T,moving);
+  XTRA.forEach((s,i)=>{const live=on(s);pipe(s,DB,s.col,live,T,moving);if(!live||!moving)return;
+    for(let j=0;j<3;j++){const u=((T-s.win[0])*.55+j/3+i*.17)%1,x=s.x+(DB.x-s.x)*u,y=s.y+(DB.y-s.y)*u;digit(s.col,L.sm,(Math.floor(T*8)+j+i)%2,x,y,Math.sin(u*Math.PI)*.9)}});
   pipe(SVC,land?{x:mapT.ox+mapT.k*95,y:SVC.y}:{x:SVC.x,y:mapT.oy+mapT.k*60},SVC.col,on(SVC),T,moving);
   let nx=0,ng=0,lastIn=null;
   const fly=(p)=>{const sc=SRC[p.si];if(T<p.t0)return;
