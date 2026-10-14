@@ -13,9 +13,9 @@ canvas{display:block;width:100vw;height:100vh}
 </head>
 <body>
 <canvas id="c" role="img" aria-label="On the backend, an Excel sheet of Anganwadi centres and a GeoJSON file of district boundaries are read as binary and loaded into a GIS database as two layers. A map service publishes the layers, and the map of Chhattisgarh forms: district boundaries, Anganwadi centres, and the stored geometry. Finally the GIS database joins every centre to the district it falls in."></canvas>
-<p class="sr">Read: the Excel sheet, the GeoJSON file, and KML, CAD and Shapefile sources are read as 0s and 1s. Load: they are stored in the GIS database as two layers, anganwadi_centres (points) and districts (polygons). Serve: the map service publishes the layers and the map draws them. Join: the GIS database matches each centre to the district it falls in.</p>
+<p class="sr">Read: the Excel sheet, the GeoJSON file, and KML, CAD and Shapefile sources are read as 0s and 1s. Load: they are stored in the GIS database as two layers, anganwadi_centres (points) and districts (polygons). Serve: the map service publishes the layers and the map draws them. Publish: the finished map, with every centre matched to its district, is published to the portal.</p>
 <script>
-/* v14 · the GIS stack.  READ → LOAD → SERVE → JOIN
+/* v14 · the GIS stack.  READ → LOAD → SERVE → PUBLISH
    Built the way a GIS developer would: the files are never drawn directly. They are loaded into a GIS database
    (PostgreSQL + PostGIS, SRID 4326) as two layers, anganwadi_centres (POINT) and districts (MULTIPOLYGON); a map
    service publishes the layers; the map draws what the service sends; the spatial join (ST_Within) runs in the DB.
@@ -334,7 +334,7 @@ function hud(T,prog,done){
   cx.globalAlpha=a;cx.textBaseline="bottom";cx.font=`600 10.5px ${MONO}`;cx.fillStyle=done?EDGE:"#9fe8cc";cx.textAlign="left";cx.fillText(done?"MAP READY":"BUILDING THE MAP",bx,by-6);
   cx.textAlign="right";cx.fillText(Math.round(prog*100)+"%",bx+bw,by-6);
   cx.fillStyle="rgba(159,232,204,.15)";cx.fillRect(bx,by,bw,2);const g=cx.createLinearGradient(bx,0,bx+bw,0);NODES.forEach((s,i)=>g.addColorStop(i/3,s.col));cx.fillStyle=g;cx.fillRect(bx,by,bw*prog,2);
-  const steps=[["READ",.5],["LOAD",TL.ing0+.9],["SERVE",TL.geo0],["JOIN",TL.join]];let cur=-1;steps.forEach((s,i)=>{if(T>=s[1])cur=i});
+  const steps=[["READ",.5],["LOAD",TL.ing0+.9],["SERVE",TL.geo0],["PUBLISH",TL.join]];let cur=-1;steps.forEach((s,i)=>{if(T>=s[1])cur=i});
   cx.textBaseline="top";cx.font=`600 10px ${MONO}`;const slot=bw/4;
   steps.forEach((s,i)=>{const x=bx+slot*i,lit=T>=s[1],now=i===cur&&!done;cx.textAlign="left";cx.globalAlpha=a*(lit?(now?1:.7):.28);cx.fillStyle=now?LAND:INK;
     if(now){cx.shadowColor=LAND;cx.shadowBlur=8}cx.fillText(s[0],x,by+8);cx.shadowBlur=0;if(i<3){const tw=cx.measureText(s[0]).width;cx.globalAlpha=a*.3;cx.fillStyle=INK;cx.textAlign="center";cx.fillText("›",(x+tw+x+slot)/2,by+8)}})}
