@@ -135,3 +135,14 @@ CHAPTER SEPARATORS (separator.html, transparent, animates when scrolled into vie
   separator.html#6   before the Maintenance sidecar
   separator.html#7   before "From the ground, back to the ground"           (full cycle + Output node; frame height ~180)
   Strip is 1100x186 (#7 is 1100x220); it scales to the frame width and centres vertically. Reduced-motion users see the end state.
+
+LIVE GEO PORTAL (v18 · 21 Oct 2026)
+  portal.html#portal&bare              a working portal on the real boundaries, with the guided steps
+  portal.html#portal&bare&step=N       open a step directly (0-based): 0 open, 1 layers, 2 search, 3 heatmap,
+                                       4 by district, 5 find nearby, 6 Ask AI, 7 for everyone
+  portal.html#portal&bare&nav=off      no step card, free exploration
+  &view=lng,lat,zoom &layers=aw,gp,mine &aw=points|heat|district &bm=outline|light|sat  (the link button builds these)
+  Map engine: MapLibre GL JS 4.7.1 from unpkg. Labels are HTML, so no glyph or sprite server is needed.
+  Real: districts (Census 2011), state outline, neighbouring states, rivers, roads, rail (Natural Earth).
+  Illustrative: Anganwadi centres, GP nodes, fibre routes, mine leases, Ask AI answers (computed in the browser).
+  Frozen copy: versions/v18/portal.html
