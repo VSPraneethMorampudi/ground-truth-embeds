@@ -2962,7 +2962,7 @@ SPEC.maintain={W:560,H:600,portH:560,foot:"The servers, the report and the incom
          {at:"r0",t:"Like servicing a vehicle",b:["regular care keeps it","running for years"]}]}]}
 
 /* ============================================================ 7 · THE CYCLE (closing) */
-SPEC.cycle={W:640,H:600,portH:600,foot:"The six stages of the story. The state outline and districts are real.",
+SPEC.cycle={W:640,H:600,portH:600,
  draw(A){const s=A.st,cx=320,cy=300,R=196;s.c=[cx,cy];s.R=R;
   const ST=[["Data Creation",""],["Geodatabase","Creation"],["Geo Portal","Development"],["Mobile App",""],["Mapping and","Cartography"],["Maintenance",""]];
   s.ang=i=>-Math.PI/2+i*Math.PI/3;s.at=(a,r=R)=>[cx+Math.cos(a)*r,cy+Math.sin(a)*r];
