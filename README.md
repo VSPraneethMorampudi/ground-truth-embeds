@@ -53,7 +53,8 @@ SECTION FIGURES (v5 · hand-annotated, stepped)
 NEW STORY OUTLINE (v8 · 1 Oct 2026) — one figure per section of the re-ordered story
   index.html#create&bare        1 Data Creation: old records, paper to digital (Try it: drag the scanner), new data, keeping it current
   index.html#geodatabase&bare   2 Geodatabase: stacked layers, a record (Try it: tap the centre), rules at the door, one home
-  index.html#portal&bare        3 Geo Portal: open it, layers (Try it: switch on centres), search, Ask AI, accessibility
+  index.html#portal&bare        3 Geo Portal: open it, layers (Try it: switch on centres), heatmap, search, tools, Ask AI, accessibility
+    (v8 updated 21 Oct 2026: Heatmap and Tools steps added; steps are now 0 open, 1 layers, 2 heatmap, 3 search, 4 tools, 5 Ask AI, 6 for everyone)
   index.html#mobile&bare        4 Mobile App: you are here, nearby, capture (Try it: tap to drop a point), send for review
   index.html#mapping&bare       5 Mapping and cartography: raw data, colour (Try it: pick the river colour), labels, a thematic map
   index.html#maintain&bare      6 Maintenance: running, safe, current (Try it: publish or send back), all three

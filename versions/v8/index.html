@@ -574,7 +574,7 @@ function xy2ll(x,y){let lon=82.3,lat=21;for(let k=0;k<12;k++){const p=ll2xy(lon,
   const a=(q[0]-p[0])/.01,b=(r[0]-p[0])/.01,c=(q[1]-p[1])/.01,d=(r[1]-p[1])/.01,det=a*d-b*c;const dx=x-p[0],dy=y-p[1];lon+=(d*dx-b*dy)/det;lat+=(-c*dx+a*dy)/det}return[lon,lat]}
 
 /* ---------------- router ---------------- */
-const VIEWS={flow:"The intro told top to bottom; arrows draw as the reader scrolls",overview:"The base map and the departments that build on it",intake:"Drag a pin; the four intake checks run live",conversion:"Drag to fix a duplicate, a dangle and a sliver",projection:"Measure a kilometre anywhere in four coordinate systems",storage:"Point at the stack; every layer answers for the same spot",publication:"Change one record; every consumer updates",cartography:"Zoom from state to street; each layer switches on when it becomes useful",provenance:"The metadata card, lineage, and three tiers of access",inuse:"An example query across two departments' layers",update:"Schedules, boundary changes, revisions and what follows",create:"v8 · Data Creation: old records, paper to digital, new data, keeping it current",geodatabase:"v8 · Geodatabase: one home, rules at the door, a record",portal:"v8 · Geo Portal: layers, search, Ask AI, accessibility",mobile:"v8 · Mobile App: you are here, nearby, capture, send",mapping:"v8 · Mapping and cartography: raw data to a map that decides",maintain:"v8 · Maintenance: running, safe, current",cycle:"v8 · Closing: the six stages as one loop",legacy:"Data creation: old records converted to one GIS format",newdata:"Data creation: satellite, scanned maps and field survey",updates:"Data updates: one central database",gdbrec:"Geodatabase: map and table, one feature",gdbrules:"Geodatabase: rules at the door"};
+const VIEWS={flow:"The intro told top to bottom; arrows draw as the reader scrolls",overview:"The base map and the departments that build on it",intake:"Drag a pin; the four intake checks run live",conversion:"Drag to fix a duplicate, a dangle and a sliver",projection:"Measure a kilometre anywhere in four coordinate systems",storage:"Point at the stack; every layer answers for the same spot",publication:"Change one record; every consumer updates",cartography:"Zoom from state to street; each layer switches on when it becomes useful",provenance:"The metadata card, lineage, and three tiers of access",inuse:"An example query across two departments' layers",update:"Schedules, boundary changes, revisions and what follows",create:"v8 · Data Creation: old records, paper to digital, new data, keeping it current",geodatabase:"v8 · Geodatabase: one home, rules at the door, a record",portal:"v8 · Geo Portal: layers, heatmap, search, tools, Ask AI, accessibility",mobile:"v8 · Mobile App: you are here, nearby, capture, send",mapping:"v8 · Mapping and cartography: raw data to a map that decides",maintain:"v8 · Maintenance: running, safe, current",cycle:"v8 · Closing: the six stages as one loop",legacy:"Data creation: old records converted to one GIS format",newdata:"Data creation: satellite, scanned maps and field survey",updates:"Data updates: one central database",gdbrec:"Geodatabase: map and table, one feature",gdbrules:"Geodatabase: rules at the door"};
 const OPT={};
 function parse(){const p=location.hash.slice(1).split("&");const v=p.shift();for(const k in OPT)delete OPT[k];p.forEach(x=>{const[a,b]=x.split("=");OPT[a]=b===undefined?true:decodeURIComponent(b)});return v}
 const INIT={},inited={};
@@ -2669,14 +2669,50 @@ SPEC.portal={W:600,H:560,portH:520,foot:"Boundaries, rivers, roads and rail are 
     const tr=el("rect",{x:540,y,width:34,height:20,rx:10,fill:"var(--n300)"},g2),kn=el("circle",{cx:550,cy:y+10,r:7,fill:"#fff"},g2);return{tr,kn}});
   s.rings=near.map(p=>{const m=s.L.mark(p,g2=>el("circle",{r:9,fill:"none",stroke:"var(--orange-400)","stroke-width":2.6},g2));s.hits.appendChild(m.g);m.g.style.opacity=0;return m});
   const mx=near.reduce((a,p)=>a+p[0],0)/(near.length||1),my=near.reduce((a,p)=>a+p[1],0)/(near.length||1);
-  s.V={state:{cx:258,cy:318,w:560},city:{cx:212,cy:283,w:44},ask:{cx:mx,cy:my+10,w:34}}},
+  s.V={state:{cx:258,cy:318,w:560},city:{cx:212,cy:283,w:44},ask:{cx:mx,cy:my+10,w:34},tools:{cx:228,cy:258,w:150}};
+  // ---- heatmap: the same centres, blurred and coloured by how many overlap (v18)
+  {const vid=A.S.closest(".view").id;
+   A.defs.insertAdjacentHTML("beforeend",`<filter id="${vid}-heat" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="4.5"/><feColorMatrix type="matrix" values="0 0 0 1 0  0 0 0 1 0  0 0 0 1 0  0 0 0 1 0"/><feComponentTransfer><feFuncR type="table" tableValues=".96 .945 .914 .788 .627 .369"/><feFuncG type="table" tableValues=".839 .788 .667 .365 .204 .102"/><feFuncB type="table" tableValues=".702 .627 .471 .18 .333 .231"/><feFuncA type="table" tableValues="0 .62 .8 .88 .92 .94"/></feComponentTransfer></filter><linearGradient id="${vid}-ramp"><stop offset="0" stop-color="#f5d6b3"/><stop offset=".4" stop-color="#e9aa78"/><stop offset=".6" stop-color="#c95d2e"/><stop offset=".8" stop-color="#9a2e5d"/><stop offset="1" stop-color="#5e1a3b"/></linearGradient>`);
+   s.heat=el("g",{opacity:0,"clip-path":c},g);const hb=el("g",{filter:`url(#${vid}-heat)`},s.heat);
+   G.stack.aw.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:7,fill:"#000","fill-opacity":.34},hb));G.carto.aw.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:5,fill:"#000","fill-opacity":.05},hb));
+   g.insertBefore(s.heat,s.lay.bn);
+   // "show centres as" switch under the layer list, and a legend on the map
+   s.seg=el("g",{opacity:0},s.panel);A.hand(s.seg,16,352,"Show centres as",{size:17,fill:"var(--n600)"});
+   el("rect",{x:16,y:362,width:158,height:30,rx:8,fill:"#fff",stroke:"#d3cec6"},s.seg);el("rect",{x:95,y:362,width:79,height:30,rx:8,fill:"var(--n900)"},s.seg);
+   A.hand(s.seg,55,383,"Points",{size:17,anchor:"middle",fill:"var(--n700)"});A.hand(s.seg,134,383,"Heatmap",{size:17,anchor:"middle",fill:"#fff",bold:1});
+   s.leg=el("g",{opacity:0},s.win);V8.card(A,s.leg,206,438,170,60,{rx:10,fill:"#fff"});A.hand(s.leg,220,460,"Centres per area",{size:16,bold:1,fill:"var(--n800)"});
+   el("rect",{x:220,y:468,width:142,height:9,rx:4.5,fill:`url(#${vid}-ramp)`},s.leg);A.hand(s.leg,220,492,"fewer",{size:14,fill:"var(--n600)"});A.hand(s.leg,362,492,"more",{size:14,anchor:"end",fill:"var(--n600)"});
+   s.win.insertBefore(s.leg,s.chat)}
+  // ---- tools: a rail on the map's right edge (identify, measure, area, find nearby)
+  {s.tools=el("g",{},s.win);V8.card(A,s.tools,560,124,28,120,{rx:6,fill:"#fff"});
+   const ICO=[(x,y)=>`M${x-4},${y-7} L${x+6},${y} L${x+1},${y+1} L${x+3},${y+7} L${x+1},${y+8} L${x-1},${y+2} L${x-4},${y+5}Z`,
+     (x,y)=>`M${x-7},${y+3} L${x+3},${y-7} L${x+7},${y-3} L${x-3},${y+7}Z M${x-3},${y-1} l2,2 M${x},${y-4} l2,2`,
+     (x,y)=>`M${x-6},${y-2} L${x},${y-7} L${x+6},${y-2} L${x+4},${y+6} L${x-4},${y+6}Z`,
+     (x,y)=>`M${x-6},${y} a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 M${x-1},${y} a1,1 0 1,0 2,0 a1,1 0 1,0 -2,0`];
+   s.tb=ICO.map((d,i)=>{const cy=140+i*29,bg=el("rect",{x:562,y:cy-12,width:24,height:24,rx:5,fill:"transparent"},s.tools);
+     const ic=el("path",{d:d(574,cy),fill:"none",stroke:"var(--n800)","stroke-width":1.6,"stroke-linecap":"round","stroke-linejoin":"round","stroke-dasharray":i===3?"2.5 2":"none"},s.tools);return{bg,ic}});
+   s.tool=k=>s.tb.forEach((b,i)=>{b.bg.setAttribute("fill",i===k?"var(--n900)":"transparent");b.ic.setAttribute("stroke",i===k?"#fff":"var(--n800)")});
+   s.win.insertBefore(s.tools,s.chat);
+   const city=n=>G.ctx.cities.find(q=>q.n===n).xy,RP=city("Raipur"),BP=city("Bilaspur");
+   s.km=Math.round(Math.hypot(BP[0]-RP[0],BP[1]-RP[1])/G.kmPx);s.mMid=[(RP[0]+BP[0])/2,(RP[1]+BP[1])/2];
+   // measure: Raipur to Bilaspur
+   s.meas=el("g",{opacity:0},g);s.mLine=el("path",{d:"",fill:"none",stroke:"var(--blue-500)","stroke-width":2.6,"stroke-dasharray":"7 4","vector-effect":"non-scaling-stroke"},s.meas);
+   s.setM=t=>s.mLine.setAttribute("d",`M${RP[0]},${RP[1]} L${lerp(RP[0],BP[0],t)},${lerp(RP[1],BP[1],t)}`);
+   // find nearby: centres within 10 km of Raipur
+   const R=15*G.kmPx;s.ring=el("circle",{cx:RP[0],cy:RP[1],r:R,fill:"rgba(193,125,16,.08)",stroke:"var(--orange-400)","stroke-width":2.2,"stroke-dasharray":"6 4","vector-effect":"non-scaling-stroke",opacity:0},g);
+   s.inR=G.stack.aw.concat(G.carto.aw).filter(p=>Math.hypot(p[0]-RP[0],p[1]-RP[1])<=R);
+   s.inDots=V8.dots(s.L,g,s.inR,{r:3.6,sw:1,fill:"var(--orange-400)"});s.inDots.style.opacity=0;
+   s.mEnds=[RP,BP].map(p=>s.L.mark(p,g2=>el("circle",{r:5,fill:"#fff",stroke:"var(--blue-500)","stroke-width":2.4},g2)));
+   s.mLab=s.L.mark(s.mMid,g2=>V8.chip(A,g2,8,-14,`${s.km} km`,{w:84,h:28,fill:"#fff",stroke:"var(--blue-500)",ink:"var(--blue-700)",size:18}));
+   s.rLab=s.L.mark([RP[0]+R*.72,RP[1]+R*.72],g2=>V8.chip(A,g2,4,0,`${s.inR.length} centres`,{w:124,h:28,fill:"#fff",stroke:"var(--orange-400)",ink:"var(--orange-700)",size:18}));
+   s.toolEls=[s.meas,s.ring,s.inDots,s.mLab.g,s.rLab.g].concat(s.mEnds.map(m=>m.g));s.toolEls.forEach(e=>e.style.opacity=0)}},
  steps:[]};
 {const I=SPEC.portal;
  const setLay=(A,k,on,ms=300)=>{const s=A.st,r=s.LY.find(x=>x.k===k);r.on=on;r.tr.setAttribute("fill",on?"var(--blue-500)":"var(--n300)");A.to(r.kn,{cx:on?40:26},ms);A.op(s.lay[k],on?1:0,ms)};
  const lays=(A,on)=>A.st.LY.forEach(r=>setLay(A,r.k,on.includes(r.k)));
  const acc=(A,on)=>{const s=A.st;s.LY.forEach(r=>{const t=r.g.querySelector("text");if(!t.dataset.fs)t.dataset.fs=t.getAttribute("font-size");t.setAttribute("font-size",(+t.dataset.fs*(on?1.15:1)).toFixed(1))});s.accR.forEach((r,i)=>{const v=on&&i<2;r.tr.setAttribute("fill",v?"var(--blue-500)":"var(--n300)");r.kn.setAttribute("cx",v?564:550)});A.op(s.hc,on?1:0,500);
 };
- const reset=A=>{const s=A.st;s.q.textContent="Search a place";s.q.style.fill="var(--n500)";A.op([s.sug,s.chat,s.acc,s.pin.g],0,200);s.rings.forEach(m=>m.g.style.opacity=0);acc(A,false)};
+ const reset=A=>{const s=A.st;s.q.textContent="Search a place";s.q.style.fill="var(--n500)";A.op([s.sug,s.chat,s.acc,s.pin.g,s.heat,s.seg,s.leg].concat(s.toolEls),0,200);s.tool(-1);s.rings.forEach(m=>m.g.style.opacity=0);acc(A,false)};
  I.steps=[
  {nav:"Open it",go:async A=>{const s=A.st;reset(A);lays(A,["dist","riv","road"]);A.op(s.vill,0,200);await s.L.fly(s.V.state,800)},
   notes:[{at:"l0",t:"Open the portal",b:["the whole state on one map,","in any web browser.","Nothing to install"],to:()=>[300,24]},
@@ -2684,11 +2720,20 @@ SPEC.portal={W:600,H:560,portH:520,foot:"Boundaries, rivers, roads and rail are 
  {nav:"Layers",go:async A=>{const s=A.st;reset(A);lays(A,["dist","riv","road","bn"]);A.op(s.vill,0,200);await s.L.fly(s.V.state,500)},
   notes:[{at:"l0",t:"Switch layers on and off",b:["show only what you need:","rivers, roads, centres,","internet nodes"],to:()=>[30,260]},
          {at:"r0",t:"Every layer is live",b:["it comes straight from the","geodatabase, so it is","always the latest"]}]},
+ {nav:"Heatmap",go:async A=>{const s=A.st;reset(A);lays(A,["dist","riv","road","aw"]);A.op(s.vill,0,200);await s.L.fly(s.V.state,500);
+   await A.op(s.seg,1,300);await A.wait(300);A.op(s.lay.aw,0,600);await A.op(s.heat,1,800);await A.op(s.leg,1,300)},
+  notes:[{at:"l0",t:"Same layer, drawn as density",b:["thousands of dots blur","together at state scale.","Switch them to a heatmap"],to:()=>[134,377]},
+         {at:"r0",t:"Darker means more centres",c:"var(--dv-magenta-700)",b:["they crowd around Raipur","and Bhilai, and thin out","in the forested south"],to:A=>A.st.L.ill([204,301])}]},
  {nav:"Search",go:async A=>{const s=A.st;reset(A);lays(A,["dist","riv","road","aw"]);await s.L.fly(s.V.state,300);s.q.style.fill="var(--n900)";s.q.textContent="";
    for(const ch of "Raipur"){s.q.textContent+=ch;await A.wait(110)}await A.op(s.sug,1,250);await A.wait(450);A.op(s.sug,0,200);
    await Promise.all([s.L.fly(s.V.city,1300),A.op(s.vill,1,1000)]);await A.op(s.pin.g,1,250)},
   notes:[{at:"l0",t:"Search a place",b:["type a village, a district or","a centre's name, and the","map takes you there"],to:()=>[300,76]},
          {at:"r0",t:"Detail appears as you zoom",b:["centres show once","there is room to","read them"],to:A=>A.st.L.ill([203.06,289.6])}]},
+ {nav:"Tools",go:async A=>{const s=A.st;reset(A);lays(A,["dist","riv","road","aw"]);A.op(s.vill,0,200);await s.L.fly(s.V.tools,900);
+   s.tool(1);s.setM(0);A.op([s.meas,s.mEnds[0].g],1,200);await A.tw(900,t=>s.setM(t));A.op(s.mEnds[1].g,1,200);await A.op(s.mLab.g,1,300);await A.wait(600);
+   s.tool(3);await A.op(s.ring,1,450);await A.op(s.inDots,1,300);await A.op(s.rLab.g,1,300)},
+  notes:[{at:"l0",t:"Measure a distance",bmax:3,b:A=>["Raipur to Bilaspur:",`about ${A.st.km} km in a`,"straight line"],to:A=>{const s=A.st,a=G.ctx.cities;const r=a.find(q=>q.n==="Raipur").xy,b=a.find(q=>q.n==="Bilaspur").xy;return s.L.ill([lerp(r[0],b[0],.78),lerp(r[1],b[1],.78)])}},
+         {at:"r0",t:"Find what's nearby",c:"var(--orange-700)",b:["count the centres within","15 km of any spot. The","tools sit on the map"],to:()=>[560,227]}]},
  {nav:"Ask AI",go:async A=>{const s=A.st;reset(A);lays(A,["dist","riv","road","aw","bn"]);A.op(s.vill,1,300);await s.L.fly(s.V.ask,900);
    [s.qB,s.dotsB,s.aB].forEach(e=>e.style.opacity=0);await A.op(s.chat,1,300);await A.op(s.qB,1,300);await A.op(s.dotsB,1,200);await A.wait(700);await A.op(s.dotsB,0,150);
    await A.op(s.aB,1,300);for(const m of s.rings){m.g.style.opacity=1;await A.wait(40)}},
