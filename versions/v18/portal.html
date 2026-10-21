@@ -224,7 +224,7 @@ body.hc .pill{color:#fff!important;border:1px solid #fff}
 .tbar .meta{font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .tbar .btn{height:30px;font-size:.8rem;padding:0 11px}
 .tbody{height:172px;overflow:auto;border-top:1px solid var(--line)}
-.table.closed .tbody{display:none}
+.table.closed{display:none}
 table{border-collapse:collapse;width:100%;font-size:.82rem}
 th{position:sticky;top:0;background:var(--panel);text-align:left;font-weight:500;color:var(--muted);font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;padding:6px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
 td{padding:5px 12px;border-bottom:1px solid var(--line);white-space:nowrap;color:var(--text)}
@@ -313,7 +313,7 @@ body.rm *{transition:none!important;animation:none!important}
         <hr>
         <button id="homeBtn" aria-label="Zoom to the whole state" data-tip="Whole state"><svg class="ic" viewBox="0 0 20 20"><path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4"/></svg></button>
         <button id="shareBtn" aria-label="Copy a link to this view" data-tip="Copy link to this view"><svg class="ic" viewBox="0 0 20 20"><path d="M8.5 11.5a3.2 3.2 0 0 0 4.6 0l2.6-2.6a3.2 3.2 0 0 0-4.6-4.6L10 5.4"/><path d="M11.5 8.5a3.2 3.2 0 0 0-4.6 0L4.3 11.1a3.2 3.2 0 0 0 4.6 4.6L10 14.6"/></svg></button>
-        <button id="tblBtn" aria-label="Show or hide the attribute table" aria-pressed="true" data-tip="Attribute table"><svg class="ic" viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="12" rx="1.5"/><path d="M3 8h14M3 12h14M8 8v8"/></svg></button>
+        <button id="tblBtn" aria-label="Show or hide the attribute table" aria-pressed="false" data-tip="Attribute table"><svg class="ic" viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="12" rx="1.5"/><path d="M3 8h14M3 12h14M8 8v8"/></svg></button>
       </div>
       <div class="zoom"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button></div>
       <div class="chip" id="chip" hidden></div>
@@ -339,7 +339,7 @@ body.rm *{transition:none!important;animation:none!important}
     </div>
   </div>
 
-  <section class="table" id="table" aria-label="Attribute table">
+  <section class="table closed" id="table" aria-label="Attribute table">
     <div class="tbar">
       <div role="tablist" aria-label="Table" id="tabs" style="display:flex;gap:2px;flex-wrap:wrap"></div>
       <span class="sp"></span>
@@ -353,7 +353,7 @@ body.rm *{transition:none!important;animation:none!important}
     <span class="co" id="coord">21.2514° N, 81.6296° E</span>
     <span class="co hide-phone" id="zl">Zoom 6.4</span>
     <span class="hide-phone">WGS 84 · EPSG:4326</span>
-    <span class="note" id="attr">Boundaries: Census 2011 · Rivers, roads, rail: Natural Earth · Centres, nodes, leases: illustrative</span>
+    <span class="note" id="attr">Boundaries: Census 2011 · Rivers, roads, rail: Natural Earth, clipped to the state · Centres, nodes, leases: illustrative</span>
   </footer>
   <p class="sr" id="live" aria-live="polite"></p>
 </div>
@@ -458,7 +458,8 @@ const SRC={
   gp:fc(GP.map(g=>pt(g.p,{id:g.id,status:g.status}))),
   fibre:fc(FIBRE.map(l=>({type:"Feature",properties:{},geometry:{type:"LineString",coordinates:l}}))),
   mines:fc(MINES.map(m=>({type:"Feature",properties:{id:m.id,mineral:m.mineral},geometry:{type:"Polygon",coordinates:[m.ring]}}))),
-  sel:fc([]),hits:fc([]),meas:fc([]),buf:fc([])
+  sel:fc([]),hits:fc([]),meas:fc([]),buf:fc([]),
+  mask:fc([{type:"Feature",properties:{},geometry:{type:"Polygon",coordinates:[[[60,0],[110,0],[110,40],[60,40],[60,0]]].concat(GEO.state)}}])
 };
 
 // ---------------------------------------------------------------- map style
@@ -482,8 +483,8 @@ const style={version:8,
     {id:"bg",type:"background",paint:{"background-color":T.bg}},
     {id:"bm-light",type:"raster",source:"bm-light",layout:{visibility:"none"}},
     {id:"bm-sat",type:"raster",source:"bm-sat",layout:{visibility:"none"}},
-    {id:"nb-fill",type:"fill",source:"nb",paint:{"fill-color":T.nb,"fill-outline-color":T.nbLine}},
-    {id:"nb-line",type:"line",source:"nb",paint:{"line-color":T.nbLine,"line-width":1.4}},
+    {id:"nb-fill",type:"fill",source:"nb",layout:{visibility:"none"},paint:{"fill-color":T.nb,"fill-outline-color":T.nbLine}},
+    {id:"nb-line",type:"line",source:"nb",layout:{visibility:"none"},paint:{"line-color":T.nbLine,"line-width":1.4}},
     {id:"state-fill",type:"fill",source:"state",paint:{"fill-color":T.state}},
     {id:"choro",type:"fill",source:"dist",layout:{visibility:"none"},paint:{"fill-color":choroExpr(T),"fill-opacity":["case",["boolean",["feature-state","hover"],false],1,0.88]}},
     {id:"mines-fill",type:"fill",source:"mines",layout:{visibility:"none"},paint:{"fill-color":T.mine,"fill-opacity":0.45}},
@@ -501,6 +502,8 @@ const style={version:8,
     {id:"aw-heat",type:"heatmap",source:"aw",layout:{visibility:"none"},paint:{"heatmap-weight":1,
       "heatmap-intensity":["interpolate",["linear"],["zoom"],5,0.22,10,1.1],"heatmap-radius":["interpolate",["linear"],["zoom"],5,7,10,30],
       "heatmap-color":heatRamp(T),"heatmap-opacity":["interpolate",["linear"],["zoom"],8.5,0.9,10.5,0.25]}},
+    {id:"mask",type:"fill",source:"mask",paint:{"fill-color":T.bg}},
+    {id:"state-edge",type:"line",source:"state",layout:{"line-join":"round"},paint:{"line-color":T.outline,"line-width":["interpolate",["linear"],["zoom"],5,2.4,10,3]}},
     {id:"aw-pt",type:"circle",source:"aw",layout:{visibility:"none"},paint:{"circle-color":statusColor(T),"circle-radius":["interpolate",["linear"],["zoom"],5,1.9,8,3,11,5.5],"circle-stroke-color":T.ptLine,"circle-stroke-width":["interpolate",["linear"],["zoom"],5,0.4,9,1.2]}},
     {id:"gp-pt",type:"circle",source:"gp",layout:{visibility:"none"},paint:{"circle-color":statusColor(T),"circle-radius":["interpolate",["linear"],["zoom"],5,2.4,9,4,11,6],"circle-stroke-color":"#05343f","circle-stroke-width":["interpolate",["linear"],["zoom"],5,0.8,9,1.6]}},
     {id:"meas-fill",type:"fill",source:"meas",filter:["==","$type","Polygon"],paint:{"fill-color":T.meas,"fill-opacity":0.12}},
@@ -516,7 +519,7 @@ const style={version:8,
 const pad=()=>{const w=$("#mapwrap").clientWidth,ph=w<520;return{top:ph?60:40,bottom:ph?90:50,left:ph?20:(tourOn()?370:40),right:($("#ai").hidden&&$("#acc").hidden)?70:(ph?70:420)}};
 const tourOn=()=>!$("#tour").hidden&&$("#mapwrap").clientWidth>620;
 const map=new maplibregl.Map({container:"map",style,bounds:[[STATE_BB[0],STATE_BB[1]],[STATE_BB[2],STATE_BB[3]]],fitBoundsOptions:{padding:40},
-  attributionControl:false,dragRotate:false,pitchWithRotate:false,touchPitch:false,maxZoom:16,minZoom:4.5,maxBounds:[[74,14],[90,28]]});
+  attributionControl:false,dragRotate:false,pitchWithRotate:false,touchPitch:false,maxZoom:16,minZoom:4.5,maxBounds:[[66,6],[98,36]]});
 map.touchZoomRotate.disableRotation();
 map.addControl(new maplibregl.ScaleControl({unit:"metric",maxWidth:110}),"bottom-left");
 const MW=$("#mapwrap");
@@ -571,9 +574,9 @@ function applyFilter(){const f=["in",["get","status"],["literal",[...ST.statuses
 function applyHeat(){const r=ST.radius;map.setPaintProperty("aw-heat","heatmap-radius",["interpolate",["linear"],["zoom"],5,7*r,10,30*r])}
 // basemaps
 function setBm(b){ST.bm=b;$$(".bm").forEach(x=>x.setAttribute("aria-checked",x.dataset.bm===b));vis("bm-light",b==="light");vis("bm-sat",b==="sat");
-  map.setPaintProperty("state-fill","fill-opacity",b==="outline"?1:0);map.setPaintProperty("nb-fill","fill-opacity",b==="outline"?1:b==="light"?0.45:0.35);
-  map.setPaintProperty("dist-line","line-color",b==="sat"?"#ffffff":T.dist);map.setPaintProperty("state-line","line-color",b==="sat"?"#ffd400":T.outline);
-  $("#attr").textContent=b==="light"?"Basemap © OpenStreetMap contributors © CARTO · Centres, nodes, leases: illustrative":b==="sat"?"Imagery: Esri, Maxar, Earthstar Geographics · Centres, nodes, leases: illustrative":"Boundaries: Census 2011 · Rivers, roads, rail: Natural Earth · Centres, nodes, leases: illustrative";
+  map.setPaintProperty("state-fill","fill-opacity",b==="outline"?1:0);map.setPaintProperty("mask","fill-opacity",b==="outline"?1:0.92);
+  map.setPaintProperty("dist-line","line-color",b==="sat"?"#ffffff":T.dist);map.setPaintProperty("state-line","line-color",b==="sat"?"#ffd400":T.outline);map.setPaintProperty("state-edge","line-color",b==="sat"?"#ffd400":T.outline);
+  $("#attr").textContent=b==="light"?"Basemap © OpenStreetMap contributors © CARTO · Centres, nodes, leases: illustrative":b==="sat"?"Imagery: Esri, Maxar, Earthstar Geographics · Centres, nodes, leases: illustrative":"Boundaries: Census 2011 · Rivers, roads, rail: Natural Earth, clipped to the state · Centres, nodes, leases: illustrative";
   bmFail=false}
 let bmFail=false;
 map.on("error",e=>{if(e&&e.sourceId&&e.sourceId.startsWith("bm-")&&!bmFail){bmFail=true;toast("Those basemap tiles can't load here. The outline map is back on.");setBm("outline")}});
@@ -752,8 +755,8 @@ function setA11y(k,on){A11[k]=on;$(`[data-a="${k}"]`).setAttribute("aria-checked
   if(k==="read"&&on)say("Read aloud is on.");if(k==="read"&&!on)try{speechSynthesis.cancel()}catch(e){}
   live(`${A11Y.find(a=>a[0]===k)[1]} ${on?"on":"off"}`)}
 function say(t){if(!A11.read)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="en-IN";speechSynthesis.speak(u)}catch(e){}}
-function paintTheme(){const P=(id,p,v)=>map.setPaintProperty(id,p,v);P("bg","background-color",T.bg);P("nb-fill","fill-color",T.nb);P("nb-line","line-color",T.nbLine);P("state-fill","fill-color",T.state);
-  P("dist-line","line-color",ST.bm==="sat"?"#fff":T.dist);P("state-line","line-color",ST.bm==="sat"?"#ffd400":T.outline);P("dist-hover","line-color",T.outline);P("rivers-line","line-color",T.water);P("roads-line","line-color",T.road);P("rail-line","line-color",T.rail);P("fibre-line","line-color",T.fibre);
+function paintTheme(){const P=(id,p,v)=>map.setPaintProperty(id,p,v);P("bg","background-color",T.bg);P("mask","fill-color",T.bg);P("nb-fill","fill-color",T.nb);P("nb-line","line-color",T.nbLine);P("state-fill","fill-color",T.state);
+  P("dist-line","line-color",ST.bm==="sat"?"#fff":T.dist);P("state-line","line-color",ST.bm==="sat"?"#ffd400":T.outline);P("state-edge","line-color",ST.bm==="sat"?"#ffd400":T.outline);P("dist-hover","line-color",T.outline);P("rivers-line","line-color",T.water);P("roads-line","line-color",T.road);P("rail-line","line-color",T.rail);P("fibre-line","line-color",T.fibre);
   P("aw-pt","circle-color",statusColor(T));P("aw-pt","circle-stroke-color",T.ptLine);P("gp-pt","circle-color",statusColor(T));P("mines-fill","fill-color",T.mine);P("mines-line","line-color",T.mineLine);
   P("aw-heat","heatmap-color",heatRamp(T));P("choro","fill-color",choroExpr(T));["hits-ring","sel-ring"].forEach(id=>P(id,"circle-stroke-color",T.hl));P("sel-line","line-color",T.hl);P("sel-fill","fill-color",T.hl);
   ["meas-line","buf-line"].forEach(id=>P(id,"line-color",T.meas));P("meas-fill","fill-color",T.meas);P("buf-fill","fill-color",T.meas);P("meas-pt","circle-stroke-color",T.meas)}
@@ -766,12 +769,12 @@ const STEPS=[
  {t:"Switch layers on and off",b:"Every department's layer sits on the same district boundaries. These are 2,600 Anganwadi centres and 380 BharatNet nodes, each live from the geodatabase.",
   y:"Switch on <b>Mine leases</b> in the layer panel.",go:()=>{reset();setLayer("aw",true,true);setLayer("gp",true,true);home()}},
  {t:"Search a place or a record",b:"Type a district, a town or a record ID and the map takes you there. This is the centre the story followed, AWC-RPR-00412.",
-  y:"Click any row in the table below to jump to that centre.",go:async()=>{reset();setLayer("aw",true,true);q.value="";for(const ch of "AWC-RPR-00412"){if(cur!==2)return;q.value+=ch;await wait(RM?0:45)}runSearch();await wait(RM?0:500);if(cur!==2)return;choose(0)}},
+  y:"Open the table with the <b>table button</b> on the right edge, then click a row to jump to it.",go:async()=>{reset();setLayer("aw",true,true);q.value="";for(const ch of "AWC-RPR-00412"){if(cur!==2)return;q.value+=ch;await wait(RM?0:45)}runSearch();await wait(RM?0:500);if(cur!==2)return;choose(0)}},
  {t:"See the pattern, not the dots",b:"At state scale, thousands of points blur together. A heatmap turns them into a density surface: centres crowd around Raipur, Bhilai and Bilaspur and thin out in the forested south.",
   y:"Drag <b>Radius</b> in the layer panel. Zoom in and the heat gives way to points.",go:()=>{reset();setAw("heat");home()}},
  {t:"Compare districts fairly",b:"The same centres counted per district and divided by area, so a large district doesn't win by size alone. Five classes, darker means denser.",
-  y:"Hover a district, or open the <b>Districts</b> tab in the table to sort them.",go:()=>{reset();setAw("district");setTab("dist");home()}},
- {t:"Measure, and find what's nearby",b:"Click any spot to count what lies within a radius. Here, 5 km around Raipur. The results land in the table, ready to copy as CSV.",
+  y:"Hover a district, or open the table and pick the <b>Districts</b> tab to sort them.",go:()=>{reset();setAw("district");setTab("dist");home()}},
+ {t:"Measure, and find what's nearby",b:"Click any spot to count what lies within a radius. Here, 5 km around Raipur. Show in table lists them, ready to copy as CSV.",
   y:"Drag the radius slider at the top of the map.",go:()=>{reset();setLayer("aw",true,true);setLayer("gp",true,true);setTool("nearby");nearbyAt([81.63,21.25],5);setTab("res");map.flyTo({center:[81.63,21.25],zoom:10.2,duration:dur(1200),padding:pad()})}},
  {t:"Ask in plain words",b:"No map skills needed. The assistant turns the question into a spatial query, runs it, and rings the answer on the map. On the portal it runs on the state's own servers.",
   y:"Pick another suggested question in the Ask AI panel.",go:()=>{reset();ask(QS[0])}},
@@ -797,7 +800,7 @@ map.on("click",()=>{if($("#panel").classList.contains("open")){$("#panel").class
 
 // ---------------------------------------------------------------- start
 buildPanel();buildTabs();
-if(innerWidth<760)openTable(false);
+openTable(false);
 map.on("load",()=>{addLabels();onZoom();applyFilter();
   map.getCanvas().setAttribute("aria-label","Map of Chhattisgarh. Arrow keys pan, plus and minus zoom.");
   if(OPT.layers){LAYERS.forEach(l=>setLayer(l.k,OPT.layers.includes(l.k),true))}
