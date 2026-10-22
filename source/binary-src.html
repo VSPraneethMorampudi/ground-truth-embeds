@@ -15,7 +15,7 @@ canvas{display:block;width:100vw;height:100vh}
 <canvas id="c" role="img" aria-label="An Excel sheet of Anganwadi centres, a GeoJSON file of districts and a PostGIS table send ribbons of 0s and 1s that come together as a glowing map of Chhattisgarh with its district boundaries."></canvas>
 <p class="sr">Three data sources, a spreadsheet, a GeoJSON file and a PostGIS database, stream binary digits that form one map of Chhattisgarh.</p>
 <script>
-/* v10 · cinematic. Real geometry: the state and its 27 districts (2011 census), in the state's own
+/* v10 · cinematic. Real geometry: the state and its 33 districts (official district boundary layer), in the state's own
    Lambert projection, the same outline as every other Ground Truth figure. Everything else is drawn. */
 const GEO=/*GEO*/null;
 const Q=new URLSearchParams(location.search+"&"+location.hash.slice(1));
@@ -29,9 +29,9 @@ const SRC=[
  {key:"geo",col:"#ffbe4d",title:"cg_districts.geojson",tag:"GeoJSON"},
  {key:"pg", col:"#6fa8ff",title:"PostGIS · cg_gis",tag:"PostGIS"}];
 const ROWS=[["AWC-RPR-00412","21.2514","81.6296","Raipur"],["AWC-BSP-00218","22.0797","82.1409","Bilaspur"],["AWC-DRG-00577","21.1904","81.2849","Durg"],
- ["AWC-JDP-00105","19.0748","82.0080","Bastar"],["AWC-AMB-00331","23.1185","83.1956","Surguja"],["AWC-KRB-00264","22.3595","82.7501","Korba"],["AWC-RGH-00149","21.8974","83.3950","Raigarh"]];
+ ["AWC-JDP-00105","19.0748","82.0080","Bastar"],["AWC-AMB-00331","23.1185","83.1956","Sarguja"],["AWC-KRB-00264","22.3595","82.7501","Korba"],["AWC-RGH-00149","21.8974","83.3950","Raigarh"]];
 const GJ=['{','  "type": "Feature",','  "properties": {','    "district": "Raipur"','  },','  "geometry": {','    "type": "Polygon",','    "coordinates": [[','      [81.6296, 21.2514],','      [81.7102, 21.3008],','      [81.7745, 21.2231],','      ...'];
-const SQL=["SELECT name,","  ST_AsGeoJSON(geom)","FROM cg_districts;","","name     | geom","---------+-------------","Raipur   | {\"type\":\"Multi…","Bilaspur | {\"type\":\"Multi…","Bastar   | {\"type\":\"Multi…","(27 rows)"];
+const SQL=["SELECT name,","  ST_AsGeoJSON(geom)","FROM cg_districts;","","name     | geom","---------+-------------","Raipur   | {\"type\":\"Multi…","Bilaspur | {\"type\":\"Multi…","Bastar   | {\"type\":\"Multi…","(33 rows)"];
 const cv=document.getElementById("c"),cx=cv.getContext("2d");
 let W,H,DPR,mapT,cells=[],fly=[],strands=[],nodes=[],sent=0,done=false,formedAt=0,t0=performance.now(),last=t0,L,glyph={},statePath,distPaths;
 const rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));

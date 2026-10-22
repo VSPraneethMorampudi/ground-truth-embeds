@@ -31,7 +31,7 @@ canvas{display:block;width:100vw;height:100vh}
    (v12 notes follow.)
    Every 0 and 1 on screen is real: the IEEE-754 bits of the coordinate a packet carries, or the bytes of the
    district's geometry as PostGIS stores it (EWKB, SRID 4326). Each source plays its real role:
-   GeoJSON draws the 27 district boundaries, the Excel sheet places 260 Anganwadi centres, PostGIS stores the
+   GeoJSON draws the 33 district boundaries, the Excel sheet places 260 Anganwadi centres, PostGIS stores the
    districts as binary rows and runs the spatial join (centre → district).
    Options: ?cover leaves the right side clear for a title · ?loop repeats seamlessly (for cover videos) · ?nograin no film grain (for video capture) · ?labels=0 no text · ?still finished frame · ?poster mid-formation frame. Reduced motion shows the finished frame. */
 const GEO=/*GEO*/null;
@@ -134,7 +134,7 @@ function layout(){
   ing=[];const DB=SRC[2];
   for(let i=0;i<64;i++){const p=P[Math.floor(i*P.length/64)],t1=TL.ing0+.5+i/63*(TL.ing1-TL.ing0-.9);
     ing.push(mk2(0,SRC[0],DB,t1,rnd(.9,1.2),f64bits(p.ll[1]).slice(12,28),`${p.id}, ${p.ll[1].toFixed(4)}, ${p.ll[0].toFixed(4)}`))}
-  for(let i=0;i<54;i++){const d=D[i%27],v=d.rings[0][(i*7)%d.rings[0].length].ll,t1=TL.ing0+.8+i/53*(TL.ing1-TL.ing0-.8);
+  for(let i=0;i<54;i++){const d=D[i%D.length],v=d.rings[0][(i*7)%d.rings[0].length].ll,t1=TL.ing0+.8+i/53*(TL.ing1-TL.ing0-.8);
     ing.push(mk2(1,SRC[1],DB,t1,rnd(.9,1.2),f64bits(v[0]).slice(12,28),`[${v[0].toFixed(4)}, ${v[1].toFixed(4)}]`))}
   const hx=ing.filter(p=>p.si===0&&p.t1>2.2)[0],hp=P.reduce((a,p)=>p.id&&Math.abs(p.ll[1]-21.25)+Math.abs(p.ll[0]-81.63)<Math.abs(a.ll[1]-21.25)+Math.abs(a.ll[0]-81.63)?p:a,P[0]);
   Object.assign(hx,{hero:true,dur:2.0,t0:hx.t1-2.0,s0:`${hp.id}, ${hp.ll[1].toFixed(4)}, ${hp.ll[0].toFixed(4)}`,s1:f64bits(hp.ll[1]).slice(12,28),s2:"INSERT · anganwadi_centres"});
@@ -348,8 +348,8 @@ function backend(T,moving,heroes){
     if(p.hero){heroes.push({p,u,after:-1});const q=along(p.path,d);cx.globalAlpha=1;cx.fillStyle=sc.col;cx.fillRect(q[0]-2.5,q[1]-2.5,5,5);return}
     for(let k=0;k<3;k++){const q=along(p.path,Math.max(0,d-k*L.sm*.75));digit(sc.col,L.sm,+p.bits[(k+(moving?(u*10|0):0))%16],q[0],q[1],k?.45/k:.95)}};
   ing.forEach(fly);feed.forEach(fly);
-  const rowsA=Math.round(nx/64*P.length),rowsD=Math.round(ng/54*27);
-  SRC[0].count=`${rowsA} / ${P.length} rows read`;SRC[1].count=`${rowsD} / 27 features read`;DB.count=`${rowsA} centres · ${rowsD} districts`;
+  const rowsA=Math.round(nx/64*P.length),rowsD=Math.round(ng/54*D.length);
+  SRC[0].count=`${rowsA} / ${P.length} rows read`;SRC[1].count=`${rowsD} / ${D.length} features read`;DB.count=`${rowsA} centres · ${rowsD} districts`;
   if(lastIn&&T<TL.ing1+.3)DB.rec=lastIn.si===0?"INSERT INTO anganwadi_centres":"INSERT INTO districts";else if(T<TL.ing0+.6)DB.rec=""}
 
 /* ── the pipeline as four numbered stages, each with its own segment ── */

@@ -19,7 +19,7 @@ canvas{display:block;width:100vw;height:100vh}
    The real web-map stack (the one OpenStreetMap itself runs): files are loaded into PostGIS, a renderer draws
    the stored data into square tiles, the browser shows the tiles. The dark panel is the backend; the light window
    is what the user sees. Every 0 and 1 is real: IEEE-754 bits of the coordinates being moved, EWKB in PostGIS.
-   Map data: the state and districts (2011 census), rivers, rail, national highways, neighbouring states and towns.
+   Map data: the state and districts (official 33-district boundary layer), rivers, rail, national highways, neighbouring states and towns.
    Options: ?labels=0 no text · ?still finished frame · ?poster mid-build frame. Reduced motion shows the finished frame. */
 const GEO=/*GEO*/null;
 const Q=new URLSearchParams(location.search+"&"+location.hash.slice(1));
@@ -97,9 +97,9 @@ function layout(){
   const code=n=>n.replace(/[^A-Za-z]/g,"").slice(0,3).toUpperCase(),dists=GEO.districts;
   for(let i=0;i<64;i++){const p=P[Math.floor(i*P.length/64)],t1=TL.read0+.4+i/63*(TL.store1-TL.read0-.8)+rnd(-.05,.05);
     pk.push(mkp("xls",port("xls","out"),into("pg"),t1,rnd(1,1.3),f64bits(p.ll[1]).slice(12,28),`${p.ll[1].toFixed(4)}, ${p.ll[0].toFixed(4)}`))}
-  for(let i=0;i<54;i++){const d=dists[i%27],pts=d.d.slice(1).split(/[LMZ]/).filter(Boolean),v=pts[Math.floor(R()*pts.length)].split(",").map(Number),ll=xy2ll(v[0],v[1]);
+  for(let i=0;i<54;i++){const d=dists[i%dists.length],pts=d.d.slice(1).split(/[LMZ]/).filter(Boolean),v=pts[Math.floor(R()*pts.length)].split(",").map(Number),ll=xy2ll(v[0],v[1]);
     const t1=TL.read0+.8+i/53*(TL.store1-TL.read0-.6)+rnd(-.05,.05);pk.push(mkp("geo",port("geo","out"),into("pg"),t1,rnd(1,1.3),f64bits(ll[0]).slice(12,28),`[${ll[0].toFixed(4)}, ${ll[1].toFixed(4)}]`))}
-  for(let i=0;i<40;i++){const d=dists[i%27],c=xy2ll(d.c[0],d.c[1]),t1=TL.rend0+.6+i/39*(TL.tile1-TL.rend0-.4);
+  for(let i=0;i<40;i++){const d=dists[i%dists.length],c=xy2ll(d.c[0],d.c[1]),t1=TL.rend0+.6+i/39*(TL.tile1-TL.rend0-.4);
     pk.push(mkp("pg",[N.pg.x+(land?rnd(-N.pg.r*.4,N.pg.r*.4):N.pg.r*.9),N.pg.y+(land?N.pg.r:rnd(-N.pg.r*.3,N.pg.r*.3))],into("rnd"),t1,rnd(.9,1.2),f64bits(c[0]).slice(12,28),(EWKB_MPOLY+f64hexLE(c[0])).slice(0,22)+"…"))}
   tiles.forEach(t=>{for(let j=0;j<3;j++){const t1=t.b0+(j+.5)/3*(t.r0-t.b0),to=[t.x+rnd(.2,.8)*t.ts,t.y+rnd(.2,.8)*t.ts];
     pk.push(mkp("rnd",[N.rnd.x+(land?N.rnd.r*1.2:rnd(-N.rnd.r*.4,N.rnd.r*.4)),N.rnd.y+(land?rnd(-N.rnd.r*.4,N.rnd.r*.4):N.rnd.r)],to,t1,rnd(.7,1),f64bits(t.x*13.7+t.y).slice(12,28),`tile ${t.id}.png`,true))}});
@@ -203,8 +203,8 @@ function frame(now){
   for(const p of pk){if(T<p.t0)break;info[p.n].rec=p.rec;if(T>=p.t1){p.n==="xls"?nx++:p.n==="geo"?ng++:p.n==="pg"?np++:0;if(p.hero&&T<p.t1+1.2)heroes.push({p,u:1,after:T-p.t1});continue}
     const u=(T-p.t0)/p.dur;if(p.hero){heroes.push({p,u,after:-1});continue}if(p.toTile){late.push([p,u]);continue}flight(p,u,moving)}
   const rendered=tiles.filter(t=>T>=t.r1).length;
-  info.xls.count=`${Math.round(nx/64*P.length)} of ${P.length} rows read`;info.geo.count=`${Math.round(ng/54*27)} of 27 features read`;
-  info.pg.count=`${Math.round(nx/64*P.length)+Math.round(ng/54*27)} rows stored`;info.rnd.count=`${rendered} of ${tiles.length} tiles drawn`;
+  info.xls.count=`${Math.round(nx/64*P.length)} of ${P.length} rows read`;info.geo.count=`${Math.round(ng/54*GEO.districts.length)} of ${GEO.districts.length} features read`;
+  info.pg.count=`${Math.round(nx/64*P.length)+Math.round(ng/54*GEO.districts.length)} rows stored`;info.rnd.count=`${rendered} of ${tiles.length} tiles drawn`;
   heroes.forEach(({p,u,after})=>{if(after<0){const q=quad(p.a,p.m,p.b,ease(u));blob(q[0],q[1],L.cs*1.8,N[p.n].col,.5);cx.globalAlpha=1;cx.fillStyle=N[p.n].col;cx.beginPath();cx.arc(q[0],q[1],2.6,0,6.283);cx.fill()}});
   ["xls","geo","pg","rnd"].forEach((k,i)=>node(k,i,T,info[k]));
   cx.globalCompositeOperation="lighter";cx.globalAlpha=1;cx.imageSmoothingEnabled=true;cx.drawImage(gl,0,0,W,H);cx.globalAlpha=.55;cx.drawImage(gl,-W*.01,-H*.01,W*1.02,H*1.02);cx.globalCompositeOperation="source-over";

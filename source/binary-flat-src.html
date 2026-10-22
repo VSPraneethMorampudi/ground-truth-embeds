@@ -19,7 +19,7 @@ canvas{display:block;width:100vw;height:100vh}
    Art direction: keep the flat green world, the three icon cards and the three stream colours; add depth
    (bloom, vignette, grain, parallax data in the air, a slow camera push), feel (trails, landing ripples,
    districts lighting up as they complete) and a finish (target outline, progress readout, light sweep,
-   title card). Real geometry: the state and its 27 districts (2011 census) in the state's Lambert
+   title card). Real geometry: the state and its 33 districts (official district boundary layer) in the state's Lambert
    projection. Options: ?labels=0 no text · ?still finished frame · ?poster mid-formation frame. */
 const GEO=/*GEO*/null;
 const Q=new URLSearchParams(location.search+"&"+location.hash.slice(1));
@@ -186,7 +186,7 @@ function frame(now){
 function hud(now,T,prog,fa){
   const a=REDUCE||POSTER?1:clamp((T-.6)/.6,0,1);if(a<=0)return;
   const bw=Math.min(220,W*.3),bx=land?SRC[0].x-bw/2:W/2-bw/2,by=land?H-Math.max(28,H*.06):H-Math.max(22,H*.035);
-  const fin=done&&!POSTER,lab=fin?(bw<200?"MAP READY":"MAP READY · 27 DISTRICTS"):"ASSEMBLING MAP",pct=Math.round(prog*100);
+  const fin=done&&!POSTER,lab=fin?(bw<200?"MAP READY":`MAP READY · ${GEO.districts.length} DISTRICTS`):"ASSEMBLING MAP",pct=Math.round(prog*100);
   cx.globalAlpha=a*(fin?.75:1);cx.textBaseline="bottom";cx.font=`600 10.5px ${MONO}`;cx.fillStyle=fin?EDGE:"#9fe8cc";cx.textAlign="left";cx.fillText(lab,bx,by-6);cx.textAlign="right";cx.fillText(pct+"%",bx+bw,by-6);
   cx.fillStyle="rgba(159,232,204,.15)";cx.fillRect(bx,by,bw,2);let x=bx;SRC.forEach((s,i)=>{const share=cells.filter(c=>c.on&&c.src===i).length/cells.length;cx.fillStyle=s.col;cx.fillRect(x,by,bw*share,2);x+=bw*share});}
 

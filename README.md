@@ -16,6 +16,15 @@ EMBED URLS  (add &bare inside sidecars)
 
 HOSTING: HTTPS, and no X-Frame-Options: DENY or restrictive frame-ancestors header.
 
+DISTRICT BOUNDARIES (22 Oct 2026): all maps, including every pinned version, now use the official
+  33-district layer (cg_district_boundary.shp, EPSG:4326, English name in field dist_e, code in dist_cod).
+  Converted with:
+  npx mapshaper -i cg_district_boundary.shp encoding=latin1 snap -clean -each 'district=dist_e, dt_code=dist_cod' -filter-fields district,dt_code -o data/full.geojson format=geojson
+  npx mapshaper data/full.geojson -simplify 0.5% keep-shapes -clean -o data/districts.json format=geojson precision=0.0001
+  npx mapshaper data/districts.json -dissolve -clean -o data/state.json format=geojson geojson-type=GeometryCollection precision=0.0001
+  then node build.js, python3 assemble4.py (copy dist4/index.html to ../index.html), python3 build_binary.py.
+  Map labels use GPM, KCG, MCB and MMAC for the four longest district names.
+
 REBUILD WITH OFFICIAL BOUNDARIES (source/)
   npm i mapshaper d3-geo d3-delaunay proj4 world-atlas topojson-client @turf/turf
   put the Revenue Dept district layer (GeoJSON, EPSG:4326, property "district") at data/cg.geojson
@@ -143,6 +152,6 @@ LIVE GEO PORTAL (v18 · 21 Oct 2026)
   portal.html#portal&bare&nav=off      no step card, free exploration
   &view=lng,lat,zoom &layers=aw,gp,mine &aw=points|heat|district &bm=outline|light|sat  (the link button builds these)
   Map engine: MapLibre GL JS 4.7.1 from unpkg. Labels are HTML, so no glyph or sprite server is needed.
-  Real: districts (Census 2011), state outline, neighbouring states, rivers, roads, rail (Natural Earth).
+  Real: districts (official 33-district boundary layer), state outline, neighbouring states, rivers, roads, rail (Natural Earth).
   Illustrative: Anganwadi centres, GP nodes, fibre routes, mine leases, Ask AI answers (computed in the browser).
   Frozen copy: versions/v18/portal.html

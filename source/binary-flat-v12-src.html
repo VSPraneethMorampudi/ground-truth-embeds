@@ -12,13 +12,13 @@ canvas{display:block;width:100vw;height:100vh}
 </style>
 </head>
 <body>
-<canvas id="c" role="img" aria-label="An Excel sheet, a GeoJSON file and a PostGIS database are read as binary, decoded into coordinates and placed on the map: GeoJSON draws the 27 district boundaries, Excel places 260 Anganwadi centres, and PostGIS stores the districts and joins each centre to its district."></canvas>
+<canvas id="c" role="img" aria-label="An Excel sheet, a GeoJSON file and a PostGIS database are read as binary, decoded into coordinates and placed on the map: GeoJSON draws the 33 district boundaries, Excel places 260 Anganwadi centres, and PostGIS stores the districts and joins each centre to its district."></canvas>
 <p class="sr">Each source is read as 0s and 1s. The bits are decoded into latitude and longitude, and the coordinates are placed on the map. GeoJSON gives the district boundaries, the Excel sheet gives the Anganwadi centre points, and PostGIS stores everything and joins each centre to the district it falls in, making one map of Chhattisgarh.</p>
 <script>
 /* v12 · the honest pipeline.  READ → DECODE → PLACE → JOIN
    Every 0 and 1 on screen is real: the IEEE-754 bits of the coordinate a packet carries, or the bytes of the
    district's geometry as PostGIS stores it (EWKB, SRID 4326). Each source plays its real role:
-   GeoJSON draws the 27 district boundaries, the Excel sheet places 260 Anganwadi centres, PostGIS stores the
+   GeoJSON draws the 33 district boundaries, the Excel sheet places 260 Anganwadi centres, PostGIS stores the
    districts as binary rows and runs the spatial join (centre → district).
    Options: ?labels=0 no text · ?still finished frame · ?poster mid-formation frame. Reduced motion shows the finished frame. */
 const GEO=/*GEO*/null;
@@ -228,7 +228,7 @@ function frame(now){
       for(let k=0;k<4;k++){const q=quad(p.a,p.m,p.b,Math.max(0,e-.028*k));digit(s.col,k?L.sm:(e>.6?L.font:L.sm),+p.bits[(k+(moving?(u*10|0):0))%16],q[0],q[1],a*(k?.55/k:1))}
       const q=quad(p.a,p.m,p.b,e);blob(q[0],q[1],L.cs*.7,s.col,.16*a)}
     s.rec=latest?latest.rec:"";
-    s.count=si===0?`${landedN} of ${P.length} centres`:si===1?`${D.filter(d=>T>=d.ge).length} of 27 districts`:`${D.filter(d=>T>=d.pe).length} of 27 rows`});
+    s.count=si===0?`${landedN} of ${P.length} centres`:si===1?`${D.filter(d=>T>=d.ge).length} of ${D.length} districts`:`${D.filter(d=>T>=d.pe).length} of ${D.length} rows`});
 
   // 7 · district names as each boundary closes
   if(TEXT){cx.textAlign="center";cx.textBaseline="middle";cx.font=`700 ${Math.max(9.5,L.cs*.92)}px ${FONT}`;
