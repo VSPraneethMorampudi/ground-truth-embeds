@@ -48,6 +48,8 @@ body.has-cursor,body.has-cursor a,body.has-cursor button{cursor:none}
 #cur.big .ring{width:92px;height:92px;margin:-46px;background:#fff}
 #cur.big .ring b{opacity:1}
 #cur.link .ring{width:58px;height:58px;margin:-29px}
+#cur.down .ring{scale:.8}
+#cur .ring{transition:width .35s,height .35s,margin .35s,background .35s,scale .2s}
 #cur.hide{opacity:0}
 #grain{position:fixed;inset:-50%;z-index:240;pointer-events:none;opacity:.06;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}

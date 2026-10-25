@@ -33,9 +33,9 @@ export class Game{
     this.ok=0;this.bad=0;this.badges=new Set();this.lv=-1;this.watch=false;this.paused=false;this.t0=0;
     root.innerHTML=`<div class="g-world" id="gWorld"></div><div class="g-labels" id="gLabels"></div>
       <div class="g-hud"><ol class="g-levels" id="gLevels"></ol>
-        <div class="g-q"><span>${L2(T("Data quality","डेटा गुणवत्ता"))}</span><b id="gQ">—</b></div>
+        <div class="g-q" id="gQwrap"><svg viewBox="0 0 36 36" aria-hidden="true"><circle class="bg" cx="18" cy="18" r="14"/><circle class="fg" cx="18" cy="18" r="14"/></svg><span>${L2(T("Data quality","डेटा गुणवत्ता"))}</span><b id="gQ">—</b></div>
         <div class="g-bad" id="gBadges"></div>
-        <button class="g-exit" id="gExit">${L2(T("Exit game","खेल से बाहर"))} ↓</button></div>
+        <button class="g-mute" id="gMute" aria-label="Sound on or off"></button><button class="g-exit" id="gExit">${L2(T("Exit game","खेल से बाहर"))} ↓</button></div>
       <aside class="g-panel" id="gPanel" aria-live="polite"></aside>
       <div class="g-buddy" id="gBuddy">${BUDDY}<div class="g-say" id="gSay"></div></div>
       <div class="g-zoom"><button data-z="in" aria-label="Zoom in">+</button><button data-z="out" aria-label="Zoom out">−</button><button data-z="home" aria-label="Reset view">⟲</button></div>
@@ -53,6 +53,7 @@ export class Game{
     $("#gPlay",root).onclick=()=>this.start(false);
     $("#gWatch",root).onclick=()=>this.start(true);
     $("#gExit",root).onclick=()=>this.exit();
+    $("#gMute",root).onclick=()=>window.FX&&FX.mute(!FX.muted());
     root.addEventListener("click",e=>{const z=e.target.closest("[data-z]");if(!z)return;const w=this.world;z.dataset.z==="in"?w.zoom(.75):z.dataset.z==="out"?w.zoom(1.33):w.home(.8)});
     this.renderBadges();
   }
@@ -67,7 +68,7 @@ export class Game{
     const p=$("#gPanel",this.root);
     p.innerHTML=`<div class="lv-k">${L2(T("Level","स्तर"))} ${i+1}/${LEVELS.length} · ${L2(L.chapter)}</div><h3>${L2(L.title)}</h3><p class="lv-task">${L2(L.task)}</p>
       <div class="lv-body"></div><div class="lv-act"><button class="lv-show">${L2(T("Show me","दिखाइए"))}</button><button class="lv-next btn" disabled>${L2(T("Next level","अगला स्तर"))} →</button></div>`;
-    p.classList.remove("in");void p.offsetWidth;p.classList.add("in");
+    p.classList.remove("in");void p.offsetWidth;p.classList.add("in");window.FX&&FX.sound("whoosh");
     $(".lv-show",p).onclick=()=>this.autoRun();
     $(".lv-next",p).onclick=()=>this.go(i+1);
     this.say(L.say);
@@ -75,7 +76,7 @@ export class Game{
     if(this.watch)this.autoRun();}
   async autoRun(){const L=LEVELS[this.lv],tk=this.token;if(!L||this.done||this.autoTok===tk)return;this.autoTok=tk;$(".lv-show",this.root)?.setAttribute("disabled","");
     await this.wait(this.watch?1400:200);if(tk!==this.token)return;await L.auto(this,tk)}
-  complete(){if(this.done)return;this.done=true;const L=LEVELS[this.lv],tk=this.token;
+  complete(){if(this.done)return;this.done=true;window.FX&&FX.sound("done");const L=LEVELS[this.lv],tk=this.token;
     this.badge(L.badge);const n=$(".lv-next",this.root);if(n){n.disabled=false;n.classList.add("pulse")}
     $(".lv-show",this.root)?.setAttribute("disabled","");
     if(L.win)this.say(L.win);
@@ -88,21 +89,23 @@ export class Game{
       <p class="lv-task">${L2(T("Data is created, stored safely, shared through the portal, checked in the field, turned into clear maps and kept up to date. Then the cycle begins again.","डेटा बनता है, सुरक्षित रखा जाता है, पोर्टल से साझा होता है, मैदान में जाँचा जाता है, साफ़ नक्शों में ढलता है और अद्यतन रखा जाता है। फिर चक्र दोबारा शुरू होता है।"))}</p>
       <div class="lv-act col"><button class="btn" id="gCard">⤓ ${L2(T("Download your map card","अपना मैप कार्ड डाउनलोड करें"))}</button>
       <button class="lv-show" id="gAgain">↺ ${L2(T("Play again","फिर से खेलें"))}</button><button class="lv-show" id="gOut">${L2(T("Continue the story","कहानी आगे देखें"))} ↓</button></div>`;
+    if(window.FX){const b=$$(".end-stats b",p);const qn=parseInt(q)||0;FX.count(b[0],qn,{suffix:q.includes("%")?"%":""});FX.count(b[1],this.badges.size,{suffix:"/8"})}
     $("#gCard",p).onclick=()=>this.card();$("#gAgain",p).onclick=()=>location.reload();$("#gOut",p).onclick=()=>{this.exit();this.onFinish&&this.onFinish(true)};
     this.say(T("The map listens to the ground, and the ground benefits from the map. Thank you for building it with me!","नक्शा ज़मीन की सुनता है, और ज़मीन को नक्शे से लाभ मिलता है। मेरे साथ इसे बनाने के लिए धन्यवाद!"));
     if(this.watch)this.wait(5000).then(()=>{if(this.watch){this.exit();this.onFinish&&this.onFinish(false)}})}
   /* ---------- helpers ---------- */
   wait(ms){return new Promise(r=>{const t0=performance.now();let acc=0,last=t0;const tick=n=>{if(!this.paused)acc+=n-last;last=n;acc>=ms?r():requestAnimationFrame(tick)};requestAnimationFrame(tick)})}
   setPaused(v){this.paused=v;this.root.classList.toggle("paused",v)}
-  good(n=1){this.ok+=n;this.q()}
-  oops(){this.bad++;this.q();this.root.classList.remove("shake");void this.root.offsetWidth;this.root.classList.add("shake")}
+  good(n=1,el){this.ok+=n;this.q();window.FX&&FX.good(el)}
+  oops(el){this.bad++;this.q();window.FX&&FX.bad(el);this.root.classList.remove("shake");void this.root.offsetWidth;this.root.classList.add("shake")}
   quality(){const t=this.ok+this.bad;return t?Math.round(100*this.ok/t)+"%":"—"}
-  q(){$("#gQ",this.root).textContent=this.quality()}
+  q(){$("#gQ",this.root).textContent=this.quality();const t=this.ok+this.bad,p=t?this.ok/t:0,fg=$(".g-q .fg",this.root);
+    fg.style.strokeDashoffset=88*(1-p);fg.style.stroke=p>.85?"var(--ok)":p>.6?"var(--cta)":"var(--bad)";const w=$("#gQwrap",this.root);w.classList.remove("bump");void w.offsetWidth;w.classList.add("bump")}
   say(o){const el=$("#gSay",this.root),b=$("#gBuddy",this.root);this.lastSay=o;el.innerHTML=L2(o);b.classList.remove("talk");void b.offsetWidth;b.classList.add("talk");
     if(REDUCE)return;const span=$(`[lang="${lang()}"]`,el);if(!span)return;const full=span.textContent;span.textContent=full.slice(0,2);let i=2;clearInterval(this.typer);
     this.typer=setInterval(()=>{i+=2;span.textContent=full.slice(0,i);if(i>=full.length)clearInterval(this.typer)},16)}
   relang(){if(this.lastSay){const el=$("#gSay",this.root);el.innerHTML=L2(this.lastSay)}}
-  badge(id){if(this.badges.has(id))return;this.badges.add(id);const b=BADGES.find(x=>x.id===id),pop=$("#gPop",this.root);
+  badge(id){if(this.badges.has(id))return;this.badges.add(id);window.FX&&FX.badge();const b=BADGES.find(x=>x.id===id),pop=$("#gPop",this.root);
     pop.innerHTML=`<div class="pop"><i>${b.i}</i><small>${L2(T("Badge earned","बैज मिला"))}</small><b>${L2(b.n)}</b></div>`;pop.classList.remove("show");void pop.offsetWidth;pop.classList.add("show");this.renderBadges()}
   renderBadges(){$("#gBadges",this.root).innerHTML=BADGES.map(b=>`<i class="${this.badges.has(b.id)?"got":""}" title="${b.n.en}">${b.i}</i>`).join("")}
   hover(rec,e){const tip=$("#gTip",this.root);if(!rec){tip.classList.remove("show");return}

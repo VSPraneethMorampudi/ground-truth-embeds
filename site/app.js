@@ -59,7 +59,18 @@ gsap.to(pre,{v:100,duration:REDUCE?.2:1.6,ease:"power2.inOut",onUpdate:()=>{$("#
     gsap.from(".hud-p,.hud-s",{opacity:0,y:20,duration:1,delay:.6,stagger:.15})})});
 
 /* ---------- small scroll effects ---------- */
+/* reading progress */
+lenis.on("scroll",({progress})=>{$("#readbar").style.transform=`scaleX(${progress||0})`});
+/* split headline letters (keeps the accent <i>) */
+function splitChars(el){let i=0;const walk=n=>{[...n.childNodes].forEach(c=>{if(c.nodeType===3){const f=document.createDocumentFragment();
+  [...c.textContent].forEach(ch=>{if(ch===" "){f.append(" ");return}const s=document.createElement("span");s.className="ch";s.style.setProperty("--i",i++);s.textContent=ch;f.append(s)});c.replaceWith(f)}else if(c.nodeType===1)walk(c)})};
+  [...el.querySelectorAll("[lang]")].forEach(x=>{i=0;walk(x)})}
+splitChars($("#oTitle"));splitChars($("#outro .gt"));
 gsap.matchMedia().add("(prefers-reduced-motion:no-preference)",()=>{
+  /* the game opens like a curtain as it scrolls in */
+  gsap.fromTo("#game",{clipPath:"inset(7% 4% 0% 4% round 56px)"},{clipPath:"inset(0% 0% 0% 0% round 0px)",ease:"none",scrollTrigger:{trigger:"#game",start:"top bottom",end:"top top",scrub:true}});
+  gsap.from("#game .g-start-in>*",{y:70,opacity:0,stagger:.09,duration:1.2,ease:"expo.out",scrollTrigger:{trigger:"#game",start:"top 55%"}});
+  gsap.from("#outro .gt .ch",{yPercent:110,rotate:8,stagger:.035,ease:"none",scrollTrigger:{trigger:"#outro",start:"top 75%",end:"top 15%",scrub:true}});
   gsap.fromTo("#outro .gt",{xPercent:10},{xPercent:-12,ease:"none",scrollTrigger:{trigger:"#outro",start:"top bottom",end:"bottom top",scrub:true}});
 });
 
@@ -68,7 +79,11 @@ if(FINE&&!REDUCE){document.body.classList.add("has-cursor");
   const cur=$("#cur"),dot=$(".dot",cur),ring=$(".ring",cur),pos={x:innerWidth/2,y:innerHeight/2},rp={...pos};
   addEventListener("pointermove",e=>{pos.x=e.clientX;pos.y=e.clientY},{passive:true});
   gsap.ticker.add(()=>{rp.x+=(pos.x-rp.x)*.18;rp.y+=(pos.y-rp.y)*.18;dot.style.transform=`translate(${pos.x}px,${pos.y}px)`;ring.style.transform=`translate(${rp.x}px,${rp.y}px)`});
-  document.addEventListener("pointerover",e=>{cur.classList.toggle("link",!!e.target.closest("a,button,[data-magnet],label,.rec,.pinc,.bin"))});
+  const CL={drag:{en:"Drag",hi:"खींचें"},spin:{en:"Rotate",hi:"घुमाएँ"}},curL=$("#curL");
+  document.addEventListener("pointerover",e=>{const t=e.target,drag=t.closest(".rec,.pinc"),spin=t.closest("#game.playing canvas");
+    cur.classList.toggle("big",!!(drag||spin));cur.classList.toggle("link",!drag&&!spin&&!!t.closest("a,button,[data-magnet],label,.bin,.file,.sheet"));
+    curL.textContent=drag?CL.drag[document.documentElement.dataset.lang||"en"]:spin?CL.spin[document.documentElement.dataset.lang||"en"]:""});
+  document.addEventListener("pointerdown",()=>cur.classList.add("down"));document.addEventListener("pointerup",()=>cur.classList.remove("down"));
   document.addEventListener("pointermove",e=>{const b=e.target.closest("[data-magnet]");$$("[data-magnet]").forEach(m=>{if(m!==b&&m._mag){m._mag=0;gsap.to(m,{x:0,y:0,duration:.7,ease:"elastic.out(1,.4)"})}});
     if(b){b._mag=1;const r=b.getBoundingClientRect();gsap.to(b,{x:(e.clientX-r.left-r.width/2)*.25,y:(e.clientY-r.top-r.height/2)*.35,duration:.4})}},{passive:true});
 }
