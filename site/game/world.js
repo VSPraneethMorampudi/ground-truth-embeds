@@ -147,6 +147,19 @@ export class World{
   showDistrictsNow(){this.districts.forEach(d=>{d.group.visible=true;d.lift=0});this.ghost.visible=false}
   async drawLayer(name,d=1.6){const g=this.layers[name];g.visible=true;g.children.forEach(m=>m.geometry.setDrawRange(0,0));
     await this.tween(d,k=>g.children.forEach(m=>m.geometry.setDrawRange(0,Math.floor(m.userData.full*k/3)*3)),x=>x)}
+  /* ---------- reset: put the world into the state a level expects ----------
+     stage 0 empty board (ghost outline) · 1+ districts in · 4+ every layer in (forest, rivers, roads, rail, facilities) */
+  setStage(n){this.anim.length=0;
+    [...this.pins].forEach(p=>this.removePin(p));[...this.labels].forEach(l=>this.unlabel(l));
+    this.districts.forEach(d=>{d.group.visible=n>=1;d.lift=0;d.targetLift=0;d.group.position.y=0;d.group.scale.y=1;d.top.color.copy(d.base)});
+    this.ghost.visible=n<1;this.ghost.material.opacity=1;
+    const full=n>=4;
+    Object.values(this.layers).forEach(g=>{g.visible=full;g.children.forEach(m=>m.geometry.setDrawRange(0,full?m.userData.full:0))});
+    this.riverColor(0x3c8fd6);
+    this.trees.visible=full;this.trees.scale.set(1,1,1);
+    ["school","health","anganwadi"].forEach(t=>{const im=this.facilities[t];im.visible=full;const M=new THREE.Matrix4();
+      im.userData.pts.forEach((q,i)=>{const[x,z]=P(...q.p);M.makeTranslation(x,TOP,z);im.setMatrixAt(i,M)});im.instanceMatrix.needsUpdate=true});
+    this.autoRotate(false);this.setHover(null)}
   setLayer(name,on){if(this.layers[name])this.layers[name].visible=on;else if(this.facilities[name])this.facilities[name].visible=on;else if(name==="trees")this.trees.visible=on}
   async popFacilities(types=["school","health","anganwadi"],d=1.1){
     for(const t of types){const im=this.facilities[t];im.visible=true;const pts=im.userData.pts,M=new THREE.Matrix4(),q=new THREE.Quaternion(),s=new THREE.Vector3();
@@ -173,7 +186,7 @@ export class World{
     if(ring){const r=new THREE.Mesh(new THREE.RingGeometry(.6,.8,32),new THREE.MeshBasicMaterial({color,transparent:true,side:THREE.DoubleSide}));r.rotation.x=-Math.PI/2;r.position.set(x,TOP+.05,z);this.scene.add(r);pin.ring=r}
     this.pins.push(pin);return pin}
   pinColor(p,color){p.mat.color.set(color);p.mat.emissive.set(color)}
-  removePin(p){this.scene.remove(p.obj);p.ring&&this.scene.remove(p.ring);this.pins=this.pins.filter(x=>x!==p)}
+  removePin(p){if(!p)return;this.scene.remove(p.obj);p.ring&&this.scene.remove(p.ring);this.pins=this.pins.filter(x=>x!==p)}
   async movePin(p,lonlat,d=1){const a=p.obj.position.clone(),[x,z]=P(...lonlat),b=new THREE.Vector3(x,TOP,z);p.bob=false;
     await this.tween(d,k=>{p.obj.position.lerpVectors(a,b,k);p.obj.position.y+=Math.sin(k*Math.PI)*10});p.y=TOP;p.lonlat=lonlat;p.obj.position.y=TOP;
     if(p.ring)p.ring.position.set(x,TOP+.05,z)}

@@ -166,3 +166,35 @@
 
 .lv-body>.files{padding:4px 2px 8px;margin:-4px -2px 0}
 .file .f-tx b,.file .f-tx>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- reset + help controls ---------- */
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.g-reset{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:99px;background:color-mix(in srgb,var(--card) 80%,transparent);backdrop-filter:blur(8px);font:600 13px var(--sans);color:var(--ink)}
+.g-reset .ic{width:16px;height:16px;transition:transform .5s cubic-bezier(.3,1.6,.5,1)}
+.g-reset:hover .ic,.lv-restart:hover .ic{transform:rotate(-300deg)}
+.g-levels li{cursor:pointer}
+.g-levels li:not(.on):hover{background:color-mix(in srgb,var(--ink) 8%,transparent)}
+.g-levels li:not(.on):hover span{max-width:120px}
+.g-levels li:focus-visible{outline:2px solid var(--accent)}
+.lv-act{align-items:center;gap:8px!important}
+.lv-act .lv-next{margin-left:auto}
+.lv-restart,.lv-hint,.lv-solve{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:44px;border-radius:99px;font:600 14px var(--sans);box-shadow:inset 0 0 0 1px var(--rule);background:var(--card);transition:background .2s,box-shadow .2s}
+.lv-restart,.lv-solve{width:44px}
+.lv-solve{color:var(--ink2)}
+.lv-hint{padding:0 14px;color:var(--accent)}
+.lv-restart:hover,.lv-hint:hover,.lv-solve:hover{box-shadow:inset 0 0 0 1.5px var(--ink)}
+.lv-restart .ic,.lv-hint .ic,.lv-solve .ic{width:18px;height:18px}
+.lv-hint[disabled],.lv-solve[disabled],.lv-show[disabled]{opacity:.35;pointer-events:none}
+.lv-act .lv-show{padding:0 14px;height:44px;display:inline-flex;align-items:center;gap:6px}
+@media (max-width:900px){.lv-act .lv-show .roll,.lv-act .lv-show span[lang]{display:none}.g-reset span{display:none}}
+
+/* the hint: a pulsing coral halo that can't be missed */
+.hint-glow{position:relative;z-index:3;animation:hintpulse 1.1s ease-in-out infinite!important;box-shadow:0 0 0 3px var(--accent),0 0 0 9px color-mix(in srgb,var(--accent) 25%,transparent)!important;border-radius:14px}
+@keyframes hintpulse{50%{box-shadow:0 0 0 3px var(--accent),0 0 0 16px color-mix(in srgb,var(--accent) 0%,transparent)!important;transform:translateY(-2px)}}
+.toggles.hint-glow,.search.hint-glow{border-radius:99px}
+.rec.sel,.pinc.sel{box-shadow:0 0 0 2.5px var(--accent)!important}
+
+/* sorting shelves say what goes in them; layers show their order */
+.bin small{font:500 10px var(--sans);color:var(--ink2);line-height:1.1}
+.sheet{position:relative;padding-left:44px!important}
+.sheet .ord{position:absolute;left:12px;top:50%;translate:0 -50%;display:grid;place-items:center;width:22px;height:22px;border-radius:7px;background:var(--paper2);font:700 12px var(--mono);color:var(--ink2)}
