@@ -77,7 +77,7 @@ if(FINE&&!REDUCE){document.body.classList.add("has-cursor");
 {const cv=$("#stars2"),x=cv.getContext("2d");let st=[],W,H,on=false;
   const rs=()=>{W=cv.width=cv.clientWidth;H=cv.height=cv.clientHeight;st=Array.from({length:Math.round(W*H/3500)},()=>[Math.random()*W,Math.random()*H,Math.random()*1.3+.2,Math.random()*6])};
   new ResizeObserver(rs).observe(cv);new IntersectionObserver(e=>on=e[0].isIntersecting).observe(cv);
-  gsap.ticker.add(t=>{if(!on)return;x.clearRect(0,0,W,H);for(const s of st){x.globalAlpha=.3+.4*Math.sin(t*1.4+s[3]);x.fillStyle="#cfeee8";x.fillRect(s[0],((s[1]-lenis.scroll*.05)%H+H)%H,s[2],s[2])}})}
+  gsap.ticker.add(t=>{if(!on)return;x.clearRect(0,0,W,H);for(const s of st){x.globalAlpha=.3+.4*Math.sin(t*1.4+s[3]);x.fillStyle=getComputedStyle(document.documentElement).getPropertyValue("--sp-star").trim()||"#cfeee8";x.fillRect(s[0],((s[1]-lenis.scroll*.05)%H+H)%H,s[2],s[2])}})}
 
 /* ---------- auto-play: flight, then the game plays itself, then the ending (≈3 min) ---------- */
 const ap={on:false,paused:false,idx:0,el:0,items:[],total:0};

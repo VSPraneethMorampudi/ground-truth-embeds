@@ -34,6 +34,8 @@ FILES
   vendor/           three 0.170 + OrbitControls (MIT), gsap + ScrollTrigger 3.15 (GSAP standard licence),
                     lenis 1.3 (MIT), d3-geo 3 (ISC)
   Fonts: Google Fonts. Bricolage Grotesque (display: 800, 75% width; body and UI), Geist Mono (labels, HUD),
+  Theme: Mahanadi (river blue, coral accent, yellow buttons) by default. ?theme=paddy|sal|night|default previews
+                    the other palettes; every colour, including the 3D world and the globe, is a token in style.css.
                     Anek Devanagari (Hindi display and body)
 
 URL OPTIONS

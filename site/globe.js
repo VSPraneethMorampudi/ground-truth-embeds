@@ -7,8 +7,11 @@ const RAIPUR=[81.63,21.25],FOCUS=[82.15,21.35],D2R=Math.PI/180;
 const cl=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),mix=(a,b,t)=>a+(b-a)*t,sm=t=>{t=cl(t);return t*t*(3-2*t)};
 const seg=(p,a,b)=>sm((p-a)/(b-a));
 let W=0,H=0,DPR=1,P=0,T=0,visible=true;
-const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();let PAPER="#f3efe6",SPACE="#04090b";
-setTimeout(()=>{PAPER=cssv("--paper")||PAPER;SPACE=cssv("--space")||SPACE},0);
+const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+/* space palette from the theme (defaults: teal) */
+const SP={glow:SP.glow,dot:SP.dot,dim:SP.dim,line:SP.line,neigh:SP.neigh,text:SP.text,label:SP.label,star:SP.star,oceanA:SP.oceanA,oceanB:SP.oceanB,deep:SP.deep,atmo:"45,212,191"};
+Object.keys(SP).forEach(k=>{const v=cssv("--sp-"+k);if(v)SP[k]=v});
+let PAPER=cssv("--paper")||"#f3efe6",SPACE=cssv("--space")||SPACE;
 const proj=d3.geoOrthographic().clipAngle(90).precision(.3);
 const path=d3.geoPath(proj,ctx);
 
@@ -21,7 +24,7 @@ addEventListener("resize",resize);resize();
 /* 0/1 glyph sprites, as in the CHiPS story identity */
 function glyph(ch,col,px){const c=document.createElement("canvas");c.width=c.height=px*2;const g=c.getContext("2d");
   g.font=`500 ${px*1.5}px "Geist Mono",monospace`;g.textAlign="center";g.textBaseline="middle";g.fillStyle=col;g.fillText(ch,px,px*1.05);return c}
-let SPR=null;const mkSpr=()=>{SPR={0:glyph("0","#7ff0d9",24),1:glyph("1","#7ff0d9",24),h0:glyph("0","#ffd48a",24),h1:glyph("1","#ffd48a",24)}};
+let SPR=null;const mkSpr=()=>{SPR={0:glyph("0",SP.glow,24),1:glyph("1",SP.glow,24),h0:glyph("0","#ffd48a",24),h1:glyph("1","#ffd48a",24)}};
 document.fonts.ready.then(mkSpr);mkSpr();
 
 const ringLine=(r,close=true)=>({type:close?"Polygon":"LineString",coordinates:close?[r]:r});
@@ -59,21 +62,21 @@ function frame(now){requestAnimationFrame(frame);if(!visible)return;
   ctx.fillStyle=SPACE;ctx.fillRect(0,0,W,H);
   /* stars */
   const sa=1-seg(K,2,6);
-  if(sa>0){for(const st of stars){const a=st.a*sa*(.65+.35*Math.sin(T*1.5+st.tw));ctx.globalAlpha=a;ctx.fillStyle="#cfeee8";
+  if(sa>0){for(const st of stars){const a=st.a*sa*(.65+.35*Math.sin(T*1.5+st.tw));ctx.globalAlpha=a;ctx.fillStyle=SP.star;
     const x=(st.x-lon*3+W*10)%W;ctx.fillRect(x,st.y,st.r,st.r)}ctx.globalAlpha=1}
   /* atmosphere */
-  if(K<4){const g=ctx.createRadialGradient(cx,cy,s*.9,cx,cy,s*1.35);g.addColorStop(0,`rgba(45,212,191,${.28*(1-seg(K,1.5,4))})`);g.addColorStop(1,"rgba(45,212,191,0)");
+  if(K<4){const g=ctx.createRadialGradient(cx,cy,s*.9,cx,cy,s*1.35);g.addColorStop(0,`rgba(${SP.atmo},${.28*(1-seg(K,1.5,4))})`);g.addColorStop(1,`rgba(${SP.atmo},0)`);
     ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,s*1.35,0,7);ctx.fill();
-    const o=ctx.createRadialGradient(cx-s*.3,cy-s*.35,s*.1,cx,cy,s);o.addColorStop(0,"#0f3a3a");o.addColorStop(1,"#061517");
+    const o=ctx.createRadialGradient(cx-s*.3,cy-s*.35,s*.1,cx,cy,s);o.addColorStop(0,SP.oceanA);o.addColorStop(1,SP.oceanB);
     ctx.fillStyle=o;ctx.beginPath();ctx.arc(cx,cy,s,0,7);ctx.fill()}
-  else{const o=ctx.createRadialGradient(cx,cy,0,cx,cy,Math.max(W,H));o.addColorStop(0,"#0b2a2b");o.addColorStop(1,"#04090b");ctx.fillStyle=o;ctx.fillRect(0,0,W,H)}
+  else{const o=ctx.createRadialGradient(cx,cy,0,cx,cy,Math.max(W,H));o.addColorStop(0,SP.deep);o.addColorStop(1,SPACE);ctx.fillStyle=o;ctx.fillRect(0,0,W,H)}
 
   /* graticule on the globe */
-  if(K<6){ctx.globalAlpha=.12*(1-seg(K,3,6));ctx.strokeStyle="#7ff0d9";ctx.lineWidth=.6;ctx.beginPath();path(d3.geoGraticule10());ctx.stroke();ctx.globalAlpha=1}
+  if(K<6){ctx.globalAlpha=.12*(1-seg(K,3,6));ctx.strokeStyle=SP.glow;ctx.lineWidth=.6;ctx.beginPath();path(d3.geoGraticule10());ctx.stroke();ctx.globalAlpha=1}
 
   /* world dots */
   const aW=1-seg(K,3,7);
-  if(aW>0){const rr=Math.max(.8,Math.min(2.2,s/260));ctx.fillStyle="#3fd6be";
+  if(aW>0){const rr=Math.max(.8,Math.min(2.2,s/260));ctx.fillStyle=SP.dot;
     const rot=proj.rotate(),c0=[-rot[0],-rot[1]];
     for(let i=0;i<G.globe.length;i+=2){const p=[G.globe[i],G.globe[i+1]];if(d3.geoDistance(p,c0)>1.53)continue;const q=proj(p);if(!q)continue;
       const inI=p[0]>68&&p[0]<97&&p[1]>7&&p[1]<36;ctx.globalAlpha=aW*(inI?.95:.55);ctx.fillRect(q[0]-rr/2,q[1]-rr/2,rr,rr)}ctx.globalAlpha=1}
@@ -81,14 +84,14 @@ function frame(now){requestAnimationFrame(frame);if(!visible)return;
   const aI=seg(K,1.6,4)*(1-seg(K,14,30));
   if(aI>0){const rr=Math.max(1,Math.min(3,s/900));
     for(let i=0;i<G.ind.length;i+=3){const q=proj([G.ind[i],G.ind[i+1]]);if(!q||q[0]<-5||q[0]>W+5||q[1]<-5||q[1]>H+5)continue;
-      ctx.globalAlpha=aI*(G.ind[i+2]?.8:.25);ctx.fillStyle=G.ind[i+2]?"#3fd6be":"#2a6b66";ctx.fillRect(q[0]-rr/2,q[1]-rr/2,rr,rr)}ctx.globalAlpha=1}
+      ctx.globalAlpha=aI*(G.ind[i+2]?.8:.25);ctx.fillStyle=G.ind[i+2]?SP.dot:SP.dim;ctx.fillRect(q[0]-rr/2,q[1]-rr/2,rr,rr)}ctx.globalAlpha=1}
   /* India outline */
   const aIO=seg(K,1.4,3)*(1-seg(K,20,40));
-  if(aIO>0){ctx.globalAlpha=aIO*.7;ctx.strokeStyle="#9ff5e4";ctx.lineWidth=1;ctx.beginPath();path(indiaGeo);ctx.stroke();ctx.globalAlpha=1}
+  if(aIO>0){ctx.globalAlpha=aIO*.7;ctx.strokeStyle=SP.line;ctx.lineWidth=1;ctx.beginPath();path(indiaGeo);ctx.stroke();ctx.globalAlpha=1}
   /* neighbouring states */
   const aN=seg(K,8,14);
-  if(aN>0){ctx.globalAlpha=aN*.35;ctx.strokeStyle="#5fa9a0";ctx.lineWidth=.8;ctx.setLineDash([3,4]);ctx.beginPath();neighGeo.forEach(n=>path(n.g));ctx.stroke();ctx.setLineDash([]);
-    ctx.globalAlpha=aN*.55;ctx.fillStyle="#8fb9b2";ctx.font=`600 ${Math.max(10,Math.min(13,W/90))}px "Bricolage Grotesque",sans-serif`;ctx.textAlign="center";
+  if(aN>0){ctx.globalAlpha=aN*.35;ctx.strokeStyle=SP.neigh;ctx.lineWidth=.8;ctx.setLineDash([3,4]);ctx.beginPath();neighGeo.forEach(n=>path(n.g));ctx.stroke();ctx.setLineDash([]);
+    ctx.globalAlpha=aN*.55;ctx.fillStyle=SP.text;ctx.font=`600 ${Math.max(10,Math.min(13,W/90))}px "Bricolage Grotesque",sans-serif`;ctx.textAlign="center";
     neighGeo.forEach(n=>{const q=proj(n.c);if(q&&q[0]>40&&q[0]<W-40&&q[1]>40&&q[1]<H-40)ctx.fillText(n.n.toUpperCase(),q[0],q[1])});ctx.globalAlpha=1}
   /* Chhattisgarh: 0/1 glyph field with a scan wave from Raipur */
   const aC=seg(K,5,12);
@@ -99,12 +102,12 @@ function frame(now){requestAnimationFrame(frame);if(!visible)return;
       ctx.globalAlpha=aC*(.45+.55*wave);const sp=SPR[(hot?"h":"")+bit];ctx.drawImage(sp,q[0]-px,q[1]-px,px*2,px*2)}ctx.globalAlpha=1}
   /* districts */
   const aD=seg(K,12,20);
-  if(aD>0){ctx.globalAlpha=aD*.5;ctx.strokeStyle="#7ff0d9";ctx.lineWidth=.7;ctx.beginPath();distGeo.forEach(d=>path(d.g));ctx.stroke();
-    const aL=seg(P,.74,.86);if(aL>0){ctx.globalAlpha=aD*aL*.75;ctx.fillStyle="#d8fff6";ctx.font=`600 ${Math.max(9,Math.min(12,W/110))}px "Bricolage Grotesque",sans-serif`;ctx.textAlign="center";
+  if(aD>0){ctx.globalAlpha=aD*.5;ctx.strokeStyle=SP.glow;ctx.lineWidth=.7;ctx.beginPath();distGeo.forEach(d=>path(d.g));ctx.stroke();
+    const aL=seg(P,.74,.86);if(aL>0){ctx.globalAlpha=aD*aL*.75;ctx.fillStyle=SP.label;ctx.font=`600 ${Math.max(9,Math.min(12,W/110))}px "Bricolage Grotesque",sans-serif`;ctx.textAlign="center";
       distGeo.forEach(d=>{const q=proj(d.c);if(q&&q[0]>20&&q[0]<W-20&&q[1]>20&&q[1]<H-20)ctx.fillText(d.n.toUpperCase(),q[0],q[1])})}ctx.globalAlpha=1}
   /* state outline draws itself */
   const aS=seg(P,.3,.42);
-  if(aS>0){ctx.save();ctx.shadowColor="#7ff0d9";ctx.shadowBlur=14;ctx.strokeStyle="#e8fffa";ctx.lineWidth=Math.max(1.2,Math.min(2.4,K/8));
+  if(aS>0){ctx.save();ctx.shadowColor=SP.glow;ctx.shadowBlur=14;ctx.strokeStyle="#ffffff";ctx.lineWidth=Math.max(1.2,Math.min(2.4,K/8));
     const n=Math.max(2,Math.round(stateLen*aS));ctx.beginPath();path(ringLine(G.state[0].slice(0,n),false));ctx.stroke();ctx.restore()}
 
   /* satellite and its beam */
