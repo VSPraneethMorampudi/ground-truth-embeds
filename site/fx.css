@@ -1,0 +1,168 @@
+/* ---------- FX: buttons ---------- */
+.roll{position:relative;z-index:1;display:inline-grid;overflow:hidden;vertical-align:middle;line-height:1.3}
+.roll>span{grid-area:1/1;display:block;white-space:nowrap;transition:transform .5s cubic-bezier(.7,0,.2,1)}
+.roll .rb{transform:translateY(110%)}
+:is(.btn,.lv-show,.g-exit,.ask button,.acts button,.search button):hover .roll .ra{transform:translateY(-110%)}
+:is(.btn,.lv-show,.g-exit,.ask button,.acts button,.search button):hover .roll .rb{transform:none}
+.btn,.lv-show{position:relative;overflow:hidden;isolation:isolate;transition:transform .45s cubic-bezier(.3,1.7,.5,1),box-shadow .3s}
+.btn::before,.lv-show::before{content:"";position:absolute;z-index:0;left:var(--fx,50%);top:var(--fy,50%);width:0;height:0;border-radius:50%;translate:-50% -50%;
+  background:color-mix(in srgb,var(--ink) 14%,transparent);transition:width .55s cubic-bezier(.2,.7,.2,1),height .55s cubic-bezier(.2,.7,.2,1)}
+.btn.ghost::before{background:var(--ink)}
+.btn.ghost:hover{color:var(--paper)}
+.lv-show::before{background:var(--ink)}
+.lv-show:hover{color:var(--paper)}
+.btn:hover::before,.lv-show:hover::before{width:320%;height:900%}
+.btn:hover{box-shadow:0 14px 30px -12px color-mix(in srgb,var(--cta) 70%,transparent)}
+.btn.ghost:hover{box-shadow:none}
+.fx-press{transform:scale(.95)!important;transition-duration:.08s!important}
+.btn .roll .ra>:last-child:not(span[lang]),.btn .roll .rb>:last-child:not(span[lang]){transition:transform .4s}
+
+/* ---------- FX: cards tilt with glare ---------- */
+.fx-tilt{position:relative;transform:perspective(700px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .5s cubic-bezier(.2,.8,.2,1),box-shadow .3s;will-change:transform}
+.fx-tilt.fx-on{transition:transform .1s linear,box-shadow .3s;box-shadow:0 0 0 1px var(--rule),0 22px 40px -18px color-mix(in srgb,var(--ink) 45%,transparent)!important;z-index:2}
+.fx-tilt::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .3s;
+  background:radial-gradient(220px circle at var(--gx,50%) var(--gy,50%),color-mix(in srgb,var(--accent) 15%,transparent),transparent 65%)}
+.fx-tilt.fx-on::after{opacity:1}
+.file:hover{transform:perspective(700px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg))}
+.fx-tilt.fx-press{transform:perspective(700px) scale(.95)!important}
+
+/* ---------- FX: juice ---------- */
+.fx-layer{position:fixed;inset:0;pointer-events:none;z-index:500;overflow:hidden}
+.fx-bit{position:absolute;width:10px;height:10px;margin:-5px;border-radius:50%;animation:fxb 1.1s cubic-bezier(.15,.7,.3,1) forwards}
+.fx-bit.sq{width:6px;height:11px;border-radius:2px}
+@keyframes fxb{to{transform:translate(var(--dx),var(--dy)) rotate(var(--r)) scale(.2);opacity:0}}
+.fx-float{position:absolute;translate:-50% -50%;font:800 24px var(--sans);font-stretch:80%;color:var(--ok);text-shadow:0 2px 0 var(--card);animation:fxf 1.2s cubic-bezier(.2,.8,.2,1) forwards}
+.fx-float.bad{color:var(--bad)}
+@keyframes fxf{0%{opacity:0;transform:translateY(0) scale(.5)}20%{opacity:1;transform:translateY(-16px) scale(1.2)}100%{opacity:0;transform:translateY(-70px) scale(1)}}
+
+/* ---------- FX: game HUD ---------- */
+.g-q{align-items:center!important}
+.g-q svg{width:26px;height:26px;rotate:-90deg;flex:none}
+.g-q circle{fill:none;stroke-width:4}
+.g-q .bg{stroke:var(--rule)}
+.g-q .fg{stroke:var(--ok);stroke-linecap:round;stroke-dasharray:88;stroke-dashoffset:88;transition:stroke-dashoffset .8s cubic-bezier(.2,.8,.2,1),stroke .3s}
+.g-q.bump b{animation:bump .5s}
+.g-levels li.on b{animation:lvpulse 1.8s infinite}
+@keyframes lvpulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--cta) 70%,transparent)}50%{box-shadow:0 0 0 6px transparent}}
+.g-levels li.done b{font-size:0}
+.g-levels li.done b::after{content:"✓";font-size:12px}
+.g-levels li{position:relative}
+.g-mute{width:34px;height:34px;border-radius:50%;background:color-mix(in srgb,var(--card) 80%,transparent);backdrop-filter:blur(8px);font-size:15px;display:grid;place-items:center}
+.g-mute .off{display:none}html.fx-muted .g-mute .on{display:none}html.fx-muted .g-mute .off{display:block}
+
+/* panel content arrives in sequence */
+.g-panel.in>*{animation:fxin .6s cubic-bezier(.2,.8,.2,1) both}
+.g-panel.in>:nth-child(2){animation-delay:.05s}.g-panel.in>:nth-child(3){animation-delay:.1s}.g-panel.in>:nth-child(4){animation-delay:.16s}.g-panel.in>:nth-child(5){animation-delay:.22s}
+.g-panel.in .lv-body>*>*{animation:fxin .55s cubic-bezier(.2,.8,.2,1) both}
+.g-panel.in .lv-body>*>:nth-child(1){animation-delay:.2s}.g-panel.in .lv-body>*>:nth-child(2){animation-delay:.24s}.g-panel.in .lv-body>*>:nth-child(3){animation-delay:.28s}
+.g-panel.in .lv-body>*>:nth-child(4){animation-delay:.32s}.g-panel.in .lv-body>*>:nth-child(5){animation-delay:.36s}.g-panel.in .lv-body>*>:nth-child(6){animation-delay:.4s}
+.g-panel.in .lv-body>*>:nth-child(7){animation-delay:.44s}.g-panel.in .lv-body>*>:nth-child(8){animation-delay:.48s}.g-panel.in .lv-body>*>:nth-child(n+9){animation-delay:.52s}
+@keyframes fxin{from{opacity:0;transform:translateY(18px)}}
+.g-panel.in .lv-body .file{animation:fxin .55s cubic-bezier(.2,.8,.2,1) both,float 3.2s ease-in-out infinite}
+
+/* badge flips in like a card */
+.g-pop .pop{transform-style:preserve-3d}
+.g-pop.show .pop{animation:badge3d 2.6s cubic-bezier(.2,.9,.2,1) both}
+@keyframes badge3d{0%{opacity:0;transform:perspective(800px) rotateY(-180deg) scale(.6)}18%{opacity:1;transform:perspective(800px) rotateY(12deg) scale(1.06)}28%{transform:perspective(800px) rotateY(0) scale(1)}
+  80%{opacity:1;transform:perspective(800px) rotateY(0) scale(1)}100%{opacity:0;transform:perspective(800px) translateY(-40px) scale(.9)}}
+.g-pop .pop::after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.35) 50%,transparent 65%);transform:translateX(-120%);animation:shine2 1.2s .4s both}
+.g-pop .pop{position:relative;overflow:hidden}
+@keyframes shine2{to{transform:translateX(120%)}}
+
+/* ---------- FX: page ---------- */
+#readbar{position:fixed;left:0;top:0;height:3px;width:100%;z-index:120;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--accent),var(--cta))}
+.ch{display:inline-block}
+.otitle h1 .ch{transform:translateY(70%) rotate(6deg);opacity:0;transition:transform 1s cubic-bezier(.2,.8,.2,1),opacity .6s;transition-delay:calc(var(--i)*28ms)}
+.otitle.on h1 .ch{transform:none;opacity:1}
+#outro .gt{overflow:hidden;padding-bottom:.06em}
+@media (prefers-reduced-motion:reduce){.fx-tilt{transform:none!important}.otitle h1 .ch{transform:none;opacity:1}.g-panel.in>*,.g-panel.in .lv-body>*>*{animation:none}}
+
+/* ---------- ICONS (Phosphor duotone) ---------- */
+.ic{width:1.15em;height:1.15em;flex:none;vertical-align:-.2em;fill:currentColor}
+.g-zoom button{display:grid;place-items:center}.g-zoom .ic{width:18px;height:18px}
+.g-mute .ic{width:18px;height:18px}
+.g-bad{gap:4px!important;padding:5px 10px!important;align-items:center}
+.g-bad i{display:grid;place-items:center;width:22px;height:22px;border-radius:7px;background:var(--rule);filter:none!important;opacity:.45!important;color:var(--ink2)}
+.g-bad i .ic{width:14px;height:14px}
+.g-bad i.got{opacity:1!important;background:var(--accent);color:#fff}
+.lv-show .ic,.btn .ic{width:18px;height:18px}
+
+/* ---------- CARDS ---------- */
+/* department files: collectible cards with an icon tile, format tag and colour edge */
+.file{display:flex!important;gap:10px;align-items:center;padding:12px 10px!important;min-height:78px;border-radius:16px!important;overflow:hidden;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--c) 10%,var(--card)) 0%,var(--card) 55%)!important;
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--c) 26%,var(--rule)),0 10px 22px -16px color-mix(in srgb,var(--c) 80%,#000)!important}
+.file::before{display:none}
+.file .f-ic{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:color-mix(in srgb,var(--c) 16%,var(--card));color:var(--c);flex:none;
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 30%,transparent)}
+.file .f-ic .ic{width:24px;height:24px}
+.file .f-tx{display:grid;gap:1px;min-width:0}
+.file .f-tx i{justify-self:start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 7px;border-radius:99px;background:color-mix(in srgb,var(--c) 14%,transparent);color:color-mix(in srgb,var(--c) 85%,var(--ink));font-size:9.5px!important;letter-spacing:.06em!important}
+.file .f-tx b{font-size:14px;line-height:1.2}
+.file .f-tx>span{font-size:12px;color:var(--ink2)}
+.tray>span{display:flex;align-items:center;gap:8px}.tray .ic{width:20px;height:20px;color:var(--accent)}
+
+/* sorting bins: icon tiles */
+.bin{gap:6px!important;padding:12px 4px!important;border-radius:16px!important;background:var(--card)!important;box-shadow:0 0 0 1px var(--rule),0 6px 0 -2px var(--paper2)}
+.bin i{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:var(--paper2);color:var(--ink)}
+.bin i .ic{width:20px;height:20px}
+.bin[data-k=bound] i{color:#7a5c3a}.bin[data-k=water] i{color:#1d6fd6}.bin[data-k=move] i{color:#d2733c}.bin[data-k=fac] i{color:#6b4fd6}
+.bin[data-k=fix]{background:var(--bad-bg)!important}.bin[data-k=fix] i{background:var(--card);color:var(--bad)}
+.bin em{display:grid;place-items:center;min-width:22px;height:20px;padding:0 6px;border-radius:99px;background:var(--paper2);font-size:11px!important}
+.bin.hov{box-shadow:0 0 0 2px var(--accent),0 10px 20px -10px var(--accent)!important}
+
+/* records: chips with a drag grip */
+.rec{display:inline-flex;align-items:center;gap:8px;padding:8px 12px 8px 8px!important;border-radius:12px!important}
+.rec::before{content:"";width:6px;height:14px;flex:none;opacity:.35;background:radial-gradient(circle,var(--ink) 1.2px,transparent 1.6px) 0 0/3px 4.6px}
+
+/* lost pins */
+.pinc{padding:12px!important;border-radius:16px!important;background:linear-gradient(135deg,var(--bad-bg),var(--card) 60%)!important;box-shadow:0 0 0 1px color-mix(in srgb,var(--bad) 25%,var(--rule))!important}
+.pinc .pin-h{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:var(--card);color:var(--bad);font-size:0!important;box-shadow:0 6px 14px -8px var(--bad)}
+.pinc .pin-h .ic{width:26px;height:26px}
+.pinc.ok{background:linear-gradient(135deg,var(--ok-bg),var(--card) 60%)!important}
+.pinc.ok .pin-h{color:var(--ok)}.pinc.ok .pin-h::after{content:none!important}
+.g-ghost .pin-h{display:grid;place-items:center;width:56px;height:56px;border-radius:18px;background:var(--card);color:var(--bad);box-shadow:0 18px 30px -12px rgba(0,0,0,.4)}
+.g-ghost .pin-h .ic{width:32px;height:32px}
+
+/* layer sheets */
+.gate{gap:8px!important}.gate>span{display:flex;align-items:center;gap:6px;font-weight:700}
+.gate em{display:inline-flex;align-items:center;gap:4px}
+
+/* portal */
+.ask b{display:flex;align-items:center;gap:6px}
+.answer .cnt{display:flex;gap:6px;flex-wrap:wrap}
+.answer .cnt em{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:99px;background:color-mix(in srgb,var(--paper) 14%,transparent);font-style:normal;font-weight:700}
+
+/* field + maintenance */
+.ph-photo{display:flex;align-items:center;justify-content:center;gap:6px}.ph-photo .ic{width:22px;height:22px}
+.status span{display:inline-flex;align-items:center;gap:6px}
+.chk em{display:inline-flex;align-items:center;gap:4px}
+.upd{border-left:4px solid var(--rule)}
+.upd.done.pub{border-left-color:var(--ok)}.upd.done.back{border-left-color:var(--bad)}
+
+/* badge pop: collectible card with a foil shimmer */
+.g-pop .pop{min-width:230px;padding:30px 36px 26px!important;border-radius:28px!important;
+  background:radial-gradient(120% 90% at 30% 0%,color-mix(in srgb,var(--accent) 45%,var(--ink)),var(--ink) 60%)!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.15),0 0 0 6px color-mix(in srgb,var(--cta) 60%,transparent),0 40px 80px -30px rgba(0,0,0,.6)!important}
+.g-pop i{display:grid;place-items:center;width:92px;height:92px;border-radius:26px;background:var(--cta);color:var(--cta-ink);margin-bottom:8px;box-shadow:inset 0 -6px 0 rgba(0,0,0,.12)}
+.g-pop i .ic{width:56px;height:56px}
+.g-pop .pop::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;mix-blend-mode:overlay;opacity:.5;
+  background:conic-gradient(from 0deg at 50% 50%,#ff8a8a,#ffd36b,#8bffb0,#7fd2ff,#c08bff,#ff8a8a);animation:foil 3s linear infinite}
+@keyframes foil{to{filter:hue-rotate(360deg)}}
+
+/* end screen: bento */
+.end-stats{grid-template-columns:1.3fr 1fr 1fr!important}
+.end-stats div{position:relative;justify-items:start!important;align-content:end;gap:2px;padding:14px!important;border-radius:18px!important;min-height:104px;overflow:hidden}
+.end-stats div .ic{position:absolute;right:10px;top:10px;width:30px;height:30px;color:var(--accent);opacity:.9}
+.end-stats .es-q{background:var(--ink)!important;color:var(--paper)}
+.end-stats .es-q span{color:color-mix(in srgb,var(--paper) 70%,transparent)!important}
+.end-stats .es-q .ic{color:var(--cta)}
+.shelf{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 0 14px}
+.bcard{display:grid;justify-items:center;gap:4px;padding:10px 4px 8px;border-radius:14px;background:var(--paper2);text-align:center;font:600 10.5px/1.15 var(--sans);color:var(--ink2);opacity:.45}
+.bcard i{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:var(--card)}
+.bcard i .ic{width:20px;height:20px}
+.bcard.got{opacity:1;background:var(--card);box-shadow:0 0 0 1px var(--rule),0 8px 16px -12px var(--accent)}
+.bcard.got i{background:var(--accent);color:#fff}
+
+.lv-body>.files{padding:4px 2px 8px;margin:-4px -2px 0}
+.file .f-tx b,.file .f-tx>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
