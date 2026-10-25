@@ -13,11 +13,11 @@
 (function(){var t=(location.search.match(/[?&]theme=(\w+)/)||[])[1];try{if(t)localStorage.setItem("gt-theme",t);else t=localStorage.getItem("gt-theme")}catch(e){}t=t||"mahanadi";if(t!=="default")document.documentElement.dataset.theme=t})();</script>
 <link rel="stylesheet" href="vendor/lenis.css">
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="game/game.css">
+<link rel="stylesheet" href="pipeline/pipeline.css">
 <link rel="stylesheet" href="fx.css">
 </head>
 <body class="loading">
-<a class="skip" href="#game">Skip to the game</a>
+<a class="skip" href="#pipeline">Skip to the story</a>
 
 <div id="readbar" aria-hidden="true"></div>
 <div id="pre" aria-hidden="true">
@@ -58,7 +58,7 @@
 </section>
 
 <main id="ground">
-  <section id="game" aria-label="The game: build the state map"></section>
+  <section id="pipeline" aria-label="From department files to the Geoportal"></section>
   <section id="outro"></section>
 </main>
 
@@ -81,11 +81,6 @@
 <script src="globe.js"></script>
 <script src="app.js"></script>
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
-<script type="module">
-  import {Game} from "./game/game.js";
-  const H=window.GT_HOOKS;
-  window.GTGame=new Game(document.getElementById("game"),{onLock:H.lock,onUnlock:H.unlock,onFinish:H.finish});
-  dispatchEvent(new Event("gt-game-ready"));
-</script>
+<script type="module" src="pipeline/pipeline.js"></script>
 </body>
 </html>

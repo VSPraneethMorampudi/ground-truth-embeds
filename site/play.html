@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ground Truth · The game</title>
+<meta name="description" content="From orbit to the ground: how Chhattisgarh turns places into reliable digital maps. An interactive story in English and Hindi.">
+<meta name="theme-color" content="#030814">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Geist+Mono:wght@400..600&family=Anek+Devanagari:wdth,wght@75..125,300..800&display=swap">
+<script>/* theme: Mahanadi by default; ?theme=paddy|sal|night|default to preview others (remembered) */
+(function(){var t=(location.search.match(/[?&]theme=(\w+)/)||[])[1];try{if(t)localStorage.setItem("gt-theme",t);else t=localStorage.getItem("gt-theme")}catch(e){}t=t||"mahanadi";if(t!=="default")document.documentElement.dataset.theme=t})();</script>
+<link rel="stylesheet" href="vendor/lenis.css">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="game/game.css">
+<link rel="stylesheet" href="fx.css">
+<style>html,body{height:100%;overflow:hidden}#game{position:fixed;inset:0;height:100svh}</style>
+</head>
+<body>
+<header id="top">
+  <a class="brand" href="./" data-magnet><span class="logo"></span><span lang="en">← Ground Truth</span><span lang="hi">← ज़मीनी सच्चाई</span></a>
+  <div class="tools"><div class="seg" role="group" aria-label="Language"><button data-setlang="en" aria-pressed="true">EN</button><button data-setlang="hi" aria-pressed="false">हिं</button></div></div>
+</header>
+<section id="game" aria-label="The game: build the state map"></section>
+<script src="icons.js"></script>
+<script src="fx.js"></script>
+<script src="cursor.js"></script>
+<script src="geo.js"></script>
+<script>
+/* language (the story page does this in app.js) */
+function setLang(l){document.documentElement.dataset.lang=l;document.documentElement.lang=l;document.querySelectorAll("[data-setlang]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.setlang===l));
+  try{localStorage.setItem("gt-lang",l)}catch(e){}window.GTGame&&GTGame.relang()}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-setlang]");if(b)setLang(b.dataset.setlang)});
+let l0=null;try{l0=localStorage.getItem("gt-lang")}catch(e){}setLang(l0||(/^hi/i.test(navigator.language)?"hi":"en"));
+document.documentElement.classList.add("in-game");
+</script>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
+<script type="module">
+  import {Game} from "./game/game.js";
+  window.GTGame=new Game(document.getElementById("game"),{onLock(){},onUnlock(){},onFinish(){location.href="./"}});
+</script>
+</body>
+</html>
