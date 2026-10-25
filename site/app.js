@@ -1,165 +1,205 @@
 (()=>{
-const G=window.GT,$=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const G=window.GT,E=G.E,$=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const REDUCE=matchMedia("(prefers-reduced-motion:reduce)").matches,FINE=matchMedia("(pointer:fine)").matches;
-const L2=o=>`<span lang="en">${o.en}</span><span lang="hi">${o.hi}</span>`;
-const L2b=(tag,o,cls="")=>`<${tag} lang="en" class="${cls}">${o.en}</${tag}><${tag} lang="hi" class="${cls}">${o.hi}</${tag}>`;
-const figURL=(view,step=0)=>`${G.FIG}#${view}&bare&auto=off&nav=off&step=${step}`;
+const L2=o=>o?`<span lang="en">${o.en}</span><span lang="hi">${o.hi}</span>`:"";
+const url=u=>/^https?:/.test(u)?u:G.BASE+u;
+const syncURL=(e,i)=>url(e.url)+`&nav=off&auto=off&step=${i}`;
 const simple=o=>o?`<div class="simple"><b>${L2(G.ui.simple)}</b><span>${L2(o)}</span></div>`:"";
+const pad=n=>String(n).padStart(2,"0");
+const pageTop=el=>el.getBoundingClientRect().top+window.scrollY;
+gsap.registerPlugin(ScrollTrigger);
 
 /* ---------- language ---------- */
-function setLang(l){document.documentElement.dataset.lang=l;document.documentElement.lang=l;
+function setLang(l){const h=document.documentElement;h.dataset.lang=l;h.lang=l;
   $$("[data-setlang]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.setlang===l));
   try{localStorage.setItem("gt-lang",l)}catch(e){}
-  if(pres.on)renderCap()}
+  requestAnimationFrame(()=>ScrollTrigger.refresh())}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-setlang]");if(b)setLang(b.dataset.setlang)});
 
-/* ---------- build the page ---------- */
-const C=G.cover,main=$("#main");
-let h=`<section id="hero"><div class="bg"></div><div class="grid"></div><div class="shade"></div>
- <div class="hero-in"><p class="kicker rv">${L2(C.kicker)}</p>
- <h1 class="title rv" style="--d:.1s">${L2(C.title)}</h1>
- <p class="sub rv" style="--d:.25s">${L2(C.sub)}</p>
- <div class="rv" style="--d:.4s;margin-top:34px;display:flex;gap:12px;flex-wrap:wrap"><a class="btn" data-magnet href="#intro">${L2({en:"Start exploring",hi:"देखना शुरू करें"})}</a>
- <button class="btn ghost" data-magnet data-present>${L2(G.ui.presentSub)}</button></div></div>
- <a class="scrollcue" href="#intro"><i></i>${L2(G.ui.explore)}</a></section>
- <div class="marquee" aria-hidden="true"><div>${[0,1].map(()=>G.chapters.filter(c=>!c.closing).map(c=>`<span>${L2(c.name)}</span>`).join("")).join("")}</div></div>
- <section id="intro"><div class="wrap intro-g"><div>${C.intro.map(p=>`<p class="big sw">${L2b("span",p)}</p>`).join("").replace(/<p class="big sw">/,'<p class="big sw">')}${simple(C.simple)}</div>
- <div class="fig intro-fig rv"><iframe title="Overview" loading="lazy" src="${G.FIG}#overview&bare&auto=off"></iframe></div></div></section>`;
-G.chapters.forEach(c=>{
-  const N=c.steps.length;
-  h+=`<section class="chapter" id="${c.id}" data-ch="${c.id}"><div class="wrap">
-   <div class="ch-num" data-par aria-hidden="true">${String(c.n).padStart(2,"0")}</div>
-   <div class="ch-h"><p class="kicker rv">${c.closing?L2(G.ui.step)+" ∞":L2({en:"Chapter",hi:"अध्याय"})+" "+c.n} · ${L2(c.name)}</p>
-    <h2 class="sw">${L2(c.head)}</h2><p class="lead rv">${L2(c.lead)}</p>
-    ${c.cta?`<div class="cta rv"><a class="btn" data-magnet href="${G.PORTAL_URL}" target="_blank" rel="noopener">${L2(G.ui.openLive)} ↗</a></div>`:""}</div>
-   <div class="scrolly"><div class="steps">${c.steps.map((s,i)=>`<div class="stepcard" data-i="${i}"><div class="in" data-spot data-tilt>
-     <div class="no">${s.k?s.k:(L2(G.ui.step)+" "+(i+1))} / ${N}</div><h3>${L2(s.t)}</h3><p>${L2(s.b)}</p>${simple(s.s)}
-     <div class="dots">${c.steps.map((_,j)=>`<i class="${j===i?"on":""}"></i>`).join("")}</div></div></div>`).join("")}</div>
-    <div class="stick"><div class="fig" data-fig="${c.id}"><iframe title="${c.name.en}" loading="lazy" src="${figURL(c.view,0)}"></iframe>
-     <div class="hint">${L2(G.ui.tryit)}</div></div></div></div></div></section>`});
-h+=`<section id="end"><div class="wrap"><h2 class="sw">${L2(G.chapters.at(-1).head)}</h2>
- <a class="btn big" data-magnet href="${G.PORTAL_URL}" target="_blank" rel="noopener">${L2(G.ui.openPortal)} ↗</a>
- <div class="cta"><button class="btn ghost" data-magnet data-present>${L2(G.ui.again)} · ${L2(G.ui.presentSub)}</button></div>
- <p class="credits">${L2(G.ui.credits)}</p></div></section>`;
-main.innerHTML=h;
-const SHORT={create:{en:"Data",hi:"डेटा"},geodatabase:{en:"Geodatabase",hi:"भू-डेटाबेस"},portal:{en:"Portal",hi:"पोर्टल"},mobile:{en:"Mobile",hi:"मोबाइल"},mapping:{en:"Mapping",hi:"मानचित्रण"},maintain:{en:"Maintenance",hi:"रखरखाव"}};
-$("#chapnav").innerHTML=G.chapters.filter(c=>!c.closing).map(c=>`<a href="#${c.id}" data-nav="${c.id}" title="${c.name.en}">${c.n} · ${L2(SHORT[c.id]||c.name)}</a>`).join("");
+/* ---------- orbit copy ---------- */
+const C=G.cover;
+$("#ocaps").innerHTML=G.orbit.map(o=>`<div class="ocap"><div class="k">${L2(o.k)}</div><p>${L2(o.t)}</p></div>`).join("");
+$("#oKick").innerHTML=L2(C.kicker);
+$("#oTitle").innerHTML=`<span lang="en">Ground <i>Truth</i></span><span lang="hi">ज़मीनी <i>सच्चाई</i></span>`;
+$("#oSub").innerHTML=L2(C.sub);
+$("#oBegin").innerHTML=L2(G.ui.begin)+" ↓";
+$("#oPlay").innerHTML=`▶ ${L2(G.ui.play)} · ${L2(G.ui.min3)}`;
 
-/* split text into words so they can blur-in one by one */
-$$(".sw").forEach(el=>{let i=0;const walk=n=>{[...n.childNodes].forEach(ch=>{
-  if(ch.nodeType===3){const f=document.createDocumentFragment();ch.textContent.split(/(\s+)/).forEach(t=>{if(!t.trim()){f.append(t);return}
-    const s=document.createElement("span");s.className="w";s.style.setProperty("--i",i++);s.textContent=t;f.append(s)});ch.replaceWith(f)}
-  else if(ch.nodeType===1&&!ch.classList.contains("w"))walk(ch)})};
-  $$("[lang]",el).length?$$("[lang]",el).forEach(x=>{i=0;walk(x)}):walk(el)});
+/* ---------- ground: build every section from content.js ---------- */
+const frame=(e,id,tag,init=0)=>{const inner=e.steps
+    ?`<div class="stack">${e.steps.map((u,i)=>`<iframe title="${id} step ${i+1}" loading="lazy" src="${url(u)}" class="${i===init?"on":""}"></iframe>`).join("")}</div>`
+    :`<iframe title="${id}" loading="lazy" src="${e.sync?syncURL(e,init):url(e.url)}"></iframe>`;
+  return `<div class="frame" data-w="${e.w||1280}" data-h="${e.h||800}" data-cursor>${tag?`<div class="tag"><i></i>${L2(tag)}</div>`:""}${inner}</div>`};
+const sep=e=>e?`<div class="wrap"><div class="sep"><iframe title="Chapter separator" loading="lazy" src="${url(e.url)}" allowtransparency="true"></iframe></div></div>`:"";
+const SEP={create:E.sep1,mobile:E.sep4,mapping:E.sep5};
+const live={en:"Interactive",hi:"इंटरैक्टिव"};
+let h=`<section id="intro"><div class="wrap">
+  <p class="label">${L2({en:"Prologue",hi:"प्रस्तावना"})}</p>
+  <p class="scrub" id="scrub">${L2({en:C.intro[0].en+" "+C.intro[1].en,hi:C.intro[0].hi+" "+C.intro[1].hi})}</p>
+  <div class="intro-more"><div><p>${L2(C.intro[2])}</p></div>${simple(C.simple)}</div>
+  <div class="fullfig">${frame(E.overview,"overview",{en:"Live figure · hover the map",hi:"लाइव चित्र · नक्शे पर कर्सर ले जाएँ"})}</div></div></section>
+ <div class="marq" aria-hidden="true"><div class="tr">${[0,1,2].map(()=>G.chapters.filter(c=>!c.closing).map(c=>`<span>${L2(c.name)}</span><span>·</span>`).join("")).join("")}</div></div>`;
+G.chapters.forEach((c,ci)=>{const e=E[c.id],N=c.steps.length;
+  h+=`<section class="chapter${ci%2?" alt":""}" id="${c.id}" data-ch="${c.id}">${sep(SEP[c.id])}<div class="wrap">
+   <div class="ch-num" aria-hidden="true">${c.closing?"∞":pad(c.n)}</div>
+   <div class="ch-h"><p class="label">${c.closing?L2({en:"Epilogue",hi:"उपसंहार"}):L2(G.ui.chapter)+" "+pad(c.n)} · ${L2(c.name)}</p>
+    <h2 class="split">${L2(c.head)}</h2><p class="lead">${L2(c.lead)}</p></div>`;
+  if(c.id==="portal"){
+    h+=`<div class="portal-note"><p>${L2(G.ui.portalNote)}</p><a class="btn ink" data-magnet href="${G.PORTAL_URL}" target="_blank" rel="noopener">${L2(G.ui.openLive)} ↗</a></div>
+     <div class="browser" data-cursor><div class="bar"><i></i><i></i><i></i><span class="url">Chhattisgarh State Geoportal</span></div>
+     <iframe title="Live Geoportal" loading="lazy" src="${url(e.url)}"></iframe></div>
+     <div class="feats">${c.steps.map((s,i)=>`<div class="feat" data-spot><b>${pad(i+1)}</b><h4>${L2(s.t)}</h4><p>${L2(s.b)}</p></div>`).join("")}</div>
+     ${c.steps.at(-1).s?`<div class="simple solo"><b>${L2(G.ui.simple)}</b><span>${L2(c.steps.at(-1).s)}</span></div>`:""}`}
+  else h+=`<div class="scrolly"><div class="cards">${c.steps.map((s,i)=>`<div class="card" data-i="${i}"><div class="in" data-spot>
+     <div class="no"><span>${s.k||pad(i+1)}</span><span>${pad(i+1)} / ${pad(N)}</span></div><h3>${L2(s.t)}</h3><p>${L2(s.b)}</p>${simple(s.s)}
+     <div class="prog">${c.steps.map((_,j)=>`<i class="${j<=i?"on":""}"></i>`).join("")}</div></div></div>`).join("")}</div>
+     <div class="stick">${frame(e,c.id,live)}</div></div>`;
+  h+=`</div></section>`});
+h+=`<section id="outro"><canvas id="stars2" aria-hidden="true"></canvas><div class="wrap">
+  <p class="label" style="color:var(--amber)">${L2({en:"Ground truth, every day",hi:"हर दिन, ज़मीनी सच्चाई"})}</p>
+  <h2 class="big"><span lang="en">Ground <i>Truth</i></span><span lang="hi">ज़मीनी <i>सच्चाई</i></span></h2>
+  <div class="row">${simple(G.chapters.at(-1).steps.at(-1).s)}
+   <div class="cta"><a class="btn" data-magnet href="${G.PORTAL_URL}" target="_blank" rel="noopener">${L2(G.ui.openPortal)} ↗</a>
+   <button class="btn ghost" data-magnet data-play>▶ ${L2(G.ui.play)}</button></div></div>
+  <div class="foot"><span>${L2(G.ui.credits)}</span><button id="toOrbit">↑ ${L2(G.ui.backOrbit)}</button></div></div></section>`;
+$("#ground").innerHTML=h;
 
-/* ---------- reveal on scroll ---------- */
-const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}}),{threshold:.15,rootMargin:"0px 0px -6% 0px"});
-$$(".rv,.sw").forEach(el=>io.observe(el));
+/* chapter rail */
+const SHORT={create:{en:"Data",hi:"डेटा"},geodatabase:{en:"Geodatabase",hi:"भू-डेटाबेस"},portal:{en:"Portal",hi:"पोर्टल"},mobile:{en:"Mobile",hi:"मोबाइल"},mapping:{en:"Mapping",hi:"मानचित्रण"},maintain:{en:"Maintenance",hi:"रखरखाव"},cycle:{en:"The cycle",hi:"चक्र"}};
+$("#rail").innerHTML=G.chapters.map(c=>`<a href="#${c.id}" data-nav="${c.id}"><span>${c.closing?"∞":pad(c.n)} · ${L2(SHORT[c.id])}</span><i></i></a>`).join("");
 
-/* ---------- scrollytelling: scroll position drives the figure's step ---------- */
-const charts=G.chapters.map(c=>{const sec=$("#"+c.id),fig=$(".fig[data-fig]",sec),fr=$("iframe",fig);
-  return{c,sec,fig,fr,cards:$$(".stepcard",sec),dots:null,cur:-1,hint:$(".hint",fig)}});
-function setStep(o,i){if(o.cur===i)return;o.cur=i;
-  o.fr.src=figURL(o.c.view,i);                       // only the #hash changes, so the figure animates to the step
-  o.cards.forEach((k,j)=>k.classList.toggle("on",j===i));
-  if(i>0&&o.hint)o.hint.classList.add("gone")}
-let ticking=false;
-function onScroll(){ticking=false;
-  const vh=innerHeight,y=scrollY,doc=document.documentElement;
-  $("#progress").style.transform=`scaleX(${Math.min(1,y/(doc.scrollHeight-vh))})`;
-  const mobile=innerWidth<=900,focus=mobile?(vh*.46+vh)/2:vh*.5;
-  let activeChap=null;
-  charts.forEach(o=>{const r=o.sec.getBoundingClientRect();
-    if(r.top<vh*.5&&r.bottom>vh*.4)activeChap=o.c.id;
-    o.fig.classList.toggle("live",r.top<vh*.7&&r.bottom>vh*.3);
-    if(r.bottom<-200||r.top>vh+200)return;
-    let best=-1,bd=1e9;o.cards.forEach((k,i)=>{const b=k.getBoundingClientRect(),d=Math.abs((b.top+b.bottom)/2-focus);if(d<bd){bd=d;best=i}});
-    if(r.top>vh*.55)best=0;                           // the chapter has not really started
-    setStep(o,best)});
-  $$("#chapnav a").forEach(a=>a.classList.toggle("on",a.dataset.nav===activeChap));
-  if(!REDUCE){$$("[data-par]").forEach(el=>{const r=el.parentElement.getBoundingClientRect();el.style.transform=`translateY(${(r.top*-.12).toFixed(1)}px)`});
-    const bg=$("#hero .bg");if(y<vh*1.2)bg.style.transform=`translateY(${y*.25}px)`}}
-addEventListener("scroll",()=>{if(!ticking){ticking=true;requestAnimationFrame(onScroll)}},{passive:true});
-addEventListener("resize",onScroll);
+/* ---------- smooth scroll ---------- */
+const lenis=new Lenis({lerp:REDUCE?1:.09,smoothWheel:!REDUCE,wheelMultiplier:.9});
+lenis.on("scroll",ScrollTrigger.update);
+gsap.ticker.add(t=>lenis.raf(t*1000));gsap.ticker.lagSmoothing(0);
+const goTo=(t,o={})=>lenis.scrollTo(t,{offset:0,duration:1.4,...o});
+document.addEventListener("click",e=>{const a=e.target.closest('a[href^="#"]');if(!a)return;const t=$(a.getAttribute("href"));if(!t)return;e.preventDefault();
+  goTo(a.getAttribute("href")==="#orbit"?0:t,{duration:a.getAttribute("href")==="#ground"?2.4:1.6})});
+$("#toOrbit").onclick=()=>goTo(0,{duration:3.2});
 
-/* ---------- hover / pointer effects ---------- */
-if(FINE&&!REDUCE){
-  const glow=$("#glow");addEventListener("pointermove",e=>{glow.style.transform=`translate(${e.clientX}px,${e.clientY}px)`;
-    const hero=$("#hero");if(hero){const r=hero.getBoundingClientRect();hero.style.setProperty("--mx",e.clientX-r.left+"px");hero.style.setProperty("--my",e.clientY-r.top+"px")}},{passive:true});
-  document.addEventListener("pointermove",e=>{const c=e.target.closest("[data-spot]");if(!c)return;const r=c.getBoundingClientRect();
-    c.style.setProperty("--sx",e.clientX-r.left+"px");c.style.setProperty("--sy",e.clientY-r.top+"px");
-    if(c.hasAttribute("data-tilt")){const x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;c.style.transform=`perspective(900px) rotateY(${x*5}deg) rotateX(${-y*5}deg)`}});
-  document.addEventListener("pointerout",e=>{const c=e.target.closest("[data-tilt]");if(c&&!c.contains(e.relatedTarget))c.style.transform=""});
-  document.addEventListener("pointermove",e=>{const b=e.target.closest("[data-magnet]");$$("[data-magnet]").forEach(m=>{if(m!==b)m.style.transform=""});
-    if(!b)return;const r=b.getBoundingClientRect();b.style.transform=`translate(${(e.clientX-r.left-r.width/2)*.18}px,${(e.clientY-r.top-r.height/2)*.28}px)`});
-  document.addEventListener("pointerleave",()=>$$("[data-magnet]").forEach(m=>m.style.transform=""));
-}else $("#glow").remove();
+/* ---------- figures: draw at their native size, scale to the frame (desktop) ---------- */
+const ro=new ResizeObserver(es=>es.forEach(en=>{const f=en.target,w=+f.dataset.w,hh=+f.dataset.h,wide=innerWidth>900||f.closest(".fullfig");
+  f.classList.toggle("scaled",!!wide);if(wide)f.style.aspectRatio=`${w}/${hh}`;else f.style.aspectRatio="";
+  $$("iframe",f).forEach(i=>{if(wide){i.style.width=w+"px";i.style.height=hh+"px";i.style.transform=`scale(${f.clientWidth/w})`}else{i.style.width=i.style.height="";i.style.transform=""}})}));
+$$(".frame").forEach(f=>ro.observe(f));
 
-/* ---------- presentation mode (≈3 minutes) ---------- */
-const pres={on:false,paused:false,idx:0,el:0,items:[],total:0,raf:0,last:0,frames:{},cur:null};
-function buildTimeline(){
-  const it=[],COVER=8,CARD=1.6,END=9,steps=G.chapters.reduce((n,c)=>n+c.steps.length,0),chapN=G.chapters.length;
-  const per=Math.max(3.5,(G.PRESENT_SECONDS-COVER-END-CARD*chapN)/steps);
-  it.push({type:"cover",dur:COVER});
-  G.chapters.forEach((c,ci)=>{it.push({type:"chapter",ci,dur:CARD});c.steps.forEach((s,si)=>it.push({type:"step",ci,si,dur:per}))});
-  it.push({type:"end",dur:END});
-  pres.items=it;pres.total=it.reduce((a,b)=>a+b.dur,0);
-  $("#pSegs").innerHTML=it.map(x=>`<i style="flex:${x.dur}"><b></b></i>`).join("");
-  $("#pFrame").innerHTML=G.chapters.map(c=>`<iframe title="${c.name.en}" data-v="${c.id}" src="${figURL(c.view,0)}"></iframe>`).join("");
-  $("#pFrame").append($("#pCard"),$("#pTitle"));watchP();pres.frames=Object.fromEntries($$("#pFrame iframe").map(f=>[f.dataset.v,f]))}
-function curItem(){return pres.items[pres.idx]}
-function renderCap(){const x=curItem();if(!x)return;const cap=$("#pCap");
-  if(x.type==="step"){const c=G.chapters[x.ci],s=c.steps[x.si];
-    cap.innerHTML=`<div class="k">${L2(c.name)} · ${x.si+1}/${c.steps.length}</div><h3>${L2(s.t)}</h3><p>${L2(s.b)}</p>`}
-  else if(x.type==="cover")cap.innerHTML=`<div class="k">${L2(C.kicker)}</div><h3>${L2(C.sub)}</h3><p>${L2(C.intro[0])}</p>`;
-  else if(x.type==="chapter"){const c=G.chapters[x.ci];cap.innerHTML=`<div class="k">${L2({en:"Chapter",hi:"अध्याय"})} ${c.n}</div><h3>${L2(c.head)}</h3><p>${L2(c.lead)}</p>`}
-  else cap.innerHTML=`<div class="k">${L2(C.title)}</div><h3>${L2(G.chapters.at(-1).head)}</h3><p>${L2(G.chapters.at(-1).steps.at(-1).s)}</p>`;
+/* ---------- split headings into masked words ---------- */
+$$(".split").forEach(el=>$$("[lang]",el).forEach(x=>{x.innerHTML=x.textContent.split(/\s+/).map(w=>`<span class="mask"><span>${w}</span></span>`).join(" ")}));
+$$("#scrub [lang]").forEach(x=>{x.innerHTML=x.textContent.split(/\s+/).map(w=>`<span class="w">${w}</span>`).join(" ")});
+
+/* ---------- preloader → reveal ---------- */
+const pre={v:0};
+const fontsReady=Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,2500))]);
+gsap.to(pre,{v:100,duration:REDUCE?.2:1.6,ease:"power2.inOut",onUpdate:()=>{$("#preN").textContent=pad(Math.round(pre.v));$("#preBar").style.transform=`scaleX(${pre.v/100})`},
+  onComplete:()=>fontsReady.then(()=>{document.body.classList.remove("loading");
+    gsap.to("#pre",{yPercent:-100,duration:REDUCE?.01:1.1,ease:"expo.inOut",onComplete:()=>{$("#pre").remove();ScrollTrigger.refresh();if(location.hash==="#play")apStart()}});
+    gsap.from(".hud-p,.hud-s",{opacity:0,y:20,duration:1,delay:.6,stagger:.15})})});
+
+/* ---------- scroll animations ---------- */
+const mm=gsap.matchMedia();
+mm.add("(prefers-reduced-motion:no-preference)",()=>{
+  $$(".split").forEach(el=>gsap.from($$(".mask>span",el),{yPercent:115,rotate:4,duration:1.1,ease:"expo.out",stagger:.045,scrollTrigger:{trigger:el,start:"top 85%"}}));
+  $$(".ch-num").forEach(el=>gsap.fromTo(el,{yPercent:-12},{yPercent:30,ease:"none",scrollTrigger:{trigger:el.closest("section"),start:"top bottom",end:"bottom top",scrub:true}}));
+  $$(".ch-h .lead,.ch-h .label,.portal-note,.intro-more>*").forEach(el=>gsap.from(el,{opacity:0,y:30,duration:1,ease:"power3.out",scrollTrigger:{trigger:el,start:"top 88%"}}));
+  $$(".stick .frame,.fullfig .frame,.browser").forEach(el=>gsap.from(el,{clipPath:"inset(12% 8% 12% 8% round 22px)",scale:.94,duration:1.4,ease:"expo.out",scrollTrigger:{trigger:el,start:"top 85%"}}));
+  gsap.from(".feat",{opacity:0,y:50,duration:1,stagger:.08,ease:"power3.out",scrollTrigger:{trigger:".feats",start:"top 88%"}});
+  gsap.fromTo("#outro .big",{xPercent:8},{xPercent:-8,ease:"none",scrollTrigger:{trigger:"#outro",start:"top bottom",end:"bottom top",scrub:true}});
+});
+/* prologue words light up as you read */
+const words=()=>$$(`#scrub [lang="${document.documentElement.dataset.lang}"] .w`);
+ScrollTrigger.create({trigger:"#scrub",start:"top 80%",end:"bottom 35%",scrub:true,onUpdate:s=>{const w=words(),n=Math.round(s.progress*w.length);w.forEach((x,i)=>x.style.opacity=i<n?1:.13)}});
+/* marquee speeds up and leans with scroll velocity */
+{const tr=$(".marq .tr");let x=0,v=0;gsap.ticker.add(()=>{if(REDUCE)return;v+=(Math.abs(lenis.velocity||0)*.6-v)*.1;x-=(.6+v);const w=tr.scrollWidth/3;if(-x>w)x+=w;tr.style.transform=`translateX(${x}px) skewX(${-Math.min(12,(lenis.velocity||0)*.4)}deg)`})}
+
+/* ---------- step cards drive the figures ---------- */
+const state={};
+let cleared=new Set();
+function setStep(c,i){const st=state[c.id]||(state[c.id]={cur:-1});if(st.cur===i)return;st.cur=i;const sec=$("#"+c.id),e=E[c.id];
+  $$(".card",sec).forEach((k,j)=>k.classList.toggle("on",j===i));
+  if(e.steps)$$(".stack iframe",sec).forEach((f,j)=>f.classList.toggle("on",j===i));
+  else if(e.sync){const f=$(".stick iframe",sec);if(f)f.src=syncURL(e,i)}
+  if(i===c.steps.length-1&&!cleared.has(c.id)){cleared.add(c.id);toast(c)}}
+G.chapters.forEach(c=>{if(c.id==="portal")return;
+  $$(`#${c.id} .card`).forEach((k,i)=>ScrollTrigger.create({trigger:k,start:()=>innerWidth<=900?"top 75%":"top center",end:()=>innerWidth<=900?"bottom 75%":"bottom center",
+    onToggle:s=>{if(s.isActive)setStep(c,i)}}))});
+G.chapters.filter(c=>c.id==="portal").forEach(c=>ScrollTrigger.create({trigger:".feats",start:"top 70%",once:true,onEnter:()=>{cleared.add(c.id);toast(c)}}));
+
+/* level rail + ground state */
+G.chapters.forEach(c=>ScrollTrigger.create({trigger:"#"+c.id,start:"top center",end:"bottom center",
+  onToggle:s=>{const a=$(`#rail [data-nav="${c.id}"]`);a.classList.toggle("on",s.isActive);if(!s.isActive&&s.direction>0)a.classList.add("done")}}));
+ScrollTrigger.create({trigger:"#ground",start:"top 40%",end:"bottom bottom",onToggle:s=>document.body.classList.toggle("on-ground",s.isActive)});
+
+/* achievements */
+function toast(c){const n=G.chapters.filter(x=>!x.closing).length,done=[...cleared].filter(id=>!G.chapters.find(x=>x.id===id).closing).length;
+  const t=document.createElement("div");t.className="t";
+  t.innerHTML=`<i>✓</i><div><small>${L2(G.ui.cleared)}${c.closing?"":` · ${done}/${n}`}</small><b>${L2(c.name)}</b></div>`;
+  $("#toast").append(t);setTimeout(()=>{t.classList.add("out");setTimeout(()=>t.remove(),500)},2600)}
+
+/* ---------- pointer: cursor, magnets, spotlights ---------- */
+if(FINE&&!REDUCE){document.body.classList.add("has-cursor");
+  const cur=$("#cur"),dot=$(".dot",cur),ring=$(".ring",cur),pos={x:innerWidth/2,y:innerHeight/2},rp={...pos};
+  addEventListener("pointermove",e=>{pos.x=e.clientX;pos.y=e.clientY;cur.classList.remove("hide")},{passive:true});
+  gsap.ticker.add(()=>{rp.x+=(pos.x-rp.x)*.18;rp.y+=(pos.y-rp.y)*.18;dot.style.transform=`translate(${pos.x}px,${pos.y}px)`;ring.style.transform=`translate(${rp.x}px,${rp.y}px)`});
+  document.addEventListener("pointerover",e=>{const l=e.target.closest("a,button,[data-magnet]");cur.classList.toggle("link",!!l)});
+  /* the pointer disappears into a live figure: hide ours, the figure shows its own */
+  document.addEventListener("pointerover",e=>{if(e.target.closest(".frame,.browser,.sep"))cur.classList.add("hide")});
+  document.addEventListener("pointermove",e=>{const b=e.target.closest("[data-magnet]");$$("[data-magnet]").forEach(m=>{if(m!==b)gsap.to(m,{x:0,y:0,duration:.6,ease:"elastic.out(1,.4)"})});
+    if(b){const r=b.getBoundingClientRect();gsap.to(b,{x:(e.clientX-r.left-r.width/2)*.25,y:(e.clientY-r.top-r.height/2)*.35,duration:.4})}
+    const s=e.target.closest("[data-spot]");if(s){const r=s.getBoundingClientRect();s.style.setProperty("--sx",e.clientX-r.left+"px");s.style.setProperty("--sy",e.clientY-r.top+"px")}},{passive:true});
 }
-function enter(i){pres.idx=Math.max(0,Math.min(pres.items.length-1,i));pres.el=0;const x=curItem();
-  const card=$("#pCard"),ttl=$("#pTitle");card.classList.remove("show");ttl.classList.remove("show");
-  Object.values(pres.frames).forEach(f=>f.classList.remove("on"));
-  if(x.type==="cover"||x.type==="end"){ttl.classList.add("show");
-    ttl.innerHTML=`<div><p class="kicker">${L2(C.kicker)}</p><h1>${L2(C.title)}</h1><p>${x.type==="cover"?L2(C.sub):L2(G.ui.openPortal)}</p></div>`}
-  else{const c=G.chapters[x.ci],f=pres.frames[c.id];f.classList.add("on");
-    if(x.type==="chapter"){f.src=figURL(c.view,0);card.innerHTML=`<div><div class="num">${String(c.n).padStart(2,"0")}</div><h2>${L2(c.name)}</h2><p>${L2(c.head)}</p></div>`;card.classList.add("show")}
-    else f.src=figURL(c.view,x.si)}
-  renderCap();paintBar()}
-function paintBar(){const segs=$$("#pSegs i b");let t=0;pres.items.forEach((x,i)=>{const p=i<pres.idx?1:i===pres.idx?Math.min(1,pres.el/x.dur):0;segs[i].style.transform=`scaleX(${p})`});
-  for(let i=0;i<pres.idx;i++)t+=pres.items[i].dur;t+=pres.el;const f=s=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,"0")}`;
-  $("#pTime").textContent=`${f(t)} / ${f(pres.total)}`}
-function loop(ts){if(!pres.on)return;const dt=Math.min(.1,(ts-pres.last)/1000||0);pres.last=ts;
-  if(!pres.paused){pres.el+=dt;const x=curItem();
-    if(pres.el>=x.dur){if(pres.idx<pres.items.length-1)enter(pres.idx+1);else{pres.paused=true;setPlayIcon()}}else paintBar()}
-  pres.raf=requestAnimationFrame(loop)}
-function setPlayIcon(){const b=$("#pPlay");b.textContent=pres.paused?"▶":"⏸";b.setAttribute("aria-label",pres.paused?G.ui.play.en:G.ui.pause.en)}
-let idleT;function wake(){document.body.classList.remove("idle");clearTimeout(idleT);idleT=setTimeout(()=>pres.on&&!pres.paused&&document.body.classList.add("idle"),3500)}
-function openPres(){$("#pres").hidden=false;if(!pres.items.length)buildTimeline();pres.on=true;pres.paused=false;document.body.classList.add("presenting");
-  setPlayIcon();enter(0);pres.last=performance.now();pres.raf=requestAnimationFrame(loop);wake();
-  const r=document.documentElement;if(r.requestFullscreen&&FINE)r.requestFullscreen().catch(()=>{});$("#pPlay").focus()}
-function closePres(){pres.on=false;cancelAnimationFrame(pres.raf);$("#pres").hidden=true;document.body.classList.remove("presenting","idle");
-  if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});document.documentElement.focus()}
-document.addEventListener("click",e=>{if(e.target.closest("#presentBtn,[data-present]"))openPres()});
-$("#pExit").onclick=closePres;
-$("#pPlay").onclick=()=>{if(pres.idx===pres.items.length-1&&pres.el>=curItem().dur){enter(0)}pres.paused=!pres.paused;setPlayIcon()};
-$("#pNext").onclick=()=>enter(pres.idx+1);
-$("#pPrev").onclick=()=>enter(pres.el>1.5?pres.idx:pres.idx-1);
-$("#pSegs").onclick=e=>{const i=$$("#pSegs i").indexOf(e.target.closest("i"));if(i>=0)enter(i)};
-addEventListener("keydown",e=>{if(!pres.on)return;wake();
-  if(e.key==="Escape")closePres();else if(e.key===" "&&document.activeElement.tagName!=="BUTTON"){e.preventDefault();$("#pPlay").click()}
-  else if(e.key==="ArrowRight")$("#pNext").click();else if(e.key==="ArrowLeft")$("#pPrev").click()});
-addEventListener("pointermove",()=>pres.on&&wake());
-document.addEventListener("fullscreenchange",()=>{if(!document.fullscreenElement&&pres.on&&FINE===false)closePres()});
-if(location.hash==="#present")addEventListener("load",()=>setTimeout(openPres,400));
 
-/* ---------- figures render at 1280x800 and scale to their panel (desktop) ---------- */
-const FW=1280,FH=800,ro=new ResizeObserver(es=>es.forEach(e=>{const box=e.target,fr=$$("iframe",box);
-  const wide=innerWidth>900||box.id==="pFrame";box.classList.toggle("scaled",wide);
-  fr.forEach(f=>{f.style.transform=wide?`scale(${box.clientWidth/FW})`:""})}));
-$$(".fig").forEach(f=>ro.observe(f));
-const watchP=()=>ro.observe($("#pFrame"));
+/* ---------- outro star field ---------- */
+{const cv=$("#stars2"),x=cv.getContext("2d");let st=[],W,H,on=false;
+  const rs=()=>{W=cv.width=cv.clientWidth;H=cv.height=cv.clientHeight;st=Array.from({length:Math.round(W*H/3500)},()=>[Math.random()*W,Math.random()*H,Math.random()*1.3+.2,Math.random()*6])};
+  new ResizeObserver(rs).observe(cv);new IntersectionObserver(e=>on=e[0].isIntersecting).observe(cv);
+  gsap.ticker.add(t=>{if(!on)return;x.clearRect(0,0,W,H);for(const s of st){x.globalAlpha=.3+.4*Math.sin(t*1.4+s[3]);x.fillStyle="#cfeee8";x.fillRect(s[0],(s[1]-(lenis.scroll*.05))%H+(s[1]<lenis.scroll*.05%H?H:0),s[2],s[2])}})}
+
+/* ---------- auto-play: the page flies itself through the story ---------- */
+const ap={on:false,paused:false,idx:0,el:0,items:[],total:0};
+const lab=(o)=>L2(o);
+function apBuild(){const it=[],orbit=$("#orbit");
+  it.push({lab:{en:"From orbit to Raipur",hi:"कक्षा से रायपुर तक"},dur:26,travel:24,ease:t=>t,y:()=>pageTop(orbit)+orbit.offsetHeight-innerHeight});
+  it.push({lab:{en:"Prologue",hi:"प्रस्तावना"},dur:9,y:()=>pageTop($("#scrub"))-innerHeight*.3});
+  it.push({lab:{en:"The base map",hi:"आधार नक्शा"},dur:8,el:()=>$(".fullfig .frame")});
+  const fixed=26+9+8+G.chapters.length*3.5+10+7,steps=G.chapters.filter(c=>c.id!=="portal").reduce((n,c)=>n+c.steps.length,0);
+  const per=Math.max(3.5,(G.PRESENT_SECONDS-fixed)/steps);
+  G.chapters.forEach(c=>{it.push({lab:c.name,dur:3.5,y:()=>pageTop($(`#${c.id} .ch-h`))-innerHeight*.25});
+    if(c.id==="portal")it.push({lab:{en:"Live portal",hi:"लाइव पोर्टल"},dur:10,el:()=>$("#portal .browser")});
+    else c.steps.forEach((s,i)=>it.push({lab:s.t,dur:per,el:()=>$$(`#${c.id} .card`)[i]}))});
+  it.push({lab:{en:"Ground Truth",hi:"ज़मीनी सच्चाई"},dur:7,y:()=>pageTop($("#outro"))});
+  ap.items=it;ap.total=it.reduce((a,b)=>a+b.dur,0);
+  $("#apSegs").innerHTML=it.map(x=>`<i style="flex:${x.dur}"><b></b></i>`).join("")}
+function apY(x){if(x.y)return x.y();const r=x.el().getBoundingClientRect(),focus=innerWidth<=900?innerHeight*.75:innerHeight*.5;
+  return r.top+window.scrollY+r.height/2-focus}
+function apScroll(rem){const x=ap.items[ap.idx];const d=Math.max(.6,(x.travel||1.4)-rem);goTo(apY(x),{duration:REDUCE?.01:d,easing:x.ease||(t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2),lock:false,force:true})}
+function apGo(i){ap.idx=Math.max(0,Math.min(ap.items.length-1,i));ap.el=0;$("#apLab").innerHTML=lab(ap.items[ap.idx].lab);apScroll(0);apPaint()}
+function apPaint(){const segs=$$("#apSegs i b");ap.items.forEach((x,i)=>segs[i].style.transform=`scaleX(${i<ap.idx?1:i===ap.idx?Math.min(1,ap.el/x.dur):0})`);
+  let t=ap.el;for(let i=0;i<ap.idx;i++)t+=ap.items[i].dur;const f=s=>`${Math.floor(s/60)}:${pad(Math.floor(s%60))}`;$("#apTime").textContent=`${f(t)} / ${f(ap.total)}`}
+gsap.ticker.add((t,dt)=>{if(!ap.on||ap.paused)return;ap.el+=dt/1000;const x=ap.items[ap.idx];
+  if(ap.el>=x.dur){if(ap.idx<ap.items.length-1)apGo(ap.idx+1);else apPause(true)}else apPaint()});
+function apPause(v){ap.paused=v;const b=$("#apPlay");b.textContent=v?"▶":"❚❚";b.setAttribute("aria-label",v?"Play":"Pause");document.body.classList.toggle("ap-paused",v);
+  if(v)lenis.scrollTo(lenis.scroll,{immediate:true,force:true});else apScroll(ap.el)}
+function apStart(){if(!ap.items.length)apBuild();ap.on=true;$("#ap").hidden=false;document.body.classList.add("autoplay");
+  $(".ap-hint").innerHTML=L2(G.ui.paused);ap.paused=false;$("#apPlay").textContent="❚❚";document.body.classList.remove("ap-paused");apGo(0)}
+function apStop(){ap.on=false;$("#ap").hidden=true;document.body.classList.remove("autoplay","ap-paused");lenis.scrollTo(lenis.scroll,{immediate:true,force:true});
+  if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}
+document.addEventListener("click",e=>{if(e.target.closest("[data-play]"))apStart()});
+$("#apPlay").onclick=()=>{if(ap.paused&&ap.idx===ap.items.length-1&&ap.el>=ap.items[ap.idx].dur){apGo(0);apPause(false);return}apPause(!ap.paused)};
+$("#apNext").onclick=()=>{apGo(ap.idx+1);if(ap.paused)apPause(false)};
+$("#apPrev").onclick=()=>{apGo(ap.el>1.5?ap.idx:ap.idx-1);if(ap.paused)apPause(false)};
+$("#apSegs").onclick=e=>{const i=$$("#apSegs i").indexOf(e.target.closest("i"));if(i>=0){apGo(i);if(ap.paused)apPause(false)}};
+$("#apStop").onclick=apStop;
+$("#apFull").onclick=()=>{const d=document.documentElement;document.fullscreenElement?document.exitFullscreen():d.requestFullscreen&&d.requestFullscreen().catch(()=>{})};
+/* the reader grabs the wheel: pause and hand over */
+const takeOver=()=>{if(ap.on&&!ap.paused)apPause(true)};
+addEventListener("wheel",takeOver,{passive:true});
+addEventListener("touchstart",e=>{if(!e.target.closest("#ap"))takeOver()},{passive:true});
+addEventListener("blur",()=>setTimeout(()=>{if(document.activeElement&&document.activeElement.tagName==="IFRAME")takeOver()},0));
+addEventListener("keydown",e=>{if(!ap.on)return;if(e.key==="Escape")return apStop();if(e.target.closest&&e.target.closest("#ap"))return;
+  if(e.key===" "){e.preventDefault();$("#apPlay").click()}else if(e.key==="ArrowRight")$("#apNext").click();else if(e.key==="ArrowLeft")$("#apPrev").click();
+  else if(["ArrowDown","ArrowUp","PageDown","PageUp","Home","End"].includes(e.key))takeOver()});
 
 /* ---------- init ---------- */
 let saved=null;try{saved=localStorage.getItem("gt-lang")}catch(e){}
 setLang(saved||(/^hi/i.test(navigator.language)?"hi":"en"));
-onScroll();
 })();

@@ -2,8 +2,35 @@
    [Square-bracket] items in the script are left out until you have the real number: add them to `facts`. */
 window.GT = {
   PORTAL_URL: "https://cogcg.cgstate.gov.in/portal",   // TODO: confirm the public Geoportal address
-  FIG: "figures/index.html",                           // the interactive figures (frozen v8 + step-follow fix)
+  /* Where the embeds live. "../" works when this folder sits inside the ground-truth-embeds Pages site;
+     on another host use "https://vspraneethmorampudi.github.io/ground-truth-embeds/". */
+  BASE: "../",
   PRESENT_SECONDS: 180,
+  /* Embeds, exactly as used in the Esri StoryMap. sync:true lets the step cards drive the figure
+     (adds &nav=off&auto=off&step=N to the hash); w/h is the size the figure is drawn at before it is scaled to fit. */
+  E: {
+    overview: {url:"versions/v16/index.html#overview",w:1440,h:810},
+    sep1:     {url:"separator.html?v=4",w:1100,h:186},
+    sep4:     {url:"separator.html?v=4#4",w:1100,h:186},
+    sep5:     {url:"separator.html?v=4#5",w:1100,h:186},
+    create:   {steps:["versions/v8/index.html?v=152#create&bare&step=0&nav=off",
+                      "versions/v11/index.html?v=151#create&bare&step=1&nav=off",
+                      "versions/v8/index.html?v=152#create&bare&step=2&nav=off",
+                      "versions/v8/index.html?v=155#create&bare&step=3&nav=off"],w:1280,h:800},
+    geodatabase:{url:"versions/v8/index.html#geodatabase&bare",sync:true,w:1280,h:800},
+    portal:   {url:"versions/v18/portal.html#portal&bare"},
+    mobile:   {url:"versions/v8/index.html#mobile&bare",sync:true,w:1280,h:800},
+    mapping:  {url:"versions/v8/index.html#mapping&bare",sync:true,w:1280,h:800},
+    maintain: {url:"versions/v8/index.html#maintain&bare",sync:true,w:1280,h:800},
+    cycle:    {url:"versions/v17/index.html#cycle&bare",sync:true,w:1280,h:800}
+  },
+  /* Opening flight: Earth → Chhattisgarh → Raipur. One caption per phase. */
+  orbit: [
+    {k:{en:"Orbit",hi:"कक्षा"},t:{en:"Every place on Earth has a truth on the ground.",hi:"पृथ्वी की हर जगह का ज़मीन पर एक सच है।"}},
+    {k:{en:"Signal",hi:"संकेत"},t:{en:"High above, satellites watch the land below.",hi:"ऊपर से, उपग्रह नीचे की धरती को देखते हैं।"}},
+    {k:{en:"Zoom",hi:"ज़ूम"},t:{en:"Chhattisgarh: 1,35,192 km² and 33 districts.",hi:"छत्तीसगढ़: 1,35,192 वर्ग किमी और 33 ज़िले।"}},
+    {k:{en:"Touchdown",hi:"लैंडिंग"},t:{en:"Down to the ground: Raipur.",hi:"ज़मीन पर: रायपुर।"}}
+  ],
   ui: {
     present:   {en:"Presentation mode",hi:"प्रस्तुति मोड"},
     presentSub:{en:"3 min auto-play",hi:"3 मिनट स्वतः चलेगा"},
@@ -17,7 +44,19 @@ window.GT = {
     openLive:  {en:"Open the live portal",hi:"लाइव पोर्टल खोलें"},
     credits:   {en:"Credits: CHiPS · [partner departments] · [team]",hi:"आभार: चिप्स (CHiPS) · [सहयोगी विभाग] · [टीम]"},
     again:     {en:"Play again",hi:"फिर से चलाएँ"},
-    step:      {en:"Step",hi:"चरण"}
+    step:      {en:"Step",hi:"चरण"},
+    chapter:   {en:"Chapter",hi:"अध्याय"},
+    begin:     {en:"Begin the descent",hi:"उतरना शुरू करें"},
+    play:      {en:"Play the story",hi:"कहानी चलाएँ"},
+    min3:      {en:"3 min",hi:"3 मिनट"},
+    cleared:   {en:"Stage cleared",hi:"चरण पूरा"},
+    paused:    {en:"Paused: you're in control. Press play to continue.",hi:"रुका हुआ: अब आप नियंत्रण में हैं। आगे बढ़ने के लिए चलाएँ दबाएँ।"},
+    portalTry: {en:"Try the live portal",hi:"लाइव पोर्टल आज़माएँ"},
+    portalNote:{en:"A working portal on the official boundaries. Pan, zoom, switch layers.",hi:"आधिकारिक सीमाओं पर चलता पोर्टल। खिसकाएँ, ज़ूम करें, परतें बदलें।"},
+    backOrbit: {en:"Back to orbit",hi:"वापस कक्षा में"},
+    loading:   {en:"Acquiring signal",hi:"संकेत प्राप्त हो रहा है"},
+    cursorPlay:{en:"Play",hi:"खेलें"},
+    cursorDrag:{en:"Explore",hi:"देखें"}
   },
   cover: {
     kicker:{en:"Chhattisgarh State Geoportal",hi:"छत्तीसगढ़ राज्य जियोपोर्टल"},
