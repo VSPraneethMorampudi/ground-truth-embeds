@@ -73,8 +73,8 @@ export class Game{
     this.say(L.say);
     await L.enter(this,$(".lv-body",p));
     if(this.watch)this.autoRun();}
-  async autoRun(){const L=LEVELS[this.lv],tk=this.token;if(this.done||this.autoing)return;this.autoing=true;$(".lv-show",this.root)?.setAttribute("disabled","");
-    try{await this.wait(this.watch?1400:200);if(tk!==this.token)return;await L.auto(this,tk)}finally{this.autoing=false}}
+  async autoRun(){const L=LEVELS[this.lv],tk=this.token;if(!L||this.done||this.autoTok===tk)return;this.autoTok=tk;$(".lv-show",this.root)?.setAttribute("disabled","");
+    await this.wait(this.watch?1400:200);if(tk!==this.token)return;await L.auto(this,tk)}
   complete(){if(this.done)return;this.done=true;const L=LEVELS[this.lv],tk=this.token;
     this.badge(L.badge);const n=$(".lv-next",this.root);if(n){n.disabled=false;n.classList.add("pulse")}
     $(".lv-show",this.root)?.setAttribute("disabled","");
