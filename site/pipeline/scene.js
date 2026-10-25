@@ -128,21 +128,58 @@ export class PipelineScene{
       if(i===0){const fp=new THREE.Mesh(new THREE.CylinderGeometry(.1,.1,5,8),M.steel);fp.position.set(0,H*.7+5.5+3.6,0);g.add(fp)}
       this.depts.push({g,top:i===0?H*.7+3.6:H+.8,d,acc})})}
 
+  /* the CHiPS GIS team: an open lab behind the conveyor where analysts convert every format by hand and by script */
   buildConverter(){const S=this.scene,M=this.M,g=this.conv=new THREE.Group();g.position.set(-46,0,16);S.add(g);
-    const body=this.rb(18,13,13,1.6,M.ink);body.position.y=6.5;g.add(body);
-    const ringM=new THREE.MeshStandardMaterial({color:col("--accent","#ff5a36"),emissive:col("--accent","#ff5a36"),emissiveIntensity:1.6});
-    this.ringIn=new THREE.Mesh(new THREE.TorusGeometry(4.6,.55,24,64),ringM);this.ringIn.rotation.y=Math.PI/2;this.ringIn.position.set(-9.2,5,0);g.add(this.ringIn);
-    const ringOutM=new THREE.MeshStandardMaterial({color:0x3fd6a0,emissive:0x3fd6a0,emissiveIntensity:1.6});
-    this.ringOut=new THREE.Mesh(new THREE.TorusGeometry(4.6,.55,24,64),ringOutM);this.ringOut.rotation.y=Math.PI/2;this.ringOut.position.set(9.2,5,0);g.add(this.ringOut);
-    const hole=new THREE.Mesh(new THREE.CircleGeometry(4.1,48),new THREE.MeshBasicMaterial({color:0x050b16}));hole.rotation.y=-Math.PI/2;hole.position.set(-9.25,5,0);g.add(hole);
-    const hole2=hole.clone();hole2.rotation.y=Math.PI/2;hole2.position.x=9.25;g.add(hole2);
-    /* the screen on top shows the coordinate system the data is converted to */
+    /* floor, back wall, side partitions */
+    const floor=this.rb(34,.8,26,.4,new THREE.MeshStandardMaterial({color:0xe8edf4,roughness:.7}));floor.position.set(0,.4,-13);g.add(floor);
+    const wall=this.rb(34,13,1,.4,M.wall);wall.position.set(0,6.5,-26);g.add(wall);
+    const sideL=this.rb(1,7,24,.3,M.wall2);sideL.position.set(-16.5,3.5,-14);g.add(sideL);const sideR=sideL.clone();sideR.position.x=16.5;g.add(sideR);
+    const stripe=this.rb(34,.6,1.1,.2,M.accent);stripe.position.set(0,12.6,-26);g.add(stripe);
+    /* big wall screen: what everything is converted to */
     this.convTex=this.tex(768,256,(x,W,H)=>{x.fillStyle="#06101f";rr(x,0,0,W,H,24);x.fill();x.fillStyle="#3fd6a0";x.font=`600 30px ${MONO}`;x.fillText("ANY FORMAT  →  ONE STANDARD",32,60);
       x.fillStyle="#fff";x.font=`800 64px ${SANS}`;x.fillText("EPSG:4326 · WGS 84",32,150);x.fillStyle="#9fb4d0";x.font=`500 26px ${MONO}`;x.fillText("GeoJSON · state schema · UTF-8",32,210)});
-    const scr=new THREE.Mesh(new THREE.PlaneGeometry(15,5),new THREE.MeshBasicMaterial({map:this.convTex,toneMapped:false}));scr.position.set(0,10.5,6.56);g.add(scr);
-    const lab=this.tex(512,128,signDraw("Conversion","रूपांतरण","#ff5a36"));const l=new THREE.Mesh(new THREE.PlaneGeometry(9,2.25),new THREE.MeshBasicMaterial({map:lab,transparent:true}));l.position.set(0,15.6,0);g.add(l);
-    /* scanning light inside the entrance */
-    this.scan=new THREE.Mesh(new THREE.PlaneGeometry(.3,8),new THREE.MeshBasicMaterial({color:0xff9a7a,transparent:true,opacity:.8}));this.scan.rotation.y=Math.PI/2;this.scan.position.set(-9.3,5,0);g.add(this.scan)}
+    const scr=new THREE.Mesh(new THREE.PlaneGeometry(18,6),new THREE.MeshBasicMaterial({map:this.convTex,toneMapped:false}));scr.position.set(0,7.6,-25.45);g.add(scr);
+    const lab=this.tex(640,160,signDraw("CHiPS GIS Team","चिप्स जीआईएस टीम","#ff5a36"));const l=new THREE.Mesh(new THREE.PlaneGeometry(14,3.5),new THREE.MeshBasicMaterial({map:lab,transparent:true}));l.position.set(0,15.6,-25.6);g.add(l);
+    /* monitor screens: real GIS work */
+    const scrA=this.tex(320,200,(x,W,H)=>{x.fillStyle="#1b2433";x.fillRect(0,0,W,H);x.fillStyle="#2a3446";x.fillRect(0,0,W,18);x.fillStyle="#dfe7f1";x.fillRect(40,18,W-40,H-18);
+      x.strokeStyle="#ff5a36";x.lineWidth=3;x.beginPath();[[80,60],[170,40],[260,80],[240,160],[120,170],[70,120]].forEach((p,i)=>i?x.lineTo(...p):x.moveTo(...p));x.closePath();x.stroke();x.fillStyle="#ff5a3633";x.fill();
+      x.fillStyle="#fff";[[80,60],[170,40],[260,80],[240,160],[120,170],[70,120]].forEach(p=>{x.fillRect(p[0]-4,p[1]-4,8,8)});x.fillStyle="#9fb4d0";for(let i=0;i<6;i++)x.fillRect(8,28+i*22,24,14)});
+    const scrB=this.tex(320,200,(x,W,H)=>{x.fillStyle="#fff";x.fillRect(0,0,W,H);x.fillStyle="#0d1b2e";x.fillRect(0,0,W,22);x.fillStyle="#fff";x.font=`600 12px ${MONO}`;x.fillText("attribute table · schools",8,15);
+      for(let r=0;r<8;r++)for(let c=0;c<4;c++){x.fillStyle=r%2?"#f3f6fb":"#fff";x.fillRect(c*80,24+r*22,80,22);x.strokeStyle="#e3e9f2";x.strokeRect(c*80,24+r*22,80,22);x.fillStyle=r===3?"#d2423a":"#2a3446";x.font=`500 11px ${MONO}`;x.fillText(["GPS","2227","21.1","81.7"][c]+r,c*80+6,40+r*22)}});
+    const scrC=this.tex(320,200,(x,W,H)=>{x.fillStyle="#efe3c4";x.fillRect(0,0,W,H);x.strokeStyle="#9c8a63";for(let i=0;i<7;i++){x.beginPath();x.moveTo(0,i*32);x.bezierCurveTo(100,i*32+20,200,i*32-20,W,i*32+8);x.stroke()}
+      x.strokeStyle="#222";x.lineWidth=3;x.beginPath();x.moveTo(20,180);x.lineTo(300,30);x.stroke();x.strokeStyle="#d2423a";x.lineWidth=2;[[40,40],[280,44],[270,170],[50,160]].forEach(([a,b])=>{x.beginPath();x.moveTo(a-10,b);x.lineTo(a+10,b);x.moveTo(a,b-10);x.lineTo(a,b+10);x.stroke()});
+      x.fillStyle="#0d1b2e";x.fillRect(0,H-22,W,22);x.fillStyle="#3fd6a0";x.font=`600 12px ${MONO}`;x.fillText("georeferencer · 4 GCPs · RMS 0.8 px",8,H-7)});
+    const screens=[scrA,scrB,scrC];
+    /* desks with dual monitors, chairs and analysts */
+    const deskM=new THREE.MeshStandardMaterial({color:0xf6f1e8,roughness:.5}),legM=M.steel,chairM=new THREE.MeshStandardMaterial({color:0x2a3446,roughness:.6});
+    const shirts=[0x2f6fd6,0xff5a36,0x3e8a4f,0x6b4fd6,0xe39a1f,0x0b7a70],skins=[0x8d5524,0xc68642,0xa0662f,0x7a4a21,0xb87a46,0x95603a],hairs=[0x1b1410,0x231a14,0x111111];
+    this.analysts=[];seed=3;
+    [[-9,-9],[0,-9],[9,-9],[-9,-18],[0,-18],[9,-18]].forEach(([x,z],k)=>{
+      const desk=this.rb(7.4,.35,3.2,.15,deskM);desk.position.set(x,3.4,z);g.add(desk);
+      [-3.2,3.2].forEach(dx=>{const leg=this.rb(.3,3,2.8,.1,legM);leg.position.set(x+dx,1.9,z);g.add(leg)});
+      [-1.6,1.6].forEach((dx,m)=>{const mon=this.rb(3,1.9,.2,.1,M.ink);mon.position.set(x+dx,5.3,z-.9);mon.rotation.y=dx<0?.12:-.12;g.add(mon);
+        const face=new THREE.Mesh(new THREE.PlaneGeometry(2.8,1.7),new THREE.MeshBasicMaterial({map:screens[(k+m)%3],toneMapped:false}));face.position.z=.11;mon.add(face);
+        const st=this.rb(.3,1,.3,.1,legM);st.position.set(x+dx,4.1,z-.9);g.add(st)});
+      const kb=this.rb(2.2,.12,.7,.05,M.ink);kb.position.set(x,3.65,z+.6);g.add(kb);
+      /* chair */
+      const seat=this.rb(2.2,.4,2.2,.3,chairM);seat.position.set(x,2.5,z+2.6);g.add(seat);const backr=this.rb(2.2,2.4,.35,.3,chairM);backr.position.set(x,3.9,z+3.6);g.add(backr);
+      const post=new THREE.Mesh(new THREE.CylinderGeometry(.15,.15,2,8),legM);post.position.set(x,1.3,z+2.6);g.add(post);
+      /* analyst (seen from behind, working) */
+      const p=new THREE.Group();p.position.set(x,2.7,z+2.5);g.add(p);
+      const shirt=new THREE.MeshStandardMaterial({color:shirts[k],roughness:.7});
+      const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.75,1.3,6,14),shirt);torso.position.y=1.45;torso.scale.z=.75;torso.castShadow=true;p.add(torso);
+      [-1,1].forEach(sx=>{const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.24,1.2,4,8),shirt);arm.position.set(sx*.82,1.55,-.55);arm.rotation.x=1.15;arm.castShadow=true;p.add(arm)});
+      const head=new THREE.Group();head.position.y=3.05;p.add(head);
+      const skull=new THREE.Mesh(new THREE.SphereGeometry(.58,20,16),new THREE.MeshStandardMaterial({color:skins[k],roughness:.6}));skull.castShadow=true;head.add(skull);
+      const hair=new THREE.Mesh(new THREE.SphereGeometry(.62,20,16,0,Math.PI*2,0,Math.PI*.55),new THREE.MeshStandardMaterial({color:hairs[k%3],roughness:.8}));hair.rotation.x=.35;head.add(hair);
+      if(k===1||k===4){const bun=new THREE.Mesh(new THREE.SphereGeometry(.3,12,10),hair.material);bun.position.set(0,.2,.55);head.add(bun)}
+      this.analysts.push({head,ph:rnd()*6})});
+    /* intake and output on the conveyor (pulsing rings) */
+    const ringM=new THREE.MeshStandardMaterial({color:col("--accent","#ff5a36"),emissive:col("--accent","#ff5a36"),emissiveIntensity:1.6});
+    this.ringIn=new THREE.Mesh(new THREE.TorusGeometry(4.2,.45,20,56),ringM);this.ringIn.rotation.y=Math.PI/2;this.ringIn.position.set(-9.2,4.4,0);g.add(this.ringIn);
+    const ringOutM=new THREE.MeshStandardMaterial({color:0x3fd6a0,emissive:0x3fd6a0,emissiveIntensity:1.6});
+    this.ringOut=new THREE.Mesh(new THREE.TorusGeometry(4.2,.45,20,56),ringOutM);this.ringOut.rotation.y=Math.PI/2;this.ringOut.position.set(9.2,4.4,0);g.add(this.ringOut);
+    this.scan=new THREE.Mesh(new THREE.PlaneGeometry(.25,7.4),new THREE.MeshBasicMaterial({color:0xff9a7a,transparent:true,opacity:.8}));this.scan.rotation.y=Math.PI/2;this.scan.position.set(-9.3,4.4,0);g.add(this.scan)}
 
   buildGate(){const S=this.scene,M=this.M,g=this.gate=new THREE.Group();g.position.set(-24,0,16);S.add(g);
     const p1=this.rb(1.6,12,1.6,.5,M.wall);p1.position.set(0,6,-4.5);g.add(p1);const p2=p1.clone();p2.position.z=4.5;g.add(p2);
@@ -320,7 +357,7 @@ export class PipelineScene{
     this.cam.position.lerp(pos,ka);this.look.lerp(tgt,ka);this.cam.lookAt(this.look);
     /* belt moves while data flows */
     this.beltTex.offset.y-=dt*(s>SI.collect-.2&&s<SI.map?.6:.05);
-    this.scan.position.z=Math.sin(t*3)*3.6;this.ringIn.material.emissiveIntensity=1.2+Math.sin(t*4)*.5;this.ringOut.material.emissiveIntensity=1.2+Math.cos(t*4)*.5;
+    this.scan.position.z=Math.sin(t*3)*3.2;(this.analysts||[]).forEach(a=>{a.head.rotation.y=Math.sin(t*.7+a.ph)*.25;a.head.position.y=3.05+Math.abs(Math.sin(t*6+a.ph))*.03});this.ringIn.material.emissiveIntensity=1.2+Math.sin(t*4)*.5;this.ringOut.material.emissiveIntensity=1.2+Math.cos(t*4)*.5;
     /* departments: highlight the one being described */
     const fs=STEPS[i].formats,active=fs?fs[Math.min(3,Math.floor(f*4))]:-1;
     this.depts.forEach((dp,j)=>{const on=j===active;dp.g.position.y+=((on?.6:0)-dp.g.position.y)*.15;dp.acc.emissive.set(dp.d.col);dp.acc.emissiveIntensity+=((on?.8:0)-dp.acc.emissiveIntensity)*.15});

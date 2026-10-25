@@ -8,7 +8,8 @@ THE PIPELINE (pipeline/): the main story, driven by scroll
   One sticky 3D scene (Three.js) that you move through by scrolling, 13 steps, each one screen:
     departments (8 buildings, each with its real file format floating above: Shapefile, KML, CAD .dwg, Excel,
     GPS CSV, handwritten register, satellite GeoTIFF, scanned toposheet) → collection on a conveyor →
-    conversion machine (rows → points with swapped lat/long fixed; CAD/KML reprojected to EPSG:4326) →
+    the CHiPS GIS team lab (analysts at dual monitors: digitising, attribute tables, georeferencing scans;
+    rows → points with swapped lat/long fixed; CAD/KML reprojected to EPSG:4326) →
     quality gate (one record with a blank code is sent back) → State Data Centre (42U racks with 1U/2U
     servers, drive bays, blinking LEDs, cable tray) and geodatabase layers → the 33-district map assembling
     layer by layer → the Geoportal screen → field app, dashboard and department GIS → use cases → the loop.
