@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ground Truth · Chhattisgarh State Geoportal</title>
+<meta name="description" content="How Chhattisgarh turns places into reliable digital maps: an interactive story with a 3-minute presentation mode.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="progress" aria-hidden="true"></div>
+<div id="glow" aria-hidden="true"></div>
+
+<header id="top">
+  <a class="brand" href="#hero"><span class="dot"></span><span lang="en">Ground Truth</span><span lang="hi">ज़मीनी सच्चाई</span></a>
+  <nav id="chapnav" aria-label="Chapters"></nav>
+  <div class="tools">
+    <div class="seg" role="group" aria-label="Language">
+      <button data-setlang="en" aria-pressed="true">EN</button><button data-setlang="hi" aria-pressed="false">हिं</button>
+    </div>
+    <button class="btn present" id="presentBtn" data-magnet><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M3 2l11 6-11 6z"/></svg><span lang="en">Present · 3 min</span><span lang="hi">प्रस्तुति · 3 मिनट</span></button>
+  </div>
+</header>
+
+<main id="main"></main>
+
+<div id="pres" hidden aria-label="Presentation" role="dialog" aria-modal="true">
+  <div class="p-stage"><div class="p-frame" id="pFrame"></div><div class="p-card" id="pCard" aria-live="polite"></div><div class="p-title" id="pTitle"></div></div>
+  <div class="p-cap" id="pCap" aria-live="polite"></div>
+  <div class="p-bar"><div class="p-segs" id="pSegs"></div>
+    <div class="p-ctl">
+      <button id="pPrev" aria-label="Previous">⏮</button><button id="pPlay" aria-label="Pause">⏸</button><button id="pNext" aria-label="Next">⏭</button>
+      <span class="p-time" id="pTime">0:00 / 3:00</span><span class="sp"></span>
+      <div class="seg" role="group" aria-label="Language"><button data-setlang="en" aria-pressed="true">EN</button><button data-setlang="hi" aria-pressed="false">हिं</button></div>
+      <button id="pExit" class="btn ghost"><span lang="en">Exit · Esc</span><span lang="hi">बाहर · Esc</span></button>
+    </div></div>
+</div>
+
+<script src="content.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
