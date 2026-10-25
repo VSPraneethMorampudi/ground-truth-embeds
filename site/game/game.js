@@ -314,13 +314,13 @@ const LEVELS=[
      if(ok){if(!blue){blue=true;g.good();$$(".themes button",body).forEach(b=>b.disabled=false);g.say(T("Rivers in blue: everyone reads that instantly. Now, what should your map answer?","नदियाँ नीले रंग में: हर कोई तुरंत समझ जाता है। अब, आपका नक्शा किस प्रश्न का उत्तर दे?"))}}
      else{g.oops();g.say(T("Readers expect water in blue. Try again!","पाठक पानी को नीले रंग में देखने की उम्मीद करते हैं। फिर कोशिश करें!"))}};
    this.theme=async i=>{const t=TH[i],vals={};w.districts.forEach(d=>vals[d.name]=(cnt[d.name]||{})[t.k]||0);$$(".themes button",body).forEach((b,j)=>b.classList.toggle("on",j===i));
-     ["school","health","anganwadi"].forEach(k=>w.setLayer(k,false));w.setLayer("trees",false);await w.choropleth(vals,t.r);
+     ["school","health","anganwadi","trees","rivers","roads","rail"].forEach(k=>w.setLayer(k,false));await w.choropleth(vals,t.r);
      const sorted=Object.entries(vals).sort((a,b)=>b[1]-a[1]);
      $(".legend",body).innerHTML=`<div class="ramp" style="--a:#${t.r[0].toString(16).padStart(6,"0")};--b:#${t.r[1].toString(16).padStart(6,"0")}"></div><span>${L2(T("Most","सबसे अधिक"))}: <b>${L2(DN(sorted[0][0]))}</b> (${sorted[0][1]})</span><span>${L2(T("Fewest","सबसे कम"))}: <b>${L2(DN(sorted.at(-1)[0]))}</b> (${sorted.at(-1)[1]})</span>`;
      g.good();g.complete()};
    $$(".swatches button",body).forEach(b=>b.onclick=()=>this.swatch(+b.dataset.s));$$(".themes button",body).forEach(b=>b.onclick=()=>this.theme(+b.dataset.t))},
  async auto(g,tk){this.swatch(0);await g.wait(1200);if(tk!==g.token)return;await this.theme(0)},
- async leave(g){const w=g.world;await w.flatten();["school","health","anganwadi"].forEach(k=>w.setLayer(k,true));w.setLayer("trees",true);w.riverColor(0x3c8fd6)}},
+ async leave(g){const w=g.world;await w.flatten();["school","health","anganwadi","trees","rivers","roads","rail"].forEach(k=>w.setLayer(k,true));w.riverColor(0x3c8fd6)}},
 
 /* 8 · MAINTAIN */
 {id:"maintain",badge:"maintain",name:T("Maintain","रखरखाव"),chapter:T("Maintenance","रखरखाव"),
