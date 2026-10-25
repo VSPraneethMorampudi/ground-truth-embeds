@@ -33,7 +33,8 @@ FILES
   app.js            language, smooth scroll (Lenis), preloader, cursor, outro, auto-play
   vendor/           three 0.170 + OrbitControls (MIT), gsap + ScrollTrigger 3.15 (GSAP standard licence),
                     lenis 1.3 (MIT), d3-geo 3 (ISC)
-  Fonts: Google Fonts (Instrument Serif, Inter Tight, Tiro Devanagari Hindi, Noto Sans Devanagari, JetBrains Mono)
+  Fonts: Google Fonts. Fraunces (headlines, SOFT/WONK axes) + Bricolage Grotesque (body, game UI) + Geist Mono (labels);
+                    Hindi: Tiro Devanagari Hindi (headlines) + Anek Devanagari (body, UI)
 
 URL OPTIONS
   #play    start auto-play on load (kiosk / meeting-room screen)

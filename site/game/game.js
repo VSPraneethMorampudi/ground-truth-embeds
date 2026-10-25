@@ -42,7 +42,7 @@ export class Game{
       <div class="g-tip" id="gTip"></div><div class="g-pop" id="gPop"></div><div class="g-ghost" id="gGhost"></div>
       <div class="g-start" id="gStart"><div class="g-start-in">
         <p class="label">${L2(T("Play · 8 levels","खेलें · 8 स्तर"))}</p>
-        <h2>${L2(T("Build the state map","राज्य का नक्शा बनाइए"))}</h2>
+        <h2><span lang="en">Build the <i>state map</i></span><span lang="hi">राज्य का <i>नक्शा</i> बनाइए</span></h2>
         <p class="g-start-sub">${L2(T("Data arrives from every department. Sort it, fix it, merge it into one map, open it to everyone and keep it true. About six minutes, or watch it play in three.","हर विभाग से डेटा आता है। उसे छाँटिए, सुधारिए, एक नक्शे में जोड़िए, सबके लिए खोलिए और सच्चा बनाए रखिए। लगभग छह मिनट, या तीन मिनट में चलता हुआ देखें।"))}</p>
         <div class="g-start-b"><button class="btn" id="gPlay" data-magnet>▶ ${L2(T("Start playing","खेलना शुरू करें"))}</button><button class="btn ghost" id="gWatch" data-magnet>${L2(T("Watch it play · 3 min","चलता हुआ देखें · 3 मिनट"))}</button></div>
         <p class="g-note">${L2(T("Real: the 33 district boundaries, rivers, roads and rail. Illustrative: the centres, records and updates.","असली: 33 ज़िलों की सीमाएँ, नदियाँ, सड़कें और रेल। उदाहरण: केंद्र, रिकॉर्ड और अपडेट।"))}</p></div></div>`;
@@ -122,10 +122,10 @@ export class Game{
   /* map card for sharing */
   card(){const w=this.world,img=new Image();img.onload=()=>{const W=1200,H=1500,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
       x.fillStyle="#f3efe6";x.fillRect(0,0,W,H);const s=Math.min(W/img.width,1100/img.height);x.drawImage(img,(W-img.width*s)/2,170,img.width*s,img.height*s);
-      x.fillStyle="#c95d2e";x.font="500 26px 'JetBrains Mono',monospace";x.fillText("CHHATTISGARH STATE GEOPORTAL",70,90);
-      x.fillStyle="#1d1c21";x.font="400 92px 'Instrument Serif',Georgia,serif";x.fillText(lang()==="hi"?"ज़मीनी सच्चाई":"Ground Truth",66,150+0);
-      x.font="500 34px 'Inter Tight',sans-serif";x.fillText((lang()==="hi"?"डेटा गुणवत्ता ":"Data quality ")+this.quality()+"   ·   "+this.badges.size+"/8 "+(lang()==="hi"?"बैज":"badges"),70,1340);
-      x.fillStyle="#5b5752";x.font="400 26px 'Inter Tight',sans-serif";x.fillText(lang()==="hi"?"मैंने राज्य का नक्शा बनाया: 33 ज़िले, एक भरोसेमंद नक्शा।":"I built the state map: 33 districts, one trusted map.",70,1395);
+      x.fillStyle="#c95d2e";x.font="500 26px 'Geist Mono',monospace";x.fillText("CHHATTISGARH STATE GEOPORTAL",70,90);
+      x.fillStyle="#1d1c21";x.font="400 92px 'Fraunces',Georgia,serif";x.fillText(lang()==="hi"?"ज़मीनी सच्चाई":"Ground Truth",66,150+0);
+      x.font="500 34px 'Bricolage Grotesque',sans-serif";x.fillText((lang()==="hi"?"डेटा गुणवत्ता ":"Data quality ")+this.quality()+"   ·   "+this.badges.size+"/8 "+(lang()==="hi"?"बैज":"badges"),70,1340);
+      x.fillStyle="#5b5752";x.font="400 26px 'Bricolage Grotesque',sans-serif";x.fillText(lang()==="hi"?"मैंने राज्य का नक्शा बनाया: 33 ज़िले, एक भरोसेमंद नक्शा।":"I built the state map: 33 districts, one trusted map.",70,1395);
       x.fillText(new Date().toLocaleDateString(lang()==="hi"?"hi-IN":"en-IN",{day:"numeric",month:"long",year:"numeric"}),70,1440);
       const a=document.createElement("a");a.download="ground-truth-map-card.png";a.href=c.toDataURL("image/png");a.click()};img.src=w.snapshot()}
 }

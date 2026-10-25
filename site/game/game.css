@@ -36,7 +36,7 @@ html.in-game,html.in-game body{overflow:hidden}
 #game.playing .g-panel.in{opacity:1;transform:none}
 .lv-k{font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--orange)}
 html[data-lang=hi] .lv-k{letter-spacing:0;font:600 13px var(--hi)}
-.g-panel h3{font:400 clamp(28px,2.4vw,38px)/1.02 var(--serif);margin:10px 0 10px;letter-spacing:-.015em}
+.g-panel h3{font:420 clamp(26px,2.2vw,34px)/1.08 var(--serif);margin:10px 0 10px;letter-spacing:-.015em}
 html[data-lang=hi] .g-panel h3{font:400 clamp(24px,2vw,30px)/1.35 var(--hiserif)}
 .lv-task{margin:0 0 16px;color:var(--ink2);font-size:15px;line-height:1.5}
 .lv-body{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px}
@@ -101,7 +101,7 @@ html[data-lang=hi] .g-pop b{font:400 28px var(--hiserif)}
 .g-start.gone{opacity:0;visibility:hidden}
 .g-start-in{max-width:760px;text-align:center;display:grid;justify-items:center}
 .g-start .label{justify-content:center}
-.g-start h2{font:400 clamp(54px,9vw,140px)/.9 var(--serif);letter-spacing:-.03em;margin:0 0 20px}
+.g-start h2{font:350 clamp(50px,8vw,124px)/.95 var(--serif);letter-spacing:-.035em;margin:0 0 20px}
 html[data-lang=hi] .g-start h2{font:400 clamp(44px,7vw,100px)/1.2 var(--hiserif)}
 .g-start-sub{font-size:clamp(17px,1.6vw,21px);color:var(--ink2);margin:0 0 28px;max-width:52ch}
 .g-start-b{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
@@ -252,3 +252,4 @@ html[data-lang=hi] .file i{letter-spacing:0;font:600 11px var(--hi)}
   .ph-body{min-height:0}
 }
 @media (prefers-reduced-motion:reduce){.file,.g-buddy svg{animation:none}}
+.g-start h2 i{font-style:italic;color:var(--orange)}

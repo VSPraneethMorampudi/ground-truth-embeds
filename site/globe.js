@@ -18,7 +18,7 @@ addEventListener("resize",resize);resize();
 
 /* 0/1 glyph sprites, as in the CHiPS story identity */
 function glyph(ch,col,px){const c=document.createElement("canvas");c.width=c.height=px*2;const g=c.getContext("2d");
-  g.font=`500 ${px*1.5}px "JetBrains Mono",monospace`;g.textAlign="center";g.textBaseline="middle";g.fillStyle=col;g.fillText(ch,px,px*1.05);return c}
+  g.font=`500 ${px*1.5}px "Geist Mono",monospace`;g.textAlign="center";g.textBaseline="middle";g.fillStyle=col;g.fillText(ch,px,px*1.05);return c}
 let SPR=null;const mkSpr=()=>{SPR={0:glyph("0","#7ff0d9",24),1:glyph("1","#7ff0d9",24),h0:glyph("0","#ffd48a",24),h1:glyph("1","#ffd48a",24)}};
 document.fonts.ready.then(mkSpr);mkSpr();
 
@@ -86,7 +86,7 @@ function frame(now){requestAnimationFrame(frame);if(!visible)return;
   /* neighbouring states */
   const aN=seg(K,8,14);
   if(aN>0){ctx.globalAlpha=aN*.35;ctx.strokeStyle="#5fa9a0";ctx.lineWidth=.8;ctx.setLineDash([3,4]);ctx.beginPath();neighGeo.forEach(n=>path(n.g));ctx.stroke();ctx.setLineDash([]);
-    ctx.globalAlpha=aN*.55;ctx.fillStyle="#8fb9b2";ctx.font=`600 ${Math.max(10,Math.min(13,W/90))}px "Inter Tight",sans-serif`;ctx.textAlign="center";
+    ctx.globalAlpha=aN*.55;ctx.fillStyle="#8fb9b2";ctx.font=`600 ${Math.max(10,Math.min(13,W/90))}px "Bricolage Grotesque",sans-serif`;ctx.textAlign="center";
     neighGeo.forEach(n=>{const q=proj(n.c);if(q&&q[0]>40&&q[0]<W-40&&q[1]>40&&q[1]<H-40)ctx.fillText(n.n.toUpperCase(),q[0],q[1])});ctx.globalAlpha=1}
   /* Chhattisgarh: 0/1 glyph field with a scan wave from Raipur */
   const aC=seg(K,5,12);
@@ -98,7 +98,7 @@ function frame(now){requestAnimationFrame(frame);if(!visible)return;
   /* districts */
   const aD=seg(K,12,20);
   if(aD>0){ctx.globalAlpha=aD*.5;ctx.strokeStyle="#7ff0d9";ctx.lineWidth=.7;ctx.beginPath();distGeo.forEach(d=>path(d.g));ctx.stroke();
-    const aL=seg(P,.74,.86);if(aL>0){ctx.globalAlpha=aD*aL*.75;ctx.fillStyle="#d8fff6";ctx.font=`600 ${Math.max(9,Math.min(12,W/110))}px "Inter Tight",sans-serif`;ctx.textAlign="center";
+    const aL=seg(P,.74,.86);if(aL>0){ctx.globalAlpha=aD*aL*.75;ctx.fillStyle="#d8fff6";ctx.font=`600 ${Math.max(9,Math.min(12,W/110))}px "Bricolage Grotesque",sans-serif`;ctx.textAlign="center";
       distGeo.forEach(d=>{const q=proj(d.c);if(q&&q[0]>20&&q[0]<W-20&&q[1]>20&&q[1]<H-20)ctx.fillText(d.n.toUpperCase(),q[0],q[1])})}ctx.globalAlpha=1}
   /* state outline draws itself */
   const aS=seg(P,.3,.42);

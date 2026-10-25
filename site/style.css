@@ -2,14 +2,17 @@
   --space:#04090b;--glow:#7ff0d9;--amber:#ffb45a;
   --paper:#f3efe6;--paper2:#e9e3d6;--ink:#1d1c21;--ink2:#5b5752;--rule:rgba(29,28,33,.14);
   --orange:#c95d2e;--teal:#0b7a70;
-  --sans:"Inter Tight","Noto Sans Devanagari",system-ui,sans-serif;
-  --serif:"Instrument Serif","Noto Sans Devanagari",Georgia,serif;
-  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
-  --hi:"Noto Sans Devanagari","Inter Tight",sans-serif;
-  --hiserif:"Tiro Devanagari Hindi","Noto Sans Devanagari",serif;
+  --sans:"Bricolage Grotesque","Anek Devanagari",system-ui,sans-serif;
+  --serif:"Fraunces","Tiro Devanagari Hindi",Georgia,serif;
+  --mono:"Geist Mono",ui-monospace,Menlo,monospace;
+  --hi:"Anek Devanagari","Bricolage Grotesque",sans-serif;
+  --hiserif:"Tiro Devanagari Hindi","Anek Devanagari",serif;
   --hdr:68px;--land:0;
 }
 *{box-sizing:border-box}
+/* Fraunces: soft corners for headlines, the wonky italic for the accent word */
+.pre-n,.ocap p,.otitle h1,.gt,.g-panel h3,.g-start h2,.g-pop b,.end-stats b,.cap h3,.cap .k b,.big,.scrub{font-variation-settings:"SOFT" 60,"WONK" 0}
+.otitle h1 i,.gt i,.g-start h2 i{font-variation-settings:"SOFT" 100,"WONK" 1}
 html{background:var(--space)}
 body{margin:0;background:var(--paper);color:var(--ink);font:400 18px/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
 html[data-lang=hi] body{line-height:1.75}
@@ -25,7 +28,7 @@ body.loading{overflow:hidden}
 
 /* preloader */
 #pre{position:fixed;inset:0;z-index:300;background:var(--space);color:#dff;display:grid;place-items:end start;padding:clamp(20px,5vw,64px)}
-.pre-n{font:400 clamp(90px,20vw,280px)/.8 var(--serif);color:#e8fffa;display:flex;align-items:flex-start}
+.pre-n{font:300 clamp(90px,20vw,280px)/.8 var(--serif);color:#e8fffa;display:flex;align-items:flex-start}
 .pre-n small{font:500 16px var(--mono);margin:12px 0 0 8px;color:var(--glow)}
 .pre-l{font:500 13px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--glow);margin:18px 0 12px}
 .pre-l::after{content:"…";animation:blink 1s steps(2) infinite}
@@ -102,13 +105,13 @@ body.on-ground #rail{opacity:1;pointer-events:auto}
 .ocap.on{opacity:1;transform:none}
 .ocap .k{font:500 12px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--amber);display:flex;gap:10px;align-items:center}
 .ocap .k::before{content:"";width:28px;height:1px;background:currentColor}
-.ocap p{font:400 clamp(32px,4.4vw,62px)/1.04 var(--serif);margin:12px 0 0;color:#fff;letter-spacing:-.01em;text-shadow:0 2px 30px rgba(0,0,0,.6)}
+.ocap p{font:350 clamp(30px,4vw,56px)/1.08 var(--serif);margin:12px 0 0;color:#fff;letter-spacing:-.01em;text-shadow:0 2px 30px rgba(0,0,0,.6)}
 html[data-lang=hi] .ocap p{font:400 clamp(26px,3.6vw,50px)/1.35 var(--hiserif)}
 .otitle{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;text-align:center;padding:20px;opacity:0;pointer-events:none;color:var(--ink)}
 .otitle.on{opacity:calc(var(--land) * 1.6);pointer-events:auto}
 .otitle .kick{font:500 13px var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--orange);margin:0}
 html[data-lang=hi] .otitle .kick{letter-spacing:.04em;font:600 15px var(--hi)}
-.otitle h1{font:400 clamp(72px,15vw,230px)/.86 var(--serif);margin:14px 0 18px;letter-spacing:-.03em}
+.otitle h1{font:350 clamp(64px,12.5vw,200px)/.9 var(--serif);margin:14px 0 18px;letter-spacing:-.035em}
 .otitle h1 i{font-style:italic;color:var(--orange)}
 html[data-lang=hi] .otitle h1{font:400 clamp(60px,12vw,180px)/1.15 var(--hiserif)}
 .osub{font-size:clamp(18px,2vw,24px);max-width:34ch;margin:0 0 28px;color:var(--ink2)}
@@ -217,7 +220,7 @@ html[data-lang=hi] .cap h3{font:400 clamp(24px,2.2vw,34px)/1.35 var(--hiserif)}
 
 /* closing + footer */
 #outro{background:var(--space);color:#eafffb;padding:clamp(100px,14vw,200px) 0 40px;position:relative;overflow:hidden}
-#outro .gt{font:400 clamp(80px,19vw,340px)/.8 var(--serif);letter-spacing:-.045em;margin:0;white-space:nowrap}
+#outro .gt{font:350 clamp(72px,16vw,290px)/.85 var(--serif);letter-spacing:-.045em;margin:0;white-space:nowrap}
 #outro .gt i{color:var(--amber)}
 html[data-lang=hi] #outro .gt{font:400 clamp(60px,12vw,220px)/1.15 var(--hiserif);letter-spacing:0}
 #outro .row{display:flex;flex-wrap:wrap;gap:24px;justify-content:space-between;align-items:end;margin-top:clamp(40px,6vw,80px)}
