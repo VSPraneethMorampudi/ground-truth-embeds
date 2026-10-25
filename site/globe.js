@@ -9,9 +9,9 @@ const seg=(p,a,b)=>sm((p-a)/(b-a));
 let W=0,H=0,DPR=1,P=0,T=0,visible=true;
 const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 /* space palette from the theme (defaults: teal) */
-const SP={glow:SP.glow,dot:SP.dot,dim:SP.dim,line:SP.line,neigh:SP.neigh,text:SP.text,label:SP.label,star:SP.star,oceanA:SP.oceanA,oceanB:SP.oceanB,deep:SP.deep,atmo:"45,212,191"};
+const SP={glow:"#7ff0d9",dot:"#3fd6be",dim:"#2a6b66",line:"#9ff5e4",neigh:"#5fa9a0",text:"#8fb9b2",label:"#d8fff6",star:"#cfeee8",oceanA:"#0f3a3a",oceanB:"#061517",deep:"#0b2a2b",atmo:"45,212,191"};
 Object.keys(SP).forEach(k=>{const v=cssv("--sp-"+k);if(v)SP[k]=v});
-let PAPER=cssv("--paper")||"#f3efe6",SPACE=cssv("--space")||SPACE;
+let PAPER=cssv("--paper")||"#f3efe6",SPACE=cssv("--space")||"#04090b";
 const proj=d3.geoOrthographic().clipAngle(90).precision(.3);
 const path=d3.geoPath(proj,ctx);
 
