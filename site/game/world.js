@@ -85,11 +85,11 @@ export class World{
       const curve=new THREE.CatmullRomCurve3(pts,false,"centripetal");const tube=new THREE.TubeGeometry(curve,Math.max(8,pts.length*3),r,6,false);
       const m=new THREE.Mesh(tube,mat);m.castShadow=true;m.userData.full=tube.index.count;tube.setDrawRange(0,0);g.add(m)});
     this.scene.add(g);g.userData.mat=mat;return g}
-  makeFacilities(){seed=11;const types=[["school",COLORS.school,[3,7]],["health",COLORS.health,[1,3]],["anganwadi",COLORS.anganwadi,[4,9]]];
+  makeFacilities(){seed=11;const types=[["school",COLORS.school,[1,4]],["health",COLORS.health,[1,2]],["anganwadi",COLORS.anganwadi,[2,5]]];
     const out={},list=[];
     types.forEach(([t,col,[a,b]])=>{const pts=[];this.districts.forEach(d=>{const n=a+Math.floor(rnd()*(b-a+1));const bb=this.bbox(d.data);
         for(let k=0,tries=0;k<n&&tries<400;tries++){const p=[bb[0]+rnd()*(bb[2]-bb[0]),bb[1]+rnd()*(bb[3]-bb[1])];if(inDistrict(d.data,p)){pts.push({p,d:d.name});k++}}});
-      const geo=new THREE.CylinderGeometry(.0,.32,1.1,8);geo.translate(0,.55,0);const head=new THREE.SphereGeometry(.34,12,8);head.translate(0,1.25,0);
+      const geo=new THREE.CylinderGeometry(.0,.2,.7,8);geo.translate(0,.35,0);const head=new THREE.SphereGeometry(.22,12,8);head.translate(0,.8,0);
       const merged=this.merge([geo,head]);const mat=new THREE.MeshStandardMaterial({color:col,roughness:.4});
       const im=new THREE.InstancedMesh(merged,mat,pts.length);im.castShadow=true;im.visible=false;im.userData.pts=pts;
       const M=new THREE.Matrix4();pts.forEach((q,i)=>{const[x,z]=P(...q.p);M.makeTranslation(x,TOP,z);im.setMatrixAt(i,M)});
@@ -100,8 +100,8 @@ export class World{
     const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));g.setAttribute("normal",new THREE.Float32BufferAttribute(nor,3));g.setIndex(idx);return g}
   bbox(d){let a=[999,999,-999,-999];d.r.forEach(r=>r.forEach(([x,y])=>{a[0]=Math.min(a[0],x);a[1]=Math.min(a[1],y);a[2]=Math.max(a[2],x);a[3]=Math.max(a[3],y)}));return a}
   makeTrees(){seed=29;const pts=[];this.districts.forEach(d=>{if(!FOREST.has(d.name))return;const bb=this.bbox(d.data);
-      for(let k=0,t=0;k<22&&t<300;t++){const p=[bb[0]+rnd()*(bb[2]-bb[0]),bb[1]+rnd()*(bb[3]-bb[1])];if(inDistrict(d.data,p)){pts.push(p);k++}}});
-    const cone=new THREE.ConeGeometry(.55,1.5,6);cone.translate(0,1.25,0);const trunk=new THREE.CylinderGeometry(.12,.14,.6,5);trunk.translate(0,.3,0);
+      for(let k=0,t=0;k<10&&t<300;t++){const p=[bb[0]+rnd()*(bb[2]-bb[0]),bb[1]+rnd()*(bb[3]-bb[1])];if(inDistrict(d.data,p)){pts.push(p);k++}}});
+    const cone=new THREE.ConeGeometry(.42,1.1,6);cone.translate(0,.95,0);const trunk=new THREE.CylinderGeometry(.09,.11,.45,5);trunk.translate(0,.22,0);
     const a=new THREE.InstancedMesh(cone,new THREE.MeshStandardMaterial({color:COLORS.tree,roughness:.8,flatShading:true}),pts.length);
     const b=new THREE.InstancedMesh(trunk,new THREE.MeshStandardMaterial({color:COLORS.trunk}),pts.length);
     const M=new THREE.Matrix4(),q=new THREE.Quaternion(),s=new THREE.Vector3();
