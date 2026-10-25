@@ -13,9 +13,18 @@ FILES
                 Chhattisgarh dots, official districts and neighbouring states from ../source/
   app.js        builds the sections, smooth scroll (Lenis), scroll animations (GSAP ScrollTrigger),
                 step cards that drive the figures, cursor, level rail, toasts, auto-play
-  style.css     design: space → paper; Instrument Serif, Inter Tight, Noto Sans Devanagari, JetBrains Mono
+  style.css     design: space → paper. Fonts from Google Fonts: Instrument Serif + Inter Tight (English),
+                Tiro Devanagari Hindi + Noto Sans Devanagari (Hindi), JetBrains Mono (labels)
   vendor/       gsap + ScrollTrigger 3.15 (GSAP standard licence), lenis 1.3 (MIT), d3-geo 3 (ISC)
-  fonts/        self-hosted, OFL (licences alongside)
+
+SCENES (app.js)
+  scene   pinned: the chapter title fills the screen, the figure grows from a card behind it to full
+          size, then scrolling plays the steps (captions cross-fade, the figure follows)
+          used for the overview, Geodatabase, Mobile, Mapping, Maintenance and the closing cycle
+  track   pinned, sideways: one full screen per step URL (Data Creation)
+  window  pinned: the live portal grows to full screen, feature captions play over it
+  Figures show "Click to play": a click hands the mouse to the figure, moving off it hands it back
+  to the page, so the wheel never gets stuck inside a figure.
 
 EMBEDS (content.js → E). BASE is "../" so the folder works inside this Pages site:
   https://vspraneethmorampudi.github.io/ground-truth-embeds/site/
