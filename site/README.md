@@ -33,7 +33,10 @@ FILES
   game/world.js     the 3D diorama: districts, layers, pins, labels, picking, choropleth, snapshot,
                     adaptive quality (drops resolution and shadows on slow machines; ?lowgl forces it)
   game/game.js      the guide, HUD, badges, the eight levels and their auto-solvers
-  game/game.css     game styles (desktop side panel, phone bottom sheet)
+  game/game.css     game styles. Desktop: side panel. Phones (≤900px): the page header hides, one compact top bar
+                    (exit, level dots, quality, restart, sound), the level panel is a bottom sheet that scrolls
+                    with its buttons pinned, and shrinks ("peek") while you need the map (Pinpoint, Field);
+                    the 3D view is re-centred on the visible area above the sheet (World.setInset)
   fx.js / fx.css    the feel layer: rolling-label buttons with a fill from the cursor and springy press, card
                     tilt with glare, particle bursts and +1 / ✕ floats, soft synthesised sounds (mute button
                     in the game HUD; sounds only inside the game), phone vibration, count-ups

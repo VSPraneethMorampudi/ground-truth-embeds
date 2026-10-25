@@ -42,8 +42,10 @@ export class World{
   resize(){const w=this.host.clientWidth,h=this.host.clientHeight;if(!w||!h)return;this.renderer.setSize(w,h,false);this.camera.aspect=w/h;
     this.camera.fov=w<700?42:30;
     /* keep the diorama centred in the space the panel leaves free: right panel on desktop, bottom sheet on phones */
-    const wide=w>900,ox=wide?Math.min(410,w*.34)/2+14:0,oy=wide?0:-h*.2;
-    if(this.offset!==false)this.camera.setViewOffset(w,h,ox,-oy,w,h);this.camera.updateProjectionMatrix()}
+    /* inset = space the game UI covers (right panel on desktop, top bar + bottom sheet on phones) */
+    const wide=w>900,I=this.inset||{},right=I.right!=null?I.right:(wide?Math.min(410,w*.34)+28:0),top=I.top||0,bottom=I.bottom!=null?I.bottom:(wide?0:h*.4);
+    if(this.offset!==false)this.camera.setViewOffset(w,h,right/2,(bottom-top)/2,w,h);this.camera.updateProjectionMatrix()}
+  setInset(i){const o=this.inset||{};if(o.right===i.right&&o.bottom===i.bottom&&o.top===i.top)return;this.inset=i;this.resize()}
   setOffset(on){this.offset=on;if(!on)this.camera.clearViewOffset();this.resize()}
 
   /* ---------------- build ---------------- */
@@ -133,7 +135,7 @@ export class World{
   /* ---------------- camera ---------------- */
   fly(pos,target=[0,0,0],d=1.6){const c=this.camera,ctl=this.controls,p0=c.position.clone(),t0=ctl.target.clone(),p1=new THREE.Vector3(...pos),t1=new THREE.Vector3(...target);
     return this.tween(d,k=>{c.position.lerpVectors(p0,p1,k);ctl.target.lerpVectors(t0,t1,k)},x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2)}
-  home(d=1.6){return this.fly(this.host.clientWidth<700?[0,150,120]:[0,104,96],[0,0,4],d)}
+  home(d=1.6){return this.fly(this.host.clientWidth<700?[0,128,92]:[0,104,96],[0,0,4],d)}
   flyTo(name,d=1.6){const r=this.byName(name);if(!r)return;const[x,z]=P(...r.c);return this.fly([x+8,46,z+44],[x,0,z],d)}
   zoom(f){const c=this.camera,t=this.controls.target,v=c.position.clone().sub(t).multiplyScalar(f);const L=v.length();if(L<28||L>170)return;return this.fly(t.clone().add(v).toArray(),t.toArray(),.5)}
   autoRotate(on){this.controls.autoRotate=on;this.controls.autoRotateSpeed=.6}

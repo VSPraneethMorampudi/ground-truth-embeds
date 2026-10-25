@@ -135,7 +135,7 @@
 
 /* field + maintenance */
 .ph-photo{display:flex;align-items:center;justify-content:center;gap:6px}.ph-photo .ic{width:22px;height:22px}
-.status span{display:inline-flex;align-items:center;gap:6px}
+.status>span{display:inline-flex;align-items:center;gap:6px}
 .chk em{display:inline-flex;align-items:center;gap:4px}
 .upd{border-left:4px solid var(--rule)}
 .upd.done.pub{border-left-color:var(--ok)}.upd.done.back{border-left-color:var(--bad)}

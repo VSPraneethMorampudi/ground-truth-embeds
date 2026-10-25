@@ -208,8 +208,8 @@ html[data-lang=hi] .file i{letter-spacing:0;font:600 11px var(--hi)}
 
 /* level 8: queue */
 .status{display:flex;flex-wrap:wrap;gap:6px}
-.status span{padding:5px 10px;border-radius:99px;background:var(--ok-bg);color:var(--ok-ink);font:600 12px var(--sans)}
-.status span:first-child{animation:float 2s infinite}
+.status>span{padding:5px 10px;border-radius:99px;background:var(--ok-bg);color:var(--ok-ink);font:600 12px var(--sans)}
+.status>span:first-child{animation:float 2s infinite}
 .queue{display:grid;gap:8px}
 .upd{padding:12px 14px;border-radius:14px;background:var(--card);box-shadow:0 0 0 1px var(--rule);display:grid;gap:8px;transition:.4s}
 .upd b{font-size:14px}
@@ -234,24 +234,73 @@ html[data-lang=hi] .file i{letter-spacing:0;font:600 11px var(--hi)}
 
 #game.paused .g-say::after{content:" ⏸";opacity:.6}
 
-/* phones: the panel becomes a bottom sheet, the guide sits above it */
+/* phones: one compact top bar, the level panel is a scrolling bottom sheet with pinned actions */
+.sh-handle{display:none}
 @media (max-width:900px){
-  .g-hud{top:calc(var(--hdr) - 4px);gap:6px;padding:0 10px;flex-wrap:wrap}
-  .g-levels li.on span{max-width:90px}
-  .g-q{padding:6px 10px}.g-bad{display:none}
-  .g-exit{padding:6px 10px;font-size:12px}
-  .g-panel{left:8px;right:8px;width:auto;top:auto;bottom:8px;max-height:52svh;padding:16px;border-radius:20px}
-  .g-panel h3{font-size:24px;margin:6px 0}
-  .lv-task{font-size:13.5px;margin-bottom:10px}
-  .g-buddy{left:8px;right:8px;bottom:calc(52svh + 14px);max-width:none}
-  .g-buddy svg{width:44px;height:54px}
-  .g-say{font-size:13px;padding:10px 12px;margin-bottom:20px}
-  .g-zoom{display:none}
-  .bins{grid-template-columns:repeat(5,1fr)}
-  .bin{font-size:10px;padding:8px 2px}
-  .files{grid-template-columns:1fr 1fr}
-  .phone{width:200px}
+  html.in-game #top,html.in-game #readbar{display:none}
+  #game{min-height:0;height:100svh}
+  .g-hud{top:max(8px,env(safe-area-inset-top));gap:6px;padding:0 8px;flex-wrap:nowrap}
+  .g-exit{order:-1;flex:none;width:36px;height:36px;padding:0;border-radius:50%;font-size:0}
+  .g-exit::before{content:"✕";font:600 15px var(--sans);color:#fff}
+  .g-levels{flex:1;min-width:0;gap:0;padding:4px 3px;justify-content:space-between}
+  .g-levels li{height:28px;padding:0;flex:none}
+  .g-levels li b{width:20px;height:20px;font-size:10px}
+  .g-levels li span,.g-levels li.on span{display:none}
+  .g-levels li.on{padding:0;background:none}
+  .g-levels li.on b{width:24px;height:24px;font-size:11.5px}
+  .g-q{flex:none;padding:4px 8px 4px 4px!important;gap:3px!important}
+  .g-q>span{display:none}
+  .g-q svg{width:24px!important;height:24px!important}
+  .g-q b{font-size:13px}
+  .g-bad,.g-zoom{display:none!important}
+  .g-mute{width:34px;height:34px}
+  .g-reset{flex:none;width:34px;height:34px;padding:0;justify-content:center}
+  .g-reset span{display:none}
+  .g-mute{flex:none}
+
+  .g-panel{left:0;right:0;width:auto;top:auto;bottom:0;max-height:min(58svh,560px);padding:6px 16px 0;border-radius:22px 22px 0 0;
+    overflow-y:auto;overscroll-behavior:contain;transition:max-height .45s cubic-bezier(.2,.8,.2,1),opacity .5s,transform .6s cubic-bezier(.2,.7,.2,1);
+    box-shadow:0 -1px 0 var(--rule),0 -18px 40px -24px rgba(0,0,0,.45);transform:translateY(30px)}
+  #game.playing .g-panel.in{transform:none}
+  .sh-handle{display:grid;place-items:center;position:sticky;top:-6px;z-index:2;width:calc(100% + 32px);height:26px;margin:-6px -16px 2px;background:linear-gradient(var(--panel) 70%,transparent)}
+  .sh-handle i{width:40px;height:5px;border-radius:3px;background:var(--rule)}
+  .lv-k{font-size:10.5px}
+  .g-panel h3{font-size:22px!important;margin:4px 0 6px}
+  .lv-task{font-size:13.5px;line-height:1.45;margin:0 0 12px}
+  .lv-body{flex:none;min-height:auto;display:grid;gap:10px}
+  .lv-body>*{overflow:visible!important}
+  .lv-act{position:sticky;bottom:0;z-index:2;margin:12px -16px 0;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:var(--panel);border-top:1px solid var(--rule);backdrop-filter:blur(10px)}
+  .lv-act .lv-next{padding:12px 16px;font-size:14px}
+  .lv-act.col{position:static;margin:12px 0 0;padding:0 0 16px;border:0;background:none}
+  /* shrunk: title, task and actions only, so the map can be tapped */
+  .g-panel.peek{max-height:none}
+  .g-panel.peek .lv-body{display:none}
+  .g-panel.peek .lv-task{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:0}
+  .g-panel.peek h3{font-size:18px!important}
+
+  /* the guide: small avatar, three lines, just above the sheet */
+  .g-buddy{left:10px;right:10px;bottom:calc(var(--sheet,45svh) + 8px);max-width:none;gap:6px;transition:bottom .45s cubic-bezier(.2,.8,.2,1),opacity .5s}
+  .g-buddy svg{width:34px;height:42px}
+  .g-say{margin-bottom:12px;padding:8px 12px;font-size:12.5px;line-height:1.4;border-radius:14px 14px 14px 4px;min-height:0;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;max-height:calc(4.2em + 16px)}
+  .w-label.lost span{display:none}
+  .w-label.lost{padding:5px 9px;font-size:11px}
+
+  .files{grid-template-columns:1fr 1fr;gap:8px}
+  .file{min-height:70px}
+  .file .f-ic{width:32px;height:32px}.file .f-ic .ic{width:19px;height:19px}
+  .recs{gap:6px}
+  .rec{font-size:12.5px}
+  .bins{grid-template-columns:repeat(5,1fr);gap:5px;position:sticky;bottom:70px;z-index:1;padding:6px 0;background:var(--panel)}
+  .bin{font-size:10px;padding:8px 2px!important}
+  .bin i{width:28px;height:28px}.bin small{display:none}
+  .pinc{padding:10px!important}.pinc .pin-h{width:38px;height:38px}
+  .phone{width:min(230px,70vw)}
+  .status{gap:4px}.status>span{padding:4px 8px;font-size:11px}
   .ph-body{min-height:0}
+  .shelf{grid-template-columns:repeat(4,1fr)}
+  .end-stats div{min-height:84px}
+  .end-stats b{font-size:28px!important}
 }
 @media (prefers-reduced-motion:reduce){.file,.g-buddy svg{animation:none}}
 
