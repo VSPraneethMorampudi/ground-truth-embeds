@@ -74,16 +74,8 @@ gsap.matchMedia().add("(prefers-reduced-motion:no-preference)",()=>{
   gsap.fromTo("#outro .gt",{xPercent:10},{xPercent:-12,ease:"none",scrollTrigger:{trigger:"#outro",start:"top bottom",end:"bottom top",scrub:true}});
 });
 
-/* ---------- pointer: cursor, magnets ---------- */
-if(FINE&&!REDUCE){document.body.classList.add("has-cursor");
-  const cur=$("#cur"),dot=$(".dot",cur),ring=$(".ring",cur),pos={x:innerWidth/2,y:innerHeight/2},rp={...pos};
-  addEventListener("pointermove",e=>{pos.x=e.clientX;pos.y=e.clientY},{passive:true});
-  gsap.ticker.add(()=>{rp.x+=(pos.x-rp.x)*.18;rp.y+=(pos.y-rp.y)*.18;dot.style.transform=`translate(${pos.x}px,${pos.y}px)`;ring.style.transform=`translate(${rp.x}px,${rp.y}px)`});
-  const CL={drag:{en:"Drag",hi:"खींचें"},spin:{en:"Rotate",hi:"घुमाएँ"}},curL=$("#curL");
-  document.addEventListener("pointerover",e=>{const t=e.target,drag=t.closest(".rec,.pinc"),spin=t.closest("#game.playing canvas");
-    cur.classList.toggle("big",!!(drag||spin));cur.classList.toggle("link",!drag&&!spin&&!!t.closest("a,button,[data-magnet],label,.bin,.file,.sheet"));
-    curL.textContent=drag?CL.drag[document.documentElement.dataset.lang||"en"]:spin?CL.spin[document.documentElement.dataset.lang||"en"]:""});
-  document.addEventListener("pointerdown",()=>cur.classList.add("down"));document.addEventListener("pointerup",()=>cur.classList.remove("down"));
+/* ---------- pointer: magnetic buttons (the cursor itself lives in cursor.js) ---------- */
+if(FINE&&!REDUCE){
   document.addEventListener("pointermove",e=>{const b=e.target.closest("[data-magnet]");$$("[data-magnet]").forEach(m=>{if(m!==b&&m._mag){m._mag=0;gsap.to(m,{x:0,y:0,duration:.7,ease:"elastic.out(1,.4)"})}});
     if(b){b._mag=1;const r=b.getBoundingClientRect();gsap.to(b,{x:(e.clientX-r.left-r.width/2)*.25,y:(e.clientY-r.top-r.height/2)*.35,duration:.4})}},{passive:true});
 }

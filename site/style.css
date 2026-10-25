@@ -38,19 +38,40 @@ body.loading{overflow:hidden}
 .pre-bar{width:min(420px,80vw);height:2px;background:color-mix(in srgb,var(--glow) 20%,transparent)}
 .pre-bar i{display:block;height:100%;width:100%;background:var(--glow);transform-origin:0 50%;transform:scaleX(0)}
 
-/* cursor + grain */
-#cur{position:fixed;left:0;top:0;z-index:250;pointer-events:none;mix-blend-mode:difference;display:none}
-body.has-cursor #cur{display:block}
-body.has-cursor,body.has-cursor a,body.has-cursor button{cursor:none}
-#cur .dot{position:absolute;width:6px;height:6px;margin:-3px;border-radius:50%;background:#fff}
-#cur .ring{position:absolute;width:38px;height:38px;margin:-19px;border-radius:50%;border:1px solid #fff;display:grid;place-items:center;transition:width .35s,height .35s,margin .35s,background .35s}
-#cur .ring b{font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:#000;opacity:0;transition:opacity .2s}
-#cur.big .ring{width:92px;height:92px;margin:-46px;background:#fff}
-#cur.big .ring b{opacity:1}
-#cur.link .ring{width:58px;height:58px;margin:-29px}
-#cur.down .ring{scale:.8}
-#cur .ring{transition:width .35s,height .35s,margin .35s,background .35s,scale .2s}
-#cur.hide{opacity:0}
+/* cursor (cursor.js) + grain */
+html.sv-on,html.sv-on *{cursor:none!important}
+html.sv-on input[type=text],html.sv-on input:not([type]),html.sv-on input[list]{cursor:text!important}
+#sv{position:fixed;inset:0;z-index:600;pointer-events:none;opacity:0;transition:opacity .25s;--sv:var(--ink)}
+#sv.sv-show{opacity:1}
+#sv.sv-dark{--sv:#fff}
+.sv-trail{position:absolute;inset:0;width:100%;height:100%}
+.sv-x{position:absolute;left:0;top:0;width:0;height:0}
+.sv-x i{position:absolute;background:var(--sv);transition:transform .25s,opacity .25s}
+.sv-x i:nth-child(1),.sv-x i:nth-child(2){width:9px;height:1.5px;top:-.75px}
+.sv-x i:nth-child(1){right:5px}.sv-x i:nth-child(2){left:5px}
+.sv-x i:nth-child(3),.sv-x i:nth-child(4){width:1.5px;height:9px;left:-.75px}
+.sv-x i:nth-child(3){bottom:5px}.sv-x i:nth-child(4){top:5px}
+.sv-x b{position:absolute;left:-2px;top:-2px;width:4px;height:4px;border-radius:50%;background:var(--accent)}
+#sv.sv-lockon .sv-x i{opacity:0}
+#sv.sv-map .sv-x i:nth-child(1){transform:translateX(-6px)}#sv.sv-map .sv-x i:nth-child(2){transform:translateX(6px)}
+#sv.sv-map .sv-x i:nth-child(3){transform:translateY(-6px)}#sv.sv-map .sv-x i:nth-child(4){transform:translateY(6px)}
+#sv.sv-down .sv-x i{transform:scale(.6)}
+.sv-lock{position:absolute;left:0;top:0;width:22px;height:22px}
+.sv-lock>i{position:absolute;width:8px;height:8px;border:0 solid var(--sv);transition:border-color .2s,width .3s,height .3s}
+.sv-lock>i:nth-child(1){left:0;top:0;border-width:1.5px 0 0 1.5px}.sv-lock>i:nth-child(2){right:0;top:0;border-width:1.5px 1.5px 0 0}
+.sv-lock>i:nth-child(3){right:0;bottom:0;border-width:0 1.5px 1.5px 0}.sv-lock>i:nth-child(4){left:0;bottom:0;border-width:0 0 1.5px 1.5px}
+#sv.sv-lockon .sv-lock>i{width:12px;height:12px;border-color:var(--accent);border-width:2px}
+#sv.sv-lockon .sv-lock>i:nth-child(1){border-width:2px 0 0 2px}#sv.sv-lockon .sv-lock>i:nth-child(2){border-width:2px 2px 0 0}
+#sv.sv-lockon .sv-lock>i:nth-child(3){border-width:0 2px 2px 0}#sv.sv-lockon .sv-lock>i:nth-child(4){border-width:0 0 2px 2px}
+#sv.sv-map .sv-lock{opacity:0}
+.sv-tag{position:absolute;left:100%;top:-6px;margin-left:6px;padding:3px 8px;border-radius:6px;background:var(--accent);color:#fff;font:600 10.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;font-style:normal;
+  opacity:0;transform:translateX(-6px);transition:opacity .2s,transform .3s}
+html[data-lang=hi] .sv-tag{text-transform:none;letter-spacing:0;font:600 11.5px var(--hi)}
+.sv-tag.on{opacity:1;transform:none}
+.sv-read{position:absolute;left:0;top:0;display:grid;gap:1px;padding:7px 10px;border-radius:10px;background:var(--ink);color:var(--paper);font:500 11px var(--mono);white-space:nowrap;
+  opacity:0;scale:.9;transform-origin:0 0;transition:opacity .2s,scale .2s}
+.sv-read.on{opacity:1;scale:1}
+.sv-read b{font:700 13px var(--sans);letter-spacing:-.01em}
 #grain{position:fixed;inset:-50%;z-index:240;pointer-events:none;opacity:.06;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 html.in-game #grain{display:none}
