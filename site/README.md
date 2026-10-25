@@ -33,8 +33,8 @@ FILES
   app.js            language, smooth scroll (Lenis), preloader, cursor, outro, auto-play
   vendor/           three 0.170 + OrbitControls (MIT), gsap + ScrollTrigger 3.15 (GSAP standard licence),
                     lenis 1.3 (MIT), d3-geo 3 (ISC)
-  Fonts: Google Fonts. Fraunces (headlines, SOFT/WONK axes) + Bricolage Grotesque (body, game UI) + Geist Mono (labels);
-                    Hindi: Tiro Devanagari Hindi (headlines) + Anek Devanagari (body, UI)
+  Fonts: Google Fonts. Bricolage Grotesque (display: 800, 75% width; body and UI), Geist Mono (labels, HUD),
+                    Anek Devanagari (Hindi display and body)
 
 URL OPTIONS
   #play    start auto-play on load (kiosk / meeting-room screen)

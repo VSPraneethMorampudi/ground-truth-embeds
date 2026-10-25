@@ -123,7 +123,7 @@ export class Game{
   card(){const w=this.world,img=new Image();img.onload=()=>{const W=1200,H=1500,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
       x.fillStyle="#f3efe6";x.fillRect(0,0,W,H);const s=Math.min(W/img.width,1100/img.height);x.drawImage(img,(W-img.width*s)/2,170,img.width*s,img.height*s);
       x.fillStyle="#c95d2e";x.font="500 26px 'Geist Mono',monospace";x.fillText("CHHATTISGARH STATE GEOPORTAL",70,90);
-      x.fillStyle="#1d1c21";x.font="400 92px 'Fraunces',Georgia,serif";x.fillText(lang()==="hi"?"ज़मीनी सच्चाई":"Ground Truth",66,150+0);
+      x.fillStyle="#1d1c21";x.font="800 92px 'Bricolage Grotesque',Georgia,serif";x.fillText(lang()==="hi"?"ज़मीनी सच्चाई":"Ground Truth",66,150+0);
       x.font="500 34px 'Bricolage Grotesque',sans-serif";x.fillText((lang()==="hi"?"डेटा गुणवत्ता ":"Data quality ")+this.quality()+"   ·   "+this.badges.size+"/8 "+(lang()==="hi"?"बैज":"badges"),70,1340);
       x.fillStyle="#5b5752";x.font="400 26px 'Bricolage Grotesque',sans-serif";x.fillText(lang()==="hi"?"मैंने राज्य का नक्शा बनाया: 33 ज़िले, एक भरोसेमंद नक्शा।":"I built the state map: 33 districts, one trusted map.",70,1395);
       x.fillText(new Date().toLocaleDateString(lang()==="hi"?"hi-IN":"en-IN",{day:"numeric",month:"long",year:"numeric"}),70,1440);

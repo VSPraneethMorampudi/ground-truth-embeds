@@ -15,8 +15,10 @@ export const COLORS={paper:0xfbf8f2,side:0xe2d9c6,plinth:0xe9e1d0,plinthSide:0xc
   river:0x3c8fd6,road:0xd2733c,rail:0x3a383d,school:0x2f6fd6,health:0xd2423a,anganwadi:0xe39a1f,pending:0xffc23a,tree:0x5f8f4e,trunk:0x8a6a4a};
 export const FOREST=new Set(["Bastar","Dantewada","Bijapur","Sukma","Narayanpur","Kanker","Kondagaon","Sarguja","Jashpur","Korba","Balrampur-Ramanujganj","Surajpur","Koriya","Manendragarh-Chirmiri-Bharatpur","Gariyaband","Dhamtari","Gaurela-Pendra-Marwahi","Mohla-Manpur-Ambagarh Chowki"]);
 
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function themeColors(){[["paper","--w-top"],["side","--w-side"],["plinth","--w-plinth"],["plinthSide","--w-plinth-side"],["line","--w-line"],["slab","--w-slab"]].forEach(([k,v])=>{const c=css(v);if(c)COLORS[k]=new THREE.Color(c).getHex()})}
 export class World{
-  constructor(host,labelHost){this.ql=/[?&]lowgl/.test(location.search)?2:0;this.qn=0;this.qs=0;
+  constructor(host,labelHost){themeColors();this.ql=/[?&]lowgl/.test(location.search)?2:0;this.qn=0;this.qs=0;
     this.host=host;this.labelHost=labelHost;this.labels=[];this.hoverCb=null;this.anim=[];this.t=0;
     const R=this.renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
     R.setPixelRatio(this.ql?.5:Math.min(2,devicePixelRatio||1));R.shadowMap.enabled=!this.ql;R.shadowMap.type=THREE.PCFSoftShadowMap;
@@ -51,7 +53,7 @@ export class World{
     const st=G.state[0],ss=this.shapeOf(st);
     const plinth=new THREE.Mesh(new THREE.CylinderGeometry(52,54,3,96),[new THREE.MeshStandardMaterial({color:COLORS.plinthSide,roughness:.9}),new THREE.MeshStandardMaterial({color:COLORS.plinth,roughness:.95}),new THREE.MeshStandardMaterial({color:COLORS.plinthSide})]);
     plinth.position.y=-1.5-1.2;plinth.receiveShadow=true;S.add(plinth);
-    const slab=new THREE.Mesh(new THREE.ExtrudeGeometry(ss,{depth:1.2,bevelEnabled:false}),[new THREE.MeshStandardMaterial({color:0xf1eadb,roughness:.9}),new THREE.MeshStandardMaterial({color:COLORS.side,roughness:.9})]);
+    const slab=new THREE.Mesh(new THREE.ExtrudeGeometry(ss,{depth:1.2,bevelEnabled:false}),[new THREE.MeshStandardMaterial({color:COLORS.slab||0xf1eadb,roughness:.9}),new THREE.MeshStandardMaterial({color:COLORS.side,roughness:.9})]);
     slab.rotation.x=-Math.PI/2;slab.position.y=-1.2;slab.receiveShadow=true;slab.castShadow=true;S.add(slab);this.slab=slab;
     /* ghost outline of the state before any data arrives */
     const gpts=st.map(([lo,la])=>{const[x,z]=P(lo,la);return new THREE.Vector3(x,.02,z)});
