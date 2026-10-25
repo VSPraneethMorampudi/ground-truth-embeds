@@ -7,6 +7,8 @@ const RAIPUR=[81.63,21.25],FOCUS=[82.15,21.35],D2R=Math.PI/180;
 const cl=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),mix=(a,b,t)=>a+(b-a)*t,sm=t=>{t=cl(t);return t*t*(3-2*t)};
 const seg=(p,a,b)=>sm((p-a)/(b-a));
 let W=0,H=0,DPR=1,P=0,T=0,visible=true;
+const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();let PAPER="#f3efe6",SPACE="#04090b";
+setTimeout(()=>{PAPER=cssv("--paper")||PAPER;SPACE=cssv("--space")||SPACE},0);
 const proj=d3.geoOrthographic().clipAngle(90).precision(.3);
 const path=d3.geoPath(proj,ctx);
 
@@ -54,7 +56,7 @@ function frame(now){requestAnimationFrame(frame);if(!visible)return;
   ctx.setTransform(DPR,0,0,DPR,0,0);
   /* space → ground: background warms to paper as we land */
   const land=seg(P,.93,1);
-  ctx.fillStyle="#04090b";ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=SPACE;ctx.fillRect(0,0,W,H);
   /* stars */
   const sa=1-seg(K,2,6);
   if(sa>0){for(const st of stars){const a=st.a*sa*(.65+.35*Math.sin(T*1.5+st.tw));ctx.globalAlpha=a;ctx.fillStyle="#cfeee8";
@@ -137,7 +139,7 @@ function frame(now){requestAnimationFrame(frame);if(!visible)return;
   else if(hud.lock)hud.lock.style.opacity=0;
 
   /* landing: paper rises */
-  if(land>0){ctx.globalAlpha=land;ctx.fillStyle="#f3efe6";ctx.fillRect(0,0,W,H);ctx.globalAlpha=1}
+  if(land>0){ctx.globalAlpha=land;ctx.fillStyle=PAPER;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1}
 
   /* HUD */
   const alt=Math.max(.4,35786/Math.pow(K,1.55)/mix(1,2.2,z2));
