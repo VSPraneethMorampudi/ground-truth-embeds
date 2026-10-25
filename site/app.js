@@ -69,7 +69,7 @@ splitChars($("#oTitle"));splitChars($("#outro .gt"));
 gsap.matchMedia().add("(prefers-reduced-motion:no-preference)",()=>{
   /* the game opens like a curtain as it scrolls in */
   gsap.fromTo("#game",{clipPath:"inset(7% 4% 0% 4% round 56px)"},{clipPath:"inset(0% 0% 0% 0% round 0px)",ease:"none",scrollTrigger:{trigger:"#game",start:"top bottom",end:"top top",scrub:true}});
-  gsap.from("#game .g-start-in>*",{y:70,opacity:0,stagger:.09,duration:1.2,ease:"expo.out",scrollTrigger:{trigger:"#game",start:"top 55%"}});
+  addEventListener("gt-game-ready",()=>gsap.from("#game .g-start-in>*",{y:70,opacity:0,stagger:.09,duration:1.2,ease:"expo.out",scrollTrigger:{trigger:"#game",start:"top 55%"}}),{once:true});
   gsap.from("#outro .gt .ch",{yPercent:110,rotate:8,stagger:.035,ease:"none",scrollTrigger:{trigger:"#outro",start:"top 75%",end:"top 15%",scrub:true}});
   gsap.fromTo("#outro .gt",{xPercent:10},{xPercent:-12,ease:"none",scrollTrigger:{trigger:"#outro",start:"top bottom",end:"bottom top",scrub:true}});
 });

@@ -85,6 +85,7 @@
   import {Game} from "./game/game.js";
   const H=window.GT_HOOKS;
   window.GTGame=new Game(document.getElementById("game"),{onLock:H.lock,onUnlock:H.unlock,onFinish:H.finish});
+  dispatchEvent(new Event("gt-game-ready"));
 </script>
 </body>
 </html>

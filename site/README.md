@@ -16,7 +16,10 @@ THE GAME (game/)
     7 Cartography  pick the river colour, choose a question: districts rise into a 3D thematic map
     8 Maintain     publish or send back incoming updates from their rule checks
   Badges per level, a data-quality score, and a downloadable map card at the end.
-  Every level has "Show me" (the guide solves it); "Watch it play" runs all eight.
+  Every level has Restart (↺, key R), Hint (key H: the next move glows; also offered by itself after
+  12 s without progress or after two mistakes) and Solve (⚡, the guide does it); "Watch it play" runs all
+  eight. The level pills jump to any level, and the world is reset to exactly what that level expects
+  (World.setStage). "Restart" in the bar starts the whole game again without reloading. Esc leaves the game.
   Real: district boundaries, state outline, rivers, roads, rail, towns. Illustrative: facility points,
   trees, records, updates and the AI answers.
 

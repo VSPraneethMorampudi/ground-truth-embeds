@@ -35,7 +35,7 @@ export class Game{
       <div class="g-hud"><ol class="g-levels" id="gLevels"></ol>
         <div class="g-q" id="gQwrap"><svg viewBox="0 0 36 36" aria-hidden="true"><circle class="bg" cx="18" cy="18" r="14"/><circle class="fg" cx="18" cy="18" r="14"/></svg><span>${L2(T("Data quality","डेटा गुणवत्ता"))}</span><b id="gQ">—</b></div>
         <div class="g-bad" id="gBadges"></div>
-        <button class="g-mute" id="gMute" aria-label="Sound on or off">${icon("speaker-high","on")}${icon("speaker-slash","off")}</button><button class="g-exit" id="gExit">${L2(T("Exit game","खेल से बाहर"))}</button></div>
+        <button class="g-reset" id="gReset" title="Restart the game">${icon("arrow-counter-clockwise")}<span>${L2(T("Restart","फिर से"))}</span></button><button class="g-mute" id="gMute" aria-label="Sound on or off">${icon("speaker-high","on")}${icon("speaker-slash","off")}</button><button class="g-exit" id="gExit">${L2(T("Exit game","खेल से बाहर"))}</button></div>
       <aside class="g-panel" id="gPanel" aria-live="polite"></aside>
       <div class="g-buddy" id="gBuddy">${BUDDY}<div class="g-say" id="gSay"></div></div>
       <div class="g-zoom"><button data-z="in" aria-label="Zoom in">${icon("plus-b")}</button><button data-z="out" aria-label="Zoom out">${icon("minus-b")}</button><button data-z="home" aria-label="Reset view">${icon("crosshair-simple-b")}</button></div>
@@ -49,10 +49,14 @@ export class Game{
     this.world=new World($("#gWorld",root),$("#gLabels",root));
     this.world.hoverCb=(rec,e)=>this.hover(rec,e);
     this.world.home(0);
-    $("#gLevels",root).innerHTML=LEVELS.map((l,i)=>`<li data-i="${i}"><b>${i+1}</b><span>${L2(l.name)}</span></li>`).join("");
+    $("#gLevels",root).innerHTML=LEVELS.map((l,i)=>`<li data-i="${i}" title="${l.name.en}" role="button" tabindex="0"><b>${i+1}</b><span>${L2(l.name)}</span></li>`).join("");
     $("#gPlay",root).onclick=()=>this.start(false);
     $("#gWatch",root).onclick=()=>this.start(true);
     $("#gExit",root).onclick=()=>this.exit();
+    $("#gReset",root).onclick=()=>this.restart();
+    $("#gLevels",root).addEventListener("click",e=>{const li=e.target.closest("li");if(li&&this.root.classList.contains("playing")){this.watch=false;this.go(+li.dataset.i)}});
+    addEventListener("keydown",e=>{if(!this.root.classList.contains("playing")||e.target.closest("input,select,textarea"))return;
+      if(e.key==="r"||e.key==="R")this.go(this.lv);else if(e.key==="h"||e.key==="H")this.hint();else if((e.key==="n"||e.key==="N")&&this.done)this.go(this.lv+1);else if(e.key==="Escape"&&!document.body.classList.contains("autoplay"))this.exit()});
     $("#gMute",root).onclick=()=>window.FX&&FX.mute(!FX.muted());
     root.addEventListener("click",e=>{const z=e.target.closest("[data-z]");if(!z)return;const w=this.world;z.dataset.z==="in"?w.zoom(.75):z.dataset.z==="out"?w.zoom(1.33):w.home(.8)});
     this.renderBadges();
@@ -60,25 +64,33 @@ export class Game{
   /* ---------- flow ---------- */
   start(watch){this.watch=watch;this.paused=false;this.t0=performance.now();this.root.classList.add("playing");$("#gStart",this.root).classList.add("gone");
     this.world.controls.enableZoom=true;this.onLock&&this.onLock();this.go(0)}
-  exit(){this.root.classList.remove("playing");this.world.controls.enableZoom=false;this.watch=false;this.onUnlock&&this.onUnlock()}
-  async go(i){if(this.lv>=0&&LEVELS[this.lv].leave)await LEVELS[this.lv].leave(this);
-    this.lv=i;this.done=false;const L=LEVELS[i];this.token=(this.token||0)+1;
+  exit(){clearTimeout(this.idleT);this.root.classList.remove("playing");this.world.controls.enableZoom=false;this.watch=false;this.onUnlock&&this.onUnlock()}
+  async go(i){const same=i===this.lv;if(this.lv>=0&&LEVELS[this.lv]&&LEVELS[this.lv].leave)await LEVELS[this.lv].leave(this);
+    if(same&&this.snap){this.ok=this.snap.ok;this.bad=this.snap.bad;this.q()}   /* restarting a level gives its points back */
+    this.lv=i;this.done=false;const L=LEVELS[i];this.token=(this.token||0)+1;this.autoTok=-1;this.armed=null;this.mapTap=null;this.miss=0;
+    clearTimeout(this.idleT);$$(".hint-glow",this.root).forEach(e=>e.classList.remove("hint-glow"));$("#gGhost",this.root).classList.remove("show");
+    if(L){this.snap={ok:this.ok,bad:this.bad};this.world.setStage(L.stage||0)}
     $$("#gLevels li",this.root).forEach((li,j)=>{li.classList.toggle("on",j===i);li.classList.toggle("done",j<i)});
     if(!L){return this.finish()}
     const p=$("#gPanel",this.root);
     p.innerHTML=`<div class="lv-k">${L2(T("Level","स्तर"))} ${i+1}/${LEVELS.length} · ${L2(L.chapter)}</div><h3>${L2(L.title)}</h3><p class="lv-task">${L2(L.task)}</p>
-      <div class="lv-body"></div><div class="lv-act"><button class="lv-show">${icon("lightning")} ${L2(T("Show me","दिखाइए"))}</button><button class="lv-next btn" disabled>${L2(T("Next level","अगला स्तर"))} →</button></div>`;
+      <div class="lv-body"></div><div class="lv-act"><button class="lv-restart" title="R">${icon("arrow-counter-clockwise")}<span class="sr">${L2(T("Restart level","स्तर फिर से"))}</span></button><button class="lv-hint" title="H">${icon("sparkle")} ${L2(T("Hint","संकेत"))}</button><button class="lv-solve" title="${lang()==="hi"?"हल दिखाइए":"Show me the solution"}">${icon("lightning")}<span class="sr">${L2(T("Show me","दिखाइए"))}</span></button><button class="lv-next btn" disabled>${L2(T("Next level","अगला स्तर"))} →</button></div>`;
     p.classList.remove("in");void p.offsetWidth;p.classList.add("in");window.FX&&FX.sound("whoosh");
-    $(".lv-show",p).onclick=()=>this.autoRun();
+    $(".lv-solve",p).onclick=()=>this.autoRun();$(".lv-hint",p).onclick=()=>this.hint();$(".lv-restart",p).onclick=()=>this.go(i);
     $(".lv-next",p).onclick=()=>this.go(i+1);
     this.say(L.say);
-    await L.enter(this,$(".lv-body",p));
-    if(this.watch)this.autoRun();}
-  async autoRun(){const L=LEVELS[this.lv],tk=this.token;if(!L||this.done||this.autoTok===tk)return;this.autoTok=tk;$(".lv-show",this.root)?.setAttribute("disabled","");
+    const tk=this.token;await L.enter(this,$(".lv-body",p));if(tk!==this.token)return;
+    if(this.watch)this.autoRun();else this.idle()}
+  /* ---------- help: one-step hints, offered by themselves when the player is stuck ---------- */
+  idle(){clearTimeout(this.idleT);if(this.watch||this.done)return;this.idleT=setTimeout(()=>{if(!this.done&&!this.watch){this.hint();this.idle()}},12000)}
+  hint(){const L=LEVELS[this.lv];if(!L||this.done||!L.hint)return;$$(".hint-glow",this.root).forEach(e=>e.classList.remove("hint-glow"));
+    const r=L.hint(this);(Array.isArray(r)?r:[r]).filter(Boolean).forEach(el=>{el.classList.remove("hint-glow");void el.offsetWidth;el.classList.add("hint-glow")});window.FX&&FX.sound("tap")}
+  restart(){this.watch=false;this.ok=0;this.bad=0;this.q();$("#gQ",this.root).textContent="—";this.badges.clear();this.renderBadges();this.t0=performance.now();this.snap=null;this.lv=-1;this.field=null;this.go(0)}
+  async autoRun(){const L=LEVELS[this.lv],tk=this.token;if(!L||this.done||this.autoTok===tk)return;this.autoTok=tk;$(".lv-solve",this.root)?.setAttribute("disabled","");
     await this.wait(this.watch?1400:200);if(tk!==this.token)return;await L.auto(this,tk)}
   complete(){if(this.done)return;this.done=true;window.FX&&FX.sound("done");const L=LEVELS[this.lv],tk=this.token;
     this.badge(L.badge);const n=$(".lv-next",this.root);if(n){n.disabled=false;n.classList.add("pulse")}
-    $(".lv-show",this.root)?.setAttribute("disabled","");
+    $$(".lv-solve,.lv-hint",this.root).forEach(b=>b.setAttribute("disabled",""));clearTimeout(this.idleT);$$(".hint-glow",this.root).forEach(e=>e.classList.remove("hint-glow"));
     if(L.win)this.say(L.win);
     if(this.watch)this.wait(L.hold||2200).then(()=>{if(tk===this.token&&this.watch)this.go(this.lv+1)})}
   async finish(){const w=this.world,p=$("#gPanel",this.root),secs=Math.round((performance.now()-this.t0)/1000);
@@ -91,14 +103,14 @@ export class Game{
       <div class="lv-act col"><button class="btn" id="gCard">${icon("download-simple")} ${L2(T("Download your map card","अपना मैप कार्ड डाउनलोड करें"))}</button>
       <button class="lv-show" id="gAgain">${icon("arrow-counter-clockwise")} ${L2(T("Play again","फिर से खेलें"))}</button><button class="lv-show" id="gOut">${L2(T("Continue the story","कहानी आगे देखें"))} ↓</button></div>`;
     if(window.FX){const b=$$(".end-stats b",p);const qn=parseInt(q)||0;FX.count(b[0],qn,{suffix:q.includes("%")?"%":""});FX.count(b[1],this.badges.size,{suffix:"/8"})}
-    $("#gCard",p).onclick=()=>this.card();$("#gAgain",p).onclick=()=>location.reload();$("#gOut",p).onclick=()=>{this.exit();this.onFinish&&this.onFinish(true)};
+    $("#gCard",p).onclick=()=>this.card();$("#gAgain",p).onclick=()=>this.restart();$("#gOut",p).onclick=()=>{this.exit();this.onFinish&&this.onFinish(true)};
     this.say(T("The map listens to the ground, and the ground benefits from the map. Thank you for building it with me!","नक्शा ज़मीन की सुनता है, और ज़मीन को नक्शे से लाभ मिलता है। मेरे साथ इसे बनाने के लिए धन्यवाद!"));
     if(this.watch)this.wait(5000).then(()=>{if(this.watch){this.exit();this.onFinish&&this.onFinish(false)}})}
   /* ---------- helpers ---------- */
   wait(ms){return new Promise(r=>{const t0=performance.now();let acc=0,last=t0;const tick=n=>{if(!this.paused)acc+=n-last;last=n;acc>=ms?r():requestAnimationFrame(tick)};requestAnimationFrame(tick)})}
   setPaused(v){this.paused=v;this.root.classList.toggle("paused",v)}
-  good(n=1,el){this.ok+=n;this.q();window.FX&&FX.good(el)}
-  oops(el){this.bad++;this.q();window.FX&&FX.bad(el);this.root.classList.remove("shake");void this.root.offsetWidth;this.root.classList.add("shake")}
+  good(n=1,el){this.ok+=n;this.q();window.FX&&FX.good(el);this.miss=0;$$(".hint-glow",this.root).forEach(e=>e.classList.remove("hint-glow"));this.idle()}
+  oops(el){this.bad++;this.q();if(++this.miss>=2){this.miss=0;setTimeout(()=>this.hint(),700)}window.FX&&FX.bad(el);this.root.classList.remove("shake");void this.root.offsetWidth;this.root.classList.add("shake")}
   quality(){const t=this.ok+this.bad;return t?Math.round(100*this.ok/t)+"%":"—"}
   q(){$("#gQ",this.root).textContent=this.quality();const t=this.ok+this.bad,p=t?this.ok/t:0,fg=$(".g-q .fg",this.root);
     fg.style.strokeDashoffset=88*(1-p);fg.style.stroke=p>.85?"var(--ok)":p>.6?"var(--cta)":"var(--bad)";const w=$("#gQwrap",this.root);w.classList.remove("bump");void w.offsetWidth;w.classList.add("bump")}
@@ -156,7 +168,7 @@ function flyEl(el,to,root,{dur=.55,remove=true}={}){const a=el.getBoundingClient
 /* ---------------- levels ---------------- */
 const LEVELS=[
 /* 1 · COLLECT */
-{id:"collect",badge:"collect",name:T("Collect","संग्रह"),chapter:T("Data creation","डेटा निर्माण"),
+{id:"collect",stage:0,badge:"collect",name:T("Collect","संग्रह"),chapter:T("Data creation","डेटा निर्माण"),
  title:T("Departments are sending their data","विभाग अपना डेटा भेज रहे हैं"),
  task:T("Click each file to bring it into the inbox. Boundaries first make a good frame!","हर फ़ाइल पर क्लिक करके उसे इनबॉक्स में लाएँ। पहले सीमाएँ लाना अच्छा रहेगा!"),
  say:T("Hi, I'm Bindu, a map pin! For years Chhattisgarh's map lived in paper sheets, registers and spreadsheets, spread across departments. Let's bring it all in.","नमस्ते, मैं बिंदु हूँ, एक मैप पिन! वर्षों तक छत्तीसगढ़ का नक्शा कागज़ी शीटों, रजिस्टरों और स्प्रेडशीट में, अलग-अलग विभागों में बिखरा रहा। चलिए, सब एक जगह लाते हैं।"),
@@ -169,28 +181,30 @@ const LEVELS=[
      if(f.k==="bound"){g.say(T("Boundaries from Revenue: the frame every other layer sits in. Watch the 33 districts drop in.","राजस्व से सीमाएँ: वह ढाँचा जिसमें बाकी हर परत बैठती है। 33 ज़िलों को आते देखिए।"));g.world.dropDistricts()}
      if(n===FILES.length){if(!g.world.districts[0].group.visible)g.world.dropDistricts();g.complete()}};
    $$(".file",body).forEach(b=>b.onclick=()=>this.take(b))},
+ hint(g){return $(".file:not(.gone)",g.root)},
  async auto(g,tk){const order=[0,1,2,3,4,5,6,7];for(const i of order){if(tk!==g.token)return;const b=$(`.file[data-i="${i}"]`,g.root);if(b&&!b.classList.contains("gone")){await this.take(b);await g.wait(i===0?1400:420)}}}},
 
 /* 2 · SORT */
-{id:"sort",badge:"sort",name:T("Sort","छँटाई"),chapter:T("Conversion","रूपांतरण"),
+{id:"sort",stage:1,badge:"sort",name:T("Sort","छँटाई"),chapter:T("Conversion","रूपांतरण"),
  title:T("Give every record a shape and a shelf","हर रिकॉर्ड को आकार और जगह दें"),
  task:T("Drag each record onto its layer (or tap the record, then the layer). Anything broken goes to Fix.","हर रिकॉर्ड को उसकी परत पर खींचें (या रिकॉर्ड, फिर परत पर टैप करें)। जो टूटा है वह 'सुधारें' में जाए।"),
  say:T("Converting old records means giving each one a shape, a point, a line or an outline, and a home layer. Careful: three of these are broken.","पुराने रिकॉर्ड को बदलने का मतलब है हर एक को आकार देना, बिंदु, रेखा या रूपरेखा, और उसकी परत। ध्यान दें: इनमें तीन टूटे हुए हैं।"),
  win:T("Sorted! Tracing a drawing onto a computer so it can be zoomed, searched and shared: that's digitisation.","छँट गया! चित्र को कंप्यूटर पर उतारना ताकि उसे ज़ूम, खोज और साझा किया जा सके: यही अंकीयकरण है।"),
  async enter(g,body){g.world.fly([0,84,80],[0,0,4],1.4);
-   const BINS=[{k:"bound",n:T("Boundaries","सीमाएँ"),s:"polygon"},{k:"water",n:T("Water","जल"),s:"wave-sine"},{k:"move",n:T("Roads & rail","सड़क और रेल"),s:"road-horizon"},{k:"fac",n:T("Facilities","सुविधाएँ"),s:"buildings"},{k:"fix",n:T("Fix","सुधारें"),s:"warning"}];
+   const BINS=[{k:"bound",n:T("Boundaries","सीमाएँ"),s:"polygon",d:T("outlines","रूपरेखा")},{k:"water",n:T("Water","जल"),s:"wave-sine",d:T("rivers","नदियाँ")},{k:"move",n:T("Roads & rail","सड़क और रेल"),s:"road-horizon",d:T("lines","रेखाएँ")},{k:"fac",n:T("Facilities","सुविधाएँ"),s:"buildings",d:T("buildings","भवन")},{k:"fix",n:T("Fix","सुधारें"),s:"warning",d:T("broken","टूटे")}];
    const REC=[{t:T("Raipur district boundary","रायपुर ज़िला सीमा"),k:"bound"},{t:T("Mahanadi river","महानदी"),k:"water"},{t:T("Govt. Primary School, Mana","शासकीय प्राथमिक शाला, माना"),k:"fac"},
      {t:T("School: latitude and longitude swapped","स्कूल: अक्षांश और देशांतर उलटे"),k:"fix"},{t:T("Highway, Raipur to Jagdalpur","राजमार्ग, रायपुर से जगदलपुर"),k:"move"},{t:T("Bastar district boundary","बस्तर ज़िला सीमा"),k:"bound"},
      {t:T("Indravati river","इंद्रावती नदी"),k:"water"},{t:T("Anganwadi: location blank (0°, 0°)","आंगनवाड़ी: स्थान खाली (0°, 0°)"),k:"fix"},{t:T("Primary Health Centre, Abhanpur","प्राथमिक स्वास्थ्य केंद्र, अभनपुर"),k:"fac"},
      {t:T("Rail line, Bilaspur to Raipur","रेल लाइन, बिलासपुर से रायपुर"),k:"move"},{t:T("Health centre: no projection file (.prj)","स्वास्थ्य केंद्र: प्रोजेक्शन फ़ाइल (.prj) नहीं"),k:"fix"},{t:T("Anganwadi AWC-RPR-00412","आंगनवाड़ी AWC-RPR-00412"),k:"fac"}];
    const HINT={bound:T("Outlines of areas go to Boundaries.","क्षेत्रों की रूपरेखा 'सीमाएँ' में जाती है।"),water:T("Rivers are lines on the Water layer.","नदियाँ 'जल' परत पर रेखाएँ हैं।"),move:T("Roads and rail are lines on Roads & rail.","सड़क और रेल 'सड़क और रेल' पर रेखाएँ हैं।"),fac:T("A building is a point on Facilities.","भवन 'सुविधाएँ' पर एक बिंदु है।"),fix:T("Look again: that record has a problem. It goes to Fix.","फिर देखें: उस रिकॉर्ड में समस्या है। वह 'सुधारें' में जाएगा।")};
    body.innerHTML=`<div class="recs">${REC.map((r,i)=>`<button class="rec" data-i="${i}" data-k="${r.k}">${L2(r.t)}</button>`).join("")}</div>
-     <div class="bins">${BINS.map(b=>`<div class="bin" data-k="${b.k}"><i>${icon(b.s)}</i><b>${L2(b.n)}</b><em>0</em></div>`).join("")}</div>`;
+     <div class="bins">${BINS.map(b=>`<div class="bin" data-k="${b.k}"><i>${icon(b.s)}</i><b>${L2(b.n)}</b><small>${L2(b.d)}</small><em>0</em></div>`).join("")}</div>`;
    let left=REC.length,sel=null;const gh=$("#gGhost",g.root);
    const put=async(card,bin)=>{const k=card.dataset.k;if(bin.dataset.k!==k){g.oops();card.classList.remove("wob");void card.offsetWidth;card.classList.add("wob");g.say(HINT[k]);return false}
      await flyEl(card,bin,g.root,{dur:.4});const em=$("em",bin);em.textContent=+em.textContent+1;bin.classList.remove("bump");void bin.offsetWidth;bin.classList.add("bump");g.good();
      if(--left===0)g.complete();return true};
    this.put=put;
+   this.pick=()=>{const c=$(".rec:not(.gone)",body);if(!c)return[];$$(".rec",body).forEach(x=>x.classList.remove("sel"));c.classList.add("sel");sel=c;return[c,$(`.bin[data-k="${c.dataset.k}"]`,body)]};
    $$(".rec",body).forEach(card=>{card.addEventListener("pointerdown",e=>{if(card.classList.contains("gone"))return;e.preventDefault();const r=g.root.getBoundingClientRect();
      gh.innerHTML=`<div class="rec">${card.innerHTML}</div>`;gh.classList.add("show");const mv=ev=>{gh.style.transform=`translate(${ev.clientX-r.left}px,${ev.clientY-r.top}px)`;$$(".bin",body).forEach(b=>b.classList.toggle("hov",b===document.elementFromPoint(ev.clientX,ev.clientY)?.closest(".bin")))};mv(e);
      const up=ev=>{removeEventListener("pointermove",mv);removeEventListener("pointerup",up);gh.classList.remove("show");$$(".bin",body).forEach(b=>b.classList.remove("hov"));
@@ -198,10 +212,11 @@ const LEVELS=[
        if(bin&&Math.hypot(ev.clientX-e.clientX,ev.clientY-e.clientY)>8)put(card,bin);else{$$(".rec",body).forEach(c=>c.classList.remove("sel"));card.classList.add("sel");sel=card}};
      addEventListener("pointermove",mv);addEventListener("pointerup",up)})});
    $$(".bin",body).forEach(bin=>bin.addEventListener("click",()=>{if(sel){const c=sel;sel=null;c.classList.remove("sel");put(c,bin)}}))},
+ hint(g){g.say(T("Tap the glowing record, then the glowing shelf.","चमकते रिकॉर्ड पर, फिर चमकती शेल्फ़ पर टैप करें।"));return this.pick()},
  async auto(g,tk){for(const card of $$(".rec:not(.gone)",g.root)){if(tk!==g.token)return;await this.put(card,$(`.bin[data-k="${card.dataset.k}"]`,g.root));await g.wait(230)}}},
 
 /* 3 · PINPOINT */
-{id:"pin",badge:"pin",name:T("Pinpoint","सटीक स्थान"),chapter:T("Georeferencing","भू-संदर्भ"),
+{id:"pin",stage:1,badge:"pin",name:T("Pinpoint","सटीक स्थान"),chapter:T("Georeferencing","भू-संदर्भ"),
  title:T("Put the lost records back on the ground","भटके रिकॉर्ड को ज़मीन पर वापस रखें"),
  task:T("Three broken records landed far away. Drag each pin onto its district (or tap the pin, then the district).","तीन टूटे रिकॉर्ड बहुत दूर जा गिरे। हर पिन को उसके ज़िले पर खींचें (या पिन, फिर ज़िले पर टैप करें)।"),
  say:T("Swapped latitude and longitude sends a school about 7,200 km north. A blank location drops it at 0°, 0°, in the ocean. Every shape must sit on its true spot.","अक्षांश-देशांतर उलटने से स्कूल लगभग 7,200 किमी उत्तर पहुँच जाता है। खाली स्थान उसे 0°, 0° पर, समुद्र में गिरा देता है। हर आकृति अपनी सही जगह होनी चाहिए।"),
@@ -215,25 +230,33 @@ const LEVELS=[
    body.innerHTML=`<div class="pins">${R.map((r,i)=>`<div class="pinc" data-i="${i}"><span class="pin-h">${icon("map-pin")}</span><div><b>${L2(r.t)}</b><span>${L2(T("belongs in","यहाँ का है:"))} <em>${L2(DN(r.d))}</em></span><small>${L2(r.e)}</small></div></div>`).join("")}</div>`;
    const place=async(i)=>{const r=R[i],card=$(`.pinc[data-i="${i}"]`,body);if(card.classList.contains("ok"))return;card.classList.add("ok");w.unlabel(r.lab);
      await w.movePin(r.pin,r.ll,1);w.pinColor(r.pin,0x2e9b5a);w.highlight(r.d,0x2e9b5a);setTimeout(()=>w.highlight(null),900);g.good();
-     if(--left===0)g.complete()};
+     if(--left===0){w.home(1.2);g.complete()}};
    this.place=place;
+   const near=(h,r)=>h&&(h.rec.name===r.d||Math.hypot(h.lonlat[0]-r.ll[0],h.lonlat[1]-r.ll[1])<.5);
+   $$(".pinc",body).forEach(card=>card.addEventListener("pointerdown",()=>{if(card.classList.contains("ok"))return;const r=R[+card.dataset.i];w.highlight(r.d,0xffb45a);
+     g.say(T(`Now drop it on ${r.d}: the glowing district.`,`अब इसे ${HI[r.d]} पर छोड़ें: चमकता ज़िला।`))}));
+   this.pick=()=>{const i=R.findIndex((r,j)=>!$(`.pinc[data-i="${j}"]`,body).classList.contains("ok"));if(i<0)return[];const r=R[i],card=$(`.pinc[data-i="${i}"]`,body);
+     $$(".pinc",body).forEach(c=>c.classList.remove("sel"));card.classList.add("sel");w.highlight(r.d,0xffb45a);w.flyTo(r.d,1.2);
+     g.armed=(x,y)=>{card.classList.remove("sel");const h=w.pick(x,y);if(near(h,r))place(i);else{g.oops();w.highlight(r.d,0xffb45a)}};
+     g.say(T(`Tap ${r.d} on the map: it's glowing.`,`नक्शे पर ${HI[r.d]} पर टैप करें: वह चमक रहा है।`));return[card]};
    $$(".pinc",body).forEach(card=>g.dragToMap(card,h=>{const r=R[+card.dataset.i];
-     if(h&&h.rec.name===r.d)place(+card.dataset.i);
+     if(near(h,r))place(+card.dataset.i);
      else{g.oops();if(h)w.highlight(h.rec.name,0xd2423a);setTimeout(()=>w.highlight(r.d,0x2e9b5a),500);setTimeout(()=>w.highlight(null),2200);
        g.say(T(`Not quite. ${r.t.en} is in ${r.d}: look for the glowing district.`,`थोड़ा चूक गए। ${r.t.hi} ${HI[r.d]} में है: चमकता ज़िला देखें।`))}}));
    if(!g._tapArmed){g._tapArmed=true;g.armMapTap()}},
+ hint(g){return this.pick()},
  async auto(g,tk){for(let i=0;i<3;i++){if(tk!==g.token)return;await this.place(i);await g.wait(500)}},
  leave(g){(this.R||[]).forEach(r=>{g.world.unlabel(r.lab);g.world.removePin(r.pin)})}},
 
 /* 4 · MERGE */
-{id:"merge",badge:"merge",name:T("Merge","विलय"),chapter:T("Geodatabase","भू-डेटाबेस"),
+{id:"merge",stage:1,badge:"merge",name:T("Merge","विलय"),chapter:T("Geodatabase","भू-डेटाबेस"),
  title:T("Stack the layers into one geodatabase","परतों को एक भू-डेटाबेस में जमाएँ"),
  task:T("Boundaries are at the bottom. Tap the other layers from the bottom up: areas first, then lines, then points.","सीमाएँ सबसे नीचे हैं। बाकी परतें नीचे से ऊपर टैप करें: पहले क्षेत्र, फिर रेखाएँ, फिर बिंदु।"),
  say:T("A geodatabase is one safe home for every layer. It stores each fact and where it sits on the earth, in an order that keeps the map readable.","भू-डेटाबेस हर परत का एक सुरक्षित घर है। यह हर तथ्य और पृथ्वी पर उसकी जगह को ऐसे क्रम में रखता है कि नक्शा पढ़ने योग्य रहे।"),
  win:T("One home, one copy. The geodatabase also checks every record at the door: inside its boundary, clean geometry, no blank fields.","एक घर, एक प्रति। भू-डेटाबेस हर रिकॉर्ड को दरवाज़े पर जाँचता भी है: सीमा के भीतर, साफ़ ज्यामिति, कोई खाली फ़ील्ड नहीं।"),
  async enter(g,body){const w=g.world;w.showDistrictsNow();w.fly([0,74,86],[0,2,4],1.4);
    const S=[{k:"forest",n:T("Forest cover","वन आवरण"),t:T("area","क्षेत्र"),r:1},{k:"rivers",n:T("Rivers","नदियाँ"),t:T("line","रेखा"),r:2},{k:"move",n:T("Roads & rail","सड़क और रेल"),t:T("line","रेखा"),r:2},{k:"fac",n:T("Facilities","सुविधाएँ"),t:T("point","बिंदु"),r:3}];
-   body.innerHTML=`<div class="stackui"><div class="sheets">${shuffle(S,3).map(s=>`<button class="sheet" data-k="${s.k}" data-r="${s.r}"><b>${L2(s.n)}</b><i>${L2(s.t)}</i></button>`).join("")}</div>
+   body.innerHTML=`<div class="stackui"><div class="sheets">${shuffle(S,3).map(s=>`<button class="sheet" data-k="${s.k}" data-r="${s.r}"><span class="ord">${s.r}</span><b>${L2(s.n)}</b><i>${L2(s.t)}</i></button>`).join("")}</div>
      <ol class="tower"><li class="base"><b>${L2(T("Boundaries","सीमाएँ"))}</b><i>${L2(T("area","क्षेत्र"))}</i></li></ol>
      <div class="gate"><span>${icon("lock-key")} ${L2(T("Rules at the door","प्रवेश पर नियम"))}</span><em>${icon("check-circle")} ${L2(T("inside its boundary","सीमा के भीतर"))}</em><em>${icon("check-circle")} ${L2(T("clean geometry","साफ़ ज्यामिति"))}</em><em>${icon("check-circle")} ${L2(T("no blank fields","कोई खाली फ़ील्ड नहीं"))}</em></div></div>`;
    let need=1;const tower=$(".tower",body);
@@ -244,11 +267,12 @@ const LEVELS=[
      this.busy=false;
      if(r===1)need=2;if(r===2&&$$(".sheet[data-r='2']:not(.gone)",body).length===0)need=3;
      if($$(".sheet:not(.gone)",body).length===0){$(".gate",body).classList.add("on");g.complete()}};
-   this.tap=tap;$$(".sheet",body).forEach(b=>b.onclick=()=>tap(b))},
+   this.tap=tap;this.next=()=>$$(".sheet:not(.gone)",body).find(b=>+b.dataset.r===need);$$(".sheet",body).forEach(b=>b.onclick=()=>tap(b))},
+ hint(g){return this.next()},
  async auto(g,tk){for(const k of ["forest","rivers","move","fac"]){if(tk!==g.token)return;await this.tap($(`.sheet[data-k="${k}"]`,g.root));await g.wait(300)}}},
 
 /* 5 · PUBLISH */
-{id:"publish",badge:"publish",name:T("Publish","प्रकाशन"),chapter:T("Geo Portal","जियोपोर्टल"),hold:2600,
+{id:"publish",stage:4,badge:"publish",name:T("Publish","प्रकाशन"),chapter:T("Geo Portal","जियोपोर्टल"),hold:2600,
  title:T("Open it to everyone: the Geoportal","सबके लिए खोलें: जियोपोर्टल"),
  task:T("Try three things: switch a layer, search a district, ask a question.","तीन चीज़ें आज़माएँ: एक परत बदलें, एक ज़िला खोजें, एक प्रश्न पूछें।"),
  say:T("Data locked in a database helps no one. The portal puts this same map in every browser, for departments and citizens alike, and it follows GIGW and WCAG so everyone can use it.","डेटाबेस में बंद डेटा किसी के काम नहीं आता। पोर्टल यही नक्शा हर ब्राउज़र में पहुँचाता है, विभागों और नागरिकों दोनों के लिए, और GIGW व WCAG का पालन करता है ताकि हर कोई इसे चला सके।"),
@@ -275,34 +299,36 @@ const LEVELS=[
    $(".search",body).onsubmit=e=>{e.preventDefault();const v=$(".search input",body).value.trim().toLowerCase();
      const d=names.find(n=>n.toLowerCase()===v||(HI[n]||"")===v)||names.find(n=>n.toLowerCase().startsWith(v)||(HI[n]||"").startsWith(v));if(d)this.search(d);else g.say(T("I couldn't find that district. Try Bastar or Korba.","वह ज़िला नहीं मिला। बस्तर या कोरबा आज़माएँ।"))};
    $$("[data-q]",body).forEach(b=>b.onclick=()=>this.ask(+b.dataset.q))},
+ hint(g){const c=$(".check li:not(.ok)",g.root);if(!c)return;return({layer:$(".toggles",g.root),search:$(".search",g.root),ask:$(".ask button",g.root)})[c.dataset.c]},
  async auto(g,tk){this.toggle("school",false);await g.wait(900);if(tk!==g.token)return;this.toggle("school",true);await g.wait(500);if(tk!==g.token)return;
    this.search("Bastar");await g.wait(2200);if(tk!==g.token)return;this.ask(0)},
  leave(g){["rivers","roads","rail","trees","school","health","anganwadi"].forEach(k=>g.world.setLayer(k,true));g.world.highlight(null)}},
 
 /* 6 · FIELD */
-{id:"field",badge:"field",name:T("Field","मैदान"),chapter:T("Mobile app","मोबाइल ऐप"),
+{id:"field",stage:4,badge:"field",name:T("Field","मैदान"),chapter:T("Mobile app","मोबाइल ऐप"),
  title:T("Take the map to the field","नक्शा मैदान तक ले जाएँ"),
  task:T("You're a field officer near Abhanpur. Tap the map inside the pulsing ring to record a new Anganwadi centre, then send it for review.","आप अभनपुर के पास एक फ़ील्ड अधिकारी हैं। नया आंगनवाड़ी केंद्र दर्ज करने के लिए धड़कते घेरे के भीतर नक्शे पर टैप करें, फिर समीक्षा के लिए भेजें।"),
  say:T("Not everyone sits at a desk. The mobile app is a field notebook that knows exactly where you are standing.","हर कोई डेस्क पर नहीं बैठता। मोबाइल ऐप एक फ़ील्ड नोटबुक है जो ठीक-ठीक जानती है कि आप कहाँ खड़े हैं।"),
  win:T("Sent! What you capture flows back into the geodatabase after review. The person at the site keeps the map accurate.","भेज दिया! आपका दर्ज किया डेटा समीक्षा के बाद भू-डेटाबेस में लौटता है। साइट पर खड़ा व्यक्ति नक्शे को सटीक रखता है।"),
- async enter(g,body){const w=g.world,HERE=[81.76,21.06];const[hx,hz]=P(...HERE);await w.fly([hx+6,44,hz+42],[hx,0,hz],1.6);
-   this.me=w.addPin(HERE,0x2f6fd6,{ring:true,big:.8});this.meL=w.labelAt(HERE,L2(T("You are here","आप यहाँ हैं")),"me",2.4);
+ async enter(g,body){const w=g.world,HERE=[81.76,21.06];const[hx,hz]=P(...HERE);const tk=g.token;await w.fly([hx+6,44,hz+42],[hx,0,hz],1.6);if(tk!==g.token)return;
+   this.newPin=null;this.me=w.addPin(HERE,0x2f6fd6,{ring:true,big:.8});this.meL=w.labelAt(HERE,L2(T("You are here","आप यहाँ हैं")),"me",2.4);
    body.innerHTML=`<div class="phone"><div class="ph-top"><span>9:41</span><span>●●● 4G</span></div><div class="ph-bar">${L2(T("Field app","फ़ील्ड ऐप"))}</div>
      <div class="ph-body"><p class="ph-gps">GPS <b>21.0600° N, 81.7600° E</b></p><p class="ph-hint">${L2(T("Tap the map inside the ring","घेरे के भीतर नक्शे पर टैप करें"))}</p>
      <div class="ph-form"><label>${L2(T("Type","प्रकार"))}<select><option>${lang()==="hi"?"आंगनवाड़ी केंद्र":"Anganwadi centre"}</option><option>${lang()==="hi"?"स्कूल":"School"}</option><option>${lang()==="hi"?"स्वास्थ्य केंद्र":"Health centre"}</option></select></label>
        <div class="ph-photo">${icon("camera")} ${L2(T("Photo attached","फ़ोटो संलग्न"))}</div><button class="btn ph-send" disabled>${L2(T("Send for review","समीक्षा के लिए भेजें"))}</button></div></div></div>`;
    const send=$(".ph-send",body);
-   this.drop=(ll)=>{const[x,z]=P(...ll),d=Math.hypot(x-hx,z-hz);if(d>3.2){g.oops();g.say(T("That's outside the ring. Field points are recorded where you stand.","यह घेरे के बाहर है। फ़ील्ड बिंदु वहीं दर्ज होते हैं जहाँ आप खड़े हैं।"));return}
+   this.drop=(ll)=>{const[x,z]=P(...ll),d=Math.hypot(x-hx,z-hz);if(d>5){g.oops();g.say(T("That's outside the ring. Field points are recorded where you stand.","यह घेरे के बाहर है। फ़ील्ड बिंदु वहीं दर्ज होते हैं जहाँ आप खड़े हैं।"));return}
      if(this.newPin)w.removePin(this.newPin);this.newPin=w.addPin(ll,0xffc23a,{bob:true});g.field=ll;$(".ph-gps b",body).textContent=`${ll[1].toFixed(4)}° N, ${ll[0].toFixed(4)}° E`;
      body.querySelector(".phone").classList.add("form");send.disabled=false;g.good()};
    this.send=()=>{if(send.disabled)return;send.disabled=true;send.innerHTML=icon("paper-plane-tilt")+" "+L2(T("Sent · waiting for review","भेजा · समीक्षा बाकी"));g.good();g.complete()};
    send.onclick=this.send;
    g.mapTap=(x,y)=>{if(g.lv!==5||g.done)return;const h=w.pick(x,y);if(h)this.drop(h.lonlat)}},
+ hint(g){const ph=$(".phone",g.root);if(ph&&ph.classList.contains("form"))return $(".ph-send",g.root);const[hx,hz]=P(81.76,21.06);g.world.fly([hx+6,44,hz+42],[hx,0,hz],1);g.say(T("Tap anywhere inside the blue pulsing ring around you.","अपने चारों ओर नीले धड़कते घेरे के भीतर कहीं भी टैप करें।"));return $(".ph-hint",g.root)},
  async auto(g,tk){await g.wait(400);if(tk!==g.token)return;this.drop([81.775,21.07]);await g.wait(1300);if(tk!==g.token)return;this.send()},
- leave(g){g.mapTap=null;g.world.removePin(this.me);g.world.unlabel(this.meL)}},
+ leave(g){g.mapTap=null;g.world.removePin(this.me);g.world.unlabel(this.meL);this.me=this.meL=null}},
 
 /* 7 · CARTOGRAPHY */
-{id:"carto",badge:"carto",name:T("Map","नक्शा"),chapter:T("Cartography","मानचित्रकला"),hold:3000,
+{id:"carto",stage:4,badge:"carto",name:T("Map","नक्शा"),chapter:T("Cartography","मानचित्रकला"),hold:3000,
  title:T("Make a map people understand","ऐसा नक्शा बनाएँ जो लोग समझें"),
  task:T("Pick the right colour for rivers, then choose a question for your map.","नदियों के लिए सही रंग चुनें, फिर अपने नक्शे के लिए एक प्रश्न चुनें।"),
  say:T("Raw data is just points and lines. Cartography is the craft of turning it into a map that tells a clear story at a glance.","कच्चा डेटा केवल बिंदु और रेखाएँ हैं। मानचित्रकला उसे ऐसे नक्शे में बदलने की कला है जो एक नज़र में साफ़ कहानी कहे।"),
@@ -323,11 +349,12 @@ const LEVELS=[
      $(".legend",body).innerHTML=`<div class="ramp" style="--a:#${t.r[0].toString(16).padStart(6,"0")};--b:#${t.r[1].toString(16).padStart(6,"0")}"></div><span>${L2(T("Most","सबसे अधिक"))}: <b>${L2(DN(sorted[0][0]))}</b> (${sorted[0][1]})</span><span>${L2(T("Fewest","सबसे कम"))}: <b>${L2(DN(sorted.at(-1)[0]))}</b> (${sorted.at(-1)[1]})</span>`;
      g.good();g.complete()};
    $$(".swatches button",body).forEach(b=>b.onclick=()=>this.swatch(+b.dataset.s));$$(".themes button",body).forEach(b=>b.onclick=()=>this.theme(+b.dataset.t))},
+ hint(g){const b=$(".themes button:not([disabled])",g.root);return b||$(".swatches button[data-s='0']",g.root)},
  async auto(g,tk){this.swatch(0);await g.wait(1200);if(tk!==g.token)return;await this.theme(0)},
  async leave(g){const w=g.world;await w.flatten();["school","health","anganwadi","trees","rivers","roads","rail"].forEach(k=>w.setLayer(k,true));w.riverColor(0x3c8fd6)}},
 
 /* 8 · MAINTAIN */
-{id:"maintain",badge:"maintain",name:T("Maintain","रखरखाव"),chapter:T("Maintenance","रखरखाव"),
+{id:"maintain",stage:4,badge:"maintain",name:T("Maintain","रखरखाव"),chapter:T("Maintenance","रखरखाव"),
  title:T("Keep it running, safe and current","चालू, सुरक्षित और नवीनतम रखें"),
  task:T("Updates are arriving. Read the checks, then publish each one or send it back.","अपडेट आ रहे हैं। जाँच पढ़ें, फिर हर एक को प्रकाशित करें या वापस भेजें।"),
  say:T("A map is never finished. The team keeps the servers running, backs up the data, and checks every update before it goes live.","नक्शा कभी पूरा नहीं होता। टीम सर्वर चालू रखती है, डेटा का बैकअप लेती है, और हर अपडेट को लाइव होने से पहले जाँचती है।"),
@@ -349,5 +376,6 @@ const LEVELS=[
      el.classList.add("done",a);g.good();if(i===0&&this.fp){this.fp.bob=false;w.pinColor(this.fp,0xe39a1f);w.flyTo("Raipur",1.2).then(()=>setTimeout(()=>w.home(1.2),900))}
      if(--left===0)g.complete()};
    $$(".upd",body).forEach(el=>$$("[data-a]",el).forEach(b=>b.onclick=()=>this.decide(+el.dataset.i,b.dataset.a)))},
+ hint(g){const A=["pub","pub","back","back"];const el=$$(".upd",g.root).find(u=>!u.classList.contains("done"));if(!el)return;return $(`[data-a="${A[+el.dataset.i]}"]`,el)},
  async auto(g,tk){for(const[i,a]of[[0,"pub"],[1,"pub"],[2,"back"],[3,"back"]]){if(tk!==g.token)return;this.decide(i,a);await g.wait(i===0?2200:700)}}}
 ];
