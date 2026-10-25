@@ -27,7 +27,8 @@ FILES
   index.html        page shell (preloader, header, orbit stage, game section, outro, auto-play pill)
   content.js        orbit and closing text (EN + HI), portal link, auto-play length
   globe.js          the opening flight (canvas): Earth, satellite, zoom to the districts, Raipur lock-on
-  geo.js            generated (tools/gen-geo.mjs): world land dots, India, state, districts, neighbours,
+  geo.js            generated (tools/gen-geo.mjs): world land dots, India (official boundary, see below), state,
+                    districts, neighbours,
                     rivers/roads/rail clipped to the state, towns
   game/world.js     the 3D diorama: districts, layers, pins, labels, picking, choropleth, snapshot,
                     adaptive quality (drops resolution and shadows on slow machines; ?lowgl forces it)
@@ -54,3 +55,11 @@ URL OPTIONS
 
 REBUILD geo.js
   npm i world-atlas@2 topojson-client d3-geo   then: node site/tools/gen-geo.mjs (from a folder with those node_modules)
+
+INDIA BOUNDARY
+  The India outline and the "inside India" dots use India's official boundary as depicted by the Survey of
+  India: the whole of Jammu & Kashmir and Ladakh, including PoK, Gilgit-Baltistan, Aksai Chin and the Shaksgam
+  Valley, with Lakshadweep and Andaman & Nicobar. Source: DataMeet india-composite.geojson (CC0,
+  github.com/datameet/maps/tree/master/Country), simplified with mapshaper (-simplify 1.5% keep-shapes), tiny
+  islands re-added from the source; stored as tools/india-official.geojson. Do not swap in Natural Earth /
+  world-atlas country outlines for India: they use a different (de facto) line in the north.
