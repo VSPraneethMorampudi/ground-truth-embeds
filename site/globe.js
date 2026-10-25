@@ -29,7 +29,8 @@ document.fonts.ready.then(mkSpr);mkSpr();
 
 const ringLine=(r,close=true)=>({type:close?"Polygon":"LineString",coordinates:close?[r]:r});
 const stateGeo={type:"Polygon",coordinates:G.state};
-const indiaGeo={type:"MultiPolygon",coordinates:G.india.map(r=>[r])};
+const indiaGeo={type:"MultiLineString",coordinates:G.india};
+const ISLES=G.india.filter(r=>{const xs=r.map(p=>p[0]),ys=r.map(p=>p[1]);return Math.max(...xs)-Math.min(...xs)<.15&&Math.max(...ys)-Math.min(...ys)<.15}).map(r=>[r.reduce((s,p)=>s+p[0],0)/r.length,r.reduce((s,p)=>s+p[1],0)/r.length]);   /* official boundary, drawn as outline */
 const distGeo=G.districts.map(d=>({n:d.n,g:{type:"MultiPolygon",coordinates:d.r.map(r=>[r])},c:d3.geoCentroid({type:"MultiPolygon",coordinates:d.r.map(r=>[r])})}));
 const neighGeo=G.neigh.filter(n=>n.n!=="Chhattisgarh").map(n=>({n:n.n,g:{type:"MultiPolygon",coordinates:n.r.map(r=>[r])},c:d3.geoCentroid({type:"MultiPolygon",coordinates:n.r.map(r=>[r])})}));
 const stateLen=G.state[0].length;
@@ -87,7 +88,9 @@ function frame(now){requestAnimationFrame(frame);if(!visible)return;
       ctx.globalAlpha=aI*(G.ind[i+2]?.8:.25);ctx.fillStyle=G.ind[i+2]?SP.dot:SP.dim;ctx.fillRect(q[0]-rr/2,q[1]-rr/2,rr,rr)}ctx.globalAlpha=1}
   /* India outline */
   const aIO=seg(K,1.4,3)*(1-seg(K,20,40));
-  if(aIO>0){ctx.globalAlpha=aIO*.7;ctx.strokeStyle=SP.line;ctx.lineWidth=1;ctx.beginPath();path(indiaGeo);ctx.stroke();ctx.globalAlpha=1}
+  if(aIO>0){ctx.globalAlpha=aIO*.7;ctx.strokeStyle=SP.line;ctx.lineWidth=1;ctx.beginPath();path(indiaGeo);ctx.stroke();
+    /* tiny islands (Lakshadweep, small Andaman & Nicobar islands) would vanish at this scale: mark each with a dot */
+    ctx.fillStyle=SP.line;ISLES.forEach(c=>{const q=proj(c);if(q)ctx.fillRect(q[0]-1.2,q[1]-1.2,2.4,2.4)});ctx.globalAlpha=1}
   /* neighbouring states */
   const aN=seg(K,8,14);
   if(aN>0){ctx.globalAlpha=aN*.35;ctx.strokeStyle=SP.neigh;ctx.lineWidth=.8;ctx.setLineDash([3,4]);ctx.beginPath();neighGeo.forEach(n=>path(n.g));ctx.stroke();ctx.setLineDash([]);
