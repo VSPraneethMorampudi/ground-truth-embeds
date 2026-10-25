@@ -11,9 +11,10 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;700;800&family=JetBrains+Mono:wght@500&family=Noto+Sans+Devanagari:wght@400;600;800&family=Tiro+Devanagari+Hindi:ital@0;1&display=swap">
 <link rel="stylesheet" href="vendor/lenis.css">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="game/game.css">
 </head>
 <body class="loading">
-<a class="skip" href="#ground">Skip the flight</a>
+<a class="skip" href="#game">Skip to the game</a>
 
 <div id="pre" aria-hidden="true">
   <div class="pre-in"><div class="pre-n"><span id="preN">00</span><small>%</small></div>
@@ -34,8 +35,6 @@
   </div>
 </header>
 
-<nav id="rail" aria-label="Chapters"></nav>
-
 <section id="orbit" aria-label="Opening: from orbit to Raipur">
   <div class="ostick">
     <canvas id="globe" aria-hidden="true"></canvas>
@@ -55,14 +54,16 @@
   </div>
 </section>
 
-<main id="ground"></main>
+<main id="ground">
+  <section id="game" aria-label="The game: build the state map"></section>
+  <section id="outro"></section>
+</main>
 
 <div id="ap" hidden role="region" aria-label="Auto-play">
   <button id="apPrev" aria-label="Previous">⏮</button><button id="apPlay" class="main" aria-label="Pause">❚❚</button><button id="apNext" aria-label="Next">⏭</button>
   <div class="ap-mid"><div class="ap-top"><span id="apLab"></span><span class="ap-hint"></span><span id="apTime">0:00 / 3:00</span></div><div id="apSegs"></div></div>
   <button id="apFull" aria-label="Full screen">⛶</button><button id="apStop" aria-label="Stop auto-play">✕</button>
 </div>
-<div id="toast" role="status" aria-live="polite"></div>
 
 <script src="vendor/gsap.min.js"></script>
 <script src="vendor/ScrollTrigger.min.js"></script>
@@ -73,5 +74,11 @@
 <script src="content.js"></script>
 <script src="globe.js"></script>
 <script src="app.js"></script>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
+<script type="module">
+  import {Game} from "./game/game.js";
+  const H=window.GT_HOOKS;
+  window.GTGame=new Game(document.getElementById("game"),{onLock:H.lock,onUnlock:H.unlock,onFinish:H.finish});
+</script>
 </body>
 </html>

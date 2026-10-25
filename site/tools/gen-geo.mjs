@@ -16,7 +16,13 @@ const pip=(pt,rings)=>{let ins=false;for(const ring of rings)for(let i=0,j=ring.
 const cg=[];for(let la=17.7;la<=24.2;la+=.055)for(let lo=80.2;lo<=84.5;lo+=.055){if(pip([lo,la],st.coordinates))cg.push(r3(lo),r3(la))}
 const ring=g=>(g.type==='Polygon'?[g.coordinates]:g.coordinates).map(p=>p[0].map(([x,y])=>[r3(x),r3(y)]));
 const simp=(pts,k)=>pts.filter((_,i)=>i%k===0||i===pts.length-1);
-const out={globe,ind,cg,
+// lines clipped to the state (runs of vertices inside it), for the game world
+const clip=(f)=>{const g=JSON.parse(fs.readFileSync(R+f)).features,out=[];
+  for(const ft of g){const ls=ft.geometry.type==='LineString'?[ft.geometry.coordinates]:ft.geometry.coordinates;
+    for(const l of ls){let run=[];for(const p of l){if(pip(p,st.coordinates))run.push([r3(p[0]),r3(p[1])]);else{if(run.length>1)out.push({n:ft.properties.name||'',p:run});run=[]}}if(run.length>1)out.push({n:ft.properties.name||'',p:run})}}
+  return out};
+const towns=JSON.parse(fs.readFileSync(R+'cg_places.json')).features.filter(f=>f.properties.adm1name==='Chhattisgarh').map(f=>({n:f.properties.name,c:f.geometry.coordinates.map(r3)}));
+const out={globe,ind,cg,rivers:clip('cg_ne_10m_rivers_lake_centerlines.json'),roads:clip('cg_ne_10m_roads.json'),rail:clip('cg_ne_10m_railroads.json'),towns,
   state:ring(st).map(p=>simp(p,1)),
   india:ring(india.geometry).filter(p=>p.length>40).map(p=>simp(p,2)),
   districts:dis.features.map(f=>({n:f.properties.district,r:ring(f.geometry).map(p=>simp(p,2))})),
