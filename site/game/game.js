@@ -99,7 +99,7 @@ export class Game{
   quality(){const t=this.ok+this.bad;return t?Math.round(100*this.ok/t)+"%":"—"}
   q(){$("#gQ",this.root).textContent=this.quality()}
   say(o){const el=$("#gSay",this.root),b=$("#gBuddy",this.root);this.lastSay=o;el.innerHTML=L2(o);b.classList.remove("talk");void b.offsetWidth;b.classList.add("talk");
-    if(REDUCE)return;const span=$(`[lang="${lang()}"]`,el);if(!span)return;const full=span.textContent;span.textContent="";let i=0;clearInterval(this.typer);
+    if(REDUCE)return;const span=$(`[lang="${lang()}"]`,el);if(!span)return;const full=span.textContent;span.textContent=full.slice(0,2);let i=2;clearInterval(this.typer);
     this.typer=setInterval(()=>{i+=2;span.textContent=full.slice(0,i);if(i>=full.length)clearInterval(this.typer)},16)}
   relang(){if(this.lastSay){const el=$("#gSay",this.root);el.innerHTML=L2(this.lastSay)}}
   badge(id){if(this.badges.has(id))return;this.badges.add(id);const b=BADGES.find(x=>x.id===id),pop=$("#gPop",this.root);
@@ -203,9 +203,9 @@ const LEVELS=[
  say:T("Swapped latitude and longitude sends a school about 7,200 km north. A blank location drops it at 0°, 0°, in the ocean. Every shape must sit on its true spot.","अक्षांश-देशांतर उलटने से स्कूल लगभग 7,200 किमी उत्तर पहुँच जाता है। खाली स्थान उसे 0°, 0° पर, समुद्र में गिरा देता है। हर आकृति अपनी सही जगह होनी चाहिए।"),
  win:T("Every record is back on its true spot, lined up with satellite images and every other layer.","हर रिकॉर्ड अपनी सही जगह लौट आया, उपग्रह चित्रों और बाकी हर परत के साथ।"),
  async enter(g,body){const w=g.world;w.showDistrictsNow();w.home(1.4);
-   const R=[{t:T("School, Mana","स्कूल, माना"),d:"Raipur",ll:[81.72,21.18],e:T("≈ 7,200 km north · lat/long swapped","≈ 7,200 किमी उत्तर · अक्षांश/देशांतर उलटे"),at:[0,16,-62]},
-            {t:T("Anganwadi AWC-BST-00118","आंगनवाड़ी AWC-BST-00118"),d:"Bastar",ll:[81.95,19.15],e:T("≈ 9,100 km west · blank = 0°, 0°","≈ 9,100 किमी पश्चिम · खाली = 0°, 0°"),at:[-62,16,10]},
-            {t:T("Health centre, Pathalgaon","स्वास्थ्य केंद्र, पत्थलगांव"),d:"Jashpur",ll:[83.46,22.56],e:T("off the map · no .prj","नक्शे से बाहर · .prj नहीं"),at:[60,16,-20]}];
+   const R=[{t:T("School, Mana","स्कूल, माना"),d:"Raipur",ll:[81.72,21.18],e:T("≈ 7,200 km north · lat/long swapped","≈ 7,200 किमी उत्तर · अक्षांश/देशांतर उलटे"),at:[-14,9,-40]},
+            {t:T("Anganwadi AWC-BST-00118","आंगनवाड़ी AWC-BST-00118"),d:"Bastar",ll:[81.95,19.15],e:T("≈ 9,100 km west · blank = 0°, 0°","≈ 9,100 किमी पश्चिम · खाली = 0°, 0°"),at:[-38,9,14]},
+            {t:T("Health centre, Pathalgaon","स्वास्थ्य केंद्र, पत्थलगांव"),d:"Jashpur",ll:[83.46,22.56],e:T("off the map · no .prj","नक्शे से बाहर · .prj नहीं"),at:[30,9,-30]}];
    this.R=R;let left=R.length;
    R.forEach(r=>{r.pin=w.addPin([82,21],0xd2423a,{bob:true,big:1.3});w.pinAt(r.pin,...r.at);r.lab=w.label(`<b>${L2(r.t)}</b><span>${L2(r.e)}</span>`,[r.at[0],r.at[1]+4,r.at[2]],"lost")});
    body.innerHTML=`<div class="pins">${R.map((r,i)=>`<div class="pinc" data-i="${i}"><span class="pin-h">📍</span><div><b>${L2(r.t)}</b><span>${L2(T("belongs in","यहाँ का है:"))} <em>${L2(DN(r.d))}</em></span><small>${L2(r.e)}</small></div></div>`).join("")}</div>`;
