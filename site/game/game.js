@@ -281,7 +281,7 @@ const LEVELS=[
  task:T("You're a field officer near Abhanpur. Tap the map inside the pulsing ring to record a new Anganwadi centre, then send it for review.","आप अभनपुर के पास एक फ़ील्ड अधिकारी हैं। नया आंगनवाड़ी केंद्र दर्ज करने के लिए धड़कते घेरे के भीतर नक्शे पर टैप करें, फिर समीक्षा के लिए भेजें।"),
  say:T("Not everyone sits at a desk. The mobile app is a field notebook that knows exactly where you are standing.","हर कोई डेस्क पर नहीं बैठता। मोबाइल ऐप एक फ़ील्ड नोटबुक है जो ठीक-ठीक जानती है कि आप कहाँ खड़े हैं।"),
  win:T("Sent! What you capture flows back into the geodatabase after review. The person at the site keeps the map accurate.","भेज दिया! आपका दर्ज किया डेटा समीक्षा के बाद भू-डेटाबेस में लौटता है। साइट पर खड़ा व्यक्ति नक्शे को सटीक रखता है।"),
- async enter(g,body){const w=g.world,HERE=[81.76,21.06];const[hx,hz]=P(...HERE);await w.fly([hx+4,24,hz+24],[hx,0,hz],1.6);
+ async enter(g,body){const w=g.world,HERE=[81.76,21.06];const[hx,hz]=P(...HERE);await w.fly([hx+6,44,hz+42],[hx,0,hz],1.6);
    this.me=w.addPin(HERE,0x2f6fd6,{ring:true,big:.8});this.meL=w.labelAt(HERE,L2(T("You are here","आप यहाँ हैं")),"me",2.4);
    body.innerHTML=`<div class="phone"><div class="ph-top"><span>9:41</span><span>●●● 4G</span></div><div class="ph-bar">${L2(T("Field app","फ़ील्ड ऐप"))}</div>
      <div class="ph-body"><p class="ph-gps">GPS <b>21.0600° N, 81.7600° E</b></p><p class="ph-hint">${L2(T("Tap the map inside the ring","घेरे के भीतर नक्शे पर टैप करें"))}</p>

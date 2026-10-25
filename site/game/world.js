@@ -132,7 +132,7 @@ export class World{
   fly(pos,target=[0,0,0],d=1.6){const c=this.camera,ctl=this.controls,p0=c.position.clone(),t0=ctl.target.clone(),p1=new THREE.Vector3(...pos),t1=new THREE.Vector3(...target);
     return this.tween(d,k=>{c.position.lerpVectors(p0,p1,k);ctl.target.lerpVectors(t0,t1,k)},x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2)}
   home(d=1.6){return this.fly(this.host.clientWidth<700?[0,150,120]:[0,104,96],[0,0,4],d)}
-  flyTo(name,d=1.6){const r=this.byName(name);if(!r)return;const[x,z]=P(...r.c);return this.fly([x+6,32,z+30],[x,0,z],d)}
+  flyTo(name,d=1.6){const r=this.byName(name);if(!r)return;const[x,z]=P(...r.c);return this.fly([x+8,46,z+44],[x,0,z],d)}
   zoom(f){const c=this.camera,t=this.controls.target,v=c.position.clone().sub(t).multiplyScalar(f);const L=v.length();if(L<28||L>170)return;return this.fly(t.clone().add(v).toArray(),t.toArray(),.5)}
   autoRotate(on){this.controls.autoRotate=on;this.controls.autoRotateSpeed=.6}
 
