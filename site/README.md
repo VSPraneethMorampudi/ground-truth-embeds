@@ -33,6 +33,7 @@ FILES
   fx.js / fx.css    the feel layer: rolling-label buttons with a fill from the cursor and springy press, card
                     tilt with glare, particle bursts and +1 / ✕ floats, soft synthesised sounds (mute button
                     in the game HUD; sounds only inside the game), phone vibration, count-ups
+  icons.js          Phosphor Icons (duotone, MIT) as an inline sprite; icon("name") returns an <svg>
   app.js            language, smooth scroll (Lenis), preloader, cursor, outro, auto-play
   vendor/           three 0.170 + OrbitControls (MIT), gsap + ScrollTrigger 3.15 (GSAP standard licence),
                     lenis 1.3 (MIT), d3-geo 3 (ISC)

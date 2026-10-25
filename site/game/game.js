@@ -23,9 +23,9 @@ const BUDDY=`<svg viewBox="0 0 80 96" aria-hidden="true"><defs><linearGradient i
   <circle cx="27" cy="42" r="3" fill="#f6a98a" opacity=".7"/><circle cx="53" cy="42" r="3" fill="#f6a98a" opacity=".7"/></svg>`;
 
 const BADGES=[
-  {id:"collect",n:T("Archivist","अभिलेखपाल"),i:"📥"},{id:"sort",n:T("Sorter","छँटाई विशेषज्ञ"),i:"🗂️"},{id:"pin",n:T("Pinpoint","सटीक निशाना"),i:"📍"},
-  {id:"merge",n:T("Librarian","पुस्तकालयाध्यक्ष"),i:"📚"},{id:"publish",n:T("Publisher","प्रकाशक"),i:"🌐"},{id:"field",n:T("Field ranger","फ़ील्ड रेंजर"),i:"📱"},
-  {id:"carto",n:T("Cartographer","मानचित्रकार"),i:"🎨"},{id:"maintain",n:T("Guardian","संरक्षक"),i:"🛡️"}];
+  {id:"collect",n:T("Archivist","अभिलेखपाल"),i:"tray"},{id:"sort",n:T("Sorter","छँटाई विशेषज्ञ"),i:"folders"},{id:"pin",n:T("Pinpoint","सटीक निशाना"),i:"map-pin"},
+  {id:"merge",n:T("Librarian","पुस्तकालयाध्यक्ष"),i:"stack"},{id:"publish",n:T("Publisher","प्रकाशक"),i:"globe-hemisphere-east"},{id:"field",n:T("Field ranger","फ़ील्ड रेंजर"),i:"device-mobile"},
+  {id:"carto",n:T("Cartographer","मानचित्रकार"),i:"palette"},{id:"maintain",n:T("Guardian","संरक्षक"),i:"shield-check"}];
 
 export class Game{
   constructor(root,{onLock,onUnlock,onFinish}={}){
@@ -35,10 +35,10 @@ export class Game{
       <div class="g-hud"><ol class="g-levels" id="gLevels"></ol>
         <div class="g-q" id="gQwrap"><svg viewBox="0 0 36 36" aria-hidden="true"><circle class="bg" cx="18" cy="18" r="14"/><circle class="fg" cx="18" cy="18" r="14"/></svg><span>${L2(T("Data quality","डेटा गुणवत्ता"))}</span><b id="gQ">—</b></div>
         <div class="g-bad" id="gBadges"></div>
-        <button class="g-mute" id="gMute" aria-label="Sound on or off"></button><button class="g-exit" id="gExit">${L2(T("Exit game","खेल से बाहर"))} ↓</button></div>
+        <button class="g-mute" id="gMute" aria-label="Sound on or off">${icon("speaker-high","on")}${icon("speaker-slash","off")}</button><button class="g-exit" id="gExit">${L2(T("Exit game","खेल से बाहर"))}</button></div>
       <aside class="g-panel" id="gPanel" aria-live="polite"></aside>
       <div class="g-buddy" id="gBuddy">${BUDDY}<div class="g-say" id="gSay"></div></div>
-      <div class="g-zoom"><button data-z="in" aria-label="Zoom in">+</button><button data-z="out" aria-label="Zoom out">−</button><button data-z="home" aria-label="Reset view">⟲</button></div>
+      <div class="g-zoom"><button data-z="in" aria-label="Zoom in">${icon("plus")}</button><button data-z="out" aria-label="Zoom out">${icon("minus")}</button><button data-z="home" aria-label="Reset view">${icon("crosshair")}</button></div>
       <div class="g-tip" id="gTip"></div><div class="g-pop" id="gPop"></div><div class="g-ghost" id="gGhost"></div>
       <div class="g-start" id="gStart"><div class="g-start-in">
         <p class="label">${L2(T("Play · 8 levels","खेलें · 8 स्तर"))}</p>
@@ -67,7 +67,7 @@ export class Game{
     if(!L){return this.finish()}
     const p=$("#gPanel",this.root);
     p.innerHTML=`<div class="lv-k">${L2(T("Level","स्तर"))} ${i+1}/${LEVELS.length} · ${L2(L.chapter)}</div><h3>${L2(L.title)}</h3><p class="lv-task">${L2(L.task)}</p>
-      <div class="lv-body"></div><div class="lv-act"><button class="lv-show">${L2(T("Show me","दिखाइए"))}</button><button class="lv-next btn" disabled>${L2(T("Next level","अगला स्तर"))} →</button></div>`;
+      <div class="lv-body"></div><div class="lv-act"><button class="lv-show">${icon("lightning")} ${L2(T("Show me","दिखाइए"))}</button><button class="lv-next btn" disabled>${L2(T("Next level","अगला स्तर"))} →</button></div>`;
     p.classList.remove("in");void p.offsetWidth;p.classList.add("in");window.FX&&FX.sound("whoosh");
     $(".lv-show",p).onclick=()=>this.autoRun();
     $(".lv-next",p).onclick=()=>this.go(i+1);
@@ -85,10 +85,11 @@ export class Game{
     w.home(2);w.autoRotate(true);
     const q=this.quality();
     p.innerHTML=`<div class="lv-k">${L2(T("Complete","पूर्ण"))}</div><h3>${L2(T("Ground truth, built.","ज़मीनी सच्चाई, तैयार।"))}</h3>
-      <div class="end-stats"><div><b>${q}</b><span>${L2(T("data quality","डेटा गुणवत्ता"))}</span></div><div><b>${this.badges.size}/8</b><span>${L2(T("badges","बैज"))}</span></div><div><b>${Math.floor(secs/60)}:${String(secs%60).padStart(2,"0")}</b><span>${L2(T("time","समय"))}</span></div></div>
+      <div class="end-stats"><div class="es-q">${icon("seal-check")}<b>${q}</b><span>${L2(T("data quality","डेटा गुणवत्ता"))}</span></div><div>${icon("trophy")}<b>${this.badges.size}/8</b><span>${L2(T("badges","बैज"))}</span></div><div>${icon("timer")}<b>${Math.floor(secs/60)}:${String(secs%60).padStart(2,"0")}</b><span>${L2(T("time","समय"))}</span></div></div>
+      <div class="shelf">${BADGES.map(b=>`<div class="bcard ${this.badges.has(b.id)?"got":""}"><i>${icon(b.i)}</i><span>${L2(b.n)}</span></div>`).join("")}</div>
       <p class="lv-task">${L2(T("Data is created, stored safely, shared through the portal, checked in the field, turned into clear maps and kept up to date. Then the cycle begins again.","डेटा बनता है, सुरक्षित रखा जाता है, पोर्टल से साझा होता है, मैदान में जाँचा जाता है, साफ़ नक्शों में ढलता है और अद्यतन रखा जाता है। फिर चक्र दोबारा शुरू होता है।"))}</p>
-      <div class="lv-act col"><button class="btn" id="gCard">⤓ ${L2(T("Download your map card","अपना मैप कार्ड डाउनलोड करें"))}</button>
-      <button class="lv-show" id="gAgain">↺ ${L2(T("Play again","फिर से खेलें"))}</button><button class="lv-show" id="gOut">${L2(T("Continue the story","कहानी आगे देखें"))} ↓</button></div>`;
+      <div class="lv-act col"><button class="btn" id="gCard">${icon("download-simple")} ${L2(T("Download your map card","अपना मैप कार्ड डाउनलोड करें"))}</button>
+      <button class="lv-show" id="gAgain">${icon("arrow-counter-clockwise")} ${L2(T("Play again","फिर से खेलें"))}</button><button class="lv-show" id="gOut">${L2(T("Continue the story","कहानी आगे देखें"))} ↓</button></div>`;
     if(window.FX){const b=$$(".end-stats b",p);const qn=parseInt(q)||0;FX.count(b[0],qn,{suffix:q.includes("%")?"%":""});FX.count(b[1],this.badges.size,{suffix:"/8"})}
     $("#gCard",p).onclick=()=>this.card();$("#gAgain",p).onclick=()=>location.reload();$("#gOut",p).onclick=()=>{this.exit();this.onFinish&&this.onFinish(true)};
     this.say(T("The map listens to the ground, and the ground benefits from the map. Thank you for building it with me!","नक्शा ज़मीन की सुनता है, और ज़मीन को नक्शे से लाभ मिलता है। मेरे साथ इसे बनाने के लिए धन्यवाद!"));
@@ -106,8 +107,8 @@ export class Game{
     this.typer=setInterval(()=>{i+=2;span.textContent=full.slice(0,i);if(i>=full.length)clearInterval(this.typer)},16)}
   relang(){if(this.lastSay){const el=$("#gSay",this.root);el.innerHTML=L2(this.lastSay)}}
   badge(id){if(this.badges.has(id))return;this.badges.add(id);window.FX&&FX.badge();const b=BADGES.find(x=>x.id===id),pop=$("#gPop",this.root);
-    pop.innerHTML=`<div class="pop"><i>${b.i}</i><small>${L2(T("Badge earned","बैज मिला"))}</small><b>${L2(b.n)}</b></div>`;pop.classList.remove("show");void pop.offsetWidth;pop.classList.add("show");this.renderBadges()}
-  renderBadges(){$("#gBadges",this.root).innerHTML=BADGES.map(b=>`<i class="${this.badges.has(b.id)?"got":""}" title="${b.n.en}">${b.i}</i>`).join("")}
+    pop.innerHTML=`<div class="pop"><i>${icon(b.i)}</i><small>${L2(T("Badge earned","बैज मिला"))}</small><b>${L2(b.n)}</b></div>`;pop.classList.remove("show");void pop.offsetWidth;pop.classList.add("show");this.renderBadges()}
+  renderBadges(){$("#gBadges",this.root).innerHTML=BADGES.map(b=>`<i class="${this.badges.has(b.id)?"got":""}" title="${b.n.en}">${icon(b.i)}</i>`).join("")}
   hover(rec,e){const tip=$("#gTip",this.root);if(!rec){tip.classList.remove("show");return}
     const r=this.root.getBoundingClientRect();tip.innerHTML=L2(DN(rec.name));tip.style.transform=`translate(${e.clientX-r.left+14}px,${e.clientY-r.top+14}px)`;tip.classList.add("show")}
   /* drag a DOM card onto the 3D world (or tap card, then tap map) */
@@ -135,14 +136,14 @@ export class Game{
 
 /* ---------------- shared bits ---------------- */
 const FILES=[
-  {d:T("Revenue","राजस्व"),f:T("Shapefile","शेपफ़ाइल"),c:T("District boundaries","ज़िलों की सीमाएँ"),k:"bound",col:"#7a5c3a"},
-  {d:T("Water Resources","जल संसाधन"),f:T("KML","KML"),c:T("Rivers","नदियाँ"),k:"rivers",col:"#3c8fd6"},
-  {d:T("Public Works","लोक निर्माण"),f:T("CAD drawing","CAD ड्रॉइंग"),c:T("Roads","सड़कें"),k:"roads",col:"#d2733c"},
-  {d:T("Railways","रेलवे"),f:T("Paper map (scan)","कागज़ी नक्शा (स्कैन)"),c:T("Rail lines","रेल लाइनें"),k:"rail",col:"#3a383d"},
-  {d:T("Education","शिक्षा"),f:T("Excel","एक्सेल"),c:T("Schools","स्कूल"),k:"school",col:"#2f6fd6"},
-  {d:T("Health","स्वास्थ्य"),f:T("Excel","एक्सेल"),c:T("Health centres","स्वास्थ्य केंद्र"),k:"health",col:"#d2423a"},
-  {d:T("Women & Child Dev.","महिला एवं बाल विकास"),f:T("Paper register","कागज़ी रजिस्टर"),c:T("Anganwadi centres","आंगनवाड़ी केंद्र"),k:"anganwadi",col:"#e39a1f"},
-  {d:T("Forest","वन"),f:T("Paper map","कागज़ी नक्शा"),c:T("Forest cover","वन आवरण"),k:"forest",col:"#5f8f4e"}];
+  {d:T("Revenue","राजस्व"),f:T("Shapefile","शेपफ़ाइल"),c:T("District boundaries","ज़िलों की सीमाएँ"),k:"bound",col:"#7a5c3a",ic:"polygon"},
+  {d:T("Water Resources","जल संसाधन"),f:T("KML","KML"),c:T("Rivers","नदियाँ"),k:"rivers",col:"#3c8fd6",ic:"drop"},
+  {d:T("Public Works","लोक निर्माण"),f:T("CAD drawing","CAD ड्रॉइंग"),c:T("Roads","सड़कें"),k:"roads",col:"#d2733c",ic:"road-horizon"},
+  {d:T("Railways","रेलवे"),f:T("Paper map (scan)","कागज़ी नक्शा (स्कैन)"),c:T("Rail lines","रेल लाइनें"),k:"rail",col:"#3a383d",ic:"train"},
+  {d:T("Education","शिक्षा"),f:T("Excel","एक्सेल"),c:T("Schools","स्कूल"),k:"school",col:"#2f6fd6",ic:"graduation-cap"},
+  {d:T("Health","स्वास्थ्य"),f:T("Excel","एक्सेल"),c:T("Health centres","स्वास्थ्य केंद्र"),k:"health",col:"#d2423a",ic:"first-aid-kit"},
+  {d:T("Women & Child Dev.","महिला एवं बाल विकास"),f:T("Paper register","कागज़ी रजिस्टर"),c:T("Anganwadi centres","आंगनवाड़ी केंद्र"),k:"anganwadi",col:"#e39a1f",ic:"baby"},
+  {d:T("Forest","वन"),f:T("Paper map","कागज़ी नक्शा"),c:T("Forest cover","वन आवरण"),k:"forest",col:"#5f8f4e",ic:"tree-evergreen"}];
 const shuffle=(a,s=7)=>{a=[...a];for(let i=a.length-1;i>0;i--){s=s*16807%2147483647;const j=s%(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
 /* fly a DOM element's clone to a target element */
 function flyEl(el,to,root,{dur=.55,remove=true}={}){const a=el.getBoundingClientRect(),b=to.getBoundingClientRect(),r=root.getBoundingClientRect();
@@ -161,8 +162,8 @@ const LEVELS=[
  say:T("Hi, I'm Bindu, a map pin! For years Chhattisgarh's map lived in paper sheets, registers and spreadsheets, spread across departments. Let's bring it all in.","नमस्ते, मैं बिंदु हूँ, एक मैप पिन! वर्षों तक छत्तीसगढ़ का नक्शा कागज़ी शीटों, रजिस्टरों और स्प्रेडशीट में, अलग-अलग विभागों में बिखरा रहा। चलिए, सब एक जगह लाते हैं।"),
  win:T("Eight departments, eight formats. Precious, like an old family album, but not organised yet.","आठ विभाग, आठ प्रारूप। पुराने पारिवारिक एल्बम जैसा अनमोल, पर अभी बिखरा हुआ।"),
  async enter(g,body){g.world.home(1.2);
-   body.innerHTML=`<div class="files">${FILES.map((f,i)=>`<button class="file" data-i="${i}" style="--c:${f.col};--d:${(i%4)*.4}s"><i>${L2(f.f)}</i><b>${L2(f.d)}</b><span>${L2(f.c)}</span></button>`).join("")}</div>
-     <div class="tray"><span>${L2(T("Inbox","इनबॉक्स"))}</span><b class="tray-n">0/${FILES.length}</b></div>`;
+   body.innerHTML=`<div class="files">${FILES.map((f,i)=>`<button class="file" data-i="${i}" style="--c:${f.col};--d:${(i%4)*.4}s"><span class="f-ic">${icon(f.ic)}</span><span class="f-tx"><i>${L2(f.f)}</i><b>${L2(f.d)}</b><span>${L2(f.c)}</span></span></button>`).join("")}</div>
+     <div class="tray"><span>${icon("tray")} ${L2(T("Inbox","इनबॉक्स"))}</span><b class="tray-n">0/${FILES.length}</b></div>`;
    let n=0;const tray=$(".tray",body);
    this.take=async(btn)=>{if(btn.classList.contains("gone"))return;const f=FILES[+btn.dataset.i];await flyEl(btn,tray,g.root);n++;$(".tray-n",body).textContent=`${n}/${FILES.length}`;tray.classList.remove("bump");void tray.offsetWidth;tray.classList.add("bump");g.good();
      if(f.k==="bound"){g.say(T("Boundaries from Revenue: the frame every other layer sits in. Watch the 33 districts drop in.","राजस्व से सीमाएँ: वह ढाँचा जिसमें बाकी हर परत बैठती है। 33 ज़िलों को आते देखिए।"));g.world.dropDistricts()}
@@ -177,14 +178,14 @@ const LEVELS=[
  say:T("Converting old records means giving each one a shape, a point, a line or an outline, and a home layer. Careful: three of these are broken.","पुराने रिकॉर्ड को बदलने का मतलब है हर एक को आकार देना, बिंदु, रेखा या रूपरेखा, और उसकी परत। ध्यान दें: इनमें तीन टूटे हुए हैं।"),
  win:T("Sorted! Tracing a drawing onto a computer so it can be zoomed, searched and shared: that's digitisation.","छँट गया! चित्र को कंप्यूटर पर उतारना ताकि उसे ज़ूम, खोज और साझा किया जा सके: यही अंकीयकरण है।"),
  async enter(g,body){g.world.fly([0,84,80],[0,0,4],1.4);
-   const BINS=[{k:"bound",n:T("Boundaries","सीमाएँ"),s:"▢"},{k:"water",n:T("Water","जल"),s:"〰"},{k:"move",n:T("Roads & rail","सड़क और रेल"),s:"═"},{k:"fac",n:T("Facilities","सुविधाएँ"),s:"●"},{k:"fix",n:T("Fix","सुधारें"),s:"⚠"}];
+   const BINS=[{k:"bound",n:T("Boundaries","सीमाएँ"),s:"polygon"},{k:"water",n:T("Water","जल"),s:"wave-sine"},{k:"move",n:T("Roads & rail","सड़क और रेल"),s:"road-horizon"},{k:"fac",n:T("Facilities","सुविधाएँ"),s:"buildings"},{k:"fix",n:T("Fix","सुधारें"),s:"warning"}];
    const REC=[{t:T("Raipur district boundary","रायपुर ज़िला सीमा"),k:"bound"},{t:T("Mahanadi river","महानदी"),k:"water"},{t:T("Govt. Primary School, Mana","शासकीय प्राथमिक शाला, माना"),k:"fac"},
      {t:T("School: latitude and longitude swapped","स्कूल: अक्षांश और देशांतर उलटे"),k:"fix"},{t:T("Highway, Raipur to Jagdalpur","राजमार्ग, रायपुर से जगदलपुर"),k:"move"},{t:T("Bastar district boundary","बस्तर ज़िला सीमा"),k:"bound"},
      {t:T("Indravati river","इंद्रावती नदी"),k:"water"},{t:T("Anganwadi: location blank (0°, 0°)","आंगनवाड़ी: स्थान खाली (0°, 0°)"),k:"fix"},{t:T("Primary Health Centre, Abhanpur","प्राथमिक स्वास्थ्य केंद्र, अभनपुर"),k:"fac"},
      {t:T("Rail line, Bilaspur to Raipur","रेल लाइन, बिलासपुर से रायपुर"),k:"move"},{t:T("Health centre: no projection file (.prj)","स्वास्थ्य केंद्र: प्रोजेक्शन फ़ाइल (.prj) नहीं"),k:"fix"},{t:T("Anganwadi AWC-RPR-00412","आंगनवाड़ी AWC-RPR-00412"),k:"fac"}];
    const HINT={bound:T("Outlines of areas go to Boundaries.","क्षेत्रों की रूपरेखा 'सीमाएँ' में जाती है।"),water:T("Rivers are lines on the Water layer.","नदियाँ 'जल' परत पर रेखाएँ हैं।"),move:T("Roads and rail are lines on Roads & rail.","सड़क और रेल 'सड़क और रेल' पर रेखाएँ हैं।"),fac:T("A building is a point on Facilities.","भवन 'सुविधाएँ' पर एक बिंदु है।"),fix:T("Look again: that record has a problem. It goes to Fix.","फिर देखें: उस रिकॉर्ड में समस्या है। वह 'सुधारें' में जाएगा।")};
    body.innerHTML=`<div class="recs">${REC.map((r,i)=>`<button class="rec" data-i="${i}" data-k="${r.k}">${L2(r.t)}</button>`).join("")}</div>
-     <div class="bins">${BINS.map(b=>`<div class="bin" data-k="${b.k}"><i>${b.s}</i><b>${L2(b.n)}</b><em>0</em></div>`).join("")}</div>`;
+     <div class="bins">${BINS.map(b=>`<div class="bin" data-k="${b.k}"><i>${icon(b.s)}</i><b>${L2(b.n)}</b><em>0</em></div>`).join("")}</div>`;
    let left=REC.length,sel=null;const gh=$("#gGhost",g.root);
    const put=async(card,bin)=>{const k=card.dataset.k;if(bin.dataset.k!==k){g.oops();card.classList.remove("wob");void card.offsetWidth;card.classList.add("wob");g.say(HINT[k]);return false}
      await flyEl(card,bin,g.root,{dur:.4});const em=$("em",bin);em.textContent=+em.textContent+1;bin.classList.remove("bump");void bin.offsetWidth;bin.classList.add("bump");g.good();
@@ -211,7 +212,7 @@ const LEVELS=[
             {t:T("Health centre, Pathalgaon","स्वास्थ्य केंद्र, पत्थलगांव"),d:"Jashpur",ll:[83.46,22.56],e:T("off the map · no .prj","नक्शे से बाहर · .prj नहीं"),at:[30,9,-30]}];
    this.R=R;let left=R.length;
    R.forEach(r=>{r.pin=w.addPin([82,21],0xd2423a,{bob:true,big:1.3});w.pinAt(r.pin,...r.at);r.lab=w.label(`<b>${L2(r.t)}</b><span>${L2(r.e)}</span>`,[r.at[0],r.at[1]+4,r.at[2]],"lost")});
-   body.innerHTML=`<div class="pins">${R.map((r,i)=>`<div class="pinc" data-i="${i}"><span class="pin-h">📍</span><div><b>${L2(r.t)}</b><span>${L2(T("belongs in","यहाँ का है:"))} <em>${L2(DN(r.d))}</em></span><small>${L2(r.e)}</small></div></div>`).join("")}</div>`;
+   body.innerHTML=`<div class="pins">${R.map((r,i)=>`<div class="pinc" data-i="${i}"><span class="pin-h">${icon("map-pin")}</span><div><b>${L2(r.t)}</b><span>${L2(T("belongs in","यहाँ का है:"))} <em>${L2(DN(r.d))}</em></span><small>${L2(r.e)}</small></div></div>`).join("")}</div>`;
    const place=async(i)=>{const r=R[i],card=$(`.pinc[data-i="${i}"]`,body);if(card.classList.contains("ok"))return;card.classList.add("ok");w.unlabel(r.lab);
      await w.movePin(r.pin,r.ll,1);w.pinColor(r.pin,0x2e9b5a);w.highlight(r.d,0x2e9b5a);setTimeout(()=>w.highlight(null),900);g.good();
      if(--left===0)g.complete()};
@@ -234,7 +235,7 @@ const LEVELS=[
    const S=[{k:"forest",n:T("Forest cover","वन आवरण"),t:T("area","क्षेत्र"),r:1},{k:"rivers",n:T("Rivers","नदियाँ"),t:T("line","रेखा"),r:2},{k:"move",n:T("Roads & rail","सड़क और रेल"),t:T("line","रेखा"),r:2},{k:"fac",n:T("Facilities","सुविधाएँ"),t:T("point","बिंदु"),r:3}];
    body.innerHTML=`<div class="stackui"><div class="sheets">${shuffle(S,3).map(s=>`<button class="sheet" data-k="${s.k}" data-r="${s.r}"><b>${L2(s.n)}</b><i>${L2(s.t)}</i></button>`).join("")}</div>
      <ol class="tower"><li class="base"><b>${L2(T("Boundaries","सीमाएँ"))}</b><i>${L2(T("area","क्षेत्र"))}</i></li></ol>
-     <div class="gate"><span>${L2(T("Rules at the door","प्रवेश पर नियम"))}</span><em>✓ ${L2(T("inside its boundary","सीमा के भीतर"))}</em><em>✓ ${L2(T("clean geometry","साफ़ ज्यामिति"))}</em><em>✓ ${L2(T("no blank fields","कोई खाली फ़ील्ड नहीं"))}</em></div></div>`;
+     <div class="gate"><span>${icon("lock-key")} ${L2(T("Rules at the door","प्रवेश पर नियम"))}</span><em>${icon("check-circle")} ${L2(T("inside its boundary","सीमा के भीतर"))}</em><em>${icon("check-circle")} ${L2(T("clean geometry","साफ़ ज्यामिति"))}</em><em>${icon("check-circle")} ${L2(T("no blank fields","कोई खाली फ़ील्ड नहीं"))}</em></div></div>`;
    let need=1;const tower=$(".tower",body);
    const tap=async(b)=>{if(b.classList.contains("gone")||this.busy)return;const r=+b.dataset.r;
      if(r!==need&&!(r===2&&need===2)){g.oops();b.classList.remove("wob");void b.offsetWidth;b.classList.add("wob");g.say(T("Areas first, then lines, then points: points must stay visible on top.","पहले क्षेत्र, फिर रेखाएँ, फिर बिंदु: बिंदु ऊपर दिखते रहने चाहिए।"));return}
@@ -263,10 +264,10 @@ const LEVELS=[
      <div class="portal"><div class="toggles">${LAY.map(([k,n])=>`<label><input type="checkbox" data-l="${k}" checked><span>${L2(n)}</span></label>`).join("")}</div>
      <form class="search"><input list="gDistricts" placeholder="${lang()==="hi"?"ज़िला खोजें…":"Search a district…"}" aria-label="Search a district"><button>${L2(T("Go","जाएँ"))}</button>
        <datalist id="gDistricts">${names.map(n=>`<option value="${n}">${HI[n]||""}</option>`).join("")}</datalist></form>
-     <div class="ask"><b>✦ ${L2(T("Ask AI","AI से पूछें"))}</b>${QS.map((q,i)=>`<button data-q="${i}">${L2(q.q)}</button>`).join("")}</div>
+     <div class="ask"><b>${icon("sparkle")} ${L2(T("Ask AI","AI से पूछें"))}</b>${QS.map((q,i)=>`<button data-q="${i}">${L2(q.q)}</button>`).join("")}</div>
      <div class="answer" aria-live="polite"></div><small class="note">${L2(T("Answers come from this map's sample data.","उत्तर इस नक्शे के नमूना डेटा से हैं।"))}</small></div>`;
    const done=new Set(),tick=c=>{done.add(c);$(`.check [data-c="${c}"]`,body).classList.add("ok");g.good();if(done.size===3)g.complete()};
-   const info=(d,extra)=>{const c=cnt[d]||{};$(".answer",body).innerHTML=`<b>${L2(DN(d))}</b>${extra?`<p>${L2(extra)}</p>`:""}<span>🏫 ${c.school||0} · 🏥 ${c.health||0} · 🧒 ${c.anganwadi||0}</span>`};
+   const info=(d,extra)=>{const c=cnt[d]||{};$(".answer",body).innerHTML=`<b>${L2(DN(d))}</b>${extra?`<p>${L2(extra)}</p>`:""}<span class="cnt"><em>${icon("graduation-cap")} ${c.school||0}</em><em>${icon("first-aid-kit")} ${c.health||0}</em><em>${icon("baby")} ${c.anganwadi||0}</em></span>`};
    this.toggle=(k,on)=>{const cb=$(`[data-l="${k}"]`,body);cb.checked=on;w.setLayer(k,on);if(!done.has("layer"))tick("layer")};
    this.search=d=>{if(!names.includes(d))return;$(".search input",body).value=d;w.flyTo(d,1.4);w.highlight(d);info(d);if(!done.has("search"))tick("search")};
    this.ask=i=>{const r=QS[i].a();w.flyTo(r.d,1.4);w.highlight(r.d);info(r.d,r.t);if(!done.has("ask"))tick("ask")};
@@ -289,12 +290,12 @@ const LEVELS=[
    body.innerHTML=`<div class="phone"><div class="ph-top"><span>9:41</span><span>●●● 4G</span></div><div class="ph-bar">${L2(T("Field app","फ़ील्ड ऐप"))}</div>
      <div class="ph-body"><p class="ph-gps">GPS <b>21.0600° N, 81.7600° E</b></p><p class="ph-hint">${L2(T("Tap the map inside the ring","घेरे के भीतर नक्शे पर टैप करें"))}</p>
      <div class="ph-form"><label>${L2(T("Type","प्रकार"))}<select><option>${lang()==="hi"?"आंगनवाड़ी केंद्र":"Anganwadi centre"}</option><option>${lang()==="hi"?"स्कूल":"School"}</option><option>${lang()==="hi"?"स्वास्थ्य केंद्र":"Health centre"}</option></select></label>
-       <div class="ph-photo">📷 ${L2(T("Photo attached","फ़ोटो संलग्न"))}</div><button class="btn ph-send" disabled>${L2(T("Send for review","समीक्षा के लिए भेजें"))}</button></div></div></div>`;
+       <div class="ph-photo">${icon("camera")} ${L2(T("Photo attached","फ़ोटो संलग्न"))}</div><button class="btn ph-send" disabled>${L2(T("Send for review","समीक्षा के लिए भेजें"))}</button></div></div></div>`;
    const send=$(".ph-send",body);
    this.drop=(ll)=>{const[x,z]=P(...ll),d=Math.hypot(x-hx,z-hz);if(d>3.2){g.oops();g.say(T("That's outside the ring. Field points are recorded where you stand.","यह घेरे के बाहर है। फ़ील्ड बिंदु वहीं दर्ज होते हैं जहाँ आप खड़े हैं।"));return}
      if(this.newPin)w.removePin(this.newPin);this.newPin=w.addPin(ll,0xffc23a,{bob:true});g.field=ll;$(".ph-gps b",body).textContent=`${ll[1].toFixed(4)}° N, ${ll[0].toFixed(4)}° E`;
      body.querySelector(".phone").classList.add("form");send.disabled=false;g.good()};
-   this.send=()=>{if(send.disabled)return;send.disabled=true;send.innerHTML=L2(T("Sent ✓ · waiting for review","भेजा ✓ · समीक्षा बाकी"));g.good();g.complete()};
+   this.send=()=>{if(send.disabled)return;send.disabled=true;send.innerHTML=icon("paper-plane-tilt")+" "+L2(T("Sent · waiting for review","भेजा · समीक्षा बाकी"));g.good();g.complete()};
    send.onclick=this.send;
    g.mapTap=(x,y)=>{if(g.lv!==5||g.done)return;const h=w.pick(x,y);if(h)this.drop(h.lonlat)}},
  async auto(g,tk){await g.wait(400);if(tk!==g.token)return;this.drop([81.775,21.07]);await g.wait(1300);if(tk!==g.token)return;this.send()},
@@ -337,8 +338,8 @@ const LEVELS=[
      {t:T("School moved, Kanker","स्कूल स्थानांतरित, कांकेर"),c:[0,1,1],why:T("the new point falls outside the state","नया बिंदु राज्य के बाहर पड़ता है")},
      {t:T("Health centre, Korba","स्वास्थ्य केंद्र, कोरबा"),c:[1,1,0],why:T("its code is blank","इसका कोड खाली है")}];
    const CH=[T("inside boundary","सीमा के भीतर"),T("clean geometry","साफ़ ज्यामिति"),T("code filled","कोड भरा")];
-   body.innerHTML=`<div class="status"><span class="ok">● ${L2(T("Servers running","सर्वर चालू"))}</span><span class="ok">✓ ${L2(T("Backup 02:00","बैकअप 02:00"))}</span><span class="ok">✓ ${L2(T("Security updates","सुरक्षा अपडेट"))}</span></div>
-     <div class="queue">${U.map((u,i)=>`<div class="upd" data-i="${i}"><b>${L2(u.t)}</b><div class="chk">${u.c.map((v,j)=>`<em class="${v?"y":"n"}">${v?"✓":"✗"} ${L2(CH[j])}</em>`).join("")}</div>
+   body.innerHTML=`<div class="status"><span class="ok">${icon("hard-drives")} ${L2(T("Servers running","सर्वर चालू"))}</span><span class="ok">${icon("cloud-check")} ${L2(T("Backup 02:00","बैकअप 02:00"))}</span><span class="ok">${icon("lock-key")} ${L2(T("Security updates","सुरक्षा अपडेट"))}</span></div>
+     <div class="queue">${U.map((u,i)=>`<div class="upd" data-i="${i}"><b>${L2(u.t)}</b><div class="chk">${u.c.map((v,j)=>`<em class="${v?"y":"n"}">${icon(v?"check-circle":"x-circle")} ${L2(CH[j])}</em>`).join("")}</div>
        <div class="acts"><button data-a="pub">${L2(T("Publish","प्रकाशित करें"))}</button><button data-a="back">${L2(T("Send back","वापस भेजें"))}</button></div></div>`).join("")}</div>`;
    if(g.field)this.fp=w.addPin(g.field,0xffc23a,{bob:true});
    let left=U.length;
