@@ -60,11 +60,17 @@ export class Game{
     $("#gMute",root).onclick=()=>window.FX&&FX.mute(!FX.muted());
     root.addEventListener("click",e=>{const z=e.target.closest("[data-z]");if(!z)return;const w=this.world;z.dataset.z==="in"?w.zoom(.75):z.dataset.z==="out"?w.zoom(1.33):w.home(.8)});
     this.renderBadges();
+    const panel=$("#gPanel",root),hud=$(".g-hud",root);
+    const measure=()=>{if(!root.classList.contains("playing")){this.world.setInset({});return}
+      const R=root.getBoundingClientRect(),pr=panel.getBoundingClientRect(),hr=hud.getBoundingClientRect();
+      if(this.phone){const sheet=Math.max(0,root.clientHeight-panel.offsetTop);root.style.setProperty("--sheet",sheet+"px");this.world.setInset({right:0,top:hr.bottom-R.top,bottom:sheet})}
+      else{root.style.removeProperty("--sheet");this.world.setInset({})}};
+    new ResizeObserver(measure).observe(panel);addEventListener("resize",measure);this.measure=measure;
   }
   /* ---------- flow ---------- */
-  start(watch){this.watch=watch;this.paused=false;this.t0=performance.now();this.root.classList.add("playing");$("#gStart",this.root).classList.add("gone");
+  start(watch){this.watch=watch;this.paused=false;this.t0=performance.now();this.root.classList.add("playing");setTimeout(()=>this.measure&&this.measure(),50);$("#gStart",this.root).classList.add("gone");
     this.world.controls.enableZoom=true;this.onLock&&this.onLock();this.go(0)}
-  exit(){clearTimeout(this.idleT);this.root.classList.remove("playing");this.world.controls.enableZoom=false;this.watch=false;this.onUnlock&&this.onUnlock()}
+  exit(){clearTimeout(this.idleT);this.root.classList.remove("playing");this.measure&&this.measure();this.world.controls.enableZoom=false;this.watch=false;this.onUnlock&&this.onUnlock()}
   async go(i){const same=i===this.lv;if(this.lv>=0&&LEVELS[this.lv]&&LEVELS[this.lv].leave)await LEVELS[this.lv].leave(this);
     if(same&&this.snap){this.ok=this.snap.ok;this.bad=this.snap.bad;this.q()}   /* restarting a level gives its points back */
     this.lv=i;this.done=false;const L=LEVELS[i];this.token=(this.token||0)+1;this.autoTok=-1;this.armed=null;this.mapTap=null;this.miss=0;
@@ -73,14 +79,18 @@ export class Game{
     $$("#gLevels li",this.root).forEach((li,j)=>{li.classList.toggle("on",j===i);li.classList.toggle("done",j<i)});
     if(!L){return this.finish()}
     const p=$("#gPanel",this.root);
-    p.innerHTML=`<div class="lv-k">${L2(T("Level","स्तर"))} ${i+1}/${LEVELS.length} · ${L2(L.chapter)}</div><h3>${L2(L.title)}</h3><p class="lv-task">${L2(L.task)}</p>
+    p.innerHTML=`<button class="sh-handle" aria-label="Show or hide the level panel"><i></i></button><div class="lv-k">${L2(T("Level","स्तर"))} ${i+1}/${LEVELS.length} · ${L2(L.chapter)}</div><h3>${L2(L.title)}</h3><p class="lv-task">${L2(L.task)}</p>
       <div class="lv-body"></div><div class="lv-act"><button class="lv-restart" title="R">${icon("arrow-counter-clockwise")}<span class="sr">${L2(T("Restart level","स्तर फिर से"))}</span></button><button class="lv-hint" title="H">${icon("sparkle")} ${L2(T("Hint","संकेत"))}</button><button class="lv-solve" title="${lang()==="hi"?"हल दिखाइए":"Show me the solution"}">${icon("lightning")}<span class="sr">${L2(T("Show me","दिखाइए"))}</span></button><button class="lv-next btn" disabled>${L2(T("Next level","अगला स्तर"))} →</button></div>`;
     p.classList.remove("in");void p.offsetWidth;p.classList.add("in");window.FX&&FX.sound("whoosh");
+    $(".sh-handle",p).onclick=()=>this.peek(!p.classList.contains("peek"));this.peek(!!L.peek);
     $(".lv-solve",p).onclick=()=>this.autoRun();$(".lv-hint",p).onclick=()=>this.hint();$(".lv-restart",p).onclick=()=>this.go(i);
     $(".lv-next",p).onclick=()=>this.go(i+1);
     this.say(L.say);
     const tk=this.token;await L.enter(this,$(".lv-body",p));if(tk!==this.token)return;
     if(this.watch)this.autoRun();else this.idle()}
+  /* ---------- phones: the level panel is a bottom sheet that can shrink to show the map ---------- */
+  get phone(){return matchMedia("(max-width:900px)").matches}
+  peek(v){const p=$("#gPanel",this.root);if(!p)return;p.classList.toggle("peek",!!v&&this.phone)}
   /* ---------- help: one-step hints, offered by themselves when the player is stuck ---------- */
   idle(){clearTimeout(this.idleT);if(this.watch||this.done)return;this.idleT=setTimeout(()=>{if(!this.done&&!this.watch){this.hint();this.idle()}},12000)}
   hint(){const L=LEVELS[this.lv];if(!L||this.done||!L.hint)return;$$(".hint-glow",this.root).forEach(e=>e.classList.remove("hint-glow"));
@@ -102,7 +112,7 @@ export class Game{
       <p class="lv-task">${L2(T("Data is created, stored safely, shared through the portal, checked in the field, turned into clear maps and kept up to date. Then the cycle begins again.","डेटा बनता है, सुरक्षित रखा जाता है, पोर्टल से साझा होता है, मैदान में जाँचा जाता है, साफ़ नक्शों में ढलता है और अद्यतन रखा जाता है। फिर चक्र दोबारा शुरू होता है।"))}</p>
       <div class="lv-act col"><button class="btn" id="gCard">${icon("download-simple")} ${L2(T("Download your map card","अपना मैप कार्ड डाउनलोड करें"))}</button>
       <button class="lv-show" id="gAgain">${icon("arrow-counter-clockwise")} ${L2(T("Play again","फिर से खेलें"))}</button><button class="lv-show" id="gOut">${L2(T("Continue the story","कहानी आगे देखें"))} ↓</button></div>`;
-    if(window.FX){const b=$$(".end-stats b",p);const qn=parseInt(q)||0;FX.count(b[0],qn,{suffix:q.includes("%")?"%":""});FX.count(b[1],this.badges.size,{suffix:"/8"})}
+    if(window.FX){const b=$$(".end-stats b",p);const qn=parseInt(q)||0;if(q.includes("%"))FX.count(b[0],qn,{suffix:"%"});FX.count(b[1],this.badges.size,{suffix:"/8"})}
     $("#gCard",p).onclick=()=>this.card();$("#gAgain",p).onclick=()=>this.restart();$("#gOut",p).onclick=()=>{this.exit();this.onFinish&&this.onFinish(true)};
     this.say(T("The map listens to the ground, and the ground benefits from the map. Thank you for building it with me!","नक्शा ज़मीन की सुनता है, और ज़मीन को नक्शे से लाभ मिलता है। मेरे साथ इसे बनाने के लिए धन्यवाद!"));
     if(this.watch)this.wait(5000).then(()=>{if(this.watch){this.exit();this.onFinish&&this.onFinish(false)}})}
@@ -226,17 +236,18 @@ const LEVELS=[
             {t:T("Anganwadi AWC-BST-00118","आंगनवाड़ी AWC-BST-00118"),d:"Bastar",ll:[81.95,19.15],e:T("≈ 9,100 km west · blank = 0°, 0°","≈ 9,100 किमी पश्चिम · खाली = 0°, 0°"),at:[27,5,4]},
             {t:T("Health centre, Pathalgaon","स्वास्थ्य केंद्र, पत्थलगांव"),d:"Jashpur",ll:[83.46,22.56],e:T("off the map · no .prj","नक्शे से बाहर · .prj नहीं"),at:[23,5,22]}];
    this.R=R;let left=R.length;
+   if(g.phone)R.forEach((r,i)=>r.at=[[-10,5,-33],[2,5,-36],[14,5,-32]][i]);
    R.forEach(r=>{r.pin=w.addPin([82,21],0xd2423a,{bob:true,big:1.3});w.pinAt(r.pin,...r.at);r.lab=w.label(`<b>${L2(r.t)}</b><span>${L2(r.e)}</span>`,[r.at[0],r.at[1]+4,r.at[2]],"lost")});
    body.innerHTML=`<div class="pins">${R.map((r,i)=>`<div class="pinc" data-i="${i}"><span class="pin-h">${icon("map-pin")}</span><div><b>${L2(r.t)}</b><span>${L2(T("belongs in","यहाँ का है:"))} <em>${L2(DN(r.d))}</em></span><small>${L2(r.e)}</small></div></div>`).join("")}</div>`;
    const place=async(i)=>{const r=R[i],card=$(`.pinc[data-i="${i}"]`,body);if(card.classList.contains("ok"))return;card.classList.add("ok");w.unlabel(r.lab);
      await w.movePin(r.pin,r.ll,1);w.pinColor(r.pin,0x2e9b5a);w.highlight(r.d,0x2e9b5a);setTimeout(()=>w.highlight(null),900);g.good();
-     if(--left===0){w.home(1.2);g.complete()}};
+     g.peek(false);if(--left===0){w.home(1.2);g.complete()}};
    this.place=place;
    const near=(h,r)=>h&&(h.rec.name===r.d||Math.hypot(h.lonlat[0]-r.ll[0],h.lonlat[1]-r.ll[1])<.5);
-   $$(".pinc",body).forEach(card=>card.addEventListener("pointerdown",()=>{if(card.classList.contains("ok"))return;const r=R[+card.dataset.i];w.highlight(r.d,0xffb45a);
+   $$(".pinc",body).forEach(card=>card.addEventListener("pointerdown",()=>{if(card.classList.contains("ok"))return;const r=R[+card.dataset.i];w.highlight(r.d,0xffb45a);setTimeout(()=>g.peek(true),120);
      g.say(T(`Now drop it on ${r.d}: the glowing district.`,`अब इसे ${HI[r.d]} पर छोड़ें: चमकता ज़िला।`))}));
    this.pick=()=>{const i=R.findIndex((r,j)=>!$(`.pinc[data-i="${j}"]`,body).classList.contains("ok"));if(i<0)return[];const r=R[i],card=$(`.pinc[data-i="${i}"]`,body);
-     $$(".pinc",body).forEach(c=>c.classList.remove("sel"));card.classList.add("sel");w.highlight(r.d,0xffb45a);w.flyTo(r.d,1.2);
+     $$(".pinc",body).forEach(c=>c.classList.remove("sel"));card.classList.add("sel");w.highlight(r.d,0xffb45a);w.flyTo(r.d,1.2);g.peek(true);
      g.armed=(x,y)=>{card.classList.remove("sel");const h=w.pick(x,y);if(near(h,r))place(i);else{g.oops();w.highlight(r.d,0xffb45a)}};
      g.say(T(`Tap ${r.d} on the map: it's glowing.`,`नक्शे पर ${HI[r.d]} पर टैप करें: वह चमक रहा है।`));return[card]};
    $$(".pinc",body).forEach(card=>g.dragToMap(card,h=>{const r=R[+card.dataset.i];
@@ -305,7 +316,7 @@ const LEVELS=[
  leave(g){["rivers","roads","rail","trees","school","health","anganwadi"].forEach(k=>g.world.setLayer(k,true));g.world.highlight(null)}},
 
 /* 6 · FIELD */
-{id:"field",stage:4,badge:"field",name:T("Field","मैदान"),chapter:T("Mobile app","मोबाइल ऐप"),
+{id:"field",stage:4,peek:true,badge:"field",name:T("Field","मैदान"),chapter:T("Mobile app","मोबाइल ऐप"),
  title:T("Take the map to the field","नक्शा मैदान तक ले जाएँ"),
  task:T("You're a field officer near Abhanpur. Tap the map inside the pulsing ring to record a new Anganwadi centre, then send it for review.","आप अभनपुर के पास एक फ़ील्ड अधिकारी हैं। नया आंगनवाड़ी केंद्र दर्ज करने के लिए धड़कते घेरे के भीतर नक्शे पर टैप करें, फिर समीक्षा के लिए भेजें।"),
  say:T("Not everyone sits at a desk. The mobile app is a field notebook that knows exactly where you are standing.","हर कोई डेस्क पर नहीं बैठता। मोबाइल ऐप एक फ़ील्ड नोटबुक है जो ठीक-ठीक जानती है कि आप कहाँ खड़े हैं।"),
@@ -319,7 +330,7 @@ const LEVELS=[
    const send=$(".ph-send",body);
    this.drop=(ll)=>{const[x,z]=P(...ll),d=Math.hypot(x-hx,z-hz);if(d>5){g.oops();g.say(T("That's outside the ring. Field points are recorded where you stand.","यह घेरे के बाहर है। फ़ील्ड बिंदु वहीं दर्ज होते हैं जहाँ आप खड़े हैं।"));return}
      if(this.newPin)w.removePin(this.newPin);this.newPin=w.addPin(ll,0xffc23a,{bob:true});g.field=ll;$(".ph-gps b",body).textContent=`${ll[1].toFixed(4)}° N, ${ll[0].toFixed(4)}° E`;
-     body.querySelector(".phone").classList.add("form");send.disabled=false;g.good()};
+     body.querySelector(".phone").classList.add("form");send.disabled=false;g.peek(false);g.good()};
    this.send=()=>{if(send.disabled)return;send.disabled=true;send.innerHTML=icon("paper-plane-tilt")+" "+L2(T("Sent · waiting for review","भेजा · समीक्षा बाकी"));g.good();g.complete()};
    send.onclick=this.send;
    g.mapTap=(x,y)=>{if(g.lv!==5||g.done)return;const h=w.pick(x,y);if(h)this.drop(h.lonlat)}},
