@@ -4,24 +4,21 @@ From orbit down to Raipur, then a playable game: the state map is built in front
 data the departments send. English and Hindi. "Play the story" runs the whole thing by itself in
 about 3 minutes (flight, then the game in watch mode, then the ending).
 
-THE GAME (game/)
-  A miniature 3D Chhattisgarh on a plinth (Three.js), built from the official 33-district layer.
-  Bindu, a map pin, guides the player. Each level is one stage of the real workflow:
-    1 Collect      click the files eight departments send (boundaries drop the 33 districts in)
-    2 Sort         drag records onto Boundaries / Water / Roads & rail / Facilities; broken ones to Fix
-    3 Pinpoint     drag three lost records (swapped lat/long, blank 0°,0°, no .prj) onto their districts
-    4 Merge        stack the layers bottom-up (areas, lines, points): forest, rivers, roads, facilities appear
-    5 Publish      the portal: switch layers, search a district, ask AI (answers from the map's data)
-    6 Field        drop a new Anganwadi point inside the ring from the field app, send it for review
-    7 Cartography  pick the river colour, choose a question: districts rise into a 3D thematic map
-    8 Maintain     publish or send back incoming updates from their rule checks
-  Badges per level, a data-quality score, and a downloadable map card at the end.
-  Every level has Restart (↺, key R), Hint (key H: the next move glows; also offered by itself after
-  12 s without progress or after two mistakes) and Solve (⚡, the guide does it); "Watch it play" runs all
-  eight. The level pills jump to any level, and the world is reset to exactly what that level expects
-  (World.setStage). "Restart" in the bar starts the whole game again without reloading. Esc leaves the game.
-  Real: district boundaries, state outline, rivers, roads, rail, towns. Illustrative: facility points,
-  trees, records, updates and the AI answers.
+THE PIPELINE (pipeline/): the main story, driven by scroll
+  One sticky 3D scene (Three.js) that you move through by scrolling, 13 steps, each one screen:
+    departments (8 buildings, each with its real file format floating above: Shapefile, KML, CAD .dwg, Excel,
+    GPS CSV, handwritten register, satellite GeoTIFF, scanned toposheet) → collection on a conveyor →
+    conversion machine (rows → points with swapped lat/long fixed; CAD/KML reprojected to EPSG:4326) →
+    quality gate (one record with a blank code is sent back) → State Data Centre (42U racks with 1U/2U
+    servers, drive bays, blinking LEDs, cable tray) and geodatabase layers → the 33-district map assembling
+    layer by layer → the Geoportal screen → field app, dashboard and department GIS → use cases → the loop.
+  The overlay shows a bold short caption (words rise in) and a side panel with the actual content: file
+  snippets, conversion before → after, the checklist, layer counts, use cases.
+  Everything in the scene is a function of scroll position, so scrolling back rewinds it exactly.
+  Files: pipeline/steps.js (all text, EN + HI, camera keys), pipeline/scene.js (3D), pipeline/pipeline.js
+  (scroll → scene + overlay), pipeline/pipeline.css. The 3D loads only when the reader gets close.
+
+THE GAME (play.html, game/): the earlier hands-on game, kept as an optional page linked at the end.
 
 FILES
   index.html        page shell (preloader, header, orbit stage, game section, outro, auto-play pill)
