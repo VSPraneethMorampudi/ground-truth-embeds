@@ -3,9 +3,9 @@
 import * as THREE from "three";
 import {RoundedBoxGeometry} from "../vendor/RoundedBoxGeometry.js";
 import {RoomEnvironment} from "../vendor/RoomEnvironment.js";
-import {DEPTS,STEPS} from "./steps.js";
-import {FILES,drawFile,drawFeature} from "./files.js";
-import {envDraw,inboxDraw,mailDraw,gisDraw} from "./screens.js";
+import {DEPTS,STEPS} from "./steps.js?v=202610260830";
+import {FILES,drawFile,drawFeature} from "./files.js?v=202610260830";
+import {envDraw,inboxDraw,mailDraw,gisDraw} from "./screens.js?v=202610260830";
 
 const G=window.GEO,D2R=Math.PI/180,LON0=82.15,LAT0=21.35,K=1,CX=Math.cos(LAT0*D2R),MX=75,MS=10;
 export const P=(lon,lat)=>[MX+(lon-LON0)*CX*MS,-(lat-LAT0)*MS];
