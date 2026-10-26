@@ -3,9 +3,9 @@
 import * as THREE from "three";
 import {RoundedBoxGeometry} from "../vendor/RoundedBoxGeometry.js";
 import {RoomEnvironment} from "../vendor/RoomEnvironment.js";
-import {DEPTS,STEPS} from "./steps.js?v=202610261000";
-import {FILES,drawFile,drawFeature} from "./files.js?v=202610261000";
-import {envDraw,inboxDraw,mailDraw,gisDraw} from "./screens.js?v=202610261000";
+import {DEPTS,STEPS} from "./steps.js?v=202610261050";
+import {FILES,drawFile,drawFeature} from "./files.js?v=202610261050";
+import {envDraw,inboxDraw,mailDraw,gisDraw} from "./screens.js?v=202610261050";
 
 const G=window.GEO,D2R=Math.PI/180,LON0=82.15,LAT0=21.35,K=1,CX=Math.cos(LAT0*D2R),MX=75,MS=10;
 export const P=(lon,lat)=>[MX+(lon-LON0)*CX*MS,-(lat-LAT0)*MS];
@@ -71,8 +71,13 @@ export class PipelineScene{
   resize(){const w=this.host.clientWidth,h=this.host.clientHeight;if(!w||!h)return;this.r.setSize(w,h,false);this.cam.aspect=w/h;this.phone=w<760;
     this.cam.fov=this.phone?48:32;
     /* keep the subject centred in the space the caption and side panel leave free */
-    if(this.phone)this.cam.setViewOffset(w,h,0,this.ex?h*.2:-h*.06,w,h);else this.cam.setViewOffset(w,h,Math.min(460,w*.34)/2,h*.04,w,h);
+    this.offX=this.offX??0;this.applyOffset(true);
     this.cam.updateProjectionMatrix()}
+  /* keep the subject centred in the space the caption and panel leave free; the sideways shift only applies while a panel shows */
+  applyOffset(force,k=.08){const w=this.host.clientWidth,h=this.host.clientHeight;if(!w||!h)return;
+    const tx=!this.phone&&(this.panel||this.ex)?Math.min(460,w*.34)/2:0,nx=force?this.offX:this.offX+(tx-this.offX)*k;
+    if(!force&&Math.abs(nx-this.offX)<.3&&Math.abs(tx-this.offX)<.3)return;this.offX=Math.abs(tx-nx)<.3?tx:nx;
+    if(this.phone)this.cam.setViewOffset(w,h,0,this.ex?h*.2:-h*.06,w,h);else this.cam.setViewOffset(w,h,this.offX,h*.04,w,h);this.cam.updateProjectionMatrix()}
   setVisible(v){this.on=v}
   redrawTextures(){(this.texs||[]).forEach(t=>{const u=t.userData;u.x.clearRect(0,0,u.c.width,u.c.height);u.draw(u.x,u.c.width,u.c.height);t.needsUpdate=true})}
   tex(w,h,draw){const t=canvasTex(w,h,draw);(this.texs=this.texs||[]).push(t);return t}
@@ -490,11 +495,12 @@ export class PipelineScene{
     /* overview keys ("fit") back the camera off until the whole scene fits the space the caption and panel leave free */
     const far=this.phone?1.55:1;
     const key=c=>{const p=new THREE.Vector3(...c[0]),g=new THREE.Vector3(...c[1]);if(c[2]!=="fit")return[p,g];
-      const dir=p.clone().sub(g).normalize(),el=Math.asin(dir.y),vf=this.cam.fov*D2R/2,hf=Math.atan(Math.tan(vf)*this.cam.aspect),useW=this.phone?.96:.7,useH=this.phone?.5:.66;
+      const dir=p.clone().sub(g).normalize(),el=Math.asin(dir.y),vf=this.cam.fov*D2R/2,hf=Math.atan(Math.tan(vf)*this.cam.aspect),useW=this.phone?.96:(this.panel||this.ex?.7:.94),useH=this.phone?.5:.66;
       const hw=176,hh=(110*Math.sin(el)+50*Math.cos(el))/2,d=Math.max(hw/(Math.tan(hf)*useW),hh/(Math.tan(vf)*useH))*1.04/far;return[g.clone().addScaledVector(dir,d),g]};
     const K0=key(k0),K1=key(k1),pos=K0[0].lerp(K1[0],e),tgt=K0[1].lerp(K1[1],e);
     if(ex){pos.set(...ex.cam[0]);tgt.set(...ex.cam[1])}
     pos.sub(tgt).multiplyScalar(far).add(tgt);pos.x+=this.mouse.x*6;pos.y-=this.mouse.y*4;
+    this.applyOffset(false,ka);
     this.cam.position.lerp(pos,ka);this.look.lerp(tgt,ka);this.cam.lookAt(this.look);
     /* the floor path pulses while data moves; analysts type, glance between their two screens */
     this.analysts.forEach((a,k)=>{a.head.rotation.y=Math.sin(t*.45+a.ph)*.3;a.head.rotation.x=.1+Math.sin(t*.8+a.ph)*.04;
@@ -551,13 +557,14 @@ export class PipelineScene{
       sh.position.set(mix(0,mapPos.x,toMap),mix(y,mapPos.y+Math.sin(toMap*Math.PI)*28,toMap),mix(0,mapPos.z,toMap));sh.scale.setScalar(Math.max(.001,up*(1-sm((toMap-.7)/.3))));sh.rotation.y=Math.sin(t*.6+k)*.05*(1-toMap)});
     /* the map assembles layer by layer */
     const sm0=SI.map,mp=s-sm0;
-    const dIn=seg(s,sm0-1.2,sm0-.4);this.dist.forEach((d,k)=>{const dd=seg(s,sm0-1.1+k*.012,sm0-.5+k*.012);d.m.position.y=3+(1-dd)*18;d.m.visible=dd>0.001});
-    const draw=(grp,a,b)=>{const p=seg(s,a,b);grp.visible=p>0;grp.children.forEach(m=>m.geometry.setDrawRange(0,Math.floor(m.userData.full*p/3)*3))};
+    const pv=1-seg(s,.3,.85);
+    const dIn=seg(s,sm0-1.2,sm0-.4);this.dist.forEach((d,k)=>{const dd=Math.max(pv,seg(s,sm0-1.1+k*.012,sm0-.5+k*.012));d.m.position.y=3+(1-dd)*18;d.m.visible=dd>0.001});
+    const draw=(grp,a,b)=>{const p=Math.max(pv,seg(s,a,b));grp.visible=p>0;grp.children.forEach(m=>m.geometry.setDrawRange(0,Math.floor(m.userData.full*p/3)*3))};
     draw(this.rivers,sm0+.15,sm0+.45);draw(this.roads,sm0+.3,sm0+.6);draw(this.rail,sm0+.4,sm0+.65);
     const off=ex&&ex.off||{};if(off.rivers)this.rivers.visible=false;if(off.roads)this.roads.visible=false;if(off.rail)this.rail.visible=false;this.trees.visible=!off.forest;this.fac.visible=this.facH.visible=!off.fac;
     const m4=new THREE.Matrix4(),qn=new THREE.Quaternion(),v3=new THREE.Vector3();
-    const tp=seg(s,sm0+.05,sm0+.35);this.treePts.forEach(([p,sc],k)=>{const[x,z]=P(...p);const g=cl(tp*1.6-k/this.treePts.length*.6);v3.setScalar(Math.max(.001,g*sc));m4.compose(new THREE.Vector3(x,3.9,z),qn,v3);this.trees.setMatrixAt(k,m4)});this.trees.instanceMatrix.needsUpdate=true;
-    const pp=seg(s,sm0+.5,sm0+.8);this.facPts.forEach((p,k)=>{const[x,z]=P(...p);const g=cl(pp*1.6-k/this.facPts.length*.6);const e=g<1?1+2.7*Math.pow(g-1,3)+1.7*Math.pow(g-1,2):1;v3.setScalar(Math.max(.001,e));m4.compose(new THREE.Vector3(x,3.9,z),qn,v3);this.fac.setMatrixAt(k,m4);this.facH.setMatrixAt(k,m4)});
+    const tp=Math.max(pv,seg(s,sm0+.05,sm0+.35));this.treePts.forEach(([p,sc],k)=>{const[x,z]=P(...p);const g=cl(tp*1.6-k/this.treePts.length*.6);v3.setScalar(Math.max(.001,g*sc));m4.compose(new THREE.Vector3(x,3.9,z),qn,v3);this.trees.setMatrixAt(k,m4)});this.trees.instanceMatrix.needsUpdate=true;
+    const pp=Math.max(pv,seg(s,sm0+.5,sm0+.8));this.facPts.forEach((p,k)=>{const[x,z]=P(...p);const g=cl(pp*1.6-k/this.facPts.length*.6);const e=g<1?1+2.7*Math.pow(g-1,3)+1.7*Math.pow(g-1,2):1;v3.setScalar(Math.max(.001,e));m4.compose(new THREE.Vector3(x,3.9,z),qn,v3);this.fac.setMatrixAt(k,m4);this.facH.setMatrixAt(k,m4)});
     this.fac.instanceMatrix.needsUpdate=this.facH.instanceMatrix.needsUpdate=true;
     /* use cases: districts rise and take a colour per question */
     let su=SI.uses,uIn=seg(s,su-.1,su+.15)*(1-seg(s,su+.9,su+1.1)),ui=Math.min(3,Math.floor(cl(s-su)*4));if(ex&&ex.id==="map"&&ex.use!=null){uIn=1;ui=ex.use}this.useIdx=uIn>0?ui:-1;
@@ -569,9 +576,9 @@ export class PipelineScene{
     if(hd>=0)this.dist[hd].m.position.y+=.6;if(sd>=0){this.dist[sd].m.position.y+=1.2;this.dist[sd].m.material[0].color.copy(this.acc3)}
     const hl=ex&&ex.hl||0;if(hl!==(this.portalHl||0)){this.portalHl=hl;const u=this.portalTex.userData;u.draw=(x,W,H)=>this.drawPortal(x,W,H,hl);u.x.clearRect(0,0,u.c.width,u.c.height);u.draw(u.x,u.c.width,u.c.height);this.portalTex.needsUpdate=true}
     /* portal screen rises behind the map */
-    const pr=seg(s,SI.portal-.5,SI.portal+.2);this.portal.position.y=mix(-40,24,pr);this.portal.visible=pr>0;
+    const pr=Math.max(pv,seg(s,SI.portal-.5,SI.portal+.2));this.portal.position.y=mix(-40,24,pr);this.portal.visible=pr>0;
     /* apps pop up */
-    [[this.phoneG,0],[this.tabG,.12],[this.lapG,.24]].forEach(([o,d])=>{const a=seg(s,SI.apps-.45+d,SI.apps-.05+d);const e=a<1?1+2.7*Math.pow(a-1,3)+1.7*Math.pow(a-1,2):1;o.scale.setScalar(Math.max(.001,e));o.position.y+=Math.sin(t*1.5+d*10)*.004});
+    [[this.phoneG,0],[this.tabG,.12],[this.lapG,.24]].forEach(([o,d])=>{const a=Math.max(pv,seg(s,SI.apps-.45+d,SI.apps-.05+d));const e=a<1?1+2.7*Math.pow(a-1,3)+1.7*Math.pow(a-1,2):1;o.scale.setScalar(Math.max(.001,e));o.position.y+=Math.sin(t*1.5+d*10)*.004});
     /* the loop back from the field */
     const lp=seg(s,SI.loop-.2,SI.loop+.5);this.loop.geometry.setDrawRange(0,Math.floor(this.loop.userData.full*lp/3)*3);this.loopDots.visible=lp>.95;
     if(this.loopDots.visible){for(let k=0;k<6;k++){const u=((t*.08+k/6)%1);m4.makeTranslation(...this.loopCurve.getPointAt(u).toArray());this.loopDots.setMatrixAt(k,m4)}this.loopDots.instanceMatrix.needsUpdate=true}

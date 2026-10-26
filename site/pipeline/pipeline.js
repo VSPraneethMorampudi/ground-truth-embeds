@@ -1,8 +1,8 @@
 /* Scroll controller for the pipeline: scroll position → scene + overlay. */
-import {STEPS,DEPTS,CONV,USES,APPS} from "./steps.js?v=202610261000";
-import {FILES,FMTS,drawFile} from "./files.js?v=202610261000";
-import {mailDraw,gisDraw} from "./screens.js?v=202610261000";
-import {buildApps} from "./apps.js?v=202610261000";
+import {STEPS,DEPTS,CONV,USES,APPS} from "./steps.js?v=202610261050";
+import {FILES,FMTS,drawFile} from "./files.js?v=202610261050";
+import {mailDraw,gisDraw} from "./screens.js?v=202610261050";
+import {buildApps} from "./apps.js?v=202610261050";
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const L2=o=>o?`<span lang="en">${o.en}</span><span lang="hi">${o.hi}</span>`:"";
 const T=(en,hi)=>({en,hi});
@@ -22,7 +22,7 @@ sec.innerHTML=`<div class="pl-stage">
   <div class="pl-cue"><i></i>${L2(T("Scroll","स्क्रॉल करें"))}</div>
   <div class="pl-live" id="plLive"><iframe id="plPortal" title="Chhattisgarh State Geoportal (live)" width="1400" height="780" loading="lazy"></iframe></div>
   <aside class="pl-ex" id="plEx" aria-live="polite"></aside>
-  <nav class="pl-dock" id="plDock" aria-label="Explore"><span>${L2(T("Explore","एक्सप्लोर"))}</span>${[["depts","buildings",T("Departments","विभाग")],["lab","paper-plane-tilt",T("CHiPS lab","चिप्स लैब")],["dc","hard-drives",T("Data centre","डेटा केंद्र")],["map","map-trifold",T("Map","नक्शा")],["portal","globe-hemisphere-east",T("Geoportal","जियोपोर्टल")]].map(([id,i,t])=>`<button data-ex="${id}">${window.icon?window.icon(i):""}<b>${L2(t)}</b></button>`).join("")}<button class="ex-close" data-ex-close>✕ <b>${L2(T("Back to story","कहानी पर लौटें"))}</b></button></nav>
+  <nav class="pl-dock" id="plDock" aria-label="Explore"><span>${L2(T("Explore","एक्सप्लोर"))}</span>${[["depts","buildings",T("Departments","विभाग")],["lab","paper-plane-tilt",T("CHiPS lab","चिप्स लैब")],["dc","hard-drives",T("Data centre","डेटा केंद्र")],["map","map-trifold",T("Map","नक्शा")],["portal","globe-hemisphere-east",T("Geoportal","जियोपोर्टल")]].map(([id,i,t])=>`<button data-ex="${id}">${window.icon?window.icon(i):""}<b>${L2(t)}</b></button>`).join("")}<button class="ex-close" data-ex-close>✕ <b>${L2(T("Back to story","कहानी पर लौटें"))}</b></button><a class="dock-cta" href="${(window.GT&&window.GT.PORTAL_URL)||"#"}" target="_blank" rel="noopener"><b>${L2(T("Open the Geoportal","जियोपोर्टल खोलें"))}</b> ↗</a></nav>
 </div>`;
 
 /* ---------- caption: bold headline, word by word ---------- */
@@ -61,9 +61,8 @@ function side(i,f){const st=STEPS[i],p=$("#plSide");let key=st.id,html="";
   else if(st.id==="apps"){const a=Math.min(2,Math.floor(f*3));key+=":"+a;html=`<div class="cards">${APPS.map((x,k)=>`<div class="card ${k===a?"on":""}"><b>${L2(x.t)}</b><span>${L2(x.b)}</span></div>`).join("")}</div>`}
   else if(st.uses){const a=Math.min(3,Math.floor(f*4));key+=":"+a;html=`<div class="cards uses">${USES.map((x,k)=>`<div class="card ${k===a?"on":""}" style="--c:${x.col}"><b>${L2(x.t)}</b><span>${L2(x.b)}</span></div>`).join("")}</div>
       <small class="note">${L2(T("Illustrative values on real district boundaries.","असली ज़िला सीमाओं पर उदाहरण मान।"))}</small>`}
-  else if(st.id==="loop"){html=`<div class="end"><a class="btn" href="${PORTAL_URL}" target="_blank" rel="noopener">${L2(T("Open the Geoportal","जियोपोर्टल खोलें"))} ↗</a>
-      <p class="ex-k">${L2(T("Now explore each block","अब हर हिस्से को खुद देखें"))}</p><div class="ex-q">${[["depts",T("Departments","विभाग")],["lab",T("CHiPS lab","चिप्स लैब")],["dc",T("Data centre","डेटा केंद्र")],["map",T("Map","नक्शा")],["portal",T("Geoportal","जियोपोर्टल")]].map(([id,t])=>`<button data-ex="${id}">${L2(t)}</button>`).join("")}</div></div>`}
-  if(p.dataset.key===key)return;const first=p.dataset.key?.split(":")[0]!==key.split(":")[0];p.dataset.key=key;p.innerHTML=html;p.classList.toggle("empty",!html);
+  else if(st.id==="loop"){html=""}
+  if(p.dataset.key===key)return;const first=p.dataset.key?.split(":")[0]!==key.split(":")[0];p.dataset.key=key;p.innerHTML=html;p.classList.toggle("empty",!html);if(scene)scene.panel=!!html;
   if(!REDUCE&&html&&first)gsap.fromTo(p,{clipPath:"inset(0 0 100% 0 round 22px)",y:30},{clipPath:"inset(0 0 0% 0 round 22px)",y:0,duration:.8,ease:"expo.out"})}
 
 /* ---------- scroll → s ---------- */
@@ -198,5 +197,5 @@ addEventListener("gt-lang",()=>{const i=cur;cur=-1;$("#plSide").dataset.key="";u
 
 /* ---------- the 3D scene loads when the reader gets close ---------- */
 new IntersectionObserver(async es=>{const e=es[0];
-  if(e.isIntersecting&&!scene){const {PipelineScene}=await import("./scene.js?v=202610261000");scene=new PipelineScene($("#pl3d"));window.GTPipe=scene;ScrollTrigger.refresh()}
+  if(e.isIntersecting&&!scene){const {PipelineScene}=await import("./scene.js?v=202610261050");scene=new PipelineScene($("#pl3d"));window.GTPipe=scene;ScrollTrigger.refresh()}
   if(scene)scene.setVisible(e.isIntersecting)},{rootMargin:"600px"}).observe(sec);
