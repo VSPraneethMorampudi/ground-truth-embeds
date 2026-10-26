@@ -6,17 +6,22 @@ about 3 minutes (flight, then the game in watch mode, then the ending).
 
 THE PIPELINE (pipeline/): the main story, driven by scroll
   One sticky 3D scene (Three.js) that you move through by scrolling, 13 steps, each one screen:
-    departments (8 buildings, each with its real file format floating above: Shapefile, KML, CAD .dwg, Excel,
-    GPS CSV, handwritten register, satellite GeoTIFF, scanned toposheet) → collection on a conveyor →
-    the CHiPS GIS team lab (analysts at dual monitors: digitising, attribute tables, georeferencing scans;
-    rows → points with swapped lat/long fixed; CAD/KML reprojected to EPSG:4326) →
+    a department campus (8 named government buildings — secretariat, glass tower, school, hospital, forest
+    lodge, railway station… — each with a bilingual name board). A department is not one format: each sends
+    2–3 files (17 in all, 10 formats: Shapefile, KML, CAD .dwg, Excel, CSV, GPS track, PDF, paper register,
+    satellite GeoTIFF, scanned maps). Click or tap any file card (in 3D or in the side panel) to open it in a
+    file viewer: its contents, coordinates or not, raw text, and what the CHiPS team does with it →
+    files are emailed to the CHiPS GIS team: envelopes fly to the lab, the team inbox on the wall fills up,
+    each analyst opens the mail on one screen and works the attachment in a desktop GIS tool on the other
+    (georeferencer, attribute table + Add XY, reproject & edit, raster warp, with live progress) →
     quality gate (one record with a blank code is sent back) → State Data Centre (42U racks with 1U/2U
     servers, drive bays, blinking LEDs, cable tray) and geodatabase layers → the 33-district map assembling
     layer by layer → the Geoportal screen → field app, dashboard and department GIS → use cases → the loop.
   The overlay shows a bold short caption (words rise in) and a side panel with the actual content: file
   snippets, conversion before → after, the checklist, layer counts, use cases.
   Everything in the scene is a function of scroll position, so scrolling back rewinds it exactly.
-  Files: pipeline/steps.js (all text, EN + HI, camera keys), pipeline/scene.js (3D), pipeline/pipeline.js
+  Files: pipeline/steps.js (all text, EN + HI, camera keys), pipeline/files.js (the department files and how
+  each is drawn), pipeline/screens.js (inbox, mail client and GIS tool screens), pipeline/scene.js (3D), pipeline/pipeline.js
   (scroll → scene + overlay), pipeline/pipeline.css. The 3D loads only when the reader gets close.
 
 THE GAME (play.html, game/): the earlier hands-on game, kept as an optional page linked at the end.

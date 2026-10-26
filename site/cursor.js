@@ -39,6 +39,9 @@ function probe(e){const t=e.target;
     else{read.innerHTML=`<span>${T.rotate[lang()]}</span>`;read.classList.add("on")}
     return}
   el.classList.remove("sv-map");read.classList.remove("on");
+  /* a file card in the pipeline's 3D: lock onto its projected outline */
+  if(t.closest&&t.closest("#pl3d")&&window.GTPipe&&window.GTPipe.hoverRect&&!dragging){target={fake:true,getBoundingClientRect:()=>window.GTPipe.hoverRect||{left:P.x,top:P.y,width:0,height:0}};
+    el.classList.add("sv-lockon");el.classList.remove("sv-drag");tag.textContent=T.open[lang()];tag.classList.add("on");return}
   const hit=t.closest&&t.closest(LOCK);
   if(hit&&!hit.classList.contains("gone")&&!hit.disabled&&!dragging){target=hit;el.classList.add("sv-lockon");
     const isDrag=hit.matches(DRAG);el.classList.toggle("sv-drag",isDrag);
@@ -52,7 +55,7 @@ function loop(now){requestAnimationFrame(loop);if(!visible)return;
   S.x+=(P.x-S.x)*.35;S.y+=(P.y-S.y)*.35;
   x.style.transform=`translate(${P.x}px,${P.y}px)`;read.style.transform=`translate(${P.x+18}px,${P.y+18}px)`;
   if(target){const r=target.getBoundingClientRect(),pad=down?2:6;box.x=r.left-pad;box.y=r.top-pad;box.w=r.width+pad*2;box.h=r.height+pad*2;
-    if(!document.contains(target)){target=null;el.classList.remove("sv-lockon","sv-drag")}}
+    if(target.fake?!(window.GTPipe&&window.GTPipe.hoverRect):!document.contains(target)){target=null;el.classList.remove("sv-lockon","sv-drag");tag.classList.remove("on")}}
   else{const s=down?14:22;box.x=S.x-s/2;box.y=S.y-s/2;box.w=s;box.h=s}
   const k=target?.28:.4;bs.x+=(box.x-bs.x)*k;bs.y+=(box.y-bs.y)*k;bs.w+=(box.w-bs.w)*k;bs.h+=(box.h-bs.h)*k;
   lock.style.transform=`translate(${bs.x}px,${bs.y}px)`;lock.style.width=bs.w+"px";lock.style.height=bs.h+"px";
