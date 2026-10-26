@@ -3,9 +3,9 @@
 import * as THREE from "three";
 import {RoundedBoxGeometry} from "../vendor/RoundedBoxGeometry.js";
 import {RoomEnvironment} from "../vendor/RoomEnvironment.js";
-import {DEPTS,STEPS} from "./steps.js?v=202610260945";
-import {FILES,drawFile,drawFeature} from "./files.js?v=202610260945";
-import {envDraw,inboxDraw,mailDraw,gisDraw} from "./screens.js?v=202610260945";
+import {DEPTS,STEPS} from "./steps.js?v=202610261000";
+import {FILES,drawFile,drawFeature} from "./files.js?v=202610261000";
+import {envDraw,inboxDraw,mailDraw,gisDraw} from "./screens.js?v=202610261000";
 
 const G=window.GEO,D2R=Math.PI/180,LON0=82.15,LAT0=21.35,K=1,CX=Math.cos(LAT0*D2R),MX=75,MS=10;
 export const P=(lon,lat)=>[MX+(lon-LON0)*CX*MS,-(lat-LAT0)*MS];
@@ -487,8 +487,12 @@ export class PipelineScene{
   frame(){if(!this.on)return;const raw=Math.min(.5,this.clock.getDelta()),dt=Math.min(.05,raw),ka=1-Math.exp(-raw*5);this.t+=dt;const ex=this.ex,s=ex?ex.s:this.s,t=this.t,M=this.M;
     /* camera: glide between step keys in the first 40% of each step */
     const i=Math.floor(cl(s,0,STEPS.length-.0001)),f=s-i,k0=STEPS[Math.max(0,i-1)].cam,k1=STEPS[i].cam,e=i===0?1:sm(f/.4);
+    /* overview keys ("fit") back the camera off until the whole scene fits the space the caption and panel leave free */
     const far=this.phone?1.55:1;
-    const pos=new THREE.Vector3(...k0[0]).lerp(new THREE.Vector3(...k1[0]),e),tgt=new THREE.Vector3(...k0[1]).lerp(new THREE.Vector3(...k1[1]),e);
+    const key=c=>{const p=new THREE.Vector3(...c[0]),g=new THREE.Vector3(...c[1]);if(c[2]!=="fit")return[p,g];
+      const dir=p.clone().sub(g).normalize(),el=Math.asin(dir.y),vf=this.cam.fov*D2R/2,hf=Math.atan(Math.tan(vf)*this.cam.aspect),useW=this.phone?.96:.7,useH=this.phone?.5:.66;
+      const hw=176,hh=(110*Math.sin(el)+50*Math.cos(el))/2,d=Math.max(hw/(Math.tan(hf)*useW),hh/(Math.tan(vf)*useH))*1.04/far;return[g.clone().addScaledVector(dir,d),g]};
+    const K0=key(k0),K1=key(k1),pos=K0[0].lerp(K1[0],e),tgt=K0[1].lerp(K1[1],e);
     if(ex){pos.set(...ex.cam[0]);tgt.set(...ex.cam[1])}
     pos.sub(tgt).multiplyScalar(far).add(tgt);pos.x+=this.mouse.x*6;pos.y-=this.mouse.y*4;
     this.cam.position.lerp(pos,ka);this.look.lerp(tgt,ka);this.cam.lookAt(this.look);
