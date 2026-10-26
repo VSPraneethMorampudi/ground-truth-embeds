@@ -1,7 +1,7 @@
 /* What the CHiPS GIS team's screens show: the team inbox, each analyst's mail client with the department's
    email open, and a desktop GIS tool working on the attachment (georeferencer, attribute table + XY,
    reproject & edit, raster warp). All drawn on 2D canvases (512 × 320) that become monitor textures. */
-import {FMTS} from "./files.js?v=202610260830";
+import {FMTS} from "./files.js?v=202610260900";
 const MONO='"Geist Mono",ui-monospace,monospace',SANS='"Bricolage Grotesque",system-ui,sans-serif';
 const rr=(x,X,Y,W,H,r)=>{x.beginPath();x.roundRect(X,Y,W,H,r)};
 const clip=(x,t,w)=>{t=String(t);if(x.measureText(t).width<=w)return t;while(t.length>1&&x.measureText(t+"…").width>w)t=t.slice(0,-1);return t+"…"};

@@ -1,8 +1,8 @@
 /* Scroll controller for the pipeline: scroll position → scene + overlay. */
-import {STEPS,DEPTS,CONV,USES,APPS} from "./steps.js?v=202610260830";
-import {FILES,FMTS,drawFile} from "./files.js?v=202610260830";
-import {mailDraw,gisDraw} from "./screens.js?v=202610260830";
-import {buildApps} from "./apps.js?v=202610260830";
+import {STEPS,DEPTS,CONV,USES,APPS} from "./steps.js?v=202610260900";
+import {FILES,FMTS,drawFile} from "./files.js?v=202610260900";
+import {mailDraw,gisDraw} from "./screens.js?v=202610260900";
+import {buildApps} from "./apps.js?v=202610260900";
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const L2=o=>o?`<span lang="en">${o.en}</span><span lang="hi">${o.hi}</span>`:"";
 const T=(en,hi)=>({en,hi});
@@ -198,5 +198,5 @@ addEventListener("gt-lang",()=>{const i=cur;cur=-1;$("#plSide").dataset.key="";u
 
 /* ---------- the 3D scene loads when the reader gets close ---------- */
 new IntersectionObserver(async es=>{const e=es[0];
-  if(e.isIntersecting&&!scene){const {PipelineScene}=await import("./scene.js?v=202610260830");scene=new PipelineScene($("#pl3d"));window.GTPipe=scene;ScrollTrigger.refresh()}
+  if(e.isIntersecting&&!scene){const {PipelineScene}=await import("./scene.js?v=202610260900");scene=new PipelineScene($("#pl3d"));window.GTPipe=scene;ScrollTrigger.refresh()}
   if(scene)scene.setVisible(e.isIntersecting)},{rootMargin:"600px"}).observe(sec);
