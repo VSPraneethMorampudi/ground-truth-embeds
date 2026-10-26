@@ -138,6 +138,13 @@ html[data-lang=hi] .pl-dock>span{letter-spacing:0;font:700 13px var(--hi)}
 .pl-dock button.on{background:var(--ink);color:var(--paper)}
 .pl-dock .ex-close{display:none;background:var(--accent);color:#fff}
 #pipeline.exploring .pl-dock .ex-close{display:flex}
+/* the one call to action, next to the dock, with a shine sweeping across it */
+.dock-cta{position:relative;overflow:hidden;isolation:isolate;display:flex;align-items:center;gap:6px;margin-left:4px;padding:10px 18px;border-radius:99px;white-space:nowrap;flex:none;
+  background:var(--cta);color:var(--cta-ink);font:800 14px var(--sans);text-decoration:none;box-shadow:0 8px 22px -10px var(--cta);transition:transform .3s cubic-bezier(.3,1.7,.5,1),box-shadow .3s}
+.dock-cta::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.75) 48%,transparent 66%);transform:translateX(-130%);animation:ctashine 3.2s ease-in-out infinite}
+.dock-cta:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 14px 30px -12px var(--cta)}
+@keyframes ctashine{0%,55%{transform:translateX(-130%)}85%,100%{transform:translateX(130%)}}
+@media (prefers-reduced-motion:reduce){.dock-cta::after{animation:none}}
 #pipeline.exploring :is(.pl-cap,.pl-side,.pl-rail,.pl-cue){opacity:0;pointer-events:none;transition:opacity .3s}
 #pipeline.exploring .pl-stage::after{opacity:0}
 .pl-stage::after{transition:opacity .4s}
