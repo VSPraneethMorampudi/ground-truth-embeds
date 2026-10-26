@@ -3,9 +3,9 @@
 import * as THREE from "three";
 import {RoundedBoxGeometry} from "../vendor/RoundedBoxGeometry.js";
 import {RoomEnvironment} from "../vendor/RoomEnvironment.js";
-import {DEPTS,STEPS} from "./steps.js?v=202610260900";
-import {FILES,drawFile,drawFeature} from "./files.js?v=202610260900";
-import {envDraw,inboxDraw,mailDraw,gisDraw} from "./screens.js?v=202610260900";
+import {DEPTS,STEPS} from "./steps.js?v=202610260945";
+import {FILES,drawFile,drawFeature} from "./files.js?v=202610260945";
+import {envDraw,inboxDraw,mailDraw,gisDraw} from "./screens.js?v=202610260945";
 
 const G=window.GEO,D2R=Math.PI/180,LON0=82.15,LAT0=21.35,K=1,CX=Math.cos(LAT0*D2R),MX=75,MS=10;
 export const P=(lon,lat)=>[MX+(lon-LON0)*CX*MS,-(lat-LAT0)*MS];
@@ -87,13 +87,13 @@ export class PipelineScene{
     this.beltY=1;this.beltZ=16;
     this.buildDepts();this.buildConverter();this.buildTeamServer();this.buildDataCentre();this.buildMap();this.buildPortal();this.buildApps();this.buildDocs();this.buildLoop();this.buildBlocks()}
 
-  /* the department campus: eight named government buildings, each with its own architecture and a name board */
+  /* the department campus: seven named government buildings, each with its own architecture and a name board */
   buildDepts(){const S=this.scene,M=this.M;this.depts=[];
     const stone=new THREE.MeshStandardMaterial({color:0xd8d0bf,roughness:.85}),cream=new THREE.MeshStandardMaterial({color:0xf3e9d2,roughness:.7}),
       wood=new THREE.MeshStandardMaterial({color:0x8a5a36,roughness:.8}),leaf=new THREE.MeshStandardMaterial({color:0x3e8a4f,roughness:.8}),
       white=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.5}),paneG=new THREE.BoxGeometry(1,1,1);
     /* back row: the bigger offices; front row: lower buildings, so every board and file stays in view */
-    const LAY=[[-153,-30,"capitol"],[-131,-30,"tower"],[-111,-30,"block"],[-92,-30,"court"],[-150,0,"slab"],[-130,0,"terrace"],[-111,0,"lodge"],[-92,0,"station"]];
+    const LAY=[[-153,-30,"capitol"],[-131,-30,"tower"],[-111,-30,"block"],[-92,-30,"court"],[-142,0,"slab"],[-122,0,"terrace"],[-102,0,"lodge"]];
     DEPTS.forEach((d,i)=>{const g=new THREE.Group(),[gx,gz,style]=LAY[i];g.position.set(gx,0,gz);S.add(g);
       const acc=new THREE.MeshStandardMaterial({color:d.col,roughness:.45});
       const B=(w,h,dd,x,y,z,m,r=.3)=>{const o=this.rb(w,h,dd,r,m);o.position.set(x,y,z);g.add(o);return o};
@@ -386,11 +386,15 @@ export class PipelineScene{
     const ped=(x,z,w)=>{const p=this.rb(w,2,w*.7,.6,M.wall2);p.position.set(x,1,z);g.add(p);return p};
     /* phone: field app */
     ped(-18,4,10);const ph=this.phoneG=new THREE.Group();ph.position.set(-18,9.5,4);ph.rotation.set(-.15,.35,0);g.add(ph);
-    ph.add(this.rb(6,12,.7,.9,M.ink));const ps=screen(5.4,11.2,(x,W,H)=>{x.fillStyle="#f3f6fb";x.fillRect(0,0,W,H);x.fillStyle="#0d1b2e";x.fillRect(0,0,W,56);x.fillStyle="#fff";x.font=`700 22px ${SANS}`;x.fillText("Field app",16,36);
+    /* a modern phone: metal band, glass front with an even thin bezel, side buttons */
+    {const band=this.rb(6.24,12.64,.5,.95,new THREE.MeshStandardMaterial({color:0x8e96a1,roughness:.25,metalness:.9}));band.position.z=-.04;ph.add(band);
+      const glass=this.rb(6.14,12.54,.56,.9,M.ink);ph.add(glass);
+      [[3.16,2.6,1.5],[-3.16,3.3,.9],[-3.16,1.9,.9],[-3.16,4.6,.5]].forEach(([x,y,h])=>{const b=this.rb(.12,h,.28,.05,new THREE.MeshStandardMaterial({color:0x8e96a1,roughness:.25,metalness:.9}));b.position.set(x,y,0);ph.add(b)})}
+    const ps=screen(5.86,12.24,(x,W,H)=>{x.fillStyle="#f3f6fb";x.fillRect(0,0,W,H);x.fillStyle="#0d1b2e";x.fillRect(0,0,W,56);x.fillStyle="#fff";x.font=`700 22px ${SANS}`;x.fillText("Field app",16,36);
       x.fillStyle="#dfe7f1";x.fillRect(0,56,W,H*.55);x.strokeStyle="#1d6fd6";x.lineWidth=4;x.beginPath();x.moveTo(0,200);x.bezierCurveTo(80,170,140,260,W,230);x.stroke();
       x.fillStyle="#2f6fd6";x.beginPath();x.arc(W/2,190,12,0,7);x.fill();x.strokeStyle="#2f6fd688";x.lineWidth=3;x.beginPath();x.arc(W/2,190,30,0,7);x.stroke();
       x.fillStyle="#0d1b2e";x.font=`500 15px ${MONO}`;x.fillText("21.0602 N  81.7604 E",14,H*.55+90);x.fillStyle="#ffc93c";rr(x,14,H-90,W-28,60,30);x.fill();x.fillStyle="#1c1300";x.font=`700 20px ${SANS}`;x.fillText("Capture point",40,H-52)});
-    ps.position.z=.37;ph.add(ps);
+    ps.position.z=.29;ph.add(ps);
     /* tablet: dashboard */
     ped(0,-6,16);const tb=this.tabG=new THREE.Group();tb.position.set(0,10,-6);tb.rotation.set(-.12,0,0);g.add(tb);
     tb.add(this.rb(18,12.5,.7,1,M.ink));const ts=screen(17,11.5,(x,W,H)=>{x.fillStyle="#fff";x.fillRect(0,0,W,H);x.fillStyle="#0d1b2e";x.font=`800 30px ${SANS}`;x.fillText("Coverage by district",24,50);
@@ -492,7 +496,7 @@ export class PipelineScene{
     this.analysts.forEach((a,k)=>{a.head.rotation.y=Math.sin(t*.45+a.ph)*.3;a.head.rotation.x=.1+Math.sin(t*.8+a.ph)*.04;
       a.arms.forEach((fa,m)=>{fa.position.y=1.22+Math.max(0,Math.sin(t*(8+k)+m*2.3+a.ph))*.06});a.mouse.position.x=a.x+2.2+Math.sin(t*1.3+a.ph)*.12});
     /* departments: all of them in the overview, then one at a time; the one whose file is under the pointer lifts */
-    const hh0=this.hoverHit,active=ex?(ex.id==="depts"&&ex.dept!=null?ex.dept:-1):STEPS[i].depts==="each"?Math.min(7,Math.floor(f*8)):-1,hvD=this.hover>=0?FILES[this.hover].d:hh0&&hh0.type==="dept"?hh0.i:-1;
+    const hh0=this.hoverHit,active=ex?(ex.id==="depts"&&ex.dept!=null?ex.dept:-1):STEPS[i].depts==="each"?Math.min(DEPTS.length-1,Math.floor(f*DEPTS.length)):-1,hvD=this.hover>=0?FILES[this.hover].d:hh0&&hh0.type==="dept"?hh0.i:-1;
     this.depts.forEach((dp,j)=>{const on=j===active||j===hvD;dp.g.position.y+=((on?.6:0)-dp.g.position.y)*.15;dp.acc.emissive.set(dp.d.col);dp.acc.emissiveIntensity+=((on?.8:0)-dp.acc.emissiveIntensity)*.15});
     if(this.flag)this.flag.rotation.y=Math.sin(t*2)*.18;
     /* files → mail → CHiPS lab → team server → data centre */

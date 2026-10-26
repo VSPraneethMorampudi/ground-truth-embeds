@@ -10,8 +10,7 @@ export const DEPTS=[
   {k:"edu",short:T("School Education","स्कूल शिक्षा"),name:T("School Education Department","स्कूल शिक्षा विभाग"),col:"#2f6fd6"},
   {k:"health",short:T("Health","स्वास्थ्य"),name:T("Health Department","स्वास्थ्य विभाग"),col:"#d2423a"},
   {k:"wcd",short:T("Women & Child","महिला एवं बाल"),name:T("Women & Child Development","महिला एवं बाल विकास विभाग"),col:"#e39a1f"},
-  {k:"forest",short:T("Forest","वन"),name:T("Forest Department","वन विभाग"),col:"#3e8a4f"},
-  {k:"rail",short:T("Railways","रेलवे"),name:T("Railways · SECR","रेलवे · द.पू.म.रे."),col:"#3a383d"}
+  {k:"forest",short:T("Forest","वन"),name:T("Forest Department","वन विभाग"),col:"#3e8a4f"}
 ];
 
 export const STEPS=[
@@ -19,7 +18,7 @@ export const STEPS=[
    k:T("The pipeline","पाइपलाइन"),h:T("Follow the data","डेटा के साथ चलिए"),
    b:T("From office files to a live map.","दफ़्तर की फ़ाइलों से लाइव नक्शे तक।")},
   {id:"depts1",cam:[[-122,130,110],[-122,0,2]],depts:"all",
-   k:T("1 · Departments","1 · विभाग"),h:T("Eight departments","आठ विभाग"),
+   k:T("1 · Departments","1 · विभाग"),h:T("Seven departments","सात विभाग"),
    b:T("Each sends many kinds of file. Click one to open it.","हर विभाग कई तरह की फ़ाइलें भेजता है। खोलने के लिए क्लिक करें।")},
   {id:"depts2",cam:[[-110,112,100],[-124,0,0]],depts:"each",
    k:T("1 · Departments","1 · विभाग"),h:T("One office, many formats","एक दफ़्तर, कई प्रारूप"),

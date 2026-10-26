@@ -6,8 +6,8 @@ about 3 minutes (flight, then the game in watch mode, then the ending).
 
 THE PIPELINE (pipeline/): the main story, driven by scroll
   One sticky 3D scene (Three.js) that you move through by scrolling, 13 steps, each one screen:
-    a department campus (8 named government buildings — secretariat, glass tower, school, hospital, forest
-    lodge, railway station… — each with a bilingual name board). A department is not one format: each sends
+    a department campus (7 named government buildings — secretariat, glass tower, school, hospital, forest
+    lodge… — each with a bilingual name board). A department is not one format: each sends
     2–3 files (17 in all, 10 formats: Shapefile, KML, CAD .dwg, Excel, CSV, GPS track, PDF, paper register,
     satellite GeoTIFF, scanned maps). Click or tap any file card (in 3D or in the side panel) to open it in a
     file viewer: its contents, coordinates or not, raw text, and what the CHiPS team does with it →

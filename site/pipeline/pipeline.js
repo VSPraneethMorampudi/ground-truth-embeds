@@ -1,8 +1,8 @@
 /* Scroll controller for the pipeline: scroll position → scene + overlay. */
-import {STEPS,DEPTS,CONV,USES,APPS} from "./steps.js?v=202610260900";
-import {FILES,FMTS,drawFile} from "./files.js?v=202610260900";
-import {mailDraw,gisDraw} from "./screens.js?v=202610260900";
-import {buildApps} from "./apps.js?v=202610260900";
+import {STEPS,DEPTS,CONV,USES,APPS} from "./steps.js?v=202610260945";
+import {FILES,FMTS,drawFile} from "./files.js?v=202610260945";
+import {mailDraw,gisDraw} from "./screens.js?v=202610260945";
+import {buildApps} from "./apps.js?v=202610260945";
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const L2=o=>o?`<span lang="en">${o.en}</span><span lang="hi">${o.hi}</span>`:"";
 const T=(en,hi)=>({en,hi});
@@ -40,8 +40,8 @@ function side(i,f){const st=STEPS[i],p=$("#plSide");let key=st.id,html="";
     html=`<div class="dl"><div class="dl-n"><span><b>${DEPTS.length}</b>${L2(T("departments","विभाग"))}</span><span><b>${FILES.length}</b>${L2(T("files","फ़ाइलें"))}</span><span><b>${Object.keys(FMTS).length}</b>${L2(T("formats","प्रारूप"))}</span></div>
       <ul class="dl-list">${DEPTS.map((d,k)=>`<li style="--c:${d.col}"><b>${L2(d.short)}</b><span>${filesOf(k).map(F=>`<button class="fchip" data-file="${F.i}" style="--f:${FMTS[F.f].c}">${FMTS[F.f].n}</button>`).join("")}</span></li>`).join("")}</ul>
       <p class="dl-hint">${TOUCH?L2(T("Tap a file to open it.","फ़ाइल खोलने के लिए टैप करें।")):L2(T("Click a file, here or in 3D, to open it.","फ़ाइल खोलने के लिए यहाँ या 3D में क्लिक करें।"))}</p></div>`}
-  else if(st.depts==="each"){const k=Math.min(7,Math.floor(f*8)),d=DEPTS[k];key+=":"+k;
-    html=`<div class="de" style="--c:${d.col}"><small>${String(k+1).padStart(2,"0")} / 08</small><b>${L2(d.name)}</b>
+  else if(st.depts==="each"){const n=DEPTS.length,k=Math.min(n-1,Math.floor(f*n)),d=DEPTS[k];key+=":"+k;
+    html=`<div class="de" style="--c:${d.col}"><small>${String(k+1).padStart(2,"0")} / ${String(n).padStart(2,"0")}</small><b>${L2(d.name)}</b>
       <ul class="de-files">${filesOf(k).map(F=>`<li><button data-file="${F.i}"><em style="--f:${FMTS[F.f].c}">${FMTS[F.f].n}</em><span><b>${F.name}</b><small>${L2(F.what)}</small></span><i class="${F.xy?"y":"n"}">${F.xy?L2(T("has XY","XY है")):L2(T("no XY","XY नहीं"))}</i></button></li>`).join("")}</ul>
       <div class="fmt-dots">${DEPTS.map((q,m)=>`<i class="${m===k?"on":""}" style="--c:${q.col}"></i>`).join("")}</div></div>`}
   else if(st.id==="collect"){html=`<div class="chips">${DEPTS.map((d,k)=>`<span class="chip ${f>k/9?"in":""}" style="--c:${d.col}"><b>${L2(d.short)}</b><small>${[...new Set(filesOf(k).map(F=>FMTS[F.f].n))].join(" · ")}</small></span>`).join("")}</div>
@@ -179,7 +179,7 @@ function homog(w,h,q){const adj=m=>[m[4]*m[8]-m[5]*m[7],m[2]*m[7]-m[1]*m[8],m[1]
   return`matrix3d(${t[0]},${t[3]},0,${t[6]},${t[1]},${t[4]},0,${t[7]},0,0,1,0,${t[2]},${t[5]},0,${t[8]})`}
 function liveStart(){if(!frame.src)frame.src=new URL("../versions/v18/portal.html#portal&bare",location.href).href;if(!devs)devs=buildApps(live);if(!liveOn){liveOn=true;requestAnimationFrame(liveTick)}}
 function liveTick(){if(!EX||EX.id!=="portal"||!scene){live.classList.remove("on");liveOn=false;return}live.classList.add("on");
-  [[frame,scene.portalScr,1400,780],[devs[0],scene.appScr[0],390,809],[devs[1],scene.appScr[1],1024,693],[devs[2],scene.appScr[2],1280,768]].forEach(([el,m,w,h])=>{
+  [[frame,scene.portalScr,1400,780],[devs[0],scene.appScr[0],390,815],[devs[1],scene.appScr[1],1024,693],[devs[2],scene.appScr[2],1280,768]].forEach(([el,m,w,h])=>{
     const q=scene.quad(m);if(!q){el.style.visibility="hidden";return}el.style.visibility="visible";el.style.transform=homog(w,h,q)});
   requestAnimationFrame(liveTick)}
 
@@ -198,5 +198,5 @@ addEventListener("gt-lang",()=>{const i=cur;cur=-1;$("#plSide").dataset.key="";u
 
 /* ---------- the 3D scene loads when the reader gets close ---------- */
 new IntersectionObserver(async es=>{const e=es[0];
-  if(e.isIntersecting&&!scene){const {PipelineScene}=await import("./scene.js?v=202610260900");scene=new PipelineScene($("#pl3d"));window.GTPipe=scene;ScrollTrigger.refresh()}
+  if(e.isIntersecting&&!scene){const {PipelineScene}=await import("./scene.js?v=202610260945");scene=new PipelineScene($("#pl3d"));window.GTPipe=scene;ScrollTrigger.refresh()}
   if(scene)scene.setVisible(e.isIntersecting)},{rootMargin:"600px"}).observe(sec);

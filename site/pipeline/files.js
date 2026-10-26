@@ -100,14 +100,7 @@ export const FILES=[
   {d:6,f:"shp",name:"forest_compartments_Bastar",ext:".shp .shx .dbf .prj",kind:"polygon",view:"shp",geo:"bastar",xy:true,
    what:T("Forest compartments inside Bastar district","बस्तर ज़िले के भीतर वन कक्ष"),
    rows:[["comp_no","range","area_ha"],["RF-412","Jagdalpur","388.2"],["RF-413","Jagdalpur","402.7"],["PF-118","Tokapal","215.0"],["RF-509","Bakawand","611.4"]],
-   todo:T("Reproject, rename fields to the state schema","पुनःप्रक्षेपण, फ़ील्ड नाम राज्य स्कीमा के अनुसार")},
-  /* ---- Railways ---- */
-  {d:7,f:"scan",name:"toposheet_Raipur-Durg_scan",ext:".jpg (scan)",kind:"line",view:"topo",xy:false,
-   what:T("Rail lines on an old 1:50 000 toposheet","पुरानी 1:50 000 टोपोशीट पर रेल लाइनें"),
-   todo:T("Georeference with control points, trace the track","नियंत्रण बिंदुओं से भू-संदर्भित, ट्रैक ट्रेस करें")},
-  {d:7,f:"kml",name:"SECR_stations_CG",ext:".kml",kind:"point",view:"code",geo:"stations",xy:true,
-   what:T("Junctions and stations as placemarks","जंक्शन और स्टेशन, प्लेसमार्क के रूप में"),
-   todo:T("Read as points, attach station codes","बिंदु बनाएँ, स्टेशन कोड जोड़ें")}
+   todo:T("Reproject, rename fields to the state schema","पुनःप्रक्षेपण, फ़ील्ड नाम राज्य स्कीमा के अनुसार")}
 ];
 
 /* contents that come straight from the real geometry */
