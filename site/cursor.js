@@ -41,7 +41,7 @@ function probe(e){const t=e.target;
   el.classList.remove("sv-map");read.classList.remove("on");
   /* a file card in the pipeline's 3D: lock onto its projected outline */
   if(t.closest&&t.closest("#pl3d")&&window.GTPipe&&window.GTPipe.hoverRect&&!dragging){target={fake:true,getBoundingClientRect:()=>window.GTPipe.hoverRect||{left:P.x,top:P.y,width:0,height:0}};
-    el.classList.add("sv-lockon");el.classList.remove("sv-drag");tag.textContent=T.open[lang()];tag.classList.add("on");return}
+    el.classList.add("sv-lockon");el.classList.remove("sv-drag");const ht=window.GTPipe.hoverTag;tag.textContent=ht?ht[lang()]:T.open[lang()];tag.classList.add("on");return}
   const hit=t.closest&&t.closest(LOCK);
   if(hit&&!hit.classList.contains("gone")&&!hit.disabled&&!dragging){target=hit;el.classList.add("sv-lockon");
     const isDrag=hit.matches(DRAG);el.classList.toggle("sv-drag",isDrag);

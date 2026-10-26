@@ -45,7 +45,11 @@ $("#toOrbit").onclick=()=>goTo(0,{duration:3.2});
 
 window.GT_GOTO=y=>goTo(y,{duration:1.4});
 /* a dialog (the file viewer) is open: pause auto-play and hold the page still */
-window.GT_MODAL=v=>{if(v){takeOver();lenis.stop()}else lenis.start()};
+/* (lenis.stop() would clip the page and break the sticky 3D stage, so scrolling is held by swallowing scroll input instead) */
+let MODAL=false;window.GT_MODAL=v=>{MODAL=v;if(v){takeOver();lenis.stop();document.documentElement.classList.add("gt-modal")}else{lenis.start();document.documentElement.classList.remove("gt-modal")}};
+const holdScroll=e=>{if(MODAL&&!(e.target.closest&&e.target.closest(".ex-body,.fv-body,.fv-info,.pl-dock")))e.preventDefault()};
+addEventListener("wheel",holdScroll,{passive:false});addEventListener("touchmove",holdScroll,{passive:false});
+addEventListener("keydown",e=>{if(MODAL&&[" ","PageDown","PageUp","ArrowDown","ArrowUp","Home","End"].includes(e.key)&&!/INPUT|TEXTAREA/.test(e.target.tagName))e.preventDefault()});
 
 /* ---------- preloader → reveal ---------- */
 const pre={v:0};

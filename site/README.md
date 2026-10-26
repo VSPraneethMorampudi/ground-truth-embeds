@@ -14,9 +14,16 @@ THE PIPELINE (pipeline/): the main story, driven by scroll
     files are emailed to the CHiPS GIS team: envelopes fly to the lab, the team inbox on the wall fills up,
     each analyst opens the mail on one screen and works the attachment in a desktop GIS tool on the other
     (georeferencer, attribute table + Add XY, reproject & edit, raster warp, with live progress) →
+    (file previews draw real Chhattisgarh geography: the 33 official district boundaries, the Mahanadi, NH-30 in
+    UTM 44N metres, NH-130 as a GPS track, the rail network, real towns, dams and stations; codes and counts are samples) →
     quality gate (one record with a blank code is sent back) → State Data Centre (42U racks with 1U/2U
     servers, drive bays, blinking LEDs, cable tray) and geodatabase layers → the 33-district map assembling
     layer by layer → the Geoportal screen → field app, dashboard and department GIS → use cases → the loop.
+  Explore mode: a dock at the bottom (or clicking a block in 3D) opens any block on its own — departments (pick a
+  building, open its files), CHiPS lab (pick a mail or desk, watch it processed on the two screens), data centre
+  (open a rack, run the nightly backup), map (switch layers, ask a question, tap a district), Geoportal (search a
+  district, try the apps). Esc, ✕ or scrolling over the 3D returns to the story. The geodatabase is an exploded
+  stack of real layer sheets. The hands-on game (play.html) is not linked from the story for now.
   The overlay shows a bold short caption (words rise in) and a side panel with the actual content: file
   snippets, conversion before → after, the checklist, layer counts, use cases.
   Everything in the scene is a function of scroll position, so scrolling back rewinds it exactly.

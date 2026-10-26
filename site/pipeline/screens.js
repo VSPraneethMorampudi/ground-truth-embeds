@@ -10,7 +10,7 @@ export const timeOf=j=>{const m=2+j*3;return `10:${String(m%60).padStart(2,"0")}
 /* which tool a file needs */
 export function toolOf(F){return F.view==="cadastral"||F.view==="topo"?"georef":F.view==="tif"?"raster":["xlsx","csv","pdf","register"].includes(F.view)?"table":"vector"}
 const TOOL={georef:"Georeferencer",raster:"Raster · Warp (reproject)",table:"Attribute table · Add XY",vector:"Reproject & edit"};
-function rowsOf(F){if(F.view==="csv")return F.lines.slice(0,5).map(l=>l.split(","));if(F.view==="register")return F.rows.map(l=>l.split(/\s{2,}/));return (F.rows||[]).slice(0,5)}
+function rowsOf(F){if(F.view==="csv")return F.rows.slice(0,5);if(F.view==="register")return F.rows.map(l=>l.split(/\s{2,}/));return (F.rows||[]).slice(0,5)}
 
 /* window chrome shared by every app */
 function chrome(x,W,H,title,dark){x.fillStyle=dark?"#1e2632":"#f4f6f9";x.fillRect(0,0,W,H);x.fillStyle="#2b3442";x.fillRect(0,0,W,22);
