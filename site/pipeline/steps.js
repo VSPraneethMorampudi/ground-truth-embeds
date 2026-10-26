@@ -36,7 +36,7 @@ export const STEPS=[
   {id:"qa",cam:[[-28,30,58],[-24,6,12]],qa:true,
    k:T("4 · Quality checks","4 · गुणवत्ता जाँच"),h:T("Rules at the door","प्रवेश पर नियम"),
    b:T("Fail a check, go back with a reason.","जाँच में फ़ेल, कारण सहित वापस।")},
-  {id:"gdb",cam:[[14,44,70],[14,10,2]],gdb:true,
+  {id:"gdb",cam:[[14,60,92],[14,13,0]],gdb:true,
    k:T("5 · Geodatabase","5 · भू-डेटाबेस"),h:T("One home","एक घर"),
    b:T("State Data Centre, Raipur. Backed up nightly.","राज्य डेटा केंद्र, रायपुर। हर रात बैकअप।")},
   {id:"map",cam:[[75,92,92],[75,0,4]],
@@ -57,12 +57,12 @@ export const STEPS=[
 ];
 
 export const CONV=[
-  {in:{t:T("Excel row","एक्सेल पंक्ति"),code:`GHS Tilda | 22270433 | 81.6012 | 21.5568`},
-   steps:[T("latitude 81.6 is impossible here → columns swapped","यहाँ अक्षांश 81.6 असंभव → कॉलम उलटे"),T("swap, then check it falls inside Raipur district","उलटें, फिर जाँचें कि रायपुर ज़िले में है")],
-   out:{t:T("GeoJSON point","GeoJSON बिंदु"),code:`{ "type": "Feature",\n  "geometry": { "type": "Point",\n    "coordinates": [81.6012, 21.5568] },\n  "properties": { "udise": "22270433",\n    "name": "GHS Tilda", "district": "Raipur" } }`}},
-  {in:{t:T("CAD line (metres)","CAD रेखा (मीटर)"),code:`(412 830.4, 2 349 117.9)  UTM 44N`},
+  {in:{t:T("Excel row","एक्सेल पंक्ति"),code:`GHS Tilda | 22270433 | 81.7864 | 21.5537`},
+   steps:[T("latitude 81.8 is impossible here → columns swapped","यहाँ अक्षांश 81.8 असंभव → कॉलम उलटे"),T("swap, then check it falls inside Raipur district","उलटें, फिर जाँचें कि रायपुर ज़िले में है")],
+   out:{t:T("GeoJSON point","GeoJSON बिंदु"),code:`{ "type": "Feature",\n  "geometry": { "type": "Point",\n    "coordinates": [81.7864, 21.5537] },\n  "properties": { "udise": "22270433",\n    "name": "GHS Tilda", "district": "Raipur" } }`}},
+  {in:{t:T("CAD line (metres)","CAD रेखा (मीटर)"),code:`(564 956.3, 2 348 727.3)  UTM 44N`},
    steps:[T("reproject EPSG:32644 → EPSG:4326 (WGS 84)","पुनःप्रक्षेपण EPSG:32644 → EPSG:4326 (WGS 84)"),T("rename fields to the state schema","फ़ील्ड नाम राज्य स्कीमा के अनुसार")],
-   out:{t:T("Road in degrees","डिग्री में सड़क"),code:`LINESTRING (81.6582 21.2386,\n            81.6608 21.2343, …)\nroad_no: NH-30   class: National Highway\nsource: PWD   updated: 2025-10-14`}}
+   out:{t:T("Road in degrees","डिग्री में सड़क"),code:`LINESTRING (81.6260 21.2390,\n            81.6300 21.2310, …)\nroad_no: NH-30   class: National Highway\nsource: PWD   updated: 2025-10-14`}}
 ];
 
 export const USES=[

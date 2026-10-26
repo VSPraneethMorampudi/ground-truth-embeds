@@ -330,3 +330,7 @@ html[data-theme=mahanadi]{--space:#030814;--glow:#9fd0ff;--sp-glow:#9fd0ff;--sp-
 html[data-theme=night]{--paper:#0f1a16;--paper2:#16241e;--ink:#eaf5ef;--ink2:#9bb3a8;--orange:#c6ef4a;--accent:#c6ef4a;--cta:#c6ef4a;--cta-ink:#0b1410;--teal:#5fd3b5;
   --bg1:#18291f;--bg2:#0f1a16;--bg3:#08100d;--card:#1b2b24;--ok:#4ad08a;--ok-ink:#7fe3ad;--ok-bg:#163828;--bad-bg:#3a1c18;--bad-ink:#ff9a8a;
   --w-top:#26382f;--w-side:#14211b;--w-slab:#1c2c24;--w-plinth:#121d18;--w-plinth-side:#0a120e;--w-line:#3f5a4c}
+
+/* dialogs hold the page without clipping it (keeps the sticky 3D stage in place) */
+html.lenis.lenis-stopped.gt-modal{overflow:visible}
+.ex-body,.fv-body,.fv-info{overscroll-behavior:contain}

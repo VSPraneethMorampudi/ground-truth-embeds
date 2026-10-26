@@ -1,6 +1,7 @@
 /* Scroll controller for the pipeline: scroll position → scene + overlay. */
 import {STEPS,DEPTS,CONV,USES,APPS} from "./steps.js";
 import {FILES,FMTS,drawFile} from "./files.js";
+import {mailDraw,gisDraw} from "./screens.js";
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const L2=o=>o?`<span lang="en">${o.en}</span><span lang="hi">${o.hi}</span>`:"";
 const T=(en,hi)=>({en,hi});
@@ -18,6 +19,8 @@ sec.innerHTML=`<div class="pl-stage">
   <ol class="pl-rail" id="plRail">${STEPS.map((s,i)=>`<li data-i="${i}"><i></i><span>${L2(s.k)}</span></li>`).join("")}</ol>
   <div class="pl-bar"><i id="plBar"></i></div>
   <div class="pl-cue"><i></i>${L2(T("Scroll","स्क्रॉल करें"))}</div>
+  <aside class="pl-ex" id="plEx" aria-live="polite"></aside>
+  <nav class="pl-dock" id="plDock" aria-label="Explore"><span>${L2(T("Explore","एक्सप्लोर"))}</span>${[["depts","buildings",T("Departments","विभाग")],["lab","paper-plane-tilt",T("CHiPS lab","चिप्स लैब")],["dc","hard-drives",T("Data centre","डेटा केंद्र")],["map","map-trifold",T("Map","नक्शा")],["portal","globe-hemisphere-east",T("Geoportal","जियोपोर्टल")]].map(([id,i,t])=>`<button data-ex="${id}">${window.icon?window.icon(i):""}<b>${L2(t)}</b></button>`).join("")}<button class="ex-close" data-ex-close>✕ <b>${L2(T("Back to story","कहानी पर लौटें"))}</b></button></nav>
 </div>`;
 
 /* ---------- caption: bold headline, word by word ---------- */
@@ -57,7 +60,7 @@ function side(i,f){const st=STEPS[i],p=$("#plSide");let key=st.id,html="";
   else if(st.uses){const a=Math.min(3,Math.floor(f*4));key+=":"+a;html=`<div class="cards uses">${USES.map((x,k)=>`<div class="card ${k===a?"on":""}" style="--c:${x.col}"><b>${L2(x.t)}</b><span>${L2(x.b)}</span></div>`).join("")}</div>
       <small class="note">${L2(T("Illustrative values on real district boundaries.","असली ज़िला सीमाओं पर उदाहरण मान।"))}</small>`}
   else if(st.id==="loop"){html=`<div class="end"><a class="btn" href="${PORTAL_URL}" target="_blank" rel="noopener">${L2(T("Open the Geoportal","जियोपोर्टल खोलें"))} ↗</a>
-      <a class="btn ghost" href="play.html">${L2(T("Play the hands-on game","खेलकर देखें"))}</a></div>`}
+      <p class="ex-k">${L2(T("Now explore each block","अब हर हिस्से को खुद देखें"))}</p><div class="ex-q">${[["depts",T("Departments","विभाग")],["lab",T("CHiPS lab","चिप्स लैब")],["dc",T("Data centre","डेटा केंद्र")],["map",T("Map","नक्शा")],["portal",T("Geoportal","जियोपोर्टल")]].map(([id,t])=>`<button data-ex="${id}">${L2(t)}</button>`).join("")}</div></div>`}
   if(p.dataset.key===key)return;const first=p.dataset.key?.split(":")[0]!==key.split(":")[0];p.dataset.key=key;p.innerHTML=html;p.classList.toggle("empty",!html);
   if(!REDUCE&&html&&first)gsap.fromTo(p,{clipPath:"inset(0 0 100% 0 round 22px)",y:30},{clipPath:"inset(0 0 0% 0 round 22px)",y:0,duration:.8,ease:"expo.out"})}
 
@@ -91,8 +94,85 @@ fv.addEventListener("click",e=>{if(e.target.closest("[data-close]"))return close
   const c=e.target.closest("[data-file]");if(c)openFile(+c.dataset.file)});
 addEventListener("keydown",e=>{if(fv.hidden)return;if(e.key==="Escape"){e.preventDefault();closeFile()}else if(e.key==="ArrowRight")openFile(fvI+1);else if(e.key==="ArrowLeft")openFile(fvI-1);
   else if(e.key==="Tab"){const f=$$("button",fv),a=f[0],z=f[f.length-1];if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus()}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus()}}});
-addEventListener("gt-open-file",e=>openFile(e.detail.i));
 $("#plSide").addEventListener("click",e=>{const c=e.target.closest("[data-file]");if(c)openFile(+c.dataset.file)});
+
+/* ---------- Explore: every block is its own playground ---------- */
+const BL=[{id:"depts",ic:"buildings",t:T("Departments","विभाग")},{id:"lab",ic:"paper-plane-tilt",t:T("CHiPS lab","चिप्स लैब")},
+  {id:"dc",ic:"hard-drives",t:T("Data centre","डेटा केंद्र")},{id:"map",ic:"map-trifold",t:T("Map","नक्शा")},{id:"portal",ic:"globe-hemisphere-east",t:T("Geoportal","जियोपोर्टल")}];
+const ROLES=[T("Map services","मैप सेवाएँ"),T("Geodatabase","भू-डेटाबेस"),T("Tile cache","टाइल कैश"),T("Web portal","वेब पोर्टल"),T("Processing","प्रोसेसिंग"),T("Backup store","बैकअप भंडार"),T("Monitoring","निगरानी"),T("Standby","स्टैंडबाय")];
+const LAYERS=[["rivers",T("Rivers","नदियाँ"),"#1d6fd6"],["roads",T("Roads","सड़कें"),"#d2733c"],["rail",T("Rail","रेल"),"#3a383d"],["forest",T("Forest","वन"),"#3e8a4f"],["fac",T("Facilities","सुविधाएँ"),"#6b4fd6"]];
+const APPS3=[T("Field app","फ़ील्ड ऐप"),T("Dashboard","डैशबोर्ड"),T("Department GIS","विभागीय GIS")];
+const ic=n=>window.icon?window.icon(n):"";
+let EX=null,labRaf=0,bkRaf=0;
+const exEl=$("#plEx"),dock=$("#plDock");
+function exOpen(id){if(!scene)return;if(!fv.hidden)closeFile();cancelAnimationFrame(labRaf);cancelAnimationFrame(bkRaf);
+  if(!EX){window.GT_MODAL&&window.GT_MODAL(true);sec.classList.add("exploring")}
+  EX={id};scene.explore(id);exRender(true)}
+function exClose(){if(!EX)return;cancelAnimationFrame(labRaf);cancelAnimationFrame(bkRaf);EX=null;scene&&scene.exit();sec.classList.remove("exploring");window.GT_MODAL&&window.GT_MODAL(false);
+  $$("button",dock).forEach(b=>b.classList.remove("on"));cur=-1;$("#plSide").dataset.key="";ScrollTrigger.refresh()}
+function exSet(o,anim){Object.assign(EX,o);scene.exSet(o);exRender(anim)}
+function exRender(anim){const id=EX.id,b=BL.find(x=>x.id===id),k=BL.indexOf(b);$$("button[data-ex]",dock).forEach(x=>x.classList.toggle("on",x.dataset.ex===id));
+  let body="";
+  if(id==="depts"){if(EX.dept==null)body=`<p class="ex-hint">${L2(T("Pick a building. Click a file to open it.","कोई इमारत चुनें। फ़ाइल खोलने के लिए क्लिक करें।"))}</p>
+      <div class="ex-grid">${DEPTS.map((d,q)=>`<button data-dept="${q}" style="--c:${d.col}"><b>${L2(d.short)}</b><small>${filesOf(q).length} ${L2(T("files","फ़ाइलें"))}</small></button>`).join("")}</div>`;
+    else{const d=DEPTS[EX.dept];body=`<button class="ex-back" data-dept="">‹ ${L2(T("All departments","सभी विभाग"))}</button><div class="de" style="--c:${d.col}"><b>${L2(d.name)}</b>
+      <ul class="de-files">${filesOf(EX.dept).map(F=>`<li><button data-file="${F.i}"><em style="--f:${FMTS[F.f].c}">${FMTS[F.f].n}</em><span><b>${F.name}</b><small>${L2(F.what)}</small></span><i class="${F.xy?"y":"n"}">${F.xy?L2(T("has XY","XY है")):L2(T("no XY","XY नहीं"))}</i></button></li>`).join("")}</ul></div>`}}
+  else if(id==="lab"){if(EX.desk==null)body=`<p class="ex-hint">${L2(T("Every department file arrives here by email. Pick a mail, or click a desk.","हर विभागीय फ़ाइल ईमेल से यहाँ आती है। कोई मेल चुनें, या डेस्क पर क्लिक करें।"))}</p>
+      <ul class="ex-mail">${FILES.map(F=>`<li><button data-mail="${F.i}" style="--c:${DEPTS[F.d].col}"><b>${L2(DEPTS[F.d].short)}</b><span>${F.name}</span><em style="--f:${FMTS[F.f].c}">${FMTS[F.f].n}</em></button></li>`).join("")}</ul>`;
+    else{const F=FILES[EX.file],d=DEPTS[F.d],mine=FILES.filter(G=>G.i%6===EX.desk);body=`<button class="ex-back" data-mail="">‹ ${L2(T("Team inbox","टीम इनबॉक्स"))}</button>
+      <p class="ex-k">${L2(T(`Desk ${EX.desk+1}`,`डेस्क ${EX.desk+1}`))} · ${L2(d.short)}</p><canvas class="ex-scr" id="exMail" width="1024" height="640"></canvas><canvas class="ex-scr" id="exGis" width="1024" height="640"></canvas>
+      <div class="ex-row"><button class="btn" data-run>▶ ${L2(T("Process this file","इस फ़ाइल को प्रोसेस करें"))}</button><button class="btn ghost" data-file="${F.i}">${L2(T("Open file","फ़ाइल खोलें"))}</button></div>
+      <div class="ex-tabs">${mine.map(G=>`<button data-mail="${G.i}" class="${G===F?"on":""}" style="--f:${FMTS[G.f].c}">${FMTS[G.f].n}</button>`).join("")}</div>`}}
+  else if(id==="dc"){if(EX.rack==null)body=`<p class="ex-hint">${L2(T("Click a rack to open it.","रैक खोलने के लिए क्लिक करें।"))}</p>
+      <div class="ex-grid racks">${scene.racks.map((q,r)=>`<button data-rack="${r}"><b>${q.name}</b><small>${L2(ROLES[r])}</small></button>`).join("")}</div>
+      <div class="ex-bk"><button class="btn" data-backup>${ic("cloud-check")} ${L2(T("Run nightly backup","रात का बैकअप चलाएँ"))}</button><div class="ex-bar"><i id="exBk"></i></div><small id="exBkT">${L2(T("Last backup 02:00 · OK","पिछला बैकअप 02:00 · ठीक"))}</small></div>`;
+    else{const q=scene.racks[EX.rack];body=`<button class="ex-back" data-rack="">‹ ${L2(T("All racks","सभी रैक"))}</button><p class="ex-k">${L2(T("Rack","रैक"))} ${q.name} · ${L2(ROLES[EX.rack])}</p>
+      <ul class="ex-units">${[0,1,2,3,4,5].map(u=>{const load=20+((EX.rack*37+u*53)%70);return`<li><b>srv-${q.name.toLowerCase()}-${String(u+1).padStart(2,"0")}</b><span class="ok">● OK</span><i><s style="width:${load}%"></s></i><small>${load}%</small></li>`}).join("")}</ul>
+      <small class="note">${L2(T("Illustrative loads.","उदाहरण मान।"))}</small>`}}
+  else if(id==="map"){const off=EX.off||{},di=EX.dist!=null?scene.distInfo(EX.dist):null;
+    body=`<p class="ex-hint">${L2(T("Switch layers, ask a question, tap a district.","परतें बदलें, सवाल पूछें, ज़िले पर टैप करें।"))}</p>
+      <div class="ex-sw">${LAYERS.map(([k,t,c])=>`<label style="--c:${c}"><input type="checkbox" data-layer="${k}" ${off[k]?"":"checked"}><i></i>${L2(t)}</label>`).join("")}</div>
+      <p class="ex-k">${L2(T("Ask the map","नक्शे से पूछें"))}</p><div class="ex-q">${USES.map((u,q)=>`<button data-use="${q}" class="${EX.use===q?"on":""}" style="--c:${u.col}">${L2(u.t)}</button>`).join("")}</div>
+      ${di?`<div class="ex-dist"><b>${di.name}</b><span><i style="--c:#2f6fd6"></i>${di.n[0]} ${L2(T(di.n[0]===1?"school":"schools","स्कूल"))}</span><span><i style="--c:#d2423a"></i>${di.n[1]} ${L2(T(di.n[1]===1?"health centre":"health centres","स्वास्थ्य केंद्र"))}</span><span><i style="--c:#e39a1f"></i>${di.n[2]} ${L2(T(di.n[2]===1?"anganwadi centre":"anganwadi centres","आंगनवाड़ी"))}</span><small>${L2(T("Sample points, illustrative.","नमूना बिंदु, उदाहरण।"))}</small></div>`:""}`}
+  else{const names=scene.dist.map(d=>d.name).sort();
+    body=`<p class="ex-hint">${L2(T("Search a district on the Geoportal, or try an app.","जियोपोर्टल पर ज़िला खोजें, या कोई ऐप आज़माएँ।"))}</p>
+      <label class="ex-search">${ic("magnifying-glass")}<input id="exQ" list="exQL" placeholder="Raipur, Bastar, Korba…" autocomplete="off" value="${EX.hl||""}"><datalist id="exQL">${names.map(n=>`<option value="${n}">`).join("")}</datalist></label>
+      <div class="ex-q">${APPS3.map((a,q)=>`<button data-dev="${q}" class="${EX.dev===q?"on":""}">${L2(a)}</button>`).join("")}${EX.dev!=null?`<button data-dev="">${L2(T("Portal screen","पोर्टल स्क्रीन"))}</button>`:""}</div>
+      ${EX.dev!=null?`<p class="ex-txt">${L2(APPS[EX.dev].b)}</p>`:""}
+      <a class="btn" href="${PORTAL_URL}" target="_blank" rel="noopener">${L2(T("Open the real Geoportal","असली जियोपोर्टल खोलें"))} ↗</a>`}
+  exEl.innerHTML=`<header><span class="ex-ic">${ic(b.ic)}</span><div><small>${L2(T("Explore","एक्सप्लोर"))} · ${k+1}/5</small><h3>${L2(b.t)}</h3></div>
+    <button class="ex-x" data-ex-close aria-label="Back to the story">✕</button></header><div class="ex-body">${body}</div>
+    <footer><button data-ex="${BL[(k+4)%5].id}">‹ ${L2(BL[(k+4)%5].t)}</button><button data-ex="${BL[(k+1)%5].id}">${L2(BL[(k+1)%5].t)} ›</button></footer>`;
+  if(id==="lab"&&EX.desk!=null)drawLab();
+  if(anim&&!REDUCE)gsap.fromTo(exEl,{x:30,opacity:0},{x:0,opacity:1,duration:.55,ease:"expo.out"})}
+function drawLab(){const F=FILES[EX.file],d=DEPTS[F.d],mine=FILES.filter(G=>G.i%6===EX.desk),p=EX.labP??1;
+  [["#exMail",mailDraw(F,d,mine,DEPTS)],["#exGis",gisDraw(F,d,p)]].forEach(([s,dr])=>{const c=$(s);if(!c)return;const x=c.getContext("2d");x.setTransform(2,0,0,2,0,0);x.clearRect(0,0,512,320);dr(x,512,320)})}
+function labRun(){cancelAnimationFrame(labRaf);const t0=performance.now();const go=now=>{const p=Math.min(1,(now-t0)/3800);EX.labP=p;scene.ex.labP=p;drawLab();if(p<1)labRaf=requestAnimationFrame(go)};labRaf=requestAnimationFrame(go)}
+function backup(){cancelAnimationFrame(bkRaf);scene.exSet({backup:scene.t});const t0=performance.now();
+  const go=now=>{const p=Math.min(1,(now-t0)/4000),b=$("#exBk"),tx=$("#exBkT");if(b)b.style.transform=`scaleX(${p})`;
+    if(tx)tx.innerHTML=p<1?L2(T(`Backing up 33 layers… ${Math.round(p*100)}%`,`33 परतों का बैकअप… ${Math.round(p*100)}%`)):L2(T("Backup complete · 0 errors ✓","बैकअप पूरा · 0 त्रुटि ✓"));if(p<1)bkRaf=requestAnimationFrame(go)};bkRaf=requestAnimationFrame(go)}
+function pickMail(i){const F=FILES[i];exSet({desk:i%6,file:i,labP:0},true);labRun()}
+document.addEventListener("click",e=>{const t=e.target;if(t.closest("[data-play]")){exClose();return}
+  if(!t.closest("#plEx,#plDock,.end"))return;let b;
+  if(b=t.closest("[data-ex-close]"))return exClose();
+  if(b=t.closest("[data-ex]"))return exOpen(b.dataset.ex);
+  if(!EX)return;
+  if(b=t.closest("[data-dept]"))return exSet({dept:b.dataset.dept===""?null:+b.dataset.dept},true);
+  if(b=t.closest("[data-mail]"))return b.dataset.mail===""?exSet({desk:null,file:null},true):pickMail(+b.dataset.mail);
+  if(b=t.closest("[data-run]"))return labRun();
+  if(b=t.closest("[data-rack]"))return exSet({rack:b.dataset.rack===""?null:+b.dataset.rack},true);
+  if(b=t.closest("[data-backup]"))return backup();
+  if(b=t.closest("[data-use]")){const q=+b.dataset.use;return exSet({use:EX.use===q?null:q})}
+  if(b=t.closest("[data-dev]"))return exSet({dev:b.dataset.dev===""?null:+b.dataset.dev})});
+exEl.addEventListener("change",e=>{const c=e.target.closest("[data-layer]");if(c){const off={...(EX.off||{})};off[c.dataset.layer]=!c.checked;exSet({off})}});
+exEl.addEventListener("input",e=>{if(e.target.id!=="exQ")return;const v=e.target.value.trim().toLowerCase(),k=scene.dist.findIndex(d=>d.name.toLowerCase()===v);
+  if(k>=0){Object.assign(EX,{hl:scene.dist[k].name});scene.exSet({hl:scene.dist[k].name,dist:k})}});
+/* clicks in 3D: files open, block parts select, blocks enter explore */
+addEventListener("gt-pick",e=>{const h=e.detail;if(h.type==="file")return openFile(h.i);if(h.type==="block")return exOpen(h.id);if(!EX)return;
+  if(h.type==="dept")exSet({dept:h.i},true);else if(h.type==="desk"){const mine=FILES.filter(G=>G.i%6===h.i);pickMail(mine[mine.length-1].i)}
+  else if(h.type==="rack")exSet({rack:h.i},true);else if(h.type==="dist")exSet({dist:EX.dist===h.i?null:h.i});else if(h.type==="device")exSet({dev:h.i})});
+addEventListener("keydown",e=>{if(EX&&fv.hidden&&e.key==="Escape")exClose()});
+$("#pl3d").addEventListener("wheel",()=>{if(EX&&fv.hidden)exClose()},{passive:true});
 
 ScrollTrigger.create({trigger:sec,start:"top top",end:"bottom bottom",onUpdate:st=>update(st.progress),onRefresh:st=>update(st.progress)});
 update(0);
