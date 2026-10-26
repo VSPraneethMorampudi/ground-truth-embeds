@@ -1,5 +1,5 @@
 /* The pipeline world. Everything is a pure function of scroll position s (0..steps), so scrolling back
-   rewinds it exactly. Left to right: departments → CHiPS lab → GIS cloud (checks) → data centre → map + portal → apps. */
+   rewinds it exactly. Left to right: departments → CHiPS lab → team server (checks) → data centre → map + portal → apps. */
 import * as THREE from "three";
 import {RoundedBoxGeometry} from "../vendor/RoundedBoxGeometry.js";
 import {RoomEnvironment} from "../vendor/RoomEnvironment.js";
@@ -85,7 +85,7 @@ export class PipelineScene{
     const top=this.rb(340,.4,136,.2,M.groundTop);top.position.set(3,-.15,0);top.receiveShadow=true;top.castShadow=false;S.add(top);
     /* data travels at this height and lane between the lab, the gate and the data centre */
     this.beltY=1;this.beltZ=16;
-    this.buildDepts();this.buildConverter();this.buildDataCentre();this.buildCloud();this.buildMap();this.buildPortal();this.buildApps();this.buildDocs();this.buildLoop();this.buildBlocks()}
+    this.buildDepts();this.buildConverter();this.buildTeamServer();this.buildDataCentre();this.buildMap();this.buildPortal();this.buildApps();this.buildDocs();this.buildLoop();this.buildBlocks()}
 
   /* the department campus: eight named government buildings, each with its own architecture and a name board */
   buildDepts(){const S=this.scene,M=this.M;this.depts=[];
@@ -175,7 +175,7 @@ export class PipelineScene{
     const lab=this.tex(640,160,signDraw("CHiPS GIS Team","चिप्स जीआईएस टीम","#ff5a36"));const l=new THREE.Mesh(new THREE.PlaneGeometry(14,3.5),new THREE.MeshBasicMaterial({map:lab,transparent:true}));l.position.set(0,15.4,-26.6);g.add(l);
     /* plants in the corners */
     const potM=new THREE.MeshStandardMaterial({color:0xe9e2d6,roughness:.7}),leafM=new THREE.MeshStandardMaterial({color:0x3e8a4f,roughness:.8});
-    [[-15.5,-24.5],[15.5,-24.5],[-15.5,-2]].forEach(([a,b])=>{A(new THREE.Mesh(new THREE.CylinderGeometry(.8,.6,1.5,16),potM),a,1.55,b);for(let k=0;k<5;k++){const lf=A(new THREE.Mesh(new THREE.SphereGeometry(.9,10,8),leafM),a+Math.sin(k*1.3)*.6,3+k*.35,b+Math.cos(k*1.3)*.6);lf.scale.set(.8,1.3,.8)}});
+    [[-15.5,-24.5],[15.5,-2],[-15.5,-2]].forEach(([a,b])=>{A(new THREE.Mesh(new THREE.CylinderGeometry(.8,.6,1.5,16),potM),a,1.55,b);for(let k=0;k<5;k++){const lf=A(new THREE.Mesh(new THREE.SphereGeometry(.9,10,8),leafM),a+Math.sin(k*1.3)*.6,3+k*.35,b+Math.cos(k*1.3)*.6);lf.scale.set(.8,1.3,.8)}});
     /* workstations: desk, dual monitors (mail + GIS), keyboard, mouse, mug, office chair, analyst */
     const deskM=new THREE.MeshStandardMaterial({color:0xe9dcc6,roughness:.55}),frameM=new THREE.MeshStandardMaterial({color:0x3a4250,roughness:.4,metalness:.6}),
       chairM=new THREE.MeshStandardMaterial({color:0x252c38,roughness:.7}),meshM=new THREE.MeshStandardMaterial({color:0x39424f,roughness:.9}),
@@ -235,21 +235,17 @@ export class PipelineScene{
   /* swap what a monitor shows; redraws only when the content changes */
   setScreen(sc,key,draw){if(sc.key===key)return;sc.key=key;const u=sc.t.userData;u.draw=draw;u.x.clearRect(0,0,u.c.width,u.c.height);draw(u.x,u.c.width,u.c.height);sc.t.needsUpdate=true}
 
-  /* the GIS cloud: analysts upload converted features here, checks run here, clean data streams down to the servers */
-  buildCloud(){const S=this.scene,g=this.cloud=new THREE.Group();g.position.set(-16,34,2);S.add(g);
-    const cm=new THREE.MeshPhysicalMaterial({color:0xffffff,roughness:.55,sheen:1,sheenColor:new THREE.Color(0xcfe3ff),emissive:0xdfeaff,emissiveIntensity:.12});
-    [[0,1,0,6.5],[-6.5,-.6,.5,5],[6.8,-.4,0,5.2],[-11.5,-2,0,3.4],[11.8,-2,.5,3.6],[-2.8,4.4,-.5,4.8],[3.6,3.8,-1,4.4],[0,-1.8,3.6,4.4],[-5,-2,-3,4],[5,-2.2,-3,4]].forEach(([x,y,z,r])=>{
-      const b=new THREE.Mesh(new THREE.SphereGeometry(r,32,22),cm);b.position.set(x,y,z);b.scale.y=.86;b.castShadow=true;g.add(b)});
-    /* the check ring under the cloud: green, red while a record is sent back */
-    this.cloudRing=new THREE.Mesh(new THREE.TorusGeometry(11,.3,12,80),new THREE.MeshStandardMaterial({color:0x3fd6a0,emissive:0x3fd6a0,emissiveIntensity:1.6}));this.cloudRing.rotation.x=Math.PI/2;this.cloudRing.position.y=-5.2;g.add(this.cloudRing);
-    const lab=this.tex(640,160,signDraw("GIS Cloud · checks","जीआईएस क्लाउड · जाँच","#3fd6a0"));const l=new THREE.Mesh(new THREE.PlaneGeometry(13,3.25),new THREE.MeshBasicMaterial({map:lab,transparent:true}));l.position.set(0,11.5,2);g.add(l);
-    /* uplinks: one light beam from each analyst's GIS screen into the cloud */
-    const beam=(a,b,c,col)=>{const cv=new THREE.QuadraticBezierCurve3(a,b,c);const m=new THREE.Mesh(new THREE.TubeGeometry(cv,40,.16,8),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0,depthWrite:false}));S.add(m);return{cv,m}};
-    const cw=g.position,cp=this.conv.position;
-    this.ups=this.analysts.map((an,k)=>{const a=new THREE.Vector3(cp.x+an.x+1.95,7.4,cp.z+an.z-1.2),c=new THREE.Vector3(cw.x-6+k*2.4,cw.y-5,cw.z+1);return beam(a,new THREE.Vector3((a.x+c.x)/2,c.y+2,(a.z+c.z)/2),c,0x3fd6a0)});
-    /* downlinks: data streams from the cloud into every rack */
-    const dp=this.dc.position;this.downs=this.racks.map(q=>{const c=new THREE.Vector3(dp.x+q.x,1.2+14.6,dp.z+q.z),a=new THREE.Vector3(cw.x+4+(q.x)*.3,cw.y-5,cw.z+q.z*.2);return beam(a,new THREE.Vector3((a.x+c.x)/2,a.y-2,(a.z+c.z)/2),c,0x5fa8ff)});
-    this.bits=new THREE.InstancedMesh(new THREE.BoxGeometry(.5,.5,.5),new THREE.MeshBasicMaterial({color:0x8fd0ff,toneMapped:false}),64);this.bits.visible=false;S.add(this.bits)}
+  /* the CHiPS team server: a small rack in the lab's back corner. Converted features land here, checks run here,
+     then clean data goes on to the State Data Centre */
+  buildTeamServer(){const M=this.M,g=this.tsrv=new THREE.Group();g.position.set(13.6,.8,-23.4);this.conv.add(g);
+    const frame=new THREE.MeshStandardMaterial({color:0x15181d,roughness:.45,metalness:.6}),unit=new THREE.MeshStandardMaterial({color:0x2a2f37,roughness:.4,metalness:.7});
+    const body=this.rb(4.2,7.6,3.4,.2,frame);body.position.y=3.8;g.add(body);
+    this.tsLeds=[];for(let k=0;k<6;k++){const u=this.rb(3.6,.9,.2,.06,unit);u.position.set(0,1.1+k*1.08,1.72);g.add(u);
+      for(let b=0;b<6;b++){const bay=new THREE.Mesh(new THREE.BoxGeometry(.38,.5,.06),new THREE.MeshStandardMaterial({color:0x0c0f13}));bay.position.set(-.9+b*.48,1.1+k*1.08,1.84);g.add(bay)}
+      const led=new THREE.Mesh(new THREE.BoxGeometry(.18,.12,.06),new THREE.MeshBasicMaterial({color:0x3fd6a0,toneMapped:false}));led.position.set(-1.55,1.25+k*1.08,1.84);g.add(led);this.tsLeds.push(led)}
+    this.qaLight=new THREE.Mesh(new THREE.BoxGeometry(4,.3,.3),new THREE.MeshStandardMaterial({color:0x3fd6a0,emissive:0x3fd6a0,emissiveIntensity:1.8}));this.qaLight.position.set(0,7.8,1.6);g.add(this.qaLight);
+    const lab=this.tex(640,160,signDraw("Team server · checks","टीम सर्वर · जाँच","#3fd6a0"));const l=new THREE.Mesh(new THREE.PlaneGeometry(6.4,1.6),new THREE.MeshBasicMaterial({map:lab,transparent:true}));l.position.set(0,9.2,1.2);g.add(l);
+    this.tsPos=new THREE.Vector3();g.getWorldPosition(this.tsPos)}
 
   buildDataCentre(){const S=this.scene,M=this.M,g=this.dc=new THREE.Group();g.position.set(14,0,0);S.add(g);
     /* raised data-centre floor with perforated tiles */
@@ -407,7 +403,7 @@ export class PipelineScene{
     const lb=this.rb(16,10,.5,.4,M.ink);lb.position.y=5;lid.add(lb);const lsc=screen(15,9,(x,W,H)=>{x.fillStyle="#13233d";x.fillRect(0,0,W,H);x.fillStyle="#1d2f4d";x.fillRect(0,0,160,H);
       for(let i=0;i<7;i++){x.fillStyle="#9fb4d0";x.fillRect(16,30+i*40,110,10)}x.strokeStyle="#5fa8ff";x.lineWidth=2;for(let i=0;i<30;i++){x.beginPath();x.arc(200+((i*97)%400),60+((i*53)%300),3+i%4,0,7);x.stroke()}
       x.strokeStyle="#ffd36b";x.lineWidth=4;x.beginPath();x.moveTo(170,330);x.bezierCurveTo(300,250,420,280,W,120);x.stroke()});lsc.position.set(0,5,.26);lid.add(lsc);
-    [this.phoneG,this.tabG,this.lapG].forEach(o=>o.scale.setScalar(.001))}
+    this.appScr=[ps,ts,lsc];this.portalScr=this.portalScr;[this.phoneG,this.tabG,this.lapG].forEach(o=>o.scale.setScalar(.001))}
 
   /* one card per file, fanned above its department; the card face shows the file's real contents */
   buildDocs(){const S=this.scene,per={};this.docs=FILES.map((F,j)=>{const d=DEPTS[F.d],t=this.tex(512,660,drawFile(F,d));
@@ -455,7 +451,10 @@ export class PipelineScene{
     if(e.id==="lab"){if(e.desk!=null){const a=this.analysts[e.desk],c=this.conv.position;return[V(c.x+a.x,12.5,c.z+a.z+10.5),V(c.x+a.x,5.2,c.z+a.z-1.5)]}return[V(-46,44,60),V(-46,4,0)]}
     if(e.id==="dc"){if(e.rack!=null){const q=this.racks[e.rack],c=this.dc.position;return[V(c.x+q.x+5,13,c.z+q.z+22),V(c.x+q.x,7.5,c.z+q.z)]}return[V(14,42,80),V(14,9,0)]}
     if(e.id==="map"){if(e.dist!=null){const[x,z]=this.dist[e.dist].c;return[V(x,40,z+34),V(x,3,z)]}return[V(75,100,82),V(75,0,6)]}
-    if(e.dev!=null){const p=[this.phoneG,this.tabG,this.lapG][e.dev].getWorldPosition(new THREE.Vector3());return[V(p.x,p.y+7,p.z+30),V(p.x,p.y,p.z)]}return[V(75,32,62),V(75,22,-48)]}
+    if(e.dev!=null){const sc=this.appScr[e.dev],p=sc.getWorldPosition(new THREE.Vector3()),n=sc.getWorldDirection(new THREE.Vector3()),d=[19,30,27][e.dev];return[V(p.x+n.x*d,p.y+n.y*d+2,p.z+n.z*d),V(p.x,p.y,p.z)]}return[V(75,32,62),V(75,22,-48)]}
+  /* a screen's four corners on the page (tl, tr, bl, br), for laying live HTML over it; null when off camera */
+  quad(m){if(!m)return null;const p=m.geometry.attributes.position,r=this.host.getBoundingClientRect(),out=[],v=new THREE.Vector3();
+    for(let k=0;k<4;k++){v.fromBufferAttribute(p,k);m.localToWorld(v);v.project(this.cam);if(v.z>1||v.z<-1||Math.abs(v.x)>3||Math.abs(v.y)>3)return null;out.push((v.x+1)/2*r.width,(1-v.y)/2*r.height)}return out}
   distInfo(k){const n=[0,0,0];(this.facD||[]).forEach((d,i)=>{if(d===k)n[i%3]++});return{name:this.dist[k].name,n}}
 
   /* clickable volumes and hover outlines for the five blocks */
@@ -491,9 +490,9 @@ export class PipelineScene{
     const hh0=this.hoverHit,active=ex?(ex.id==="depts"&&ex.dept!=null?ex.dept:-1):STEPS[i].depts==="each"?Math.min(7,Math.floor(f*8)):-1,hvD=this.hover>=0?FILES[this.hover].d:hh0&&hh0.type==="dept"?hh0.i:-1;
     this.depts.forEach((dp,j)=>{const on=j===active||j===hvD;dp.g.position.y+=((on?.6:0)-dp.g.position.y)*.15;dp.acc.emissive.set(dp.d.col);dp.acc.emissiveIntensity+=((on?.8:0)-dp.acc.emissiveIntensity)*.15});
     if(this.flag)this.flag.rotation.y=Math.sin(t*2)*.18;
-    /* files → mail → CHiPS lab → GIS cloud → data centre */
+    /* files → mail → CHiPS lab → team server → data centre */
     const sD=SI.depts1,sC=SI.collect,sQ=SI.qa,sG=SI.gdb;
-    const conv=this.conv.position,cloud=this.cloud.position,dc=this.dc.position;
+    const conv=this.conv.position,ts=this.tsPos,dc=this.dc.position;
     this.docs.forEach((o,j)=>{const F=o.F,dp=this.depts[F.d],off=o.k-(o.n-1)/2;
       const home=new THREE.Vector3(dp.g.position.x+off*6.2,dp.top+5.6-Math.abs(off)*.7,dp.g.position.z+Math.abs(off)*.5);
       const appear=seg(s,sD-.6+j*.025,sD-.1+j*.025),isAct=F.d===active;
@@ -509,15 +508,16 @@ export class PipelineScene{
       o.live=sc>.3&&fp<.15;
       o.g.position.copy(p);o.g.position.y+=fp>0?0:Math.sin(t*1.6+j)*.25;o.g.scale.setScalar(Math.max(.001,sc));o.g.lookAt(this.cam.position.x,o.g.position.y,this.cam.position.z);
       o.card.material.emissiveIntensity=o.hv*.3;
-      /* output: a map tile pops up on the analyst's GIS screen, rides the uplink into the cloud, is checked there, then streams down into a rack */
-      const outS=SI.conv1+.2+j*.07,a=cl((s-outS)/.3),u=cl((s-outS-.25)/.45),c=cl((s-(sQ+.6+j*.015))/.45);
-      const up=this.ups[j%6],th=j/FILES.length*Math.PI*2+t*.15,slot=new THREE.Vector3(cloud.x+Math.cos(th)*8.5,cloud.y-1+Math.sin(th*2)*1.2,cloud.z+6+Math.sin(th)*2.5);
-      let q=up.cv.getPoint(0).clone();q.y+=.8*a;let osc=sm(a);
-      if(u>0){const e=sm(u);q=e<1?up.cv.getPoint(e):up.cv.getPoint(1);q=q.clone().lerp(slot,sm(cl((u-.75)/.25)))}
-      if(o.reject&&s>sQ+.3){/* the record with a blank code drops out of the cloud, back to its department */
-        const back=cl((s-(sQ+.3))/.55),hp=dp.g.position;q=slot.clone().lerp(new THREE.Vector3(hp.x,3,hp.z+8),sm(back));q.y+=Math.sin(back*Math.PI)*12;osc*=1-sm((back-.85)/.15)}
-      else if(c>0){const dn=this.downs[j%8],e=sm(c);q=slot.clone().lerp(dn.cv.getPoint(0),cl(e*3));if(e>.33)q=dn.cv.getPoint((e-.33)/.67);osc*=1-sm((c-.7)/.3)}
-      o.out.position.copy(q);o.out.position.y+=Math.sin(t*2.4+j)*.15;o.out.rotation.y=Math.sin(t*.6+j)*.4;o.out.scale.setScalar(Math.max(.001,osc*.75))});
+      /* output: a map tile pops up on the analyst's GIS screen, hops onto the team server, is checked there, then flies to a rack in the data centre */
+      const outS=SI.conv1+.2+j*.07,a=cl((s-outS)/.3),u=sm(cl((s-outS-.25)/.4)),c=sm(cl((s-(sQ+.6+j*.015))/.45));
+      const scr=new THREE.Vector3(conv.x+an.x+1.95,7.6,conv.z+an.z-1.2),th=j/FILES.length*Math.PI*2+t*.25,
+        slot=new THREE.Vector3(ts.x-2+Math.cos(th)*6,ts.y+10+(j%3)*1.4,ts.z+4+Math.sin(th)*2.6);
+      let q=scr.clone();q.y+=.8*a;let osc=sm(a);
+      if(u>0){q=scr.clone().lerp(slot,u);q.y+=Math.sin(u*Math.PI)*5}
+      if(o.reject&&s>sQ+.3){/* the record with a blank code goes back to its department */
+        const back=cl((s-(sQ+.3))/.55),hp=dp.g.position;q=slot.clone().lerp(new THREE.Vector3(hp.x,3,hp.z+8),sm(back));q.y+=Math.sin(back*Math.PI)*16;osc*=1-sm((back-.85)/.15)}
+      else if(c>0){const rk=this.racks[j%8],to=new THREE.Vector3(dc.x+rk.x,16,dc.z+rk.z);q=slot.clone().lerp(to,c);q.y+=Math.sin(c*Math.PI)*16;osc*=1-sm((c-.75)/.25)}
+      o.out.position.copy(q);o.out.position.y+=Math.sin(t*2.4+j)*.15;o.out.rotation.y=Math.sin(t*.6+j)*.4;o.out.scale.setScalar(Math.max(.001,osc*(u>.9&&c<.1&&!(o.reject&&s>sQ+.3)?.5:.75)))});
     /* screens: the team inbox fills as mail lands; each analyst opens their newest mail and works it in the GIS tool */
     const got=this.docs.filter(o=>o.arrived).map(o=>o.F);
     if(this.inboxN!==got.length){this.inboxN=got.length;const u=this.inboxTex.userData,dr=inboxDraw(got,DEPTS);u.draw=dr;u.x.clearRect(0,0,u.c.width,u.c.height);dr(u.x,u.c.width,u.c.height);this.inboxTex.needsUpdate=true}
@@ -527,12 +527,9 @@ export class PipelineScene{
       this.setScreen(an.scr[0],F?`${F.i}:${mine.length}`:"-",mailDraw(F,d,mine,DEPTS));this.setScreen(an.scr[1],F?`${F.i}:${pr}`:"-",gisDraw(F,d,pr))});
     const hh=this.ptr&&!this.down?this.pick(this.ptr[0],this.ptr[1]):null;this.hoverHit=hh;this.hover=hh&&hh.type==="file"?hh.i:-1;this.hoverRect=hh?this.rectObj(hh.obj):null;this.hoverTag=hh?hh.tag:null;
     this.blocks.forEach(b=>{const on=hh&&hh.type==="block"&&hh.id===b.id?.9:ex&&ex.id===b.id?.45:0;b.a+=(on-b.a)*.15;b.ring.material.opacity=b.a;b.ring.visible=b.a>.01});
-    /* cloud: the ring checks (red while the reject drops out); beams glow while data moves; bits stream down to the racks */
-    const rej=s>sQ+.25&&s<sQ+.85,rc=rej?0xff5a36:0x3fd6a0;this.cloudRing.material.color.set(rc);this.cloudRing.material.emissive.set(rc);this.cloudRing.rotation.z=t*.3;
-    this.cloud.position.y=34+Math.sin(t*.6)*.4;
-    const upA=seg(s,SI.conv1,SI.conv1+.3)*(1-seg(s,sQ+.2,sQ+.5)),dnA=seg(s,sQ+.5,sQ+.7)*(1-seg(s,sG+.3,sG+.6));
-    this.ups.forEach((b,k)=>b.m.material.opacity=upA*(.35+.25*Math.sin(t*4+k)));this.downs.forEach((b,k)=>b.m.material.opacity=dnA*(.35+.25*Math.sin(t*4+k)));
-    this.bits.visible=dnA>.01;if(this.bits.visible){const M4=this._m4=this._m4||new THREE.Matrix4();for(let k=0;k<64;k++){const b=this.downs[k%8],p=b.cv.getPoint((t*.35+k/64*3)%1);M4.makeTranslation(p.x,p.y,p.z);this.bits.setMatrixAt(k,M4)}this.bits.instanceMatrix.needsUpdate=true}
+    /* team server: the light bar checks (red while the reject goes back); LEDs flicker while data is on it */
+    const rej=s>sQ+.25&&s<sQ+.85,rc=rej?0xff5a36:0x3fd6a0;this.qaLight.material.color.set(rc);this.qaLight.material.emissive.set(rc);
+    const busyT=s>SI.conv1&&s<sG+.3;this.tsLeds.forEach((l,k)=>l.material.color.set(busyT&&Math.sin(t*12+k*1.7)>0?(rej?0xff5a36:0xffc93c):0x3fd6a0));
     /* data centre LEDs and floating geodatabase layers */
     const busy=seg(s,sQ+.5,sG+.2),c3=new THREE.Color(),bk=ex&&ex.backup!=null?t-ex.backup:-1;this.leds.forEach((l,k)=>{const on=(Math.sin(t*l.s*3+l.p)>.2-busy*.6);c3.set(on?(k%5===0?0xffc93c:0x3fd6a0):0x16324a);if(bk>=0&&bk<4)c3.set(Math.sin(t*14+k*.7)>0?0xffc93c:0x2a1e06);else if(bk>=4&&bk<7)c3.set(0x3fd6a0);this.ledMesh.setColorAt(k,c3)});
     this.racks.forEach((q,k)=>{q.open+=((ex&&ex.id==="dc"&&ex.rack===k?1:0)-q.open)*.1;q.hinge.rotation.y=-q.open*1.7});this.ledMesh.instanceColor.needsUpdate=true;this.dcGlow.material.opacity=.08+busy*.14;

@@ -245,3 +245,4 @@ export function drawFeature(F,col){return (x,W,H)=>{const G=GEO();x.clearRect(0,
   else if(F.view==="register"){shapes(x,pr,[dist("Raipur")],null,col+"88",1.5);pts(PLACES.register)}
   else pts(HEALTH.slice(1).map(r=>[+r[4],+r[3]]));
   x.restore();x.strokeStyle=col;x.lineWidth=5;rr(x,3,3,W-6,H-6,16);x.stroke()}}
+export {measure,DAMS,SCHOOLS,HEALTH,STATIONS};

@@ -16,15 +16,17 @@ THE PIPELINE (pipeline/): the main story, driven by scroll
     (georeferencer, attribute table + Add XY, reproject & edit, raster warp, with live progress) →
     (file previews draw real Chhattisgarh geography: the 33 official district boundaries, the Mahanadi, NH-30 in
     UTM 44N metres, NH-130 as a GPS track, the rail network, real towns, dams and stations; codes and counts are samples) →
-    the GIS cloud: each analyst's screen uploads its converted features (small map tiles with the real geometry;
-    points carry map-marker pins) along a light beam; checks run in the cloud (one record with a blank code drops
-    back to its department); clean data streams down into the State Data Centre racks → State Data Centre (42U racks with 1U/2U
+    the team server in the CHiPS lab: each analyst's screen sends its converted features (small map tiles with the
+    real geometry; points carry map-marker pins) to it; checks run there (one record with a blank code goes back to
+    its department); clean data flies on to the State Data Centre racks → State Data Centre (42U racks with 1U/2U
     servers, drive bays, blinking LEDs, cable tray) and geodatabase layers → the 33-district map assembling
     layer by layer → the Geoportal screen → field app, dashboard and department GIS → use cases → the loop.
   Explore mode: a dock at the bottom (or clicking a block in 3D) opens any block on its own — departments (pick a
   building, open its files), CHiPS lab (pick a mail or desk, watch it processed on the two screens), data centre
   (open a rack, run the nightly backup), map (switch layers, ask a question, tap a district), Geoportal (search a
-  district, try the apps). Esc, ✕ or scrolling over the 3D returns to the story. The geodatabase is an exploded
+  district, try the apps). In Explore → Geoportal the real v18 Geoportal app (versions/v18/portal.html) runs live on
+  the 3D screen, and the phone, tablet and laptop carry working apps (pipeline/apps.js): a field survey app, a
+  coverage dashboard and a department desktop GIS, all on real geography, laid onto the screens with matrix3d. Esc, ✕ or scrolling over the 3D returns to the story. The geodatabase is an exploded
   stack of real layer sheets. The hands-on game (play.html) is not linked from the story for now.
   The overlay shows a bold short caption (words rise in) and a side panel with the actual content: file
   snippets, conversion before → after, the checklist, layer counts, use cases.
