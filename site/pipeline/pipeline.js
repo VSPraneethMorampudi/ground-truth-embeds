@@ -2,6 +2,7 @@
 import {STEPS,DEPTS,CONV,USES,APPS} from "./steps.js";
 import {FILES,FMTS,drawFile} from "./files.js";
 import {mailDraw,gisDraw} from "./screens.js";
+import {buildApps} from "./apps.js";
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const L2=o=>o?`<span lang="en">${o.en}</span><span lang="hi">${o.hi}</span>`:"";
 const T=(en,hi)=>({en,hi});
@@ -19,6 +20,7 @@ sec.innerHTML=`<div class="pl-stage">
   <ol class="pl-rail" id="plRail">${STEPS.map((s,i)=>`<li data-i="${i}"><i></i><span>${L2(s.k)}</span></li>`).join("")}</ol>
   <div class="pl-bar"><i id="plBar"></i></div>
   <div class="pl-cue"><i></i>${L2(T("Scroll","स्क्रॉल करें"))}</div>
+  <div class="pl-live" id="plLive"><iframe id="plPortal" title="Chhattisgarh State Geoportal (live)" width="1400" height="780" loading="lazy"></iframe></div>
   <aside class="pl-ex" id="plEx" aria-live="polite"></aside>
   <nav class="pl-dock" id="plDock" aria-label="Explore"><span>${L2(T("Explore","एक्सप्लोर"))}</span>${[["depts","buildings",T("Departments","विभाग")],["lab","paper-plane-tilt",T("CHiPS lab","चिप्स लैब")],["dc","hard-drives",T("Data centre","डेटा केंद्र")],["map","map-trifold",T("Map","नक्शा")],["portal","globe-hemisphere-east",T("Geoportal","जियोपोर्टल")]].map(([id,i,t])=>`<button data-ex="${id}">${window.icon?window.icon(i):""}<b>${L2(t)}</b></button>`).join("")}<button class="ex-close" data-ex-close>✕ <b>${L2(T("Back to story","कहानी पर लौटें"))}</b></button></nav>
 </div>`;
@@ -105,7 +107,7 @@ const APPS3=[T("Field app","फ़ील्ड ऐप"),T("Dashboard","डैश
 const ic=n=>window.icon?window.icon(n):"";
 let EX=null,labRaf=0,bkRaf=0;
 const exEl=$("#plEx"),dock=$("#plDock");
-function exOpen(id){if(!scene)return;if(!fv.hidden)closeFile();cancelAnimationFrame(labRaf);cancelAnimationFrame(bkRaf);
+function exOpen(id){if(!scene)return;if(id==="portal")setTimeout(liveStart,0);if(!fv.hidden)closeFile();cancelAnimationFrame(labRaf);cancelAnimationFrame(bkRaf);
   if(!EX){window.GT_MODAL&&window.GT_MODAL(true);sec.classList.add("exploring")}
   EX={id};scene.explore(id);exRender(true)}
 function exClose(){if(!EX)return;cancelAnimationFrame(labRaf);cancelAnimationFrame(bkRaf);EX=null;scene&&scene.exit();sec.classList.remove("exploring");window.GT_MODAL&&window.GT_MODAL(false);
@@ -135,7 +137,7 @@ function exRender(anim){const id=EX.id,b=BL.find(x=>x.id===id),k=BL.indexOf(b);$
       <p class="ex-k">${L2(T("Ask the map","नक्शे से पूछें"))}</p><div class="ex-q">${USES.map((u,q)=>`<button data-use="${q}" class="${EX.use===q?"on":""}" style="--c:${u.col}">${L2(u.t)}</button>`).join("")}</div>
       ${di?`<div class="ex-dist"><b>${di.name}</b><span><i style="--c:#2f6fd6"></i>${di.n[0]} ${L2(T(di.n[0]===1?"school":"schools","स्कूल"))}</span><span><i style="--c:#d2423a"></i>${di.n[1]} ${L2(T(di.n[1]===1?"health centre":"health centres","स्वास्थ्य केंद्र"))}</span><span><i style="--c:#e39a1f"></i>${di.n[2]} ${L2(T(di.n[2]===1?"anganwadi centre":"anganwadi centres","आंगनवाड़ी"))}</span><small>${L2(T("Sample points, illustrative.","नमूना बिंदु, उदाहरण।"))}</small></div>`:""}`}
   else{const names=scene.dist.map(d=>d.name).sort();
-    body=`<p class="ex-hint">${L2(T("Search a district on the Geoportal, or try an app.","जियोपोर्टल पर ज़िला खोजें, या कोई ऐप आज़माएँ।"))}</p>
+    body=`<p class="ex-hint">${L2(T("The real Geoportal is live on the screen: pan, click, explore. Or pick an app and use it.","असली जियोपोर्टल स्क्रीन पर चालू है: खिसकाएँ, क्लिक करें। या कोई ऐप चुनकर चलाएँ।"))}</p>
       <label class="ex-search">${ic("magnifying-glass")}<input id="exQ" list="exQL" placeholder="Raipur, Bastar, Korba…" autocomplete="off" value="${EX.hl||""}"><datalist id="exQL">${names.map(n=>`<option value="${n}">`).join("")}</datalist></label>
       <div class="ex-q">${APPS3.map((a,q)=>`<button data-dev="${q}" class="${EX.dev===q?"on":""}">${L2(a)}</button>`).join("")}${EX.dev!=null?`<button data-dev="">${L2(T("Portal screen","पोर्टल स्क्रीन"))}</button>`:""}</div>
       ${EX.dev!=null?`<p class="ex-txt">${L2(APPS[EX.dev].b)}</p>`:""}
@@ -167,6 +169,20 @@ document.addEventListener("click",e=>{const t=e.target;if(t.closest("[data-play]
 exEl.addEventListener("change",e=>{const c=e.target.closest("[data-layer]");if(c){const off={...(EX.off||{})};off[c.dataset.layer]=!c.checked;exSet({off})}});
 exEl.addEventListener("input",e=>{if(e.target.id!=="exQ")return;const v=e.target.value.trim().toLowerCase(),k=scene.dist.findIndex(d=>d.name.toLowerCase()===v);
   if(k>=0){Object.assign(EX,{hl:scene.dist[k].name});scene.exSet({hl:scene.dist[k].name,dist:k})}});
+/* live layer: in Explore → Geoportal the real Geoportal app and three working apps sit on the 3D screens,
+   kept in place every frame with a perspective (matrix3d) transform from each screen's four projected corners */
+const live=$("#plLive"),frame=$("#plPortal");let devs=null,liveOn=false;
+function homog(w,h,q){const adj=m=>[m[4]*m[8]-m[5]*m[7],m[2]*m[7]-m[1]*m[8],m[1]*m[5]-m[2]*m[4],m[5]*m[6]-m[3]*m[8],m[0]*m[8]-m[2]*m[6],m[2]*m[3]-m[0]*m[5],m[3]*m[7]-m[4]*m[6],m[1]*m[6]-m[0]*m[7],m[0]*m[4]-m[1]*m[3]];
+  const mm=(a,b)=>{const c=[];for(let i=0;i<3;i++)for(let j=0;j<3;j++){let t=0;for(let k=0;k<3;k++)t+=a[3*i+k]*b[3*k+j];c.push(t)}return c},mv=(m,v)=>[m[0]*v[0]+m[1]*v[1]+m[2]*v[2],m[3]*v[0]+m[4]*v[1]+m[5]*v[2],m[6]*v[0]+m[7]*v[1]+m[8]*v[2]];
+  const basis=(p)=>{const m=[p[0],p[2],p[4],p[1],p[3],p[5],1,1,1],v=mv(adj(m),[p[6],p[7],1]);return mm(m,[v[0],0,0,0,v[1],0,0,0,v[2]])};
+  const t=mm(basis(q),adj(basis([0,0,w,0,0,h,w,h])));for(let i=0;i<9;i++)t[i]/=t[8];
+  return`matrix3d(${t[0]},${t[3]},0,${t[6]},${t[1]},${t[4]},0,${t[7]},0,0,1,0,${t[2]},${t[5]},0,${t[8]})`}
+function liveStart(){if(!frame.src)frame.src=new URL("../versions/v18/portal.html#portal&bare",location.href).href;if(!devs)devs=buildApps(live);if(!liveOn){liveOn=true;requestAnimationFrame(liveTick)}}
+function liveTick(){if(!EX||EX.id!=="portal"||!scene){live.classList.remove("on");liveOn=false;return}live.classList.add("on");
+  [[frame,scene.portalScr,1400,780],[devs[0],scene.appScr[0],390,809],[devs[1],scene.appScr[1],1024,693],[devs[2],scene.appScr[2],1280,768]].forEach(([el,m,w,h])=>{
+    const q=scene.quad(m);if(!q){el.style.visibility="hidden";return}el.style.visibility="visible";el.style.transform=homog(w,h,q)});
+  requestAnimationFrame(liveTick)}
+
 /* clicks in 3D: files open, block parts select, blocks enter explore */
 addEventListener("gt-pick",e=>{const h=e.detail;if(h.type==="file")return openFile(h.i);if(h.type==="block")return exOpen(h.id);if(!EX)return;
   if(h.type==="dept")exSet({dept:h.i},true);else if(h.type==="desk"){const mine=FILES.filter(G=>G.i%6===h.i);pickMail(mine[mine.length-1].i)}

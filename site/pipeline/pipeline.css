@@ -203,6 +203,51 @@ html[data-lang=hi] .ex-k{letter-spacing:0;text-transform:none;font:600 13px var(
   .ex-body{padding:10px 12px}.pl-ex footer{display:none}
 }
 
+/* live apps on the 3D screens (Explore → Geoportal) */
+.pl-live{position:absolute;inset:0;z-index:2;display:none;pointer-events:none;overflow:hidden}
+.pl-live.on{display:block}
+.pl-live>*{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:auto;border:0;background:#fff;overflow:hidden;backface-visibility:hidden}
+.pl-dev{font-family:var(--sans);color:#1d2633;text-align:left}
+.pl-dev button{font:inherit;cursor:pointer}
+/* field app */
+.fa{height:100%;display:grid;grid-template-rows:auto auto 372px 1fr;background:#f3f6fb}
+.fa-st{display:flex;justify-content:space-between;padding:10px 22px 4px;font:600 14px var(--sans);background:#0d1b2e;color:#fff}.fa-st span{font-size:11px;letter-spacing:.1em}
+.fa-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 18px 14px;background:#0d1b2e;color:#fff}.fa-bar b{font:800 21px var(--sans)}
+.fa-off{font:700 12px var(--sans);padding:5px 10px;border-radius:99px;background:#ffc93c;color:#1c1300}.fa-off.ok{background:#3fd6a0;color:#06291c}
+.fa-map{position:relative}.fa-map svg{display:block;width:100%;height:100%;cursor:crosshair}
+.fa-hint{position:absolute;left:12px;top:12px;font:700 12px var(--sans);padding:6px 10px;border-radius:99px;background:#fff;box-shadow:0 4px 12px #0002}
+.fa-dist{position:absolute;right:12px;bottom:12px;font:600 11px var(--mono);padding:4px 8px;border-radius:6px;background:#ffffffd9}
+.fa-sheet{display:grid;gap:12px;align-content:start;padding:16px 18px;border-radius:22px 22px 0 0;background:#fff;box-shadow:0 -10px 30px #0d1b2e1a;margin-top:-16px;position:relative}
+.fa-sheet small{font:700 11px var(--mono);letter-spacing:.14em;color:#5d6b7e}
+.fa-chips{display:flex;gap:6px}.fa-chips button{flex:1;padding:9px;border-radius:12px;border:1.5px solid var(--c);background:#fff;color:var(--c);font-weight:700;font-size:14px}.fa-chips button.on{background:var(--c);color:#fff}
+.fa-sheet label{display:grid;gap:4px;font:600 12px var(--sans);color:#5d6b7e}.fa-sheet input{font:600 16px var(--sans);padding:10px 12px;border-radius:12px;border:1.5px solid #d9dee6;outline:none}
+.fa-row{display:flex;gap:10px;align-items:center}
+.fa-ph{padding:12px;border-radius:14px;border:1.5px dashed #9aa6b8;background:#f6f8fb;font-weight:700;font-size:14px}.fa-ph.on{border-style:solid;border-color:#2bb673;background:#e8f8f0;color:#137a4b}
+.fa-xy{display:grid}.fa-xy b{font:600 14px var(--mono)}.fa-xy span{font:500 11px var(--sans);color:#7a8698}
+.fa-go{flex:1;padding:16px;border-radius:99px;border:0;background:#ffc93c;color:#1c1300;font-weight:800;font-size:17px}.fa-sync{padding:16px 18px;border-radius:99px;border:1.5px solid #0d1b2e;background:#fff;font-weight:700;font-size:15px}
+/* dashboard */
+.db{height:100%;display:grid;grid-template-rows:auto auto 1fr;gap:14px;padding:22px 26px;background:#f4f6fa}
+.db header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.db header b{display:block;font:800 30px var(--sans);font-stretch:85%}.db header span{font:500 13px var(--sans);color:#6a778a}
+.db nav{display:flex;gap:6px}.db nav button{padding:8px 14px;border-radius:99px;border:1.5px solid var(--c);background:#fff;color:var(--c);font-weight:700;font-size:14px}.db nav button.on{background:var(--c);color:#fff}
+.db-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.db-kpi div{padding:14px 16px;border-radius:16px;background:#fff;box-shadow:0 1px 0 #e3e8ef}.db-kpi b{display:block;font:800 30px var(--sans);font-stretch:85%}.db-kpi span{font:600 13px var(--sans);color:#6a778a}
+.db-main{display:grid;grid-template-columns:430px 1fr;gap:14px;min-height:0}
+.db-map{position:relative;border-radius:16px;background:#fff;overflow:hidden}.db-map svg{width:100%;height:100%}.db-map path{transition:fill-opacity .2s}.db-map path.hl{fill-opacity:1;stroke:#0d1b2e;stroke-width:2}
+.db-tip{position:absolute;left:12px;top:12px;padding:8px 12px;border-radius:10px;background:#0d1b2e;color:#fff;font:600 13px var(--sans);opacity:0;transition:opacity .2s}
+.db-leg{position:absolute;left:12px;bottom:10px;display:flex;align-items:center;gap:6px;font:600 11px var(--sans);color:#6a778a}.db-leg i{width:10px;height:10px;border-radius:3px;background:var(--c);margin-left:6px}
+.db-list{overflow:auto;border-radius:16px;background:#fff;padding:8px 14px}.db-list div{display:grid;grid-template-columns:150px 1fr 44px;align-items:center;gap:10px;padding:5px 4px;border-radius:8px;font:600 13px var(--sans)}
+.db-list div.hl{background:#eef3fb}.db-list i{height:10px;border-radius:5px;background:#eef1f5;overflow:hidden}.db-list s{display:block;height:100%;border-radius:5px}.db-list b{font:700 12px var(--mono);text-align:right}
+/* department desktop GIS */
+.dg{height:100%;display:grid;grid-template-rows:auto auto 1fr auto auto;background:#1e2632;color:#dfe7f1;font-size:13px}
+.dg-title{display:flex;align-items:center;gap:14px;padding:8px 14px;background:#2b3442;font:600 13px var(--sans)}.dg-title span{margin-left:auto;color:#3fd6a0;font-size:12px}
+.dg-menu{padding:6px 14px;background:#f2f4f7;color:#3a4455;font:500 12px var(--sans);white-space:pre}
+.dg-body{display:grid;grid-template-columns:210px 1fr;min-height:0}
+.dg aside{padding:12px;background:#262f3d;display:grid;align-content:start;gap:6px}.dg aside small{font:700 10px var(--mono);letter-spacing:.14em;color:#9fb4d0;margin-top:6px}.dg aside p{margin:0;color:#9fb4d0}
+.dg aside label{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:6px;cursor:pointer}.dg aside label:hover{background:#33415a}.dg aside i{width:12px;height:12px;border-radius:3px;background:var(--c)}
+.dg-map{position:relative;background:#eef3f8}.dg-map svg{width:100%;height:100%;display:block;cursor:grab}.dg-map svg:active{cursor:grabbing}
+.dg-zoom{position:absolute;right:12px;top:12px;display:grid;gap:4px}.dg-zoom button{width:34px;height:34px;border-radius:8px;border:0;background:#fff;color:#0d1b2e;font-size:18px;box-shadow:0 2px 6px #0002}
+.dg-table{min-height:64px;padding:8px 14px;background:#fff;color:#3a4455;font:500 12px var(--mono)}.dg-table table{border-collapse:collapse;width:100%}.dg-table th,.dg-table td{border:1px solid #e1e6ee;padding:5px 8px;text-align:left}.dg-table th{background:#dbe5f2}
+.dg-status{display:flex;gap:24px;padding:5px 14px;background:#2b3442;color:#9fb4d0;font:500 11px var(--mono)}
+
 /* step rail */
 .pl-rail{position:absolute;right:clamp(14px,2vw,28px);top:50%;translate:0 -50%;z-index:4;list-style:none;margin:0;padding:0;display:grid;gap:10px}
 .pl-rail li{position:relative;display:flex;justify-content:flex-end;cursor:pointer}
