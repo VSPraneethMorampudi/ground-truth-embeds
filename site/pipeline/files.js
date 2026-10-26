@@ -222,3 +222,26 @@ export function drawFile(F,dep,{head=true}={}){return (x,W0,H0)=>{const sc=W0/51
     [[b[0],"81°15′"],[b[2],"81°45′"]].forEach(([lo,t])=>{const q=pr(lo,b[1]);x.fillText(t,q[0]-18,p1y+16)});[[b[3],"21°30′"],[b[1],"21°00′"]].forEach(([la,t])=>{const q=pr(b[0],la);x.fillText(t,X0+2,q[1]+4)});
     x.strokeStyle="#c0392b";x.lineWidth=2;[[p0x,p0y],[p1x,p0y],[p1x,p1y],[p0x,p1y]].forEach(([a,q])=>{x.beginPath();x.arc(a,q,9,0,7);x.stroke()})}
   x.restore()}}
+
+/* ---------- a converted feature, as a small GIS map tile (256 × 256): the file's real geometry, in its department's colour ---------- */
+const PLACES={pdf:[[81.62,21.33],[81.97,21.2],[81.75,20.99]],register:[[81.73,21.17],[81.75,20.99],[81.66,21.05],[81.72,20.83]]};
+export function drawFeature(F,col){return (x,W,H)=>{const G=GEO();x.clearRect(0,0,W,H);x.fillStyle="#fbfcfe";rr(x,3,3,W-6,H-6,16);x.fill();
+  const RP=["scanmap","register"].includes(F.view)||F.locator==="Raipur",b=pad(F.geo==="bastar"?bboxOf(dist("Bastar").r.flat()):RP?bboxOf(dist("Raipur").r.flat()):F.view==="topo"?[81.25,21,81.75,21.5]:CG,.06);
+  const pr=projector(b,12,12,W-24,H-24);x.save();rr(x,3,3,W-6,H-6,16);x.clip();shapes(x,pr,G.districts,"#eef2f7","#c9d3e0",1);
+  const handles=pts=>{x.fillStyle="#fff";x.strokeStyle=col;x.lineWidth=1.5;pts.forEach((p,i)=>{if(i%Math.max(1,Math.floor(pts.length/7)))return;const q=pr(p[0],p[1]);x.fillRect(q[0]-3,q[1]-3,6,6);x.strokeRect(q[0]-3,q[1]-3,6,6)})};
+  const pts=list=>list.forEach(([lo,la])=>dot(x,pr(lo,la),col,6));
+  if(F.geo==="districts"){shapes(x,pr,G.districts,col+"40",col,1.6)}
+  else if(F.geo==="bastar"){const d=dist("Bastar");x.save();x.beginPath();d.r.forEach(r=>trace(x,pr,r,true));x.clip();let k=0;for(let gx=0;gx<W;gx+=18)for(let gy=0;gy<H;gy+=18){x.fillStyle=col+["55","33","66","44"][(k++*7)%4];x.fillRect(gx,gy,17,17)}x.restore();shapes(x,pr,[d],null,col,2.5)}
+  else if(RP&&F.view!=="register"){const d=dist("Raipur");shapes(x,pr,[d],col+"44",col,2.5);handles(d.r[0])}
+  else if(F.geo==="mahanadi"){polys(x,pr,mahanadi(),col,5);handles(mahanadi().flatMap(r=>r.p))}
+  else if(F.view==="dwg"){polys(x,pr,[NH30()],col,5);handles(NH30().p)}
+  else if(F.geo==="nh130"){polys(x,pr,[NH130()],col,5);handles(NH130().p)}
+  else if(F.view==="topo"){polys(x,pr,G.rail,col,4);G.rail.forEach(l=>handles(l.p))}
+  else if(F.geo==="stations"){polys(x,pr,G.rail,"#9aa3ae",1.5,[4,3]);pts(STATIONS.map(s=>[s[2],s[3]]))}
+  else if(F.ll){const[a,c2]=F.ll;pts(F.rows.slice(1).map(r=>[+r[c2],+r[a]]).filter(([lo,la])=>la>17&&la<24.5&&lo>80))}
+  else if(F.view==="tif"){const FO=["Bastar","Dantewada","Bijapur","Sukma","Narayanpur","Kanker","Kondagaon","Sarguja","Jashpur","Korba","Balrampur-Ramanujganj","Surajpur","Koriya","Gariyaband","Dhamtari"];
+    shapes(x,pr,G.districts.filter(d=>FO.includes(d.n)),"#3e8a4fbb",null);shapes(x,pr,G.districts.filter(d=>!FO.includes(d.n)),"#a7c77aaa",null)}
+  else if(F.view==="pdf")pts(PLACES.pdf);
+  else if(F.view==="register"){shapes(x,pr,[dist("Raipur")],null,col+"88",1.5);pts(PLACES.register)}
+  else pts(HEALTH.slice(1).map(r=>[+r[4],+r[3]]));
+  x.restore();x.strokeStyle=col;x.lineWidth=5;rr(x,3,3,W-6,H-6,16);x.stroke()}}

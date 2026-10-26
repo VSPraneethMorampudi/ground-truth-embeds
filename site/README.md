@@ -16,7 +16,9 @@ THE PIPELINE (pipeline/): the main story, driven by scroll
     (georeferencer, attribute table + Add XY, reproject & edit, raster warp, with live progress) →
     (file previews draw real Chhattisgarh geography: the 33 official district boundaries, the Mahanadi, NH-30 in
     UTM 44N metres, NH-130 as a GPS track, the rail network, real towns, dams and stations; codes and counts are samples) →
-    quality gate (one record with a blank code is sent back) → State Data Centre (42U racks with 1U/2U
+    the GIS cloud: each analyst's screen uploads its converted features (small map tiles with the real geometry;
+    points carry map-marker pins) along a light beam; checks run in the cloud (one record with a blank code drops
+    back to its department); clean data streams down into the State Data Centre racks → State Data Centre (42U racks with 1U/2U
     servers, drive bays, blinking LEDs, cable tray) and geodatabase layers → the 33-district map assembling
     layer by layer → the Geoportal screen → field app, dashboard and department GIS → use cases → the loop.
   Explore mode: a dock at the bottom (or clicking a block in 3D) opens any block on its own — departments (pick a
