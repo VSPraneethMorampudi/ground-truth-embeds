@@ -3,9 +3,9 @@
 import * as THREE from "three";
 import {RoundedBoxGeometry} from "../vendor/RoundedBoxGeometry.js";
 import {RoomEnvironment} from "../vendor/RoomEnvironment.js";
-import {DEPTS,STEPS} from "./steps.js?v=202610260830";
-import {FILES,drawFile,drawFeature} from "./files.js?v=202610260830";
-import {envDraw,inboxDraw,mailDraw,gisDraw} from "./screens.js?v=202610260830";
+import {DEPTS,STEPS} from "./steps.js?v=202610260900";
+import {FILES,drawFile,drawFeature} from "./files.js?v=202610260900";
+import {envDraw,inboxDraw,mailDraw,gisDraw} from "./screens.js?v=202610260900";
 
 const G=window.GEO,D2R=Math.PI/180,LON0=82.15,LAT0=21.35,K=1,CX=Math.cos(LAT0*D2R),MX=75,MS=10;
 export const P=(lon,lat)=>[MX+(lon-LON0)*CX*MS,-(lat-LAT0)*MS];
@@ -399,7 +399,12 @@ export class PipelineScene{
     ts.position.z=.37;tb.add(ts);
     /* laptop: department GIS */
     ped(18,6,16);const lp=this.lapG=new THREE.Group();lp.position.set(18,2.2,6);lp.rotation.y=-.3;g.add(lp);
-    const kb=this.rb(16,.6,10,.4,M.steel);kb.position.y=.3;lp.add(kb);const lid=new THREE.Group();lid.position.set(0,.6,-5);lid.rotation.x=-.22;lp.add(lid);
+    const kb=this.rb(16,.6,10,.4,M.steel);kb.position.y=.3;lp.add(kb);
+    /* keyboard: keys in rows, a space bar and a trackpad */
+    {const keyM=new THREE.MeshStandardMaterial({color:0x22272f,roughness:.6}),keys=[];const m4=new THREE.Matrix4(),q0=new THREE.Quaternion();
+      for(let r=0;r<5;r++)for(let c=0;c<14;c++)keys.push([-6.5+c*1+(r%2)*.25,-3.9+r*1,.82,.82]);keys.push([0,1.1,5.2,.82]);
+      const im=new THREE.InstancedMesh(new THREE.BoxGeometry(1,.14,1),keyM,keys.length);keys.forEach(([x,z,w,d],i)=>im.setMatrixAt(i,m4.compose(new THREE.Vector3(x,.64,z),q0,new THREE.Vector3(w,1,d))));lp.add(im);
+      const tp=this.rb(4.6,.05,2.6,.08,new THREE.MeshStandardMaterial({color:0x9aa4b0,roughness:.35,metalness:.6}));tp.position.set(0,.62,3.3);lp.add(tp)}const lid=new THREE.Group();lid.position.set(0,.6,-5);lid.rotation.x=-.22;lp.add(lid);
     const lb=this.rb(16,10,.5,.4,M.ink);lb.position.y=5;lid.add(lb);const lsc=screen(15,9,(x,W,H)=>{x.fillStyle="#13233d";x.fillRect(0,0,W,H);x.fillStyle="#1d2f4d";x.fillRect(0,0,160,H);
       for(let i=0;i<7;i++){x.fillStyle="#9fb4d0";x.fillRect(16,30+i*40,110,10)}x.strokeStyle="#5fa8ff";x.lineWidth=2;for(let i=0;i<30;i++){x.beginPath();x.arc(200+((i*97)%400),60+((i*53)%300),3+i%4,0,7);x.stroke()}
       x.strokeStyle="#ffd36b";x.lineWidth=4;x.beginPath();x.moveTo(170,330);x.bezierCurveTo(300,250,420,280,W,120);x.stroke()});lsc.position.set(0,5,.26);lid.add(lsc);
@@ -451,7 +456,7 @@ export class PipelineScene{
     if(e.id==="lab"){if(e.desk!=null){const a=this.analysts[e.desk],c=this.conv.position;return[V(c.x+a.x,12.5,c.z+a.z+10.5),V(c.x+a.x,5.2,c.z+a.z-1.5)]}return[V(-46,44,60),V(-46,4,0)]}
     if(e.id==="dc"){if(e.rack!=null){const q=this.racks[e.rack],c=this.dc.position;return[V(c.x+q.x+5,13,c.z+q.z+22),V(c.x+q.x,7.5,c.z+q.z)]}return[V(14,42,80),V(14,9,0)]}
     if(e.id==="map"){if(e.dist!=null){const[x,z]=this.dist[e.dist].c;return[V(x,40,z+34),V(x,3,z)]}return[V(75,100,82),V(75,0,6)]}
-    if(e.dev!=null){const sc=this.appScr[e.dev],p=sc.getWorldPosition(new THREE.Vector3()),n=sc.getWorldDirection(new THREE.Vector3()),d=[19,30,27][e.dev];return[V(p.x+n.x*d,p.y+n.y*d+2,p.z+n.z*d),V(p.x,p.y,p.z)]}return[V(75,32,62),V(75,22,-48)]}
+    if(e.dev!=null){const sc=this.appScr[e.dev],p=sc.getWorldPosition(new THREE.Vector3()),n=sc.getWorldDirection(new THREE.Vector3()),d=[34,36,34][e.dev];return[V(p.x+n.x*d,p.y+n.y*d+3,p.z+n.z*d),V(p.x,p.y-(e.dev===2?1.5:0),p.z)]}return[V(75,32,62),V(75,22,-48)]}
   /* a screen's four corners on the page (tl, tr, bl, br), for laying live HTML over it; null when off camera */
   quad(m){if(!m)return null;const p=m.geometry.attributes.position,r=this.host.getBoundingClientRect(),out=[],v=new THREE.Vector3();
     for(let k=0;k<4;k++){v.fromBufferAttribute(p,k);m.localToWorld(v);v.project(this.cam);if(v.z>1||v.z<-1||Math.abs(v.x)>3||Math.abs(v.y)>3)return null;out.push((v.x+1)/2*r.width,(1-v.y)/2*r.height)}return out}
