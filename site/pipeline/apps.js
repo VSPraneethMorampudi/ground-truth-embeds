@@ -1,7 +1,7 @@
 /* Working mock-ups of the three apps that use the Geoportal's data, drawn as HTML onto the 3D devices in Explore:
    a field survey app (phone), a coverage dashboard (tablet) and a department desktop GIS (laptop).
    Geography is real (window.GEO); counts and coverage values are samples. */
-import {measure,DAMS,SCHOOLS,HEALTH,STATIONS} from "./files.js?v=202610260900";
+import {measure,DAMS,SCHOOLS,HEALTH,STATIONS} from "./files.js?v=202610260945";
 const G=()=>window.GEO,D2R=Math.PI/180;
 const bb=pts=>pts.reduce((b,[x,y])=>[Math.min(b[0],x),Math.min(b[1],y),Math.max(b[2],x),Math.max(b[3],y)],[1e9,1e9,-1e9,-1e9]);
 function proj(b,W,H,p=8){const cx=Math.cos((b[1]+b[3])/2*D2R),sx=(b[2]-b[0])*cx,sy=b[3]-b[1],s=Math.min((W-2*p)/sx,(H-2*p)/sy),ox=(W-sx*s)/2,oy=(H-sy*s)/2;
@@ -16,7 +16,7 @@ const SVGNS='xmlns="http://www.w3.org/2000/svg"';
 function fieldApp(el){const d=G().districts.find(x=>x.n==="Raipur"),b=bb(d.r.flat()),W=390,H=372,f=proj([b[0]-.05,b[1]-.05,b[2]+.05,b[3]+.05],W,H,0);
   const pts=[[81.7236,21.1804,"#2f6fd6"],[81.7542,20.9871,"#2f6fd6"],[81.7531,20.9902,"#d2423a"],[81.6122,21.041,"#d2423a"],[81.66,21.05,"#e39a1f"]];
   let cur=[81.6296,21.2514],layer=0,photo=false,pending=3;const L=[["School","#2f6fd6"],["Health","#d2423a"],["Anganwadi","#e39a1f"]];
-  el.innerHTML=`<div class="fa"><div class="fa-st"><b>9:41</b><span>● ● ● ▮ 78%</span></div>
+  el.innerHTML=`<div class="fa"><div class="fa-st"><b>9:41</b><i class="fa-isl"></i><span><svg viewBox="0 0 18 12" width="18" height="12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg><svg viewBox="0 0 16 12" width="16" height="12"><path d="M8 11.5 5.6 9a3.4 3.4 0 0 1 4.8 0zM3.4 6.8a6.5 6.5 0 0 1 9.2 0l-1.5 1.5a4.4 4.4 0 0 0-6.2 0zM1.2 4.6a9.6 9.6 0 0 1 13.6 0l-1.5 1.5a7.5 7.5 0 0 0-10.6 0z"/></svg><span class="fa-bat"><i></i></span><b>78</b></span></div>
     <header class="fa-bar"><b>CG Field Survey</b><span class="fa-off" id="faOff"></span></header>
     <div class="fa-map"><svg viewBox="0 0 ${W} ${H}" ${SVGNS}><rect width="${W}" height="${H}" fill="#e8eef5"/>
       ${G().districts.map(x=>`<path d="${pth(x.r,f)}" fill="${x===d?"#fff":"#f2f5f9"}" stroke="#b9c6d6" stroke-width="${x===d?2:1}"/>`).join("")}
@@ -29,7 +29,7 @@ function fieldApp(el){const d=G().districts.find(x=>x.n==="Raipur"),b=bb(d.r.fla
     <div class="fa-sheet"><small>NEW FEATURE</small><div class="fa-chips" id="faL"></div>
       <label>Name<input id="faN" value="GPS Mana" autocomplete="off"></label>
       <div class="fa-row"><button class="fa-ph" id="faPh">📷 Add photo</button><div class="fa-xy"><b id="faXY"></b><span>GPS ±3 m · EPSG:4326</span></div></div>
-      <div class="fa-row"><button class="fa-go" id="faGo">Capture point</button><button class="fa-sync" id="faSy">Sync</button></div></div></div>`;
+      <div class="fa-row"><button class="fa-go" id="faGo">Capture point</button><button class="fa-sync" id="faSy">Sync</button></div></div><i class="fa-home"></i></div>`;
   const $=s=>el.querySelector(s),me=$("#faMe"),svg=$("svg");
   const paint=()=>{const q=f(...cur);me.setAttribute("transform",`translate(${q[0]},${q[1]})`);$("#faXY").textContent=`${cur[1].toFixed(4)} N  ${cur[0].toFixed(4)} E`;
     $("#faL").innerHTML=L.map(([n,c],i)=>`<button data-l="${i}" class="${i===layer?"on":""}" style="--c:${c}">${n}</button>`).join("");
@@ -58,8 +58,8 @@ function dashboard(el){const W=430,H=560,f=proj(CG,W,H,10),DS=[["Schools","#2f6f
   paint()}
 
 /* ---------- department desktop GIS (1280 × 768) ---------- */
-function deskGIS(el){const W=900,H=560,f=proj(CG,W,H,16);let vb=[0,0,W,H];const on={Districts:1,Rivers:1,Roads:1,Rail:1,Dams:1,Schools:1,Stations:0};
-  const LY={Districts:"#8a6a3c",Rivers:"#1d6fd6",Roads:"#d2733c",Rail:"#3a383d",Dams:"#0b7a70",Schools:"#2f6fd6",Stations:"#6b4fd6"};
+function deskGIS(el){const W=900,H=560,f=proj(CG,W,H,16);let vb=[0,0,W,H];const on={Districts:1,Rivers:1,Roads:1,Rail:1,Dams:1,Schools:1};
+  const LY={Districts:"#8a6a3c",Rivers:"#1d6fd6",Roads:"#d2733c",Rail:"#3a383d",Dams:"#0b7a70",Schools:"#2f6fd6"};
   el.innerHTML=`<div class="dg"><div class="dg-title">● ● ●<b>Department GIS — Water Resources</b><span>Connected to State Geoportal map services ✓</span></div>
     <div class="dg-menu">Project  Edit  View  Layer  Vector  Raster  Processing  Help</div>
     <div class="dg-body"><aside><small>LAYERS</small><div id="dgL"></div><small>BASEMAP</small><p>Geoportal · light</p></aside>
@@ -74,8 +74,7 @@ function deskGIS(el){const W=900,H=560,f=proj(CG,W,H,16);let vb=[0,0,W,H];const 
       (on.Rivers?g.rivers.map(r=>`<path d="${ln(r.p,f)}" fill="none" stroke="#1d6fd6" stroke-width="2.5" vector-effect="non-scaling-stroke"/>`).join(""):"")+
       (on.Roads?g.roads.map(r=>`<path d="${ln(r.p,f)}" fill="none" stroke="#d2733c" stroke-width="2" vector-effect="non-scaling-stroke"/>`).join(""):"")+
       (on.Rail?g.rail.map(r=>`<path d="${ln(r.p,f)}" fill="none" stroke="#3a383d" stroke-width="1.5" stroke-dasharray="5 3" vector-effect="non-scaling-stroke"/>`).join(""):"")+
-      (on.Dams?pts(DAMS.slice(1).map(r=>[+r[3],+r[2],r[0]]),"#0b7a70",6):"")+(on.Schools?pts(SCHOOLS.slice(1).filter(r=>+r[2]<24.5&&r[2]).map(r=>[+r[3],+r[2],r[0]]),"#2f6fd6",5):"")+
-      (on.Stations?pts(STATIONS.map(s=>[s[2],s[3],s[0]]),"#6b4fd6",5):"")};
+      (on.Dams?pts(DAMS.slice(1).map(r=>[+r[3],+r[2],r[0]]),"#0b7a70",6):"")+(on.Schools?pts(SCHOOLS.slice(1).filter(r=>+r[2]<24.5&&r[2]).map(r=>[+r[3],+r[2],r[0]]),"#2f6fd6",5):"")};
   const zoom=(k,cx=vb[0]+vb[2]/2,cy=vb[1]+vb[3]/2)=>{if(k===0){vb=[0,0,W,H];return paint()}const s=k<0?.7:1/.7,w=Math.min(W*1.2,Math.max(W*.08,vb[2]*s)),h=w*H/W;vb=[cx-(cx-vb[0])*w/vb[2],cy-(cy-vb[1])*h/vb[3],w,h];paint()};
   const toSvg=e=>{const r=svg.getBoundingClientRect();return[vb[0]+(e.clientX-r.left)/r.width*vb[2],vb[1]+(e.clientY-r.top)/r.height*vb[3]]};
   let drag=null;
@@ -90,4 +89,4 @@ function deskGIS(el){const W=900,H=560,f=proj(CG,W,H,16);let vb=[0,0,W,H];const 
   paint()}
 
 export function buildApps(host){const make=(cls,w,h,fn)=>{const d=document.createElement("div");d.className="pl-dev "+cls;d.style.width=w+"px";d.style.height=h+"px";host.appendChild(d);fn(d);return d};
-  return[make("dev-phone",390,809,fieldApp),make("dev-tab",1024,693,dashboard),make("dev-lap",1280,768,deskGIS)]}
+  return[make("dev-phone",390,815,fieldApp),make("dev-tab",1024,693,dashboard),make("dev-lap",1280,768,deskGIS)]}

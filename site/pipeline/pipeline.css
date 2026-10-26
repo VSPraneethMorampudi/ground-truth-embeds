@@ -210,14 +210,19 @@ html[data-lang=hi] .ex-k{letter-spacing:0;text-transform:none;font:600 13px var(
 .pl-dev{font-family:var(--sans);color:#1d2633;text-align:left}
 .pl-dev button{font:inherit;cursor:pointer}
 /* field app */
-.fa{height:100%;display:grid;grid-template-rows:auto auto 372px 1fr;background:#f3f6fb}
-.fa-st{display:flex;justify-content:space-between;padding:10px 22px 4px;font:600 14px var(--sans);background:#0d1b2e;color:#fff}.fa-st span{font-size:11px;letter-spacing:.1em}
+.dev-phone{border-radius:44px}
+.fa{position:relative;height:100%;display:grid;grid-template-rows:auto auto 372px 1fr;background:#f3f6fb}
+.fa-st{position:relative;display:flex;justify-content:space-between;align-items:center;height:50px;padding:6px 30px 0 34px;font:700 16px var(--sans);background:#0d1b2e;color:#fff}
+.fa-st>span{display:flex;align-items:center;gap:6px}.fa-st svg{fill:#fff}.fa-st>span>b{font:600 12px var(--sans)}
+.fa-isl{position:absolute;left:50%;top:11px;translate:-50% 0;width:118px;height:34px;border-radius:20px;background:#000}
+.fa-bat{position:relative;width:25px;height:12px;border:1.5px solid #ffffffb0;border-radius:4px;padding:1.5px}.fa-bat i{display:block;width:78%;height:100%;border-radius:2px;background:#fff}
+.fa-home{position:absolute;left:50%;bottom:8px;translate:-50% 0;width:134px;height:5px;border-radius:3px;background:#0d1b2e}
 .fa-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 18px 14px;background:#0d1b2e;color:#fff}.fa-bar b{font:800 21px var(--sans)}
 .fa-off{font:700 12px var(--sans);padding:5px 10px;border-radius:99px;background:#ffc93c;color:#1c1300}.fa-off.ok{background:#3fd6a0;color:#06291c}
 .fa-map{position:relative}.fa-map svg{display:block;width:100%;height:100%;cursor:crosshair}
 .fa-hint{position:absolute;left:12px;top:12px;font:700 12px var(--sans);padding:6px 10px;border-radius:99px;background:#fff;box-shadow:0 4px 12px #0002}
 .fa-dist{position:absolute;right:12px;bottom:12px;font:600 11px var(--mono);padding:4px 8px;border-radius:6px;background:#ffffffd9}
-.fa-sheet{display:grid;gap:12px;align-content:start;padding:16px 18px;border-radius:22px 22px 0 0;background:#fff;box-shadow:0 -10px 30px #0d1b2e1a;margin-top:-16px;position:relative}
+.fa-sheet{display:grid;gap:11px;align-content:start;padding:16px 18px 26px;border-radius:22px 22px 0 0;background:#fff;box-shadow:0 -10px 30px #0d1b2e1a;margin-top:-16px;position:relative}
 .fa-sheet small{font:700 11px var(--mono);letter-spacing:.14em;color:#5d6b7e}
 .fa-chips{display:flex;gap:6px}.fa-chips button{flex:1;padding:9px;border-radius:12px;border:1.5px solid var(--c);background:#fff;color:var(--c);font-weight:700;font-size:14px}.fa-chips button.on{background:var(--c);color:#fff}
 .fa-sheet label{display:grid;gap:4px;font:600 12px var(--sans);color:#5d6b7e}.fa-sheet input{font:600 16px var(--sans);padding:10px 12px;border-radius:12px;border:1.5px solid #d9dee6;outline:none}
