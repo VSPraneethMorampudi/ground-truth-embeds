@@ -44,6 +44,8 @@ document.addEventListener("click",e=>{const a=e.target.closest('a[href^="#"]');i
 $("#toOrbit").onclick=()=>goTo(0,{duration:3.2});
 
 window.GT_GOTO=y=>goTo(y,{duration:1.4});
+/* a dialog (the file viewer) is open: pause auto-play and hold the page still */
+window.GT_MODAL=v=>{if(v){takeOver();lenis.stop()}else lenis.start()};
 
 /* ---------- preloader → reveal ---------- */
 const pre={v:0};
@@ -117,7 +119,7 @@ $("#apFull").onclick=()=>{const d=document.documentElement;document.fullscreenEl
 function takeOver(){if(ap.on&&!ap.paused)apPause(true)}
 addEventListener("wheel",takeOver,{passive:true});
 addEventListener("touchstart",e=>{if(!e.target.closest("#ap"))takeOver()},{passive:true});
-addEventListener("keydown",e=>{if(!ap.on)return;if(e.key==="Escape")return apStop();if(e.target.closest&&e.target.closest("#ap"))return;
+addEventListener("keydown",e=>{if(!ap.on||document.body.classList.contains("fv-open"))return;if(e.key==="Escape")return apStop();if(e.target.closest&&e.target.closest("#ap"))return;
   if(e.key===" "){e.preventDefault();$("#apPlay").click()}else if(e.key==="ArrowRight")$("#apNext").click();else if(e.key==="ArrowLeft")$("#apPrev").click();
   else if(["ArrowDown","ArrowUp","PageDown","PageUp","Home","End"].includes(e.key))takeOver()});
 

@@ -4,6 +4,8 @@ import * as THREE from "three";
 import {RoundedBoxGeometry} from "../vendor/RoundedBoxGeometry.js";
 import {RoomEnvironment} from "../vendor/RoomEnvironment.js";
 import {DEPTS,STEPS} from "./steps.js";
+import {FILES,drawFile} from "./files.js";
+import {envDraw,inboxDraw,mailDraw,gisDraw} from "./screens.js";
 
 const G=window.GEO,D2R=Math.PI/180,LON0=82.15,LAT0=21.35,K=1,CX=Math.cos(LAT0*D2R),MX=75,MS=10;
 export const P=(lon,lat)=>[MX+(lon-LON0)*CX*MS,-(lat-LAT0)*MS];
@@ -19,34 +21,12 @@ function canvasTex(w,h,draw){const c=document.createElement("canvas");c.width=w;
   const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;t.userData={c,x,draw};return t}
 const MONO='"Geist Mono",ui-monospace,monospace',SANS='"Bricolage Grotesque",system-ui,sans-serif',HI='"Anek Devanagari",sans-serif';
 function rr(x,X,Y,W,H,r){x.beginPath();x.roundRect(X,Y,W,H,r)}
-function docDraw(d){return (x,W,H)=>{
-  x.fillStyle="#fff";rr(x,0,0,W,H,28);x.fill();
-  x.fillStyle=d.col;rr(x,0,0,W,96,[28,28,0,0]);x.fill();
-  x.fillStyle="#fff";x.font=`700 40px ${SANS}`;x.fillText(d.fmt,28,58);x.font=`500 22px ${MONO}`;x.globalAlpha=.85;x.fillText(d.ext,28,86);x.globalAlpha=1;
-  const B=120;x.save();x.beginPath();x.rect(20,B,W-40,H-B-20);x.clip();
-  const k=d.k;
-  if(k==="revenue"){["shp","shx","dbf","prj"].forEach((e,i)=>{x.fillStyle="#f3ede2";rr(x,28+i*118,B+12,104,120,14);x.fill();x.fillStyle=d.col;x.font=`700 26px ${MONO}`;x.fillText("."+e,44+i*118,B+84)});
-    x.strokeStyle=d.col;x.lineWidth=5;x.beginPath();[[90,380],[200,300],[330,330],[420,260],[440,420],[300,520],[140,500]].forEach((p,i)=>i?x.lineTo(...p):x.moveTo(...p));x.closePath();x.stroke();x.fillStyle=d.col+"22";x.fill();
-    x.beginPath();x.moveTo(200,300);x.lineTo(260,470);x.lineTo(440,420);x.stroke()}
-  else if(k==="water"){x.font=`500 25px ${MONO}`;const L=['<Placemark>','  <name>Mahanadi</name>','  <LineString>','   <coordinates>','    81.92,20.32,0','    82.01,20.61,0','    82.18,20.96,0','   </coordinates>','  </LineString>','</Placemark>'];
-    L.forEach((l,i)=>{x.fillStyle=l.includes("<")?d.col:"#333";x.fillText(l,30,B+40+i*44)})}
-  else if(k==="pwd"){x.fillStyle="#13233d";x.fillRect(20,B,W-40,H-B-20);x.strokeStyle="#5fb3ff33";x.lineWidth=1;for(let i=0;i<20;i++){x.beginPath();x.moveTo(20+i*26,B);x.lineTo(20+i*26,H);x.stroke();x.beginPath();x.moveTo(20,B+i*26);x.lineTo(W,B+i*26);x.stroke()}
-    x.strokeStyle="#ffd36b";x.lineWidth=6;x.beginPath();x.moveTo(40,600);x.bezierCurveTo(160,520,240,360,470,220);x.stroke();x.strokeStyle="#9fd3ff";x.lineWidth=2;x.setLineDash([10,8]);x.beginPath();x.moveTo(30,580);x.bezierCurveTo(150,500,230,340,460,200);x.stroke();x.setLineDash([]);
-    x.fillStyle="#9fd3ff";x.font=`500 22px ${MONO}`;x.fillText("UTM 44N  ·  metres",36,B+40);x.fillText("ROAD_CL  NH-30",36,B+72)}
-  else if(k==="edu"||k==="health"){const rows=k==="edu"?[["School","UDISE","Lat","Long"],["GPS Mana","22270101","21.180","81.723"],["GMS Abhanpur","22270215","20.987","81.754"],["GHS Tilda","22270433","81.601","21.556"],["GPS Kurud","","20.831","81.721"],["GPS Nawagaon","22270518","21.041","81.612"]]
-      :[["id","type","lat","lon"],["PHC-RPR-014","PHC","20.990","81.753"],["SHC-RPR-221","SHC","21.041","81.612"],["CHC-JSP-007","CHC","22.556","83.460"],["PHC-BST-031","PHC","19.081","81.952"],["SHC-KRB-102","SHC","22.351","82.683"]];
-    const cw=[170,120,80,80];rows.forEach((r,i)=>{let X=28;r.forEach((v,j)=>{x.fillStyle=i===0?d.col+"22":(i%2?"#fafafa":"#fff");x.fillRect(X,B+10+i*64,cw[j]+12,62);x.strokeStyle="#e4e4e4";x.strokeRect(X,B+10+i*64,cw[j]+12,62);
-      x.fillStyle=i===0?d.col:"#333";x.font=`${i===0?700:500} ${k==="edu"?21:20}px ${MONO}`;x.fillText(v,X+8,B+50+i*64);X+=cw[j]+12})});
-    if(k==="edu"){x.fillStyle="#d2423a";x.font=`700 28px ${SANS}`;x.fillText("⚠",W-60,B+50+3*64);x.fillText("⚠",W-60,B+50+4*64)}}
-  else if(k==="wcd"){x.fillStyle="#fbf3dc";x.fillRect(20,B,W-40,H-B-20);x.strokeStyle="#c9b78d";for(let i=0;i<11;i++){x.beginPath();x.moveTo(20,B+40+i*48);x.lineTo(W-20,B+40+i*48);x.stroke()}
-    x.strokeStyle="#d2423a";x.beginPath();x.moveTo(84,B);x.lineTo(84,H);x.stroke();x.fillStyle="#2a3b8f";x.font=`500 30px ${HI}`;
-    ["1  AWC-RPR-00412  माना","2  AWC-RPR-00413  टेमरी","3  AWC-BST-00118  नगरनार","4  AWC-BST-00119  तोकापाल","5  AWC-KRB-00031  कटघोरा"].forEach((l,i)=>x.fillText(l,32,B+80+i*48));
-    x.fillStyle="#d2423a";x.font=`700 24px ${MONO}`;x.fillText("no lat / long",32,H-50)}
-  else if(k==="forest"){for(let i=0;i<22;i++)for(let j=0;j<24;j++){const v=Math.sin(i*.6+j*.3)+Math.cos(j*.4-i*.2)+Math.sin(i*j*.05);x.fillStyle=v>1?"#1f6b35":v>.2?"#4f9a4f":v>-.6?"#a7c77a":"#e9e2c9";x.fillRect(28+i*21,B+10+j*21,20,20)}}
-  else if(k==="rail"){x.fillStyle="#efe3c4";x.fillRect(20,B,W-40,H-B-20);x.strokeStyle="#9c8a63";x.lineWidth=1;for(let i=0;i<8;i++){x.beginPath();x.moveTo(20,B+i*70);x.bezierCurveTo(200,B+i*70+30,300,B+i*70-30,W,B+i*70+10);x.stroke()}
-    x.strokeStyle="#222";x.lineWidth=5;x.beginPath();x.moveTo(40,H-60);x.lineTo(W-40,B+60);x.stroke();x.lineWidth=2;for(let i=0;i<16;i++){const t=i/15,X=mix(40,W-40,t),Y=mix(H-60,B+60,t);x.beginPath();x.moveTo(X-8,Y-8);x.lineTo(X+8,Y+8);x.stroke()}
-    x.strokeStyle="#c0392b";x.lineWidth=4;x.beginPath();x.arc(W-110,H-120,52,0,7);x.stroke();x.fillStyle="#c0392b";x.font=`700 18px ${MONO}`;x.fillText("SoI 64G/12",W-160,H-115)}
-  x.restore()}}
+/* the department name board: big, bilingual, readable from the overview */
+function boardDraw(d){return (x,W,H)=>{x.fillStyle="#0d1b2e";rr(x,0,0,W,H,26);x.fill();x.fillStyle=d.col;x.fillRect(0,0,26,H);
+  const fit=(t,w,px,fam,wt)=>{let z=px;x.font=`${wt} ${z}px ${fam}`;while(x.measureText(t).width>w&&z>20){z-=2;x.font=`${wt} ${z}px ${fam}`}};
+  x.fillStyle="#fff";fit(d.name.en,W-100,120,SANS,800);x.fillText(d.name.en,60,150);
+  x.globalAlpha=.85;fit(d.name.hi,W-100,84,HI,600);x.fillText(d.name.hi,60,262);x.globalAlpha=1}}
+function flagDraw(x,W,H){[["#ff9933",0],["#ffffff",1],["#138808",2]].forEach(([c,i])=>{x.fillStyle=c;x.fillRect(0,i*H/3,W,H/3)});x.strokeStyle="#000080";x.lineWidth=3;x.beginPath();x.arc(W/2,H/2,H/7,0,7);x.stroke()}
 function signDraw(en,hi,accent){return (x,W,H)=>{x.fillStyle="#0d1b2e";rr(x,0,0,W,H,20);x.fill();x.fillStyle=accent;x.fillRect(0,0,14,H);
   x.fillStyle="#fff";x.font=`800 ${en.length>16?44:54}px ${SANS}`;x.fillText(en,36,H*.5);x.font=`600 36px ${HI}`;x.globalAlpha=.75;x.fillText(hi,36,H*.86);x.globalAlpha=1}}
 
@@ -77,7 +57,14 @@ export class PipelineScene{
     Object.assign(sun.shadow.camera,{left:-170,right:170,top:80,bottom:-80,near:20,far:400});sun.shadow.bias=-.0004;sun.shadow.normalBias=.4;S.add(sun);S.add(sun.target);
     this.M=mats();this.build();
     new ResizeObserver(()=>this.resize()).observe(host);this.resize();
-    host.addEventListener("pointermove",e=>{const r=host.getBoundingClientRect();this.mouse.set((e.clientX-r.left)/r.width-.5,(e.clientY-r.top)/r.height-.5)});
+    /* pointer: parallax, hover a file card, click (or tap) to open it */
+    this.hover=-1;this.ptr=null;
+    host.addEventListener("pointermove",e=>{const r=host.getBoundingClientRect();this.mouse.set((e.clientX-r.left)/r.width-.5,(e.clientY-r.top)/r.height-.5);if(e.pointerType==="mouse")this.ptr=[e.clientX,e.clientY]});
+    host.addEventListener("pointerleave",()=>{this.ptr=null});
+    host.addEventListener("pointerdown",e=>{this.down=[e.clientX,e.clientY,performance.now()]});
+    host.addEventListener("pointercancel",()=>{this.down=null});
+    host.addEventListener("pointerup",e=>{const d=this.down;this.down=null;if(!d||Math.hypot(e.clientX-d[0],e.clientY-d[1])>10||performance.now()-d[2]>600)return;
+      const j=this.pickAt(e.clientX,e.clientY);if(j>=0)dispatchEvent(new CustomEvent("gt-open-file",{detail:{i:j}}))});
     this.clock=new THREE.Clock();this.on=true;R.setAnimationLoop(()=>this.frame());
     document.fonts&&document.fonts.ready.then(()=>this.redrawTextures())}
   resize(){const w=this.host.clientWidth,h=this.host.clientHeight;if(!w||!h)return;this.r.setSize(w,h,false);this.cam.aspect=w/h;this.phone=w<760;
@@ -93,93 +80,162 @@ export class PipelineScene{
   /* ---------------- build ---------------- */
   build(){const S=this.scene,M=this.M;
     /* ground: one long rounded platform with a soft edge */
-    const base=this.rb(330,4,140,2,M.ground);base.position.set(10,-2.2,0);S.add(base);
-    const top=this.rb(326,.4,136,.2,M.groundTop);top.position.set(10,-.15,0);top.receiveShadow=true;top.castShadow=false;S.add(top);
-    /* conveyor from the departments to the data centre */
-    const beltLen=128;this.beltTex=this.tex(64,512,(x,W,H)=>{x.fillStyle="#2a3446";x.fillRect(0,0,W,H);x.fillStyle="#3a4760";for(let i=0;i<8;i++)x.fillRect(0,i*64,W,22)});
-    this.beltTex.wrapS=this.beltTex.wrapT=THREE.RepeatWrapping;this.beltTex.repeat.set(1,beltLen/8);
-    const beltM=new THREE.MeshStandardMaterial({map:this.beltTex,roughness:.6});
-    const belt=new THREE.Mesh(new THREE.BoxGeometry(beltLen,.6,5),beltM);belt.position.set(-94+beltLen/2+24,.4,16);belt.receiveShadow=true;S.add(belt);
-    const rail1=this.rb(beltLen,1.2,.6,.3,M.steel);rail1.position.set(belt.position.x,.9,13.4);S.add(rail1);const rail2=rail1.clone();rail2.position.z=18.6;S.add(rail2);
+    const base=this.rb(344,4,140,2,M.ground);base.position.set(3,-2.2,0);S.add(base);
+    const top=this.rb(340,.4,136,.2,M.groundTop);top.position.set(3,-.15,0);top.receiveShadow=true;top.castShadow=false;S.add(top);
+    /* data travels at this height and lane between the lab, the gate and the data centre */
     this.beltY=1;this.beltZ=16;
     this.buildDepts();this.buildConverter();this.buildGate();this.buildDataCentre();this.buildMap();this.buildPortal();this.buildApps();this.buildDocs();this.buildLoop()}
 
+  /* the department campus: eight named government buildings, each with its own architecture and a name board */
   buildDepts(){const S=this.scene,M=this.M;this.depts=[];
-    const pos=[[-142,-18],[-124,-24],[-106,-24],[-88,-18],[-142,0],[-124,-4],[-106,-4],[-88,0]];
-    DEPTS.forEach((d,i)=>{const g=new THREE.Group();const [x,z]=pos[i];g.position.set(x,0,z);S.add(g);
+    const stone=new THREE.MeshStandardMaterial({color:0xd8d0bf,roughness:.85}),cream=new THREE.MeshStandardMaterial({color:0xf3e9d2,roughness:.7}),
+      wood=new THREE.MeshStandardMaterial({color:0x8a5a36,roughness:.8}),leaf=new THREE.MeshStandardMaterial({color:0x3e8a4f,roughness:.8}),
+      white=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.5}),paneG=new THREE.BoxGeometry(1,1,1);
+    /* back row: the bigger offices; front row: lower buildings, so every board and file stays in view */
+    const LAY=[[-153,-30,"capitol"],[-131,-30,"tower"],[-111,-30,"block"],[-92,-30,"court"],[-150,0,"slab"],[-130,0,"terrace"],[-111,0,"lodge"],[-92,0,"station"]];
+    DEPTS.forEach((d,i)=>{const g=new THREE.Group(),[gx,gz,style]=LAY[i];g.position.set(gx,0,gz);S.add(g);
       const acc=new THREE.MeshStandardMaterial({color:d.col,roughness:.45});
-      const H=[16,12,13,11,12,10,11,14][i],W=13,D=10;
-      if(i===0){/* Revenue: the state secretariat style, columns and a dome */
-        const b=this.rb(W+2,H*.7,D,.5,M.wall);b.position.y=H*.35;g.add(b);
-        for(let c=0;c<6;c++){const col=new THREE.Mesh(new THREE.CylinderGeometry(.45,.5,H*.6,16),M.wall2);col.position.set(-W/2+1.6+c*2.4,H*.3,D/2+.9);col.castShadow=true;g.add(col)}
-        const pedi=this.rb(W+3,1,3,.3,M.wall);pedi.position.set(0,H*.62,D/2+.9);g.add(pedi);
-        const dome=new THREE.Mesh(new THREE.SphereGeometry(3.6,32,16,0,Math.PI*2,0,Math.PI/2),new THREE.MeshPhysicalMaterial({color:0xe7d7b6,roughness:.3,clearcoat:.6}));dome.position.y=H*.7;dome.castShadow=true;g.add(dome);
-        const drum=new THREE.Mesh(new THREE.CylinderGeometry(3.7,3.7,1.4,32),M.wall2);drum.position.y=H*.7;g.add(drum)}
-      else{const b=this.rb(W,H,D,.7,M.wall);b.position.y=H/2;g.add(b);
-        const roof=this.rb(W+.6,.8,D+.6,.3,acc);roof.position.y=H+.3;g.add(roof);
-        /* glass window bands */
-        const rows=Math.floor((H-3)/2.6);for(let r=0;r<rows;r++){const w=this.rb(W-2.4,1.4,.3,.2,M.glass);w.position.set(0,2.8+r*2.6,D/2+.05);w.castShadow=false;g.add(w)}
-        const door=this.rb(2.6,2.6,.4,.2,M.ink);door.position.set(0,1.3,D/2+.1);g.add(door)}
-      /* sign: name in English and Hindi */
-      const st=this.tex(512,160,signDraw(d.name.en,d.name.hi,d.col));const sign=new THREE.Mesh(new THREE.PlaneGeometry(10,3.1),new THREE.MeshBasicMaterial({map:st,transparent:true}));
-      sign.position.set(0,i===0?H*.7+5.2:H+3.2,i===0?0:D/2-1);if(i===0)sign.position.z=D/2;g.add(sign);
-      const pole=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,2,8),M.steel);pole.position.set(0,sign.position.y-2,sign.position.z-.1);if(i!==0)g.add(pole);
-      /* flag on the secretariat */
-      if(i===0){const fp=new THREE.Mesh(new THREE.CylinderGeometry(.1,.1,5,8),M.steel);fp.position.set(0,H*.7+5.5+3.6,0);g.add(fp)}
-      this.depts.push({g,top:i===0?H*.7+3.6:H+.8,d,acc})})}
+      const B=(w,h,dd,x,y,z,m,r=.3)=>{const o=this.rb(w,h,dd,r,m);o.position.set(x,y,z);g.add(o);return o};
+      const C=(rt,rb,h,x,y,z,m,seg=16)=>{const o=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg),m);o.position.set(x,y,z);o.castShadow=o.receiveShadow=true;g.add(o);return o};
+      /* windows: one instanced mesh of glass panes per building */
+      const pn=[],m4=new THREE.Matrix4(),q0=new THREE.Quaternion();
+      const win=(x0,y0,z,cols,rows,pw,ph,gx2,gy)=>{for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)pn.push(m4.compose(new THREE.Vector3(x0+(c-(cols-1)/2)*gx2,y0+r*gy,z),q0,new THREE.Vector3(pw,ph,.3)).clone())};
+      const ledges=(w,z,y0,n,gy)=>{for(let r=0;r<n;r++)B(w,.28,.7,0,y0+r*gy,z,M.wall2,.1)};
+      const steps=(w,z)=>{for(let k=0;k<3;k++)B(w-k*.8,1-k*.33,1,0,(1-k*.33)/2,z+k*.9,stone,.1)};
+      const canopy=(w,z,y=4,m=acc)=>{B(w,.35,3,0,y,z+1.5,m,.12);[-1,1].forEach(sx=>C(.16,.16,y-1,sx*(w/2-.4),(y+1)/2,z+2.7,M.steel,8))};
+      const door=(z,w=2.6)=>B(w,2.8,.4,0,2.4,z,M.ink,.15);
+      let top=10,PD=12;
+      if(style==="capitol"){/* Revenue: the secretariat — colonnade, pediment, dome, the national flag */
+        PD=16;B(24,1,16,0,.5,0,stone,.2);steps(10,8.5);
+        B(11,9,11,0,5.5,0,M.wall);[-1,1].forEach(sx=>{B(5.6,7,9,sx*8.3,4.5,-.5,M.wall2);win(sx*8.3,3,4.05,2,3,1.4,1.4,2.3,2.1)});
+        for(let c=0;c<6;c++)C(.42,.48,7,-4.2+c*1.68,4.5,7,M.wall,16);
+        B(11.6,.9,2.8,0,8.45,6.6,M.wall);B(11.8,.5,11.4,0,10.25,0,acc,.15);
+        const tri=new THREE.Shape();tri.moveTo(-5.8,0);tri.lineTo(5.8,0);tri.lineTo(0,2.3);tri.closePath();
+        const ped=new THREE.Mesh(new THREE.ExtrudeGeometry(tri,{depth:2.4,bevelEnabled:false}),M.wall);ped.position.set(0,8.9,5.4);ped.castShadow=true;g.add(ped);
+        win(0,3,5.55,3,3,1.2,1.6,2.6,2.1);door(5.6);
+        C(3.5,3.5,1.6,0,10.8,-.5,M.wall2,40);const dome=new THREE.Mesh(new THREE.SphereGeometry(3.4,40,20,0,Math.PI*2,0,Math.PI/2),new THREE.MeshPhysicalMaterial({color:0xe9d8b4,roughness:.3,clearcoat:.6}));
+        dome.position.set(0,11.6,-.5);dome.castShadow=true;g.add(dome);C(.55,.7,1.3,0,15.6,-.5,M.wall2,16);
+        C(.08,.08,6,0,19,-.5,M.steel,8);const fl=new THREE.Mesh(new THREE.PlaneGeometry(2.4,1.6),new THREE.MeshStandardMaterial({map:this.tex(96,64,flagDraw),side:THREE.DoubleSide,roughness:.8}));
+        fl.position.set(1.25,21.1,-.5);g.add(fl);this.flag=fl;top=17}
+      else if(style==="tower"){PD=14;/* Water Resources: glass tower on a podium, a water tank on the roof */
+        B(17,1,14,0,.5,0,stone,.2);steps(7,7.4);B(15,4,12,0,3,0,M.wall);win(0,2.8,6.05,5,1,2,1.6,2.8,0);canopy(6,6,4.6);door(6.1);
+        B(9,13,8,0,11.5,-1,M.wall2);win(0,6.6,3.05,3,5,2.2,1.9,2.7,2.45);[-1,1].forEach(sx=>B(.5,13.4,.8,sx*4.6,11.5,3.2,acc,.15));
+        B(9.4,.6,8.4,0,18.3,-1,acc,.2);[[-1.6,-1],[1.6,-1],[-1.6,1],[1.6,1]].forEach(([a,b])=>C(.12,.12,1.6,a,19.3,-1+b,M.steel,6));
+        C(2.4,2.4,2.4,0,21.2,-1,acc,32);C(2.5,2.5,.3,0,22.5,-1,M.steel,32);top=21.5}
+      else if(style==="block"){PD=13;/* Public Works: a solid office block, ledges per floor, plant on the roof */
+        B(17,1,13,0,.5,0,stone,.2);steps(7,6.9);B(15,11,11,0,6.5,0,M.wall);
+        win(0,4.6,5.55,5,4,2,1.5,2.7,2.4);ledges(15.3,5.6,3.6,4,2.4);canopy(6,5.5,3.9);door(5.6);
+        B(15.4,.8,11.4,0,12.4,0,acc,.2);[[-4,-2],[-1.2,-2.4],[4,2]].forEach(([a,b])=>B(2,1.3,1.6,a,13.4,b,M.steel,.2));B(3.4,2.2,3,4.2,13.9,-2.4,M.wall2,.2);top=15}
+      else if(style==="court"){PD=15;/* School Education: a U-shaped school round a courtyard, clock over the hall */
+        B(18,1,15,0,.5,0,stone,.2);B(16,8,4.4,0,5,-4.8,M.wall);[-1,1].forEach(sx=>{B(4.4,7,9,sx*5.8,4.5,1.6,M.wall2);win(sx*5.8,3,6.15,2,2,1.3,1.5,2,2.4);B(4.6,.5,9.2,sx*5.8,8.2,1.6,acc,.15)});
+        win(0,3.2,-2.55,3,2,1.4,1.6,2.4,2.6);B(16.2,.5,4.6,0,9.2,-4.8,acc,.15);B(4.4,3.4,4.6,0,10.8,-4.8,M.wall);
+        const tri=new THREE.Shape();tri.moveTo(-2.6,0);tri.lineTo(2.6,0);tri.lineTo(0,1.6);tri.closePath();const gab=new THREE.Mesh(new THREE.ExtrudeGeometry(tri,{depth:4.8,bevelEnabled:false}),acc);gab.position.set(0,12.5,-7.2);gab.castShadow=true;g.add(gab);
+        const clk=C(1.2,1.2,.3,0,10.9,-2.4,white,32);clk.rotation.x=Math.PI/2;const rim=new THREE.Mesh(new THREE.TorusGeometry(1.2,.12,8,32),M.ink);rim.position.set(0,10.9,-2.25);g.add(rim);
+        C(.25,.3,2,0,2,2,wood,8);const tr=new THREE.Mesh(new THREE.IcosahedronGeometry(1.8,1),leaf);tr.position.set(0,3.8,2);tr.castShadow=true;g.add(tr);B(5,.2,4,0,1.1,2.8,new THREE.MeshStandardMaterial({color:0xc9b48a,roughness:1}),.1);top=14.2}
+      else if(style==="slab"){/* Health: a long white hospital block, red cross and an ambulance bay */
+        B(18,1,12,0,.5,0,stone,.2);B(16,8,10,0,5,0,M.wall);win(1.4,3.2,5.05,5,3,1.7,1.3,2.5,2.1);ledges(16.2,5.1,2.4,3,2.1);
+        B(4,4,.3,-5.6,6,5.2,white,.2);B(3.2,.9,.3,-5.6,6,5.4,acc,.1);B(.9,3.2,.3,-5.6,6,5.4,acc,.1);
+        B(7,.35,3.6,3.4,3.9,6.6,acc,.12);[[0,1],[6.6,1]].forEach(([a])=>C(.16,.16,2.9,a+.1,2.45,8.1,M.steel,8));door(5.1,3.4);B(16.4,.6,10.4,0,9.3,0,acc,.2);
+        const pad=C(2.6,2.6,.15,3,9.7,0,M.ink,32);const hh=new THREE.Mesh(new THREE.TorusGeometry(2.2,.12,6,32),white);hh.rotation.x=Math.PI/2;hh.position.set(3,9.8,0);g.add(hh);top=10.5}
+      else if(style==="terrace"){/* Women & Child Development: warm two-storey office, sunshades, a pergola on the terrace */
+        B(16,1,12,0,.5,0,stone,.2);steps(6,6.9);B(14,7,10,0,4.5,0,cream);win(0,3,5.05,4,2,2,1.5,3.1,2.6);
+        for(let r=0;r<2;r++)B(13,.25,1.2,0,4,5.6+0*r,acc,.1).position.y=3.9+r*2.6;door(5.1);canopy(5,5,3.6,acc);
+        B(14.3,.5,10.3,0,8.2,0,acc,.15);for(let k=0;k<5;k++)B(.25,.25,6,-4+k*2,10.4,-1,wood,.05);[-4.4,4.4].forEach(a=>[-3.6,1.6].forEach(b=>C(.12,.12,2,a,9.4,b,wood,6)));top=11}
+      else if(style==="lodge"){/* Forest: a timber lodge with a green pitched roof among trees */
+        B(16,1,12,0,.5,0,stone,.2);steps(5,6.9);B(14,5,9,0,3.5,0,wood);win(0,3.2,4.55,4,1,1.8,1.6,3,0);door(4.6);
+        const tri=new THREE.Shape();tri.moveTo(-8,0);tri.lineTo(8,0);tri.lineTo(0,4.4);tri.closePath();const rf=new THREE.Mesh(new THREE.ExtrudeGeometry(tri,{depth:11,bevelEnabled:false}),acc);rf.position.set(0,6,-5.5);rf.castShadow=true;g.add(rf);
+        for(let k=0;k<4;k++)C(.18,.18,3,-5+k*3.33,2.5,5.6,wood,8);B(15,.3,2,0,4.1,5.6,wood,.1);
+        [[-9.5,-3],[-9.8,3],[9.6,-2.4],[9.4,3.4],[-6,-7],[5,-7]].forEach(([a,b],k)=>{const h=4+(k%3);C(.25,.3,1.6,a,.8,b,wood,6);const cn=new THREE.Mesh(new THREE.ConeGeometry(1.7,h,10),leaf);cn.position.set(a,1.6+h/2,b);cn.castShadow=true;g.add(cn)});top=10.8}
+      else{/* Railways: a station with a clock tower, platform canopy and a stretch of track */
+        PD=10;B(18,1,10,0,.5,0,stone,.2);B(16,5,6.5,0,3.5,-1,cream);win(0,3.2,2.3,6,1,1.3,2,2.4,0);B(16.4,.5,6.9,0,6.2,-1,acc,.15);
+        B(3.8,10,3.8,0,6,-1.2,M.wall);const cl2=C(1,1,.3,0,9.2,.7,white,32);cl2.rotation.x=Math.PI/2;const rr2=new THREE.Mesh(new THREE.TorusGeometry(1,.1,8,32),M.ink);rr2.position.set(0,9.2,.86);g.add(rr2);
+        const py=new THREE.Mesh(new THREE.ConeGeometry(3,2.6,4),acc);py.rotation.y=Math.PI/4;py.position.set(0,12.3,-1.2);py.castShadow=true;g.add(py);
+        B(17,.35,3.2,0,4.6,3.6,acc,.12);for(let k=0;k<5;k++)C(.14,.14,3.6,-7.6+k*3.8,2.8,4.9,M.steel,8);
+        [-.7,.7].forEach(o=>B(19,.25,.25,0,.35,7.4+o,M.steel,.05));for(let k=0;k<12;k++)B(.5,.18,2.2,-8.6+k*1.56,.2,7.4,wood,.05);top=13.6}
+      if(pn.length){const im=new THREE.InstancedMesh(paneG,M.glass,pn.length);pn.forEach((m,k)=>im.setMatrixAt(k,m));g.add(im)}
+      /* name board on a stone plinth in front of the entrance, tipped back toward the viewer */
+      const bz=PD/2+(style==="station"?5:4),st=this.tex(1024,300,boardDraw(d));
+      B(14.6,.8,1.8,0,.4,bz,stone,.15);const bk=B(14.8,4.6,.35,0,3.1,bz,M.ink,.2);bk.rotation.x=-.7;
+      const brd=new THREE.Mesh(new THREE.PlaneGeometry(14.4,4.22),new THREE.MeshBasicMaterial({map:st,toneMapped:false}));brd.position.set(0,3.1+.12,bz+.14);brd.rotation.x=-.7;g.add(brd);
+      this.depts.push({g,top,d,acc,board:brd})})}
 
-  /* the CHiPS GIS team: an open lab behind the conveyor where analysts convert every format by hand and by script */
+  /* the CHiPS GIS team: an open-plan lab. Department files arrive as email, open on the analysts' screens and are worked in GIS tools */
   buildConverter(){const S=this.scene,M=this.M,g=this.conv=new THREE.Group();g.position.set(-46,0,16);S.add(g);
-    /* floor, back wall, side partitions */
-    const floor=this.rb(34,.8,26,.4,new THREE.MeshStandardMaterial({color:0xe8edf4,roughness:.7}));floor.position.set(0,.4,-13);g.add(floor);
-    const wall=this.rb(34,13,1,.4,M.wall);wall.position.set(0,6.5,-26);g.add(wall);
-    const sideL=this.rb(1,7,24,.3,M.wall2);sideL.position.set(-16.5,3.5,-14);g.add(sideL);const sideR=sideL.clone();sideR.position.x=16.5;g.add(sideR);
-    const stripe=this.rb(34,.6,1.1,.2,M.accent);stripe.position.set(0,12.6,-26);g.add(stripe);
-    /* big wall screen: what everything is converted to */
-    this.convTex=this.tex(768,256,(x,W,H)=>{x.fillStyle="#06101f";rr(x,0,0,W,H,24);x.fill();x.fillStyle="#3fd6a0";x.font=`600 30px ${MONO}`;x.fillText("ANY FORMAT  →  ONE STANDARD",32,60);
-      x.fillStyle="#fff";x.font=`800 64px ${SANS}`;x.fillText("EPSG:4326 · WGS 84",32,150);x.fillStyle="#9fb4d0";x.font=`500 26px ${MONO}`;x.fillText("GeoJSON · state schema · UTF-8",32,210)});
-    const scr=new THREE.Mesh(new THREE.PlaneGeometry(18,6),new THREE.MeshBasicMaterial({map:this.convTex,toneMapped:false}));scr.position.set(0,7.6,-25.45);g.add(scr);
-    const lab=this.tex(640,160,signDraw("CHiPS GIS Team","चिप्स जीआईएस टीम","#ff5a36"));const l=new THREE.Mesh(new THREE.PlaneGeometry(14,3.5),new THREE.MeshBasicMaterial({map:lab,transparent:true}));l.position.set(0,15.6,-25.6);g.add(l);
-    /* monitor screens: real GIS work */
-    const scrA=this.tex(320,200,(x,W,H)=>{x.fillStyle="#1b2433";x.fillRect(0,0,W,H);x.fillStyle="#2a3446";x.fillRect(0,0,W,18);x.fillStyle="#dfe7f1";x.fillRect(40,18,W-40,H-18);
-      x.strokeStyle="#ff5a36";x.lineWidth=3;x.beginPath();[[80,60],[170,40],[260,80],[240,160],[120,170],[70,120]].forEach((p,i)=>i?x.lineTo(...p):x.moveTo(...p));x.closePath();x.stroke();x.fillStyle="#ff5a3633";x.fill();
-      x.fillStyle="#fff";[[80,60],[170,40],[260,80],[240,160],[120,170],[70,120]].forEach(p=>{x.fillRect(p[0]-4,p[1]-4,8,8)});x.fillStyle="#9fb4d0";for(let i=0;i<6;i++)x.fillRect(8,28+i*22,24,14)});
-    const scrB=this.tex(320,200,(x,W,H)=>{x.fillStyle="#fff";x.fillRect(0,0,W,H);x.fillStyle="#0d1b2e";x.fillRect(0,0,W,22);x.fillStyle="#fff";x.font=`600 12px ${MONO}`;x.fillText("attribute table · schools",8,15);
-      for(let r=0;r<8;r++)for(let c=0;c<4;c++){x.fillStyle=r%2?"#f3f6fb":"#fff";x.fillRect(c*80,24+r*22,80,22);x.strokeStyle="#e3e9f2";x.strokeRect(c*80,24+r*22,80,22);x.fillStyle=r===3?"#d2423a":"#2a3446";x.font=`500 11px ${MONO}`;x.fillText(["GPS","2227","21.1","81.7"][c]+r,c*80+6,40+r*22)}});
-    const scrC=this.tex(320,200,(x,W,H)=>{x.fillStyle="#efe3c4";x.fillRect(0,0,W,H);x.strokeStyle="#9c8a63";for(let i=0;i<7;i++){x.beginPath();x.moveTo(0,i*32);x.bezierCurveTo(100,i*32+20,200,i*32-20,W,i*32+8);x.stroke()}
-      x.strokeStyle="#222";x.lineWidth=3;x.beginPath();x.moveTo(20,180);x.lineTo(300,30);x.stroke();x.strokeStyle="#d2423a";x.lineWidth=2;[[40,40],[280,44],[270,170],[50,160]].forEach(([a,b])=>{x.beginPath();x.moveTo(a-10,b);x.lineTo(a+10,b);x.moveTo(a,b-10);x.lineTo(a,b+10);x.stroke()});
-      x.fillStyle="#0d1b2e";x.fillRect(0,H-22,W,22);x.fillStyle="#3fd6a0";x.font=`600 12px ${MONO}`;x.fillText("georeferencer · 4 GCPs · RMS 0.8 px",8,H-7)});
-    const screens=[scrA,scrB,scrC];
-    /* desks with dual monitors, chairs and analysts */
-    const deskM=new THREE.MeshStandardMaterial({color:0xf6f1e8,roughness:.5}),legM=M.steel,chairM=new THREE.MeshStandardMaterial({color:0x2a3446,roughness:.6});
-    const shirts=[0x2f6fd6,0xff5a36,0x3e8a4f,0x6b4fd6,0xe39a1f,0x0b7a70],skins=[0x8d5524,0xc68642,0xa0662f,0x7a4a21,0xb87a46,0x95603a],hairs=[0x1b1410,0x231a14,0x111111];
-    this.analysts=[];seed=3;
-    [[-9,-9],[0,-9],[9,-9],[-9,-18],[0,-18],[9,-18]].forEach(([x,z],k)=>{
-      const desk=this.rb(7.4,.35,3.2,.15,deskM);desk.position.set(x,3.4,z);g.add(desk);
-      [-3.2,3.2].forEach(dx=>{const leg=this.rb(.3,3,2.8,.1,legM);leg.position.set(x+dx,1.9,z);g.add(leg)});
-      [-1.6,1.6].forEach((dx,m)=>{const mon=this.rb(3,1.9,.2,.1,M.ink);mon.position.set(x+dx,5.3,z-.9);mon.rotation.y=dx<0?.12:-.12;g.add(mon);
-        const face=new THREE.Mesh(new THREE.PlaneGeometry(2.8,1.7),new THREE.MeshBasicMaterial({map:screens[(k+m)%3],toneMapped:false}));face.position.z=.11;mon.add(face);
-        const st=this.rb(.3,1,.3,.1,legM);st.position.set(x+dx,4.1,z-.9);g.add(st)});
-      const kb=this.rb(2.2,.12,.7,.05,M.ink);kb.position.set(x,3.65,z+.6);g.add(kb);
-      /* chair */
-      const seat=this.rb(2.2,.4,2.2,.3,chairM);seat.position.set(x,2.5,z+2.6);g.add(seat);const backr=this.rb(2.2,2.4,.35,.3,chairM);backr.position.set(x,3.9,z+3.6);g.add(backr);
-      const post=new THREE.Mesh(new THREE.CylinderGeometry(.15,.15,2,8),legM);post.position.set(x,1.3,z+2.6);g.add(post);
-      /* analyst (seen from behind, working) */
-      const p=new THREE.Group();p.position.set(x,2.7,z+2.5);g.add(p);
-      const shirt=new THREE.MeshStandardMaterial({color:shirts[k],roughness:.7});
-      const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.75,1.3,6,14),shirt);torso.position.y=1.45;torso.scale.z=.75;torso.castShadow=true;p.add(torso);
-      [-1,1].forEach(sx=>{const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.24,1.2,4,8),shirt);arm.position.set(sx*.82,1.55,-.55);arm.rotation.x=1.15;arm.castShadow=true;p.add(arm)});
-      const head=new THREE.Group();head.position.y=3.05;p.add(head);
-      const skull=new THREE.Mesh(new THREE.SphereGeometry(.58,20,16),new THREE.MeshStandardMaterial({color:skins[k],roughness:.6}));skull.castShadow=true;head.add(skull);
-      const hair=new THREE.Mesh(new THREE.SphereGeometry(.62,20,16,0,Math.PI*2,0,Math.PI*.55),new THREE.MeshStandardMaterial({color:hairs[k%3],roughness:.8}));hair.rotation.x=.35;head.add(hair);
-      if(k===1||k===4){const bun=new THREE.Mesh(new THREE.SphereGeometry(.3,12,10),hair.material);bun.position.set(0,.2,.55);head.add(bun)}
-      this.analysts.push({head,ph:rnd()*6})});
-    /* intake and output on the conveyor (pulsing rings) */
-    const ringM=new THREE.MeshStandardMaterial({color:col("--accent","#ff5a36"),emissive:col("--accent","#ff5a36"),emissiveIntensity:1.6});
-    this.ringIn=new THREE.Mesh(new THREE.TorusGeometry(4.2,.45,20,56),ringM);this.ringIn.rotation.y=Math.PI/2;this.ringIn.position.set(-9.2,4.4,0);g.add(this.ringIn);
-    const ringOutM=new THREE.MeshStandardMaterial({color:0x3fd6a0,emissive:0x3fd6a0,emissiveIntensity:1.6});
-    this.ringOut=new THREE.Mesh(new THREE.TorusGeometry(4.2,.45,20,56),ringOutM);this.ringOut.rotation.y=Math.PI/2;this.ringOut.position.set(9.2,4.4,0);g.add(this.ringOut);
-    this.scan=new THREE.Mesh(new THREE.PlaneGeometry(.25,7.4),new THREE.MeshBasicMaterial({color:0xff9a7a,transparent:true,opacity:.8}));this.scan.rotation.y=Math.PI/2;this.scan.position.set(-9.3,4.4,0);g.add(this.scan)}
+    const A=(o,x,y,z)=>{o.position.set(x,y,z);o.castShadow=o.receiveShadow=true;g.add(o);return o};
+    /* floor (carpet tiles), back wall with windows, low side partitions */
+    const carpet=this.tex(256,256,(x,W,H)=>{for(let i=0;i<4;i++)for(let j=0;j<4;j++){x.fillStyle=(i+j)%2?"#cfd6df":"#c5ccd6";x.fillRect(i*64,j*64,64,64)}});carpet.wrapS=carpet.wrapT=THREE.RepeatWrapping;carpet.repeat.set(5,4);
+    A(this.rb(36,.8,28,.4,new THREE.MeshStandardMaterial({map:carpet,roughness:.95})),0,.4,-13);
+    A(this.rb(36,13,1,.4,M.wall),0,6.5,-27);A(this.rb(36,.6,1.1,.2,M.accent),0,12.6,-27);
+    [-1,1].forEach(sx=>{A(this.rb(1,4.2,26,.3,M.wall2),sx*17.5,2.9,-14);A(this.rb(1.1,.4,26.2,.15,M.accent),sx*17.5,5.1,-14)});
+    [-14.4,-11,11,14.4].forEach(wx=>A(this.rb(3,5,.3,.2,M.glass),wx,7,-26.4));
+    /* wall: the team inbox, everything that has arrived */
+    this.inboxTex=this.tex(1024,400,inboxDraw([],DEPTS));
+    A(this.rb(19.4,7.9,.4,.3,M.ink),0,7.1,-26.3);const ib=new THREE.Mesh(new THREE.PlaneGeometry(19,7.4),new THREE.MeshBasicMaterial({map:this.inboxTex,toneMapped:false}));ib.position.set(0,7.1,-26.05);g.add(ib);
+    const lab=this.tex(640,160,signDraw("CHiPS GIS Team","चिप्स जीआईएस टीम","#ff5a36"));const l=new THREE.Mesh(new THREE.PlaneGeometry(14,3.5),new THREE.MeshBasicMaterial({map:lab,transparent:true}));l.position.set(0,15.4,-26.6);g.add(l);
+    /* plants in the corners */
+    const potM=new THREE.MeshStandardMaterial({color:0xe9e2d6,roughness:.7}),leafM=new THREE.MeshStandardMaterial({color:0x3e8a4f,roughness:.8});
+    [[-15.5,-24.5],[15.5,-24.5],[-15.5,-2]].forEach(([a,b])=>{A(new THREE.Mesh(new THREE.CylinderGeometry(.8,.6,1.5,16),potM),a,1.55,b);for(let k=0;k<5;k++){const lf=A(new THREE.Mesh(new THREE.SphereGeometry(.9,10,8),leafM),a+Math.sin(k*1.3)*.6,3+k*.35,b+Math.cos(k*1.3)*.6);lf.scale.set(.8,1.3,.8)}});
+    /* workstations: desk, dual monitors (mail + GIS), keyboard, mouse, mug, office chair, analyst */
+    const deskM=new THREE.MeshStandardMaterial({color:0xe9dcc6,roughness:.55}),frameM=new THREE.MeshStandardMaterial({color:0x3a4250,roughness:.4,metalness:.6}),
+      chairM=new THREE.MeshStandardMaterial({color:0x252c38,roughness:.7}),meshM=new THREE.MeshStandardMaterial({color:0x39424f,roughness:.9}),
+      shoeM=new THREE.MeshStandardMaterial({color:0x1d1a18,roughness:.6}),mugM=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.3});
+    const PEOPLE=[/* skin, shirt, trousers, hair colour, hair style, glasses */
+      [0x8d5524,0x2f6fd6,0x2b2f3a,0x15100c,"short",1],[0xc68642,0xd2423a,0x3b3f4a,0x1b1410,"long",0],[0xa0662f,0xf2efe8,0x4a3f35,0x111111,"short",0],
+      [0x7a4a21,0x3e8a4f,0x23262e,0x1b1410,"bun",1],[0xb87a46,0xe39a1f,0x2f3542,0x231a14,"long",0],[0x95603a,0x6b4fd6,0x3a3a3a,0x0e0e0e,"short",1]];
+    this.analysts=[];this.screens=[];seed=3;
+    const cap=(r,l,m)=>new THREE.Mesh(new THREE.CapsuleGeometry(r,l,6,12),m);
+    [[-10.8,-8.6],[0,-8.6],[10.8,-8.6],[-10.8,-19],[0,-19],[10.8,-19]].forEach(([x,z],k)=>{
+      /* desk: top, side panels, modesty panel */
+      A(this.rb(8.4,.3,3.6,.12,deskM),x,3.25,z);[-4,4].forEach(dx=>A(this.rb(.25,2.5,3.3,.08,frameM),x+dx,1.95,z));A(this.rb(7.8,1.4,.15,.05,frameM),x,2.4,z-1.6);
+      /* monitors on arms: left = mail, right = GIS */
+      const scr=[];[-1.95,1.95].forEach((dx,m)=>{const mon=new THREE.Group();mon.position.set(x+dx,5.15,z-1);mon.rotation.y=dx<0?.16:-.16;g.add(mon);
+        const bz=this.rb(3.7,2.35,.18,.08,M.ink);bz.castShadow=true;mon.add(bz);const back=this.rb(1.4,1,.4,.15,M.ink);back.position.z=-.25;mon.add(back);
+        const t=this.tex(512,320,m?gisDraw(null,null,0):mailDraw(null,null,[],DEPTS));const face=new THREE.Mesh(new THREE.PlaneGeometry(3.52,2.2),new THREE.MeshBasicMaterial({map:t,toneMapped:false}));face.position.z=.1;mon.add(face);
+        A(this.rb(.22,1.5,.22,.08,frameM),x+dx,4.1,z-1.35);scr.push({t,key:"",mon})});
+      A(this.rb(1.6,.1,1.2,.05,frameM),x-1.95,3.42,z-1.35);A(this.rb(1.6,.1,1.2,.05,frameM),x+1.95,3.42,z-1.35);
+      A(this.rb(2.6,.12,.8,.05,new THREE.MeshStandardMaterial({color:0x2b3038,roughness:.5})),x,3.46,z+.55);
+      A(this.rb(1.1,.04,.9,.02,new THREE.MeshStandardMaterial({color:0x2f3a4a,roughness:.9})),x+2.2,3.41,z+.6);const mouse=A(this.rb(.32,.16,.5,.07,M.ink),x+2.2,3.5,z+.6);
+      A(new THREE.Mesh(new THREE.CylinderGeometry(.22,.2,.5,14),mugM),x-3.3,3.65,z+.2);
+      if(k%2===0)A(this.rb(1.4,.3,1,.05,new THREE.MeshStandardMaterial({color:0xfafafa,roughness:.8})),x-3.1,3.55,z-1);
+      /* office chair: five-star base, gas lift, seat, mesh back */
+      const cz=z+2.6;for(let a=0;a<5;a++){const leg=A(this.rb(1.3,.14,.22,.06,frameM),x+Math.cos(a*1.257)*.6,.95,cz+Math.sin(a*1.257)*.6);leg.rotation.y=-a*1.257;
+        A(new THREE.Mesh(new THREE.SphereGeometry(.14,8,6),M.ink),x+Math.cos(a*1.257)*1.2,.88,cz+Math.sin(a*1.257)*1.2)}
+      A(new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,1.3,8),frameM),x,1.6,cz);A(this.rb(2.1,.35,2,.25,chairM),x,2.3,cz);
+      const bk=A(this.rb(1.9,1.5,.2,.3,meshM),x,3.45,cz+1.2);bk.rotation.x=-.1;A(this.rb(.25,1.2,.25,.1,frameM),x,2.7,cz+1.15);
+      /* the analyst, seated, facing the screens */
+      const [skin,shirtC,pantC,hairC,style,glasses]=PEOPLE[k];const sk=new THREE.MeshStandardMaterial({color:skin,roughness:.55}),sh=new THREE.MeshStandardMaterial({color:shirtC,roughness:.75}),
+        pt=new THREE.MeshStandardMaterial({color:pantC,roughness:.8}),hr=new THREE.MeshStandardMaterial({color:hairC,roughness:.75});
+      const p=new THREE.Group();p.position.set(x,2.48,cz-.1);g.add(p);const add=(o,a,b,c)=>{o.position.set(a,b,c);o.castShadow=true;p.add(o);return o};
+      add(this.rb(1.45,.55,1.3,.25,pt),0,.28,.1);
+      [-1,1].forEach(sx=>{const th=add(cap(.3,1.1,pt),sx*.38,.32,-.75);th.rotation.x=Math.PI/2;const sn=add(cap(.25,1.15,pt),sx*.4,-.6,-1.42);
+        add(this.rb(.42,.25,.85,.1,shoeM),sx*.4,-1.4,-1.62)});
+      const torso=add(new THREE.Mesh(new THREE.CylinderGeometry(.66,.56,1.55,20),sh),0,1.3,.1);torso.scale.z=.68;torso.rotation.x=-.1;
+      const sho=add(cap(.33,1.0,sh),0,2.0,.05);sho.rotation.z=Math.PI/2;sho.scale.z=.8;
+      add(new THREE.Mesh(new THREE.CylinderGeometry(.17,.19,.35,12),sk),0,2.32,0);
+      const arms=[];[-1,1].forEach(sx=>{const up=add(cap(.18,.75,sh),sx*.82,1.62,-.22);up.rotation.x=.55;up.rotation.z=sx*.12;
+        const fa=new THREE.Group();fa.position.set(sx*.74,1.22,-.5);p.add(fa);const f=cap(.15,.8,sk);f.rotation.x=Math.PI/2-.08;f.position.z=-.45;f.castShadow=true;fa.add(f);
+        const sl=cap(.19,.15,sh);sl.rotation.x=Math.PI/2;sl.position.z=-.05;fa.add(sl);const hand=new THREE.Mesh(new THREE.SphereGeometry(.17,12,10),sk);hand.scale.set(1,.6,1.3);hand.position.set(-sx*.12,-.05,-.95);fa.add(hand);
+        fa.rotation.y=sx*.22;arms.push(fa)});
+      const head=new THREE.Group();head.position.set(0,2.85,-.05);p.add(head);
+      const skull=new THREE.Mesh(new THREE.SphereGeometry(.44,24,18),sk);skull.scale.set(.9,1.06,.98);skull.castShadow=true;head.add(skull);
+      [-1,1].forEach(sx=>{const ear=new THREE.Mesh(new THREE.SphereGeometry(.1,8,6),sk);ear.position.set(sx*.4,0,.02);ear.scale.z=.6;head.add(ear)});
+      const nose=new THREE.Mesh(new THREE.ConeGeometry(.07,.18,8),sk);nose.rotation.x=-Math.PI/2;nose.position.set(0,-.02,-.46);head.add(nose);
+      const hair=new THREE.Mesh(new THREE.SphereGeometry(.47,24,16,0,Math.PI*2,0,Math.PI*.52),hr);hair.rotation.x=.42;hair.position.y=.05;hair.scale.set(.93,1.04,1.02);head.add(hair);
+      if(style==="long"){const back=new THREE.Mesh(new THREE.CapsuleGeometry(.36,.7,6,12),hr);back.position.set(0,-.35,.26);back.scale.set(1.15,1,.55);head.add(back)}
+      if(style==="bun"){const bun=new THREE.Mesh(new THREE.SphereGeometry(.22,12,10),hr);bun.position.set(0,.3,.42);head.add(bun)}
+      if(glasses){const gm=new THREE.MeshStandardMaterial({color:0x111111,roughness:.3});[-1,1].forEach(sx=>{const r=new THREE.Mesh(new THREE.TorusGeometry(.11,.02,6,16),gm);r.position.set(sx*.16,.04,-.42);head.add(r)});
+        [-1,1].forEach(sx=>{const tm=new THREE.Mesh(new THREE.BoxGeometry(.02,.02,.4),gm);tm.position.set(sx*.38,.04,-.22);head.add(tm)})}
+      this.analysts.push({head,arms,mouse,ph:rnd()*6,x,z,scr})});
+    /* the path data follows out of the lab: a lit floor strip to the gate and the data centre */
+    this.pathTex=this.tex(64,256,(x,W,H)=>{x.fillStyle="#0000";x.clearRect(0,0,W,H);x.fillStyle="#3fd6a0";for(let i=0;i<4;i++)x.fillRect(16,i*64+8,32,30)});
+    this.pathTex.wrapS=this.pathTex.wrapT=THREE.RepeatWrapping;this.pathTex.repeat.set(1,14);
+    const path=new THREE.Mesh(new THREE.PlaneGeometry(1.2,56),new THREE.MeshBasicMaterial({map:this.pathTex,transparent:true,opacity:.7,depthWrite:false}));path.rotation.x=-Math.PI/2;path.rotation.z=Math.PI/2;path.position.set(-18,.08,16);S.add(path);
+    /* department mail: one envelope per file */
+    this.envs=FILES.map(F=>{const t=this.tex(320,210,envDraw(F,DEPTS[F.d]));const e=new THREE.Group();const b=this.rb(5,3.3,.3,.3,new THREE.MeshStandardMaterial({color:0xffffff,roughness:.5}));e.add(b);
+      const f=new THREE.Mesh(new THREE.PlaneGeometry(5,3.3),new THREE.MeshBasicMaterial({map:t,transparent:true,toneMapped:false}));f.position.z=.16;e.add(f);e.scale.setScalar(.001);S.add(e);return e})}
+
+  /* swap what a monitor shows; redraws only when the content changes */
+  setScreen(sc,key,draw){if(sc.key===key)return;sc.key=key;const u=sc.t.userData;u.draw=draw;u.x.clearRect(0,0,u.c.width,u.c.height);draw(u.x,u.c.width,u.c.height);sc.t.needsUpdate=true}
 
   buildGate(){const S=this.scene,M=this.M,g=this.gate=new THREE.Group();g.position.set(-24,0,16);S.add(g);
     const p1=this.rb(1.6,12,1.6,.5,M.wall);p1.position.set(0,6,-4.5);g.add(p1);const p2=p1.clone();p2.position.z=4.5;g.add(p2);
@@ -329,18 +385,28 @@ export class PipelineScene{
       x.strokeStyle="#ffd36b";x.lineWidth=4;x.beginPath();x.moveTo(170,330);x.bezierCurveTo(300,250,420,280,W,120);x.stroke()});lsc.position.set(0,5,.26);lid.add(lsc);
     [this.phoneG,this.tabG,this.lapG].forEach(o=>o.scale.setScalar(.001))}
 
-  buildDocs(){const S=this.scene;this.docs=DEPTS.map((d,i)=>{const t=this.tex(512,660,docDraw(d));
-    const card=this.rb(6.4,8.25,.25,.5,new THREE.MeshStandardMaterial({color:0xffffff,roughness:.5}));card.castShadow=true;
+  /* one card per file, fanned above its department; the card face shows the file's real contents */
+  buildDocs(){const S=this.scene,per={};this.docs=FILES.map((F,j)=>{const d=DEPTS[F.d],t=this.tex(512,660,drawFile(F,d));
+    const k=per[F.d]=(per[F.d]??-1)+1,n=FILES.filter(x=>x.d===F.d).length;
+    const card=this.rb(6.4,8.25,.25,.5,new THREE.MeshStandardMaterial({color:0xffffff,roughness:.5,emissive:0xffffff,emissiveIntensity:0}));card.castShadow=true;
     const face=new THREE.Mesh(new THREE.PlaneGeometry(6.4,8.25),new THREE.MeshBasicMaterial({map:t,transparent:true,toneMapped:false}));face.position.z=.14;card.add(face);
-    const g=new THREE.Group();g.add(card);S.add(g);g.scale.setScalar(.001);
+    const g=new THREE.Group();g.add(card);S.add(g);g.scale.setScalar(.001);card.userData.file=j;face.userData.file=j;
     /* the converted output: a glowing feature of the right kind */
     const c=new THREE.Color(d.col),mt=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:.6,roughness:.3});
-    let out;if(d.kind==="point"){const pin=new THREE.ConeGeometry(.9,2.4,16);pin.rotateX(Math.PI);pin.translate(0,1.2,0);out=new THREE.Group();out.add(new THREE.Mesh(pin,mt));const h=new THREE.Mesh(new THREE.SphereGeometry(1,20,14),mt);h.position.y=2.9;out.add(h)}
-    else if(d.kind==="line"){const pts=[[-2.4,0,0],[-1,0,1.2],[.6,0,-.8],[2.4,0,.6]].map(p=>new THREE.Vector3(...p));out=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),32,.35,8),mt)}
-    else if(d.kind==="raster"){out=new THREE.Group();for(let a=0;a<3;a++)for(let b=0;b<3;b++){const q=this.rb(1.2,.5,1.2,.15,new THREE.MeshStandardMaterial({color:[0x1f6b35,0x4f9a4f,0xa7c77a][(a+b)%3],roughness:.5}));q.position.set(a*1.35-1.35,0,b*1.35-1.35);out.add(q)}}
+    let out;if(F.kind==="point"){const pin=new THREE.ConeGeometry(.9,2.4,16);pin.rotateX(Math.PI);pin.translate(0,1.2,0);out=new THREE.Group();out.add(new THREE.Mesh(pin,mt));const h=new THREE.Mesh(new THREE.SphereGeometry(1,20,14),mt);h.position.y=2.9;out.add(h)}
+    else if(F.kind==="line"){const pts=[[-2.4,0,0],[-1,0,1.2],[.6,0,-.8],[2.4,0,.6]].map(p=>new THREE.Vector3(...p));out=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),32,.35,8),mt)}
+    else if(F.kind==="raster"){out=new THREE.Group();for(let a=0;a<3;a++)for(let b=0;b<3;b++){const q=this.rb(1.2,.5,1.2,.15,new THREE.MeshStandardMaterial({color:[0x1f6b35,0x4f9a4f,0xa7c77a][(a+b)%3],roughness:.5}));q.position.set(a*1.35-1.35,0,b*1.35-1.35);out.add(q)}}
     else{const s=new THREE.Shape();[[-2.2,-1.6],[0,-2.4],[2.4,-1],[1.8,1.8],[-1,2.2],[-2.6,.4]].forEach((p,i)=>i?s.lineTo(...p):s.moveTo(...p));out=new THREE.Mesh(new THREE.ExtrudeGeometry(s,{depth:.5,bevelEnabled:true,bevelSize:.15,bevelThickness:.15,bevelSegments:2}),mt);out.rotation.x=-Math.PI/2}
     out.traverse(o=>{if(o.isMesh)o.castShadow=true});const og=new THREE.Group();og.add(out);S.add(og);og.scale.setScalar(.001);
-    return{g,card,out:og,d,reject:i===3}})}
+    return{g,card,out:og,F,k,n,reject:!!F.reject,hv:0}})}
+
+  /* pointer over the 3D: which file card is under it */
+  pickAt(cx,cy){const r=this.host.getBoundingClientRect(),v=new THREE.Vector2((cx-r.left)/r.width*2-1,-(cy-r.top)/r.height*2+1);
+    this.ray=this.ray||new THREE.Raycaster();this.ray.setFromCamera(v,this.cam);
+    const hit=this.ray.intersectObjects(this.docs.filter(o=>o.live).map(o=>o.card),true)[0];return hit?hit.object.userData.file:-1}
+  rectOf(j){const b=new THREE.Box3().setFromObject(this.docs[j].card),r=this.host.getBoundingClientRect();let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+    for(let k=0;k<8;k++){const v=new THREE.Vector3(k&1?b.max.x:b.min.x,k&2?b.max.y:b.min.y,k&4?b.max.z:b.min.z).project(this.cam);const X=r.left+(v.x+1)/2*r.width,Y=r.top+(1-v.y)/2*r.height;x0=Math.min(x0,X);y0=Math.min(y0,Y);x1=Math.max(x1,X);y1=Math.max(y1,Y)}
+    return{left:x0,top:y0,width:x1-x0,height:y1-y0,right:x1,bottom:y1}}
 
   buildLoop(){const pts=[];for(let i=0;i<=80;i++){const t=i/80,x=mix(140,-120,t);pts.push(new THREE.Vector3(x,22+Math.sin(t*Math.PI)*40,mix(10,-14,t)))}
     this.loopCurve=new THREE.CatmullRomCurve3(pts);const tube=new THREE.TubeGeometry(this.loopCurve,160,.35,8);
@@ -355,34 +421,49 @@ export class PipelineScene{
     const pos=new THREE.Vector3(...k0[0]).lerp(new THREE.Vector3(...k1[0]),e),tgt=new THREE.Vector3(...k0[1]).lerp(new THREE.Vector3(...k1[1]),e);
     pos.sub(tgt).multiplyScalar(far).add(tgt);pos.x+=this.mouse.x*6;pos.y-=this.mouse.y*4;
     this.cam.position.lerp(pos,ka);this.look.lerp(tgt,ka);this.cam.lookAt(this.look);
-    /* belt moves while data flows */
-    this.beltTex.offset.y-=dt*(s>SI.collect-.2&&s<SI.map?.6:.05);
-    this.scan.position.z=Math.sin(t*3)*3.2;(this.analysts||[]).forEach(a=>{a.head.rotation.y=Math.sin(t*.7+a.ph)*.25;a.head.position.y=3.05+Math.abs(Math.sin(t*6+a.ph))*.03});this.ringIn.material.emissiveIntensity=1.2+Math.sin(t*4)*.5;this.ringOut.material.emissiveIntensity=1.2+Math.cos(t*4)*.5;
-    /* departments: highlight the one being described */
-    const fs=STEPS[i].formats,active=fs?fs[Math.min(3,Math.floor(f*4))]:-1;
-    this.depts.forEach((dp,j)=>{const on=j===active;dp.g.position.y+=((on?.6:0)-dp.g.position.y)*.15;dp.acc.emissive.set(dp.d.col);dp.acc.emissiveIntensity+=((on?.8:0)-dp.acc.emissiveIntensity)*.15});
-    /* documents → belt → converter → outputs → gate → data centre */
+    /* the floor path pulses while data moves; analysts type, glance between their two screens */
+    this.pathTex.offset.y-=dt*(s>SI.conv1&&s<SI.map?.8:.1);
+    this.analysts.forEach((a,k)=>{a.head.rotation.y=Math.sin(t*.45+a.ph)*.3;a.head.rotation.x=.1+Math.sin(t*.8+a.ph)*.04;
+      a.arms.forEach((fa,m)=>{fa.position.y=1.22+Math.max(0,Math.sin(t*(8+k)+m*2.3+a.ph))*.06});a.mouse.position.x=a.x+2.2+Math.sin(t*1.3+a.ph)*.12});
+    /* departments: all of them in the overview, then one at a time; the one whose file is under the pointer lifts */
+    const active=STEPS[i].depts==="each"?Math.min(7,Math.floor(f*8)):-1,hvD=this.hover>=0?FILES[this.hover].d:-1;
+    this.depts.forEach((dp,j)=>{const on=j===active||j===hvD;dp.g.position.y+=((on?.6:0)-dp.g.position.y)*.15;dp.acc.emissive.set(dp.d.col);dp.acc.emissiveIntensity+=((on?.8:0)-dp.acc.emissiveIntensity)*.15});
+    if(this.flag)this.flag.rotation.y=Math.sin(t*2)*.18;
+    /* files → belt → CHiPS lab → outputs → gate → data centre */
     const sD=SI.depts1,sC=SI.collect,sQ=SI.qa,sG=SI.gdb;
     const conv=this.conv.position,gate=this.gate.position,dc=this.dc.position;
-    this.docs.forEach((o,j)=>{const dp=this.depts[j],home=new THREE.Vector3(dp.g.position.x,dp.top+6.5,dp.g.position.z);
-      const appear=seg(s,sD-.6+j*.05,sD-.1+j*.05);const isAct=j===active;
-      const flyStart=sC+.05+j*.05,flyEnd=flyStart+.55,fp=cl((s-flyStart)/(flyEnd-flyStart));
-      let p=home.clone(),sc=appear*(isAct?1.45:1);
-      if(fp>0){/* arc to the belt, then along it into the converter */
-        const beltIn=new THREE.Vector3(-92,this.beltY+5,this.beltZ),door=new THREE.Vector3(conv.x-9,5,this.beltZ);
-        if(fp<.45){const q=sm(fp/.45);p=home.clone().lerp(beltIn,q);p.y+=Math.sin(q*Math.PI)*10}else{const q=sm((fp-.45)/.55);p=beltIn.clone().lerp(door,q);sc*=mix(1,.55,q)}
-        if(fp>=1)sc=0}
-      o.g.position.copy(p);o.g.position.y+=isAct?Math.sin(t*2)*.25:0;o.g.scale.setScalar(Math.max(.001,sc));o.g.lookAt(this.cam.position.x,o.g.position.y,this.cam.position.z);
-      /* output: emerges from the converter during conversion, waits at the gate, enters the data centre */
-      const outS=SI.conv1+j*.12,toGate=sQ+.1+j*.04,toDC=sQ+.65+j*.03,absorb=sG+.25;
+    this.docs.forEach((o,j)=>{const F=o.F,dp=this.depts[F.d],off=o.k-(o.n-1)/2;
+      const home=new THREE.Vector3(dp.g.position.x+off*6.2,dp.top+5.6-Math.abs(off)*.7,dp.g.position.z+Math.abs(off)*.5);
+      const appear=seg(s,sD-.6+j*.025,sD-.1+j*.025),isAct=F.d===active;
+      const an=this.analysts[j%6],flyStart=sC+.05+j*.035,fp=cl((s-flyStart)/.4);
+      o.hv+=((j===this.hover?1:0)-o.hv)*.2;
+      let p=home.clone(),sc=appear*(isAct?1.15:.9)*(1+o.hv*.2);
+      /* sending: the file folds into an email, flies to its analyst's desk and opens on the left screen */
+      const env=this.envs[j],fold=cl(fp/.15);sc*=1-fold;let es=0;
+      if(fp>0){const to=new THREE.Vector3(conv.x+an.x-1.95,conv.y+5.4,conv.z+an.z-.4),q=sm(cl((fp-.15)/.85));
+        env.position.copy(home).lerp(to,q);env.position.y+=Math.sin(q*Math.PI)*24;es=Math.min(fold,1-sm((q-.82)/.18))*.95;
+        env.lookAt(this.cam.position);env.rotateZ(Math.sin(t*3+j)*.12*(1-q))}
+      env.scale.setScalar(Math.max(.001,es));o.arrived=fp>=1;
+      o.live=sc>.3&&fp<.15;
+      o.g.position.copy(p);o.g.position.y+=fp>0?0:Math.sin(t*1.6+j)*.25;o.g.scale.setScalar(Math.max(.001,sc));o.g.lookAt(this.cam.position.x,o.g.position.y,this.cam.position.z);
+      o.card.material.emissiveIntensity=o.hv*.3;
+      /* output: emerges from the lab during conversion, waits at the gate, enters the data centre */
+      const col=j%6,row=Math.floor(j/6),outS=SI.conv1+.2+j*.07,toGate=sQ+.1+j*.02,toDC=sQ+.6+j*.015,absorb=sG+.25;
       const a=cl((s-outS)/.4),b=cl((s-toGate)/.35),c=cl((s-toDC)/.35);
-      const exit=new THREE.Vector3(conv.x+10+(j%4)*2.4,2.2,this.beltZ+(j<4?-1.4:1.4)),atGate=new THREE.Vector3(gate.x-5+(j%4)*1.2,2.2,this.beltZ+(j<4?-1.4:1.4)),
-        inDC=new THREE.Vector3(dc.x-10.5+(j%4)*7,8+Math.floor(j/4)*3,dc.z+(j<4?-3:3));
-      let q=exit.clone().lerp(atGate,sm(b));let osc=sm(a);
-      if(o.reject&&b>0){/* the record with a blank code is sent back */
-        const back=cl((s-(sQ+.3))/.5);if(back>0){q=atGate.clone().lerp(new THREE.Vector3(-88,2,-4),sm(back));q.y+=Math.sin(back*Math.PI)*18;osc*=1-sm((back-.8)/.2)}}
+      const exit=new THREE.Vector3(conv.x+19.5+a*2,3,conv.z-11+col*1.6+row*.6),atGate=new THREE.Vector3(gate.x-6+col*1.15,3,this.beltZ+(row-1)*1.5),
+        inDC=new THREE.Vector3(dc.x-10.5+col*4.2,8+row*3,dc.z+(row-1)*2.5);
+      let q=exit.clone().lerp(atGate,sm(b));q.y+=Math.sin(sm(b)*Math.PI)*8;let osc=sm(a);
+      if(o.reject&&b>0){/* the record with a blank code goes back to its department */
+        const back=cl((s-(sQ+.3))/.5);if(back>0){const hp=dp.g.position;q=atGate.clone().lerp(new THREE.Vector3(hp.x,2,hp.z+8),sm(back));q.y+=Math.sin(back*Math.PI)*18;osc*=1-sm((back-.8)/.2)}}
       else if(c>0){q=q.lerp(inDC,sm(c));q.y+=Math.sin(c*Math.PI)*10;osc*=1-sm((s-absorb)/.3)}
-      o.out.position.copy(q);o.out.position.y+=Math.sin(t*2.4+j)*.2;o.out.rotation.y=t*.8+j;o.out.scale.setScalar(Math.max(.001,osc*1.1))});
+      o.out.position.copy(q);o.out.position.y+=Math.sin(t*2.4+j)*.2;o.out.rotation.y=t*.8+j;o.out.scale.setScalar(Math.max(.001,osc*.55))});
+    /* screens: the team inbox fills as mail lands; each analyst opens their newest mail and works it in the GIS tool */
+    const got=this.docs.filter(o=>o.arrived).map(o=>o.F);
+    if(this.inboxN!==got.length){this.inboxN=got.length;const u=this.inboxTex.userData,dr=inboxDraw(got,DEPTS);u.draw=dr;u.x.clearRect(0,0,u.c.width,u.c.height);dr(u.x,u.c.width,u.c.height);this.inboxTex.needsUpdate=true}
+    this.analysts.forEach((an,k)=>{const mine=got.filter(F=>F.i%6===k),F=mine[mine.length-1],d=F&&DEPTS[F.d];
+      const arr=F?sC+.05+F.i*.035+.4:0,pr=F?Math.round(cl((s-arr-.15)/(sQ-.4-arr))*10)/10:0;
+      this.setScreen(an.scr[0],F?`${F.i}:${mine.length}`:"-",mailDraw(F,d,mine,DEPTS));this.setScreen(an.scr[1],F?`${F.i}:${pr}`:"-",gisDraw(F,d,pr))});
+    const h=this.ptr&&!this.down?this.pickAt(this.ptr[0],this.ptr[1]):-1;this.hover=h;this.hoverRect=h>=0?this.rectOf(h):null;
     /* gate light: red while the reject bounces */
     const rej=s>sQ+.25&&s<sQ+.85;this.gateLight.material.color.set(rej?0xff5a36:0x3fd6a0);this.gateLight.material.emissive.set(rej?0xff5a36:0x3fd6a0);this.gateCurtain.material.color.set(rej?0xff5a36:0x3fd6a0);
     this.gateCurtain.material.opacity=.06+Math.sin(t*5)*.04+(s>sQ&&s<sQ+1?.08:0);
