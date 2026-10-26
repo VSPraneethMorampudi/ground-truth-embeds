@@ -14,7 +14,7 @@ export const DEPTS=[
 ];
 
 export const STEPS=[
-  {id:"intro",cam:[[-20,150,200],[0,0,10]],
+  {id:"intro",cam:[[-20,150,200],[6,0,0],"fit"],
    k:T("The pipeline","पाइपलाइन"),h:T("Follow the data","डेटा के साथ चलिए"),
    b:T("From office files to a live map.","दफ़्तर की फ़ाइलों से लाइव नक्शे तक।")},
   {id:"depts1",cam:[[-122,130,110],[-122,0,2]],depts:"all",
@@ -50,7 +50,7 @@ export const STEPS=[
   {id:"uses",cam:[[75,110,82],[75,0,4]],uses:true,
    k:T("9 · Use cases","9 · उपयोग"),h:T("Decisions, grounded","ज़मीन पर टिके निर्णय"),
    b:T("","")},
-  {id:"loop",cam:[[0,170,220],[0,10,0]],
+  {id:"loop",cam:[[0,170,220],[6,4,0],"fit"],
    k:T("10 · Never finished","10 · कभी पूरा नहीं"),h:T("Never finished","कभी पूरा नहीं"),
    b:T("Field updates flow back in.","फ़ील्ड अपडेट लौटकर आते हैं।")}
 ];
