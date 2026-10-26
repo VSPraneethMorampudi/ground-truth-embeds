@@ -7,4 +7,6 @@ for f in index.html; do
   sed -E -i "s#(href|src)=\"((style|fx|icons|cursor|geo|content|globe|app)\.(css|js)|pipeline/pipeline\.(css|js))(\?v=[0-9a-z]+)?\"#\1=\"\2?v=$V\"#g" "$f"
 done
 sed -E -i "s#(from |import\()\"(\./(steps|files|screens|apps|scene)\.js)(\?v=[0-9a-z]+)?\"#\1\"\2?v=$V\"#g" pipeline/*.js
+sed -E -i "s#<meta name=\"gt-build\" content=\"[0-9a-z]*\">#<meta name=\"gt-build\" content=\"$V\">#" index.html
+printf "%s\n" "$V" > version.txt
 echo "stamped $V"

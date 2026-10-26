@@ -1,7 +1,7 @@
 /* Working mock-ups of the three apps that use the Geoportal's data, drawn as HTML onto the 3D devices in Explore:
    a field survey app (phone), a coverage dashboard (tablet) and a department desktop GIS (laptop).
    Geography is real (window.GEO); counts and coverage values are samples. */
-import {measure,DAMS,SCHOOLS,HEALTH,STATIONS} from "./files.js?v=202610261050";
+import {measure,DAMS,SCHOOLS,HEALTH,STATIONS} from "./files.js?v=202610261120";
 const G=()=>window.GEO,D2R=Math.PI/180;
 const bb=pts=>pts.reduce((b,[x,y])=>[Math.min(b[0],x),Math.min(b[1],y),Math.max(b[2],x),Math.max(b[3],y)],[1e9,1e9,-1e9,-1e9]);
 function proj(b,W,H,p=8){const cx=Math.cos((b[1]+b[3])/2*D2R),sx=(b[2]-b[0])*cx,sy=b[3]-b[1],s=Math.min((W-2*p)/sx,(H-2*p)/sy),ox=(W-sx*s)/2,oy=(H-sy*s)/2;

@@ -6,15 +6,20 @@
 <title>Ground Truth · Chhattisgarh State Geoportal</title>
 <meta name="description" content="From orbit to the ground: how Chhattisgarh turns places into reliable digital maps. An interactive story in English and Hindi.">
 <meta name="theme-color" content="#030814">
+<meta name="gt-build" content="202610261120">
+<script>/* stale-page guard: browsers keep this page for a few minutes after a release. Ask the server for the
+   current build (no cache); if this copy is older, reload once onto the new build. */
+(function(){var b=document.querySelector('meta[name="gt-build"]').content;try{fetch("version.txt?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.text():""}).then(function(v){v=(v||"").trim();
+  if(v&&v!==b){var u=new URL(location.href);if(u.searchParams.get("b")===v)return;u.searchParams.set("b",v);location.replace(u.href)}}).catch(function(){})}catch(e){}})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Geist+Mono:wght@400..600&family=Anek+Devanagari:wdth,wght@75..125,300..800&display=swap">
 <script>/* theme: Mahanadi by default; ?theme=paddy|sal|night|default to preview others (remembered) */
 (function(){var t=(location.search.match(/[?&]theme=(\w+)/)||[])[1];try{if(t)localStorage.setItem("gt-theme",t);else t=localStorage.getItem("gt-theme")}catch(e){}t=t||"mahanadi";if(t!=="default")document.documentElement.dataset.theme=t})();</script>
 <link rel="stylesheet" href="vendor/lenis.css">
-<link rel="stylesheet" href="style.css?v=202610261050">
-<link rel="stylesheet" href="pipeline/pipeline.css?v=202610261050">
-<link rel="stylesheet" href="fx.css?v=202610261050">
+<link rel="stylesheet" href="style.css?v=202610261120">
+<link rel="stylesheet" href="pipeline/pipeline.css?v=202610261120">
+<link rel="stylesheet" href="fx.css?v=202610261120">
 </head>
 <body class="loading">
 <a class="skip" href="#pipeline">Skip to the story</a>
@@ -73,14 +78,14 @@
 <script src="vendor/lenis.min.js"></script>
 <script src="vendor/d3-array.min.js"></script>
 <script src="vendor/d3-geo.min.js"></script>
-<script src="icons.js?v=202610261050"></script>
-<script src="fx.js?v=202610261050"></script>
-<script src="cursor.js?v=202610261050"></script>
-<script src="geo.js?v=202610261050"></script>
-<script src="content.js?v=202610261050"></script>
-<script src="globe.js?v=202610261050"></script>
-<script src="app.js?v=202610261050"></script>
+<script src="icons.js?v=202610261120"></script>
+<script src="fx.js?v=202610261120"></script>
+<script src="cursor.js?v=202610261120"></script>
+<script src="geo.js?v=202610261120"></script>
+<script src="content.js?v=202610261120"></script>
+<script src="globe.js?v=202610261120"></script>
+<script src="app.js?v=202610261120"></script>
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
-<script type="module" src="pipeline/pipeline.js?v=202610261050"></script>
+<script type="module" src="pipeline/pipeline.js?v=202610261120"></script>
 </body>
 </html>
