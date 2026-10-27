@@ -21,28 +21,25 @@ const L=[ /* bottom → top, above the base map */
   {hi:"राजस्व",en:"Revenue",c:"#8a6a3c",body:`<path d="${all}" fill="none" stroke="#8a6a3c" stroke-width="1.4" stroke-linejoin="round"/>`}
 ];
 /* tilt: rotate −30°, then squash vertically (an isometric-style plane) */
-const M=[.866,-.275,.5,.476],iso=(x,y)=>[M[0]*x+M[2]*y,M[1]*x+M[3]*y];
-const corners=[[0,0],[W,0],[W,H],[0,H]].map(([x,y])=>iso(x,y)),minX=Math.min(...corners.map(c=>c[0])),maxX=Math.max(...corners.map(c=>c[0])),minY=Math.min(...corners.map(c=>c[1])),maxY=Math.max(...corners.map(c=>c[1]));
-const VW=640,GAP=118,CX=250,baseY=1010-(maxY-minY)/2;
+const TH=-38*D2R,KY=.4,M=[Math.cos(TH),Math.sin(TH)*KY,-Math.sin(TH),Math.cos(TH)*KY].map(v=>+v.toFixed(4)),iso=(x,y)=>[M[0]*x+M[2]*y,M[1]*x+M[3]*y];
+const corners=G.state[0].map(p=>iso(...P(...p))),minX=Math.min(...corners.map(c=>c[0])),maxX=Math.max(...corners.map(c=>c[0])),minY=Math.min(...corners.map(c=>c[1])),maxY=Math.max(...corners.map(c=>c[1]));
+const RP=corners.reduce((a,c)=>c[0]>a[0]?c:a),VW=640,GAP=128,CX=250,baseY=1010-(maxY-minY)/2;
 const ox=CX-(minX+maxX)/2;
-const plane=(i)=>{const y=baseY-i*GAP-(minY+maxY)/2;return{tr:`translate(${f(ox)},${f(y)}) matrix(${M.join(",")},0,0)`,rx:ox+maxX,ry:y+iso(W,0)[1]}};
-const pad=14,sheet=c=>`<rect x="${-pad}" y="${-pad}" width="${f(W+2*pad)}" height="${f(H+2*pad)}" rx="16" fill="${c}" fill-opacity=".12" stroke="${c}" stroke-opacity=".7" stroke-width="2"/>`;
+const plane=(i)=>{const y=baseY-i*GAP-(minY+maxY)/2;return{tr:`translate(${f(ox)},${f(y)}) matrix(${M.join(",")},0,0)`,rx:ox+RP[0],ry:y+RP[1]}};
 const base=plane(0);
-/* dashed guides up the stack from the sheets' outer corners: the exploded-view look */
-const cn=[[-pad,-pad],[W+pad,-pad],[W+pad,H+pad],[-pad,H+pad]].map(([x,y])=>iso(x,y)),top=plane(L.length);
-const guides=[0,1,3].map(k=>{const[x,y]=cn[k];return`<path d="M${f(ox+x)},${f(baseY-(minY+maxY)/2+y)}V${f(top.ry-(iso(W,0)[1])+y)}" stroke="#8593a6" stroke-width="1.2" stroke-dasharray="2 6" opacity=".55" fill="none"/>`}).join("");
-let layers="";L.forEach((l,k)=>{const i=k+1,p=plane(i),lx=500,ly=p.ry+6;
+let layers="";L.forEach((l,k)=>{const i=k+1,p=plane(i),lx=500,ly=plane(i).ry-40+6;
   layers+=`<g class="ly" style="--i:${i};--c:${l.c}" tabindex="0" aria-label="${l.hi} (${l.en})">
-  <g class="pl" transform="${p.tr}">${sheet(l.c)}<path d="${ring(G.state[0])}" fill="none" stroke="${l.c}" stroke-opacity=".35" stroke-width="1"/>${l.body}</g>
+  <g class="mv" style="--d:${i*GAP}px"><g class="pl" transform="${p.tr}"><path d="${ring(G.state[0])}" fill="${l.c}" fill-opacity=".16" stroke="${l.c}" stroke-width="2.2" stroke-linejoin="round"/>${l.body}</g></g>
   <g class="tag"><path d="M${f(p.rx+4)},${f(p.ry)} L${lx-12},${f(ly-8)}" stroke="${l.c}" stroke-width="1.6" stroke-dasharray="3 4" fill="none"/>
    <circle cx="${f(p.rx+4)}" cy="${f(p.ry)}" r="4" fill="${l.c}"/><text x="${lx}" y="${f(ly)}" class="hi">${l.hi}</text><text x="${lx}" y="${f(ly+24)}" class="en">${l.en}</text></g></g>`});
 const stPath=G.state.map(ring).join("");
 const svg=`<svg viewBox="0 0 ${VW} 1120" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="t d" xmlns="http://www.w3.org/2000/svg">
-<title id="t">विभिन्न विभागों से डाटा समेकित</title><desc id="d">Chhattisgarh outline at the bottom with five translucent tilted layers above it: Revenue, Forest, Health, Education, Roads.</desc>
+<title id="t">विभिन्न विभागों से डाटा समेकित</title><desc id="d">Chhattisgarh outline at the bottom with five translucent Chhattisgarh-shaped department layers above it (Revenue, Forest, Health, Education, Roads) that settle down and merge into one map.</desc>
 <g class="head"><text x="40" y="70" class="h1">विभिन्न विभागों से</text><text x="40" y="116" class="h1">डाटा समेकित</text><text x="42" y="146" class="sub">Data from many departments, consolidated on one map</text></g>
-<g class="base" style="--i:0"><ellipse cx="${CX}" cy="${f(baseY+(maxY-minY)/2+14)}" rx="${f((maxX-minX)/2+10)}" ry="18" fill="#0d1b2e" opacity=".08"/><g transform="${base.tr}">${sheet("#b9ad94").replace('fill-opacity=".12"','fill-opacity=".25"')}<path d="${all}" fill="#f7f3ea" stroke="#c9bfa8" stroke-width=".8"/><path d="${stPath}" fill="none" stroke="#0d1b2e" stroke-width="2.4" stroke-linejoin="round"/></g>
- <text x="${CX}" y="${f(baseY+(maxY-minY)/2+38)}" class="hi base-t" text-anchor="middle">छत्तीसगढ़</text><text x="${CX}" y="${f(baseY+(maxY-minY)/2+60)}" class="en" text-anchor="middle">33 districts · one boundary</text></g>
-${guides}${layers}</svg>`;
+<g class="base" style="--i:0"><ellipse cx="${CX}" cy="${f(baseY+(maxY-minY)/2+14)}" rx="${f((maxX-minX)/2+10)}" ry="18" fill="#0d1b2e" opacity=".08"/><g transform="${base.tr}"><path d="${all}" fill="#f7f3ea" stroke="#c9bfa8" stroke-width=".8"/><path d="${stPath}" fill="none" stroke="#0d1b2e" stroke-width="2.4" stroke-linejoin="round"/></g>
+ <text x="${CX}" y="${f(baseY+(maxY-minY)/2+38)}" class="hi base-t" text-anchor="middle">छत्तीसगढ़</text><text x="${CX}" y="${f(baseY+(maxY-minY)/2+60)}" class="en" text-anchor="middle">33 districts · one boundary</text>
+ <g class="one"><text x="440" y="${f(plane(0).ry-34)}" class="hi">एक नक्शा</text><text x="440" y="${f(plane(0).ry-10)}" class="en">One consolidated map</text></g></g>
+${layers}</svg>`;
 const html=`<!doctype html>
 <html lang="hi">
 <head>
@@ -63,6 +60,9 @@ const html=`<!doctype html>
   .bare .head{display:none}
   /* layers drop in one by one, then float; hover or focus lifts one */
   .ly,.base{animation:drop .9s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*.22s)}
+  .ly .mv{animation:merge 11s cubic-bezier(.6,0,.3,1) 2.4s infinite}
+  .ly .tag{animation:tagfade 11s ease 2.4s infinite}
+  .base .one{opacity:0;animation:onefade 11s ease 2.4s infinite}
   .ly .pl{animation:bob 6s ease-in-out infinite;animation-delay:calc(var(--i)*-.9s);transition:transform .35s}
   .ly{cursor:pointer;outline:none;transition:opacity .3s}
   .ly .tag text.hi{transition:fill .25s}
@@ -71,8 +71,11 @@ const html=`<!doctype html>
   svg:has(.ly:hover) .ly:not(:hover),svg:has(.ly:focus) .ly:not(:focus){opacity:.45}
   @keyframes drop{from{opacity:0;translate:0 -60px}to{opacity:1;translate:0 0}}
   @keyframes bob{50%{translate:0 -5px}}
-  .static .ly,.static .base,.static .ly .pl{animation:none}
-  @media (prefers-reduced-motion:reduce){.ly,.base,.ly .pl{animation:none}}
+  @keyframes merge{0%,28%{translate:0 0}46%,72%{translate:0 var(--d)}90%,100%{translate:0 0}}
+  @keyframes tagfade{0%,26%{opacity:1}38%,78%{opacity:0}90%,100%{opacity:1}}
+  @keyframes onefade{0%,40%{opacity:0}50%,70%{opacity:1}80%,100%{opacity:0}}
+  .static .ly,.static .base,.static .ly .pl,.static .ly .mv,.static .ly .tag,.static .base .one{animation:none}
+  @media (prefers-reduced-motion:reduce){.ly,.base,.ly .pl,.ly .mv,.ly .tag,.base .one{animation:none}}
 </style>
 </head>
 <body>
