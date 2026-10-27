@@ -3,7 +3,7 @@
 import fs from "fs";import path from "path";import {fileURLToPath} from "url";
 const here=path.dirname(fileURLToPath(import.meta.url)),root=path.join(here,"../..");
 globalThis.window={};await import(path.join(root,"site/geo.js"));const G=window.GEO;
-const D2R=Math.PI/180,B=[80.2,17.75,84.45,24.15],kx=Math.cos(20.95*D2R),MW=250,MH=360;
+const D2R=Math.PI/180,B=[80.2,17.75,84.45,24.15],kx=Math.cos(20.95*D2R),MW=300,MH=430;
 const s=Math.min(MW/((B[2]-B[0])*kx),MH/(B[3]-B[1])),W=(B[2]-B[0])*kx*s,H=(B[3]-B[1])*s;
 const P=(lo,la)=>[(lo-B[0])*kx*s,(B[3]-la)*s],f=v=>v.toFixed(1);
 const ring=r=>"M"+r.map(p=>P(...p).map(f).join(",")).join("L")+"Z",line=pts=>"M"+pts.map(p=>P(...p).map(f).join(",")).join("L");
@@ -21,24 +21,24 @@ const L=[ /* bottom → top, above the base map */
   {hi:"राजस्व",en:"Revenue",c:"#8a6a3c",body:`<path d="${all}" fill="none" stroke="#8a6a3c" stroke-width="1.4" stroke-linejoin="round"/>`}
 ];
 /* tilt: rotate −30°, then squash vertically (an isometric-style plane) */
-const TH=-38*D2R,KY=.4,M=[Math.cos(TH),Math.sin(TH)*KY,-Math.sin(TH),Math.cos(TH)*KY].map(v=>+v.toFixed(4)),iso=(x,y)=>[M[0]*x+M[2]*y,M[1]*x+M[3]*y];
+const TH=0,KY=.66,M=[Math.cos(TH),Math.sin(TH)*KY,-Math.sin(TH),Math.cos(TH)*KY].map(v=>+v.toFixed(4)),iso=(x,y)=>[M[0]*x+M[2]*y,M[1]*x+M[3]*y];
 const corners=G.state[0].map(p=>iso(...P(...p))),minX=Math.min(...corners.map(c=>c[0])),maxX=Math.max(...corners.map(c=>c[0])),minY=Math.min(...corners.map(c=>c[1])),maxY=Math.max(...corners.map(c=>c[1]));
-const RP=corners.reduce((a,c)=>c[0]>a[0]?c:a),VW=640,GAP=128,CX=250,baseY=1010-(maxY-minY)/2;
+const RP=corners.reduce((a,c)=>c[0]>a[0]?c:a),VW=640,GAP=126,MID=2.5,CX=250,baseY=1010-(maxY-minY)/2;
 const ox=CX-(minX+maxX)/2;
 const plane=(i)=>{const y=baseY-i*GAP-(minY+maxY)/2;return{tr:`translate(${f(ox)},${f(y)}) matrix(${M.join(",")},0,0)`,rx:ox+RP[0],ry:y+RP[1]}};
 const base=plane(0);
 let layers="";L.forEach((l,k)=>{const i=k+1,p=plane(i),lx=500,ly=plane(i).ry-40+6;
   layers+=`<g class="ly" style="--i:${i};--c:${l.c}" tabindex="0" aria-label="${l.hi} (${l.en})">
-  <g class="mv" style="--d:${i*GAP}px"><g class="pl" transform="${p.tr}"><path d="${ring(G.state[0])}" fill="${l.c}" fill-opacity=".16" stroke="${l.c}" stroke-width="2.2" stroke-linejoin="round"/>${l.body}</g></g>
+  <g class="mv" style="--d:${(i-MID)*GAP}px"><g class="pl" transform="${p.tr}"><path d="${ring(G.state[0])}" fill="${l.c}" fill-opacity=".16" stroke="${l.c}" stroke-width="2.2" stroke-linejoin="round"/>${l.body}</g></g>
   <g class="tag"><path d="M${f(p.rx+4)},${f(p.ry)} L${lx-12},${f(ly-8)}" stroke="${l.c}" stroke-width="1.6" stroke-dasharray="3 4" fill="none"/>
    <circle cx="${f(p.rx+4)}" cy="${f(p.ry)}" r="4" fill="${l.c}"/><text x="${lx}" y="${f(ly)}" class="hi">${l.hi}</text><text x="${lx}" y="${f(ly+24)}" class="en">${l.en}</text></g></g>`});
 const stPath=G.state.map(ring).join("");
-const svg=`<svg viewBox="0 0 ${VW} 1120" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="t d" xmlns="http://www.w3.org/2000/svg">
+const VY=Math.floor(plane(L.length).ry-(RP[1]-minY)-40),VH=Math.ceil(baseY+(maxY-minY)/2+80-VY);
+const svg=`<svg viewBox="0 ${VY} ${VW} ${VH}" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="t d" xmlns="http://www.w3.org/2000/svg">
 <title id="t">विभिन्न विभागों से डाटा समेकित</title><desc id="d">Chhattisgarh outline at the bottom with five translucent Chhattisgarh-shaped department layers above it (Revenue, Forest, Health, Education, Roads) that settle down and merge into one map.</desc>
-<g class="head"><text x="40" y="70" class="h1">विभिन्न विभागों से</text><text x="40" y="116" class="h1">डाटा समेकित</text><text x="42" y="146" class="sub">Data from many departments, consolidated on one map</text></g>
-<g class="base" style="--i:0"><ellipse cx="${CX}" cy="${f(baseY+(maxY-minY)/2+14)}" rx="${f((maxX-minX)/2+10)}" ry="18" fill="#0d1b2e" opacity=".08"/><g transform="${base.tr}"><path d="${all}" fill="#f7f3ea" stroke="#c9bfa8" stroke-width=".8"/><path d="${stPath}" fill="none" stroke="#0d1b2e" stroke-width="2.4" stroke-linejoin="round"/></g>
- <text x="${CX}" y="${f(baseY+(maxY-minY)/2+38)}" class="hi base-t" text-anchor="middle">छत्तीसगढ़</text><text x="${CX}" y="${f(baseY+(maxY-minY)/2+60)}" class="en" text-anchor="middle">33 districts · one boundary</text>
- <g class="one"><text x="440" y="${f(plane(0).ry-34)}" class="hi">एक नक्शा</text><text x="440" y="${f(plane(0).ry-10)}" class="en">One consolidated map</text></g></g>
+<g class="base" style="--i:0"><g class="mv" style="--d:${-MID*GAP}px"><ellipse cx="${CX}" cy="${f(baseY+(maxY-minY)/2+14)}" rx="${f((maxX-minX)/2+10)}" ry="18" fill="#0d1b2e" opacity=".08"/><g transform="${base.tr}"><path d="${all}" fill="#f7f3ea" stroke="#c9bfa8" stroke-width=".8"/><path d="${stPath}" fill="none" stroke="#0d1b2e" stroke-width="2.4" stroke-linejoin="round"/></g>
+ <text x="${CX}" y="${f(baseY+(maxY-minY)/2+38)}" class="hi base-t" text-anchor="middle">छत्तीसगढ़</text><text x="${CX}" y="${f(baseY+(maxY-minY)/2+60)}" class="en" text-anchor="middle">33 districts · one boundary</text></g>
+ <g class="one"><text x="440" y="${f(plane(MID).ry-6)}" class="hi">एक नक्शा</text><text x="440" y="${f(plane(MID).ry+18)}" class="en">One consolidated map</text></g></g>
 ${layers}</svg>`;
 const html=`<!doctype html>
 <html lang="hi">
@@ -60,7 +60,7 @@ const html=`<!doctype html>
   .bare .head{display:none}
   /* layers drop in one by one, then float; hover or focus lifts one */
   .ly,.base{animation:drop .9s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*.22s)}
-  .ly .mv{animation:merge 11s cubic-bezier(.6,0,.3,1) 2.4s infinite}
+  .ly .mv,.base .mv{animation:merge 11s cubic-bezier(.6,0,.3,1) 2.4s infinite}
   .ly .tag{animation:tagfade 11s ease 2.4s infinite}
   .base .one{opacity:0;animation:onefade 11s ease 2.4s infinite}
   .ly .pl{animation:bob 6s ease-in-out infinite;animation-delay:calc(var(--i)*-.9s);transition:transform .35s}
@@ -74,13 +74,13 @@ const html=`<!doctype html>
   @keyframes merge{0%,28%{translate:0 0}46%,72%{translate:0 var(--d)}90%,100%{translate:0 0}}
   @keyframes tagfade{0%,26%{opacity:1}38%,78%{opacity:0}90%,100%{opacity:1}}
   @keyframes onefade{0%,40%{opacity:0}50%,70%{opacity:1}80%,100%{opacity:0}}
-  .static .ly,.static .base,.static .ly .pl,.static .ly .mv,.static .ly .tag,.static .base .one{animation:none}
-  @media (prefers-reduced-motion:reduce){.ly,.base,.ly .pl,.ly .mv,.ly .tag,.base .one{animation:none}}
+  .static .ly,.static .base,.static .ly .pl,.static .ly .mv,.static .base .mv,.static .ly .tag,.static .base .one{animation:none}
+  @media (prefers-reduced-motion:reduce){.ly,.base,.ly .pl,.ly .mv,.base .mv,.ly .tag,.base .one{animation:none}}
 </style>
 </head>
 <body>
 ${svg}
-<script>(function(){var h=location.hash;if(/bare/.test(h)){document.body.classList.add("bare");document.querySelector("svg").setAttribute("viewBox","0 150 640 970")}if(/static/.test(h))document.body.classList.add("static")})()</script>
+<script>(function(){var h=location.hash;if(/static/.test(h))document.body.classList.add("static")})()</script>
 </body>
 </html>
 `;
