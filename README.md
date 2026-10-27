@@ -158,7 +158,7 @@ LIVE GEO PORTAL (v18 · 21 Oct 2026)
 
 STACKED LAYERS ILLUSTRATION  (tall frame; "विभिन्न विभागों से डाटा समेकित")
   layers.html            Chhattisgarh outline at the bottom, five translucent Chhattisgarh-shaped department layers above it
-                         (राजस्व, वन, स्वास्थ्य, शिक्षा, सड़क), north-up, each carrying its own data; on a loop they come together
-                         into one map in the middle ("एक नक्शा"), then lift apart again; hover lifts a layer; no heading
+                         (राजस्व, वन, स्वास्थ्य, शिक्षा, सड़क), north-up, each carrying its own data; on a loop they come together,
+                         grow into one big, straight, north-up map ("एक नक्शा · छत्तीसगढ़"), then separate again; no heading
   layers.html#static     no motion
   Rebuild from the map data: node site/tools/gen-layers.mjs

@@ -26,20 +26,24 @@ const corners=G.state[0].map(p=>iso(...P(...p))),minX=Math.min(...corners.map(c=
 const RP=corners.reduce((a,c)=>c[0]>a[0]?c:a),VW=640,GAP=126,MID=2.5,CX=250,baseY=1010-(maxY-minY)/2;
 const ox=CX-(minX+maxX)/2;
 const plane=(i)=>{const y=baseY-i*GAP-(minY+maxY)/2;return{tr:`translate(${f(ox)},${f(y)}) matrix(${M.join(",")},0,0)`,rx:ox+RP[0],ry:y+RP[1]}};
-const base=plane(0);
-let layers="";L.forEach((l,k)=>{const i=k+1,p=plane(i),lx=500,ly=plane(i).ry-40+6;
-  layers+=`<g class="ly" style="--i:${i};--c:${l.c}" tabindex="0" aria-label="${l.hi} (${l.en})">
-  <g class="mv" style="--d:${(i-MID)*GAP}px"><g class="pl" transform="${p.tr}"><path d="${ring(G.state[0])}" fill="${l.c}" fill-opacity=".16" stroke="${l.c}" stroke-width="2.2" stroke-linejoin="round"/>${l.body}</g></g>
-  <g class="tag"><path d="M${f(p.rx+4)},${f(p.ry)} L${lx-12},${f(ly-8)}" stroke="${l.c}" stroke-width="1.6" stroke-dasharray="3 4" fill="none"/>
-   <circle cx="${f(p.rx+4)}" cy="${f(p.ry)}" r="4" fill="${l.c}"/><text x="${lx}" y="${f(ly)}" class="hi">${l.hi}</text><text x="${lx}" y="${f(ly+24)}" class="en">${l.en}</text></g></g>`});
-const stPath=G.state.map(ring).join("");
+const base=plane(0),stPath=G.state.map(ring).join(""),cy=baseY-MID*GAP;
+let planes="",tags="";L.forEach((l,k)=>{const i=k+1,p=plane(i),lx=500,ly=p.ry-34;
+  planes+=`<g class="ly drop" style="--i:${i}" aria-label="${l.hi} (${l.en})"><g class="mv" style="--d:${(i-MID)*GAP}px"><g transform="${p.tr}"><path d="${ring(G.state[0])}" fill="${l.c}" fill-opacity=".16" stroke="${l.c}" stroke-width="2.2" stroke-linejoin="round"/>${l.body}</g></g></g>`;
+  tags+=`<g class="drop" style="--i:${i}"><path d="M${f(p.rx+4)},${f(p.ry)} L${lx-12},${f(ly-8)}" stroke="${l.c}" stroke-width="1.6" stroke-dasharray="3 4" fill="none"/>
+   <circle cx="${f(p.rx+4)}" cy="${f(p.ry)}" r="4" fill="${l.c}"/><text x="${lx}" y="${f(ly)}" class="hi">${l.hi}</text><text x="${lx}" y="${f(ly+24)}" class="en">${l.en}</text></g>`});
 const VY=Math.floor(plane(L.length).ry-(RP[1]-minY)-40),VH=Math.ceil(baseY+(maxY-minY)/2+80-VY);
+/* once merged, the map grows and straightens into a full, flat, north-up map in the middle of the frame */
+const flatH=(maxY-minY)/KY,S=+Math.min(580/(maxX-minX),(VH-140)/flatH).toFixed(3),GX=VW/2-CX,GY=Math.round(VY+(VH-60)/2-cy);
 const svg=`<svg viewBox="0 ${VY} ${VW} ${VH}" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="t d" xmlns="http://www.w3.org/2000/svg">
-<title id="t">विभिन्न विभागों से डाटा समेकित</title><desc id="d">Chhattisgarh outline at the bottom with five translucent Chhattisgarh-shaped department layers above it (Revenue, Forest, Health, Education, Roads) that settle down and merge into one map.</desc>
-<g class="base" style="--i:0"><g class="mv" style="--d:${-MID*GAP}px"><ellipse cx="${CX}" cy="${f(baseY+(maxY-minY)/2+14)}" rx="${f((maxX-minX)/2+10)}" ry="18" fill="#0d1b2e" opacity=".08"/><g transform="${base.tr}"><path d="${all}" fill="#f7f3ea" stroke="#c9bfa8" stroke-width=".8"/><path d="${stPath}" fill="none" stroke="#0d1b2e" stroke-width="2.4" stroke-linejoin="round"/></g>
- <text x="${CX}" y="${f(baseY+(maxY-minY)/2+38)}" class="hi base-t" text-anchor="middle">छत्तीसगढ़</text><text x="${CX}" y="${f(baseY+(maxY-minY)/2+60)}" class="en" text-anchor="middle">33 districts · one boundary</text></g>
- <g class="one"><text x="440" y="${f(plane(MID).ry-6)}" class="hi">एक नक्शा</text><text x="440" y="${f(plane(MID).ry+18)}" class="en">One consolidated map</text></g></g>
-${layers}</svg>`;
+<title id="t">विभिन्न विभागों से डाटा समेकित</title><desc id="d">Five translucent Chhattisgarh-shaped department layers (Revenue, Forest, Health, Education, Roads) above the state outline come together into one map, which grows into a full north-up map of Chhattisgarh.</desc>
+<g class="fade"><ellipse cx="${CX}" cy="${f(baseY+(maxY-minY)/2+14)}" rx="${f((maxX-minX)/2+10)}" ry="18" fill="#0d1b2e" opacity=".08"/>
+ <text x="${CX}" y="${f(baseY+(maxY-minY)/2+38)}" class="hi base-t" text-anchor="middle">छत्तीसगढ़</text><text x="${CX}" y="${f(baseY+(maxY-minY)/2+60)}" class="en" text-anchor="middle">33 districts · one boundary</text>
+ ${tags}</g>
+<g class="grow" style="transform-origin:${f(CX)}px ${f(cy)}px;--g:translate(${f(GX)}px,${GY}px) scale(${S},${+(S/KY).toFixed(3)})">
+ <g class="base drop" style="--i:0"><g class="mv" style="--d:${-MID*GAP}px"><g transform="${base.tr}"><path d="${all}" fill="#f7f3ea" stroke="#c9bfa8" stroke-width=".8"/><path d="${stPath}" fill="none" stroke="#0d1b2e" stroke-width="2.4" stroke-linejoin="round"/></g></g></g>
+ ${planes}</g>
+<g class="one"><text x="${VW/2}" y="${VY+VH-44}" class="hi" text-anchor="middle">एक नक्शा · छत्तीसगढ़</text><text x="${VW/2}" y="${VY+VH-20}" class="en" text-anchor="middle">One consolidated map</text></g>
+</svg>`;
 const html=`<!doctype html>
 <html lang="hi">
 <head>
@@ -48,34 +52,29 @@ const html=`<!doctype html>
 <title>विभिन्न विभागों से डाटा समेकित</title>
 <style>
   /* Same Avenir Next World the story loads from the portal; Devanagari falls back to the system's Hindi fonts.
-     Transparent so it sits on the story background. Tall frame. Flags: layers.html#bare (no heading), #static (no motion). */
+     Transparent so it sits on the story background. Tall frame. Flag: layers.html#static (no motion). */
   @font-face{font-family:"Avenir Next World";font-weight:700;font-display:swap;src:local("Avenir Next World Bold"),local("AvenirNextWorld-Bold"),url("https://cogcg.cgstate.gov.in/portal/apps/storymaps/static/storymaps-website-common/fonts/Avenir_Next_World/074dfc70-6436-4f4b-9314-d1e69287aea1.woff2") format("woff2")}
   html,body{margin:0;height:100%;background:transparent;overflow:hidden}
   body{display:flex;align-items:center;justify-content:center}
   svg{width:100%;height:100%;display:block}
   text{font-family:"Avenir Next World","Nirmala UI","Noto Sans Devanagari","Mangal","Kohinoor Devanagari","Avenir Next","Segoe UI",sans-serif;fill:#0d1b2e}
-  .h1{font-size:44px;font-weight:700}.sub{font-size:16px;font-weight:600;fill:#5d6b7e}
   .hi{font-size:30px;font-weight:700}.en{font-size:14px;font-weight:600;fill:#6a778a;letter-spacing:.04em}
   .base-t{font-size:26px}
-  .bare .head{display:none}
-  /* layers drop in one by one, then float; hover or focus lifts one */
-  .ly,.base{animation:drop .9s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*.22s)}
-  .ly .mv,.base .mv{animation:merge 11s cubic-bezier(.6,0,.3,1) 2.4s infinite}
-  .ly .tag{animation:tagfade 11s ease 2.4s infinite}
-  .base .one{opacity:0;animation:onefade 11s ease 2.4s infinite}
-  .ly .pl{animation:bob 6s ease-in-out infinite;animation-delay:calc(var(--i)*-.9s);transition:transform .35s}
-  .ly{cursor:pointer;outline:none;transition:opacity .3s}
-  .ly .tag text.hi{transition:fill .25s}
-  .ly:hover .pl,.ly:focus .pl{translate:0 -16px}
-  .ly:hover .tag text.hi,.ly:focus .tag text.hi{fill:var(--c)}
-  svg:has(.ly:hover) .ly:not(:hover),svg:has(.ly:focus) .ly:not(:focus){opacity:.45}
+  /* layers drop in one by one; then on a loop: come together → grow into one flat map → shrink → apart */
+  .drop{animation:drop .9s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*.22s)}
+  .mv{animation:merge 12s cubic-bezier(.6,0,.3,1) 2.4s infinite}
+  .grow{animation:grow 12s cubic-bezier(.6,0,.3,1) 2.4s infinite}
+  .fade{animation:fade 12s ease 2.4s infinite}
+  .one{opacity:0;animation:one 12s ease 2.4s infinite}
+  .mv,.grow{will-change:transform}
+  .grow path,.grow circle{vector-effect:non-scaling-stroke}
   @keyframes drop{from{opacity:0;translate:0 -60px}to{opacity:1;translate:0 0}}
-  @keyframes bob{50%{translate:0 -5px}}
-  @keyframes merge{0%,28%{translate:0 0}46%,72%{translate:0 var(--d)}90%,100%{translate:0 0}}
-  @keyframes tagfade{0%,26%{opacity:1}38%,78%{opacity:0}90%,100%{opacity:1}}
-  @keyframes onefade{0%,40%{opacity:0}50%,70%{opacity:1}80%,100%{opacity:0}}
-  .static .ly,.static .base,.static .ly .pl,.static .ly .mv,.static .base .mv,.static .ly .tag,.static .base .one{animation:none}
-  @media (prefers-reduced-motion:reduce){.ly,.base,.ly .pl,.ly .mv,.base .mv,.ly .tag,.base .one{animation:none}}
+  @keyframes merge{0%,26%{translate:0 0}42%,82%{translate:0 var(--d)}94%,100%{translate:0 0}}
+  @keyframes grow{0%,44%{transform:none}56%,72%{transform:var(--g)}84%,100%{transform:none}}
+  @keyframes fade{0%,24%{opacity:1}34%,86%{opacity:0}96%,100%{opacity:1}}
+  @keyframes one{0%,54%{opacity:0}60%,70%{opacity:1}76%,100%{opacity:0}}
+  .static .drop,.static .mv,.static .grow,.static .fade,.static .one{animation:none}
+  @media (prefers-reduced-motion:reduce){.drop,.mv,.grow,.fade,.one{animation:none}}
 </style>
 </head>
 <body>
