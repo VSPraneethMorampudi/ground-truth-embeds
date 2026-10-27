@@ -155,3 +155,10 @@ LIVE GEO PORTAL (v18 · 21 Oct 2026)
   Real: districts (official 33-district boundary layer), state outline, neighbouring states, rivers, roads, rail (Natural Earth).
   Illustrative: Anganwadi centres, GP nodes, fibre routes, mine leases, Ask AI answers (computed in the browser).
   Frozen copy: versions/v18/portal.html
+
+STACKED LAYERS ILLUSTRATION  (tall frame; "विभिन्न विभागों से डाटा समेकित")
+  layers.html            Chhattisgarh outline at the bottom, five translucent tilted department layers above it
+                         (राजस्व, वन, स्वास्थ्य, शिक्षा, सड़क), each carrying its own data; layers drop in, float, lift on hover
+  layers.html#bare       without the heading (for a sidecar with its own title)
+  layers.html#static     no motion
+  Rebuild from the map data: node site/tools/gen-layers.mjs
