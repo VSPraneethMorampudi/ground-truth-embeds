@@ -6,6 +6,7 @@ import {RoomEnvironment} from "../vendor/RoomEnvironment.js";
 import {DEPTS,STEPS} from "./steps.js?v=202610261120";
 import {FILES,drawFile,drawFeature} from "./files.js?v=202610261120";
 import {envDraw,inboxDraw,mailDraw,gisDraw} from "./screens.js?v=202610261120";
+import {createAnalyst,animateAnalyst} from "./characters.js?v=202610272300";
 
 const G=window.GEO,D2R=Math.PI/180,LON0=82.15,LAT0=21.35,K=1,CX=Math.cos(LAT0*D2R),MX=75,MS=10;
 export const P=(lon,lat)=>[MX+(lon-LON0)*CX*MS,-(lat-LAT0)*MS];
@@ -46,7 +47,7 @@ function mats(){const paper=col("--w-top","#ffffff"),side=col("--w-side","#c5d2e
     paper,side}}
 
 export class PipelineScene{
-  constructor(host){this.host=host;this.s=0;this.t=0;this.mouse=new THREE.Vector2();this.ql=/[?&]lowgl/.test(location.search)?2:0;
+  constructor(host){this.host=host;this.s=0;this.t=0;this.mouse=new THREE.Vector2();this.reduced=matchMedia("(prefers-reduced-motion:reduce)").matches;this.ql=/[?&]lowgl/.test(location.search)?2:0;
     const R=this.r=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:"high-performance"});
     R.setPixelRatio(this.ql?.6:Math.min(2,devicePixelRatio||1));R.shadowMap.enabled=!this.ql;R.shadowMap.type=THREE.PCFSoftShadowMap;
     R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=1.0;R.outputColorSpace=THREE.SRGBColorSpace;host.appendChild(R.domElement);
@@ -57,15 +58,17 @@ export class PipelineScene{
     const sun=this.sun=new THREE.DirectionalLight(0xffffff,2.4);sun.position.set(-60,120,80);sun.castShadow=!this.ql;sun.shadow.mapSize.set(4096,2048);
     Object.assign(sun.shadow.camera,{left:-170,right:170,top:80,bottom:-80,near:20,far:400});sun.shadow.bias=-.0004;sun.shadow.normalBias=.4;S.add(sun);S.add(sun.target);
     this.M=mats();this.build();
+    this.humansReady=import("./humans.js?v=202610272300").then(({loadHumanTeam})=>loadHumanTeam(this.analysts)).then(result=>{this.pickBounds=new WeakMap();return result}).catch(error=>{console.warn("Human models could not load; using the illustrated team.",error)});
+    R.domElement.setAttribute("aria-label","Interactive 3D pipeline. Use the Explore controls to select buildings, analysts, server racks and apps.");
     new ResizeObserver(()=>this.resize()).observe(host);this.resize();
     /* pointer: parallax, hover a file card, click (or tap) to open it */
     this.hover=-1;this.ptr=null;
     host.addEventListener("pointermove",e=>{const r=host.getBoundingClientRect();this.mouse.set((e.clientX-r.left)/r.width-.5,(e.clientY-r.top)/r.height-.5);if(e.pointerType==="mouse")this.ptr=[e.clientX,e.clientY]});
-    host.addEventListener("pointerleave",()=>{this.ptr=null});
+    host.addEventListener("pointerleave",()=>{this.ptr=null;this.mouse.set(0,0)});
     host.addEventListener("pointerdown",e=>{this.down=[e.clientX,e.clientY,performance.now()]});
     host.addEventListener("pointercancel",()=>{this.down=null});
     host.addEventListener("pointerup",e=>{const d=this.down;this.down=null;if(!d||Math.hypot(e.clientX-d[0],e.clientY-d[1])>10||performance.now()-d[2]>600)return;
-      const h=this.pick(e.clientX,e.clientY);if(h)dispatchEvent(new CustomEvent("gt-pick",{detail:{type:h.type,i:h.i,id:h.id}}))});
+      const h=this.pick(e.clientX,e.clientY);if(h)this.activate(h)});
     this.clock=new THREE.Clock();this.on=true;R.setAnimationLoop(()=>this.frame());
     document.fonts&&document.fonts.ready.then(()=>this.redrawTextures())}
   resize(){const w=this.host.clientWidth,h=this.host.clientHeight;if(!w||!h)return;this.r.setSize(w,h,false);this.cam.aspect=w/h;this.phone=w<760;
@@ -109,7 +112,9 @@ export class PipelineScene{
       const ledges=(w,z,y0,n,gy)=>{for(let r=0;r<n;r++)B(w,.28,.7,0,y0+r*gy,z,M.wall2,.1)};
       const steps=(w,z)=>{for(let k=0;k<3;k++)B(w-k*.8,1-k*.33,1,0,(1-k*.33)/2,z+k*.9,stone,.1)};
       const canopy=(w,z,y=4,m=acc)=>{B(w,.35,3,0,y,z+1.5,m,.12);[-1,1].forEach(sx=>C(.16,.16,y-1,sx*(w/2-.4),(y+1)/2,z+2.7,M.steel,8))};
-      const door=(z,w=2.6)=>B(w,2.8,.4,0,2.4,z,M.ink,.15);
+      const door=(z,w=2.6)=>{B(w+.35,3.05,.3,0,2.4,z,M.ink,.08);
+        [-1,1].forEach(sx=>{B(w/2-.13,2.73,.12,sx*w/4,2.4,z+.2,M.glass,.04);B(.07,.65,.14,sx*.18,2.38,z+.32,M.steel,.025)});
+        B(.07,2.8,.16,0,2.4,z+.25,M.steel,.02)};
       let top=10,PD=12;
       if(style==="capitol"){/* Revenue: the secretariat — colonnade, pediment, dome, the national flag */
         PD=16;B(24,1,16,0,.5,0,stone,.2);steps(10,8.5);
@@ -158,7 +163,7 @@ export class PipelineScene{
         const py=new THREE.Mesh(new THREE.ConeGeometry(3,2.6,4),acc);py.rotation.y=Math.PI/4;py.position.set(0,12.3,-1.2);py.castShadow=true;g.add(py);
         B(17,.35,3.2,0,4.6,3.6,acc,.12);for(let k=0;k<5;k++)C(.14,.14,3.6,-7.6+k*3.8,2.8,4.9,M.steel,8);
         [-.7,.7].forEach(o=>B(19,.25,.25,0,.35,7.4+o,M.steel,.05));for(let k=0;k<12;k++)B(.5,.18,2.2,-8.6+k*1.56,.2,7.4,wood,.05);top=13.6}
-      if(pn.length){const im=new THREE.InstancedMesh(paneG,M.glass,pn.length);pn.forEach((m,k)=>im.setMatrixAt(k,m));g.add(im)}
+      if(pn.length){const im=new THREE.InstancedMesh(paneG,M.glass,pn.length);pn.forEach((m,k)=>im.setMatrixAt(k,m));g.add(im);const frames=new THREE.InstancedMesh(paneG,M.ink,pn.length);pn.forEach((m,k)=>{const f=m.clone();f.scale(new THREE.Vector3(1.13,1.12,1.05));f.elements[14]-=.025;frames.setMatrixAt(k,f)});g.add(frames)}
       /* name board on a stone plinth in front of the entrance, tipped back toward the viewer */
       const bz=PD/2+(style==="station"?5:4),st=this.tex(1024,300,boardDraw(d));
       B(14.6,.8,1.8,0,.4,bz,stone,.15);const bk=B(14.8,4.6,.35,0,3.1,bz,M.ink,.2);bk.rotation.x=-.7;
@@ -184,55 +189,43 @@ export class PipelineScene{
     /* workstations: desk, dual monitors (mail + GIS), keyboard, mouse, mug, office chair, analyst */
     const deskM=new THREE.MeshStandardMaterial({color:0xe9dcc6,roughness:.55}),frameM=new THREE.MeshStandardMaterial({color:0x3a4250,roughness:.4,metalness:.6}),
       chairM=new THREE.MeshStandardMaterial({color:0x252c38,roughness:.7}),meshM=new THREE.MeshStandardMaterial({color:0x39424f,roughness:.9}),
-      shoeM=new THREE.MeshStandardMaterial({color:0x1d1a18,roughness:.6}),mugM=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.3});
-    const PEOPLE=[/* skin, shirt, trousers, hair colour, hair style, glasses */
-      [0x8d5524,0x2f6fd6,0x2b2f3a,0x15100c,"short",1],[0xc68642,0xd2423a,0x3b3f4a,0x1b1410,"long",0],[0xa0662f,0xf2efe8,0x4a3f35,0x111111,"short",0],
-      [0x7a4a21,0x3e8a4f,0x23262e,0x1b1410,"bun",1],[0xb87a46,0xe39a1f,0x2f3542,0x231a14,"long",0],[0x95603a,0x6b4fd6,0x3a3a3a,0x0e0e0e,"short",1]];
+      mugM=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.3});
     this.analysts=[];this.screens=[];this.deskHits=[];seed=3;
-    const cap=(r,l,m)=>new THREE.Mesh(new THREE.CapsuleGeometry(r,l,6,12),m);
     [[-10.8,-8.6],[0,-8.6],[10.8,-8.6],[-10.8,-19],[0,-19],[10.8,-19]].forEach(([x,z],k)=>{
+      const first=g.children.length;
       /* desk: top, side panels, modesty panel */
       A(this.rb(8.4,.3,3.6,.12,deskM),x,3.25,z);[-4,4].forEach(dx=>A(this.rb(.25,2.5,3.3,.08,frameM),x+dx,1.95,z));A(this.rb(7.8,1.4,.15,.05,frameM),x,2.4,z-1.6);
       /* monitors on arms: left = mail, right = GIS */
-      const scr=[];[-1.95,1.95].forEach((dx,m)=>{const mon=new THREE.Group();mon.position.set(x+dx,5.15,z-1);mon.rotation.y=dx<0?.16:-.16;g.add(mon);
+      let deskPointer;const scr=[];[-1.95,1.95].forEach((dx,m)=>{const mon=new THREE.Group();mon.position.set(x+dx,5.15,z-1);mon.rotation.y=dx<0?.16:-.16;g.add(mon);
         const bz=this.rb(3.7,2.35,.18,.08,M.ink);bz.castShadow=true;mon.add(bz);const back=this.rb(1.4,1,.4,.15,M.ink);back.position.z=-.25;mon.add(back);
         const t=this.tex(512,320,m?gisDraw(null,null,0):mailDraw(null,null,[],DEPTS));const face=new THREE.Mesh(new THREE.PlaneGeometry(3.52,2.2),new THREE.MeshBasicMaterial({map:t,toneMapped:false}));face.position.z=.1;mon.add(face);
+        if(m===1){const shape=new THREE.Shape();shape.moveTo(0,0);shape.lineTo(0,-.22);shape.lineTo(.055,-.16);shape.lineTo(.095,-.24);shape.lineTo(.13,-.22);shape.lineTo(.085,-.145);shape.lineTo(.16,-.14);shape.closePath();
+          deskPointer=new THREE.Group();const arrow=new THREE.Mesh(new THREE.ShapeGeometry(shape),new THREE.MeshBasicMaterial({color:0x182635,depthTest:false}));deskPointer.add(arrow);deskPointer.position.set(.45,-.2,.115);mon.add(deskPointer);
+          const pulse=new THREE.Mesh(new THREE.RingGeometry(.075,.095,24),new THREE.MeshBasicMaterial({color:0xff5a36,transparent:true,opacity:0,depthTest:false}));pulse.position.set(.02,-.025,.002);deskPointer.add(pulse);deskPointer.userData.pulse=pulse;
+        }
         A(this.rb(.22,1.5,.22,.08,frameM),x+dx,4.1,z-1.35);scr.push({t,key:"",mon})});
       A(this.rb(1.6,.1,1.2,.05,frameM),x-1.95,3.42,z-1.35);A(this.rb(1.6,.1,1.2,.05,frameM),x+1.95,3.42,z-1.35);
-      A(this.rb(2.6,.12,.8,.05,new THREE.MeshStandardMaterial({color:0x2b3038,roughness:.5})),x,3.46,z+.55);
-      A(this.rb(1.1,.04,.9,.02,new THREE.MeshStandardMaterial({color:0x2f3a4a,roughness:.9})),x+2.2,3.41,z+.6);const mouse=A(this.rb(.32,.16,.5,.07,M.ink),x+2.2,3.5,z+.6);
+      A(this.rb(2.6,.12,.8,.05,new THREE.MeshStandardMaterial({color:0x2b3038,roughness:.5})),x,3.46,z+.78);
+      const keys=new THREE.InstancedMesh(new THREE.BoxGeometry(.15,.035,.12),M.wall2,42),keyMatrix=new THREE.Matrix4();
+      for(let n=0;n<42;n++){keyMatrix.makeTranslation(x-1.04+(n%14)*.16,3.535,z+.56+Math.floor(n/14)*.18);keys.setMatrixAt(n,keyMatrix)}g.add(keys);
+      const handle=A(new THREE.Mesh(new THREE.TorusGeometry(.17,.045,6,16),mugM),x-3.04,3.67,z+.2);handle.rotation.y=Math.PI/2;
+      A(new THREE.Mesh(new THREE.CylinderGeometry(.183,.183,.015,14),new THREE.MeshStandardMaterial({color:0x573421,roughness:.3})),x-3.3,3.9,z+.2);
+      A(this.rb(1.3,.04,1.1,.02,new THREE.MeshStandardMaterial({color:0x2f3a4a,roughness:.9})),x+1.4,3.41,z+1.22);const mouse=A(this.rb(.32,.16,.5,.07,M.ink),x+1.4,3.5,z+1.22);
       A(new THREE.Mesh(new THREE.CylinderGeometry(.22,.2,.5,14),mugM),x-3.3,3.65,z+.2);
       if(k%2===0)A(this.rb(1.4,.3,1,.05,new THREE.MeshStandardMaterial({color:0xfafafa,roughness:.8})),x-3.1,3.55,z-1);
       /* office chair: five-star base, gas lift, seat, mesh back */
       const cz=z+2.6;for(let a=0;a<5;a++){const leg=A(this.rb(1.3,.14,.22,.06,frameM),x+Math.cos(a*1.257)*.6,.95,cz+Math.sin(a*1.257)*.6);leg.rotation.y=-a*1.257;
         A(new THREE.Mesh(new THREE.SphereGeometry(.14,8,6),M.ink),x+Math.cos(a*1.257)*1.2,.88,cz+Math.sin(a*1.257)*1.2)}
-      A(new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,1.3,8),frameM),x,1.6,cz);A(this.rb(2.1,.35,2,.25,chairM),x,2.3,cz);
-      const bk=A(this.rb(1.9,1.5,.2,.3,meshM),x,3.45,cz+1.2);bk.rotation.x=-.1;A(this.rb(.25,1.2,.25,.1,frameM),x,2.7,cz+1.15);
-      /* the analyst, seated, facing the screens */
-      const [skin,shirtC,pantC,hairC,style,glasses]=PEOPLE[k];const sk=new THREE.MeshStandardMaterial({color:skin,roughness:.55}),sh=new THREE.MeshStandardMaterial({color:shirtC,roughness:.75}),
-        pt=new THREE.MeshStandardMaterial({color:pantC,roughness:.8}),hr=new THREE.MeshStandardMaterial({color:hairC,roughness:.75});
-      const p=new THREE.Group();p.position.set(x,2.48,cz-.1);g.add(p);const add=(o,a,b,c)=>{o.position.set(a,b,c);o.castShadow=true;p.add(o);return o};
-      add(this.rb(1.45,.55,1.3,.25,pt),0,.28,.1);
-      [-1,1].forEach(sx=>{const th=add(cap(.3,1.1,pt),sx*.38,.32,-.75);th.rotation.x=Math.PI/2;const sn=add(cap(.25,1.15,pt),sx*.4,-.6,-1.42);
-        add(this.rb(.42,.25,.85,.1,shoeM),sx*.4,-1.4,-1.62)});
-      const torso=add(new THREE.Mesh(new THREE.CylinderGeometry(.66,.56,1.55,20),sh),0,1.3,.1);torso.scale.z=.68;torso.rotation.x=-.1;
-      const sho=add(cap(.33,1.0,sh),0,2.0,.05);sho.rotation.z=Math.PI/2;sho.scale.z=.8;
-      add(new THREE.Mesh(new THREE.CylinderGeometry(.17,.19,.35,12),sk),0,2.32,0);
-      const arms=[];[-1,1].forEach(sx=>{const up=add(cap(.18,.75,sh),sx*.82,1.62,-.22);up.rotation.x=.55;up.rotation.z=sx*.12;
-        const fa=new THREE.Group();fa.position.set(sx*.74,1.22,-.5);p.add(fa);const f=cap(.15,.8,sk);f.rotation.x=Math.PI/2-.08;f.position.z=-.45;f.castShadow=true;fa.add(f);
-        const sl=cap(.19,.15,sh);sl.rotation.x=Math.PI/2;sl.position.z=-.05;fa.add(sl);const hand=new THREE.Mesh(new THREE.SphereGeometry(.17,12,10),sk);hand.scale.set(1,.6,1.3);hand.position.set(-sx*.12,-.05,-.95);fa.add(hand);
-        fa.rotation.y=sx*.22;arms.push(fa)});
-      const head=new THREE.Group();head.position.set(0,2.85,-.05);p.add(head);
-      const skull=new THREE.Mesh(new THREE.SphereGeometry(.44,24,18),sk);skull.scale.set(.9,1.06,.98);skull.castShadow=true;head.add(skull);
-      [-1,1].forEach(sx=>{const ear=new THREE.Mesh(new THREE.SphereGeometry(.1,8,6),sk);ear.position.set(sx*.4,0,.02);ear.scale.z=.6;head.add(ear)});
-      const nose=new THREE.Mesh(new THREE.ConeGeometry(.07,.18,8),sk);nose.rotation.x=-Math.PI/2;nose.position.set(0,-.02,-.46);head.add(nose);
-      const hair=new THREE.Mesh(new THREE.SphereGeometry(.47,24,16,0,Math.PI*2,0,Math.PI*.52),hr);hair.rotation.x=.42;hair.position.y=.05;hair.scale.set(.93,1.04,1.02);head.add(hair);
-      if(style==="long"){const back=new THREE.Mesh(new THREE.CapsuleGeometry(.36,.7,6,12),hr);back.position.set(0,-.35,.26);back.scale.set(1.15,1,.55);head.add(back)}
-      if(style==="bun"){const bun=new THREE.Mesh(new THREE.SphereGeometry(.22,12,10),hr);bun.position.set(0,.3,.42);head.add(bun)}
-      if(glasses){const gm=new THREE.MeshStandardMaterial({color:0x111111,roughness:.3});[-1,1].forEach(sx=>{const r=new THREE.Mesh(new THREE.TorusGeometry(.11,.02,6,16),gm);r.position.set(sx*.16,.04,-.42);head.add(r)});
-        [-1,1].forEach(sx=>{const tm=new THREE.Mesh(new THREE.BoxGeometry(.02,.02,.4),gm);tm.position.set(sx*.38,.04,-.22);head.add(tm)})}
+      A(new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,1.3,8),frameM),x,1.6,cz);const seat=A(this.rb(2.1,.35,2,.25,chairM),x,2.3,cz);
+      const bk=A(this.rb(1.9,1.5,.2,.3,meshM),x,3.45,cz+1.2);bk.rotation.x=-.1;const support=A(this.rb(.25,1.2,.25,.1,frameM),x,2.7,cz+1.15);
+      const chair=new THREE.Group();chair.position.set(x,0,cz-.1);g.add(chair);[seat,bk,support].forEach(o=>chair.attach(o));
+      /* Each analyst is independently articulated and selectable. */
+      const person=createAnalyst(k);person.root.position.set(x,2.48,cz-.1);g.add(person.root);
       const dh=new THREE.Mesh(new THREE.BoxGeometry(8.8,7,8.4),new THREE.MeshBasicMaterial({visible:false}));dh.position.set(x,3.5,z+1.6);g.add(dh);this.deskHits.push(dh);
-      this.analysts.push({head,arms,mouse,ph:rnd()*6,x,z,scr})});
+      const station=new THREE.Group();station.name=`workstation-${k}`;
+      g.children.slice(first).forEach(o=>station.add(o));g.add(station);
+      const keyHomes=Array.from({length:42},(_,n)=>new THREE.Vector3(x-1.04+(n%14)*.16,3.535,z+.56+Math.floor(n/14)*.18));
+      this.analysts.push({...person,chair,mouse,mouseOrigin:mouse.position.clone(),keys,keyHomes,keyPresses:new Float32Array(42),keyMatrix:new THREE.Matrix4(),deskPointer,station,ph:rnd()*6,x,z,scr})});
     /* department mail: one envelope per file */
     this.envs=FILES.map(F=>{const t=this.tex(320,210,envDraw(F,DEPTS[F.d]));const e=new THREE.Group();const b=this.rb(5,3.3,.3,.3,new THREE.MeshStandardMaterial({color:0xffffff,roughness:.5}));e.add(b);
       const f=new THREE.Mesh(new THREE.PlaneGeometry(5,3.3),new THREE.MeshBasicMaterial({map:t,transparent:true,toneMapped:false}));f.position.z=.16;e.add(f);e.scale.setScalar(.001);S.add(e);return e})}
@@ -437,21 +430,52 @@ export class PipelineScene{
     out.rotation.x=.75;out.traverse(o=>{if(o.isMesh)o.castShadow=true});const og=new THREE.Group();og.add(out);S.add(og);og.scale.setScalar(.001);
     return{g,card,out:og,F,k,n,reject:!!F.reject,hv:0}})}
 
-  /* pointer over the 3D: which file card is under it */
-  /* what is under the pointer: a file card first, then a part of the block being explored, then a whole block */
-  pick(cx,cy){const r=this.host.getBoundingClientRect(),v=new THREE.Vector2((cx-r.left)/r.width*2-1,-(cy-r.top)/r.height*2+1);
-    this.ray=this.ray||new THREE.Raycaster();this.ray.setFromCamera(v,this.cam);const ray=this.ray,ex=this.ex;
-    const first=list=>ray.intersectObjects(list,true)[0];
-    let h=first(this.docs.filter(o=>o.live).map(o=>o.card));if(h)return{type:"file",i:h.object.userData.file,obj:this.docs[h.object.userData.file].card,tag:T2("Open","खोलें")};
-    if(ex){const id=ex.id;
-      if(id==="depts"){h=first(this.depts.map(d=>d.g));if(h){let o=h.object;while(o&&!this.depts.some(d=>d.g===o))o=o.parent;const k=this.depts.findIndex(d=>d.g===o);if(k>=0)return{type:"dept",i:k,obj:o,tag:DEPTS[k].short}}}
-      if(id==="lab"){h=first(this.deskHits);if(h){const k=this.deskHits.indexOf(h.object);return{type:"desk",i:k,obj:h.object,tag:T2(`Desk ${k+1}`,`डेस्क ${k+1}`)}}}
-      if(id==="dc"){h=first(this.racks.map(q=>q.hit));if(h){const k=this.racks.findIndex(q=>q.hit===h.object);return{type:"rack",i:k,obj:h.object,tag:T2("Rack "+this.racks[k].name,"रैक "+this.racks[k].name)}}}
-      if(id==="map"){h=first(this.dist.map(d=>d.m));if(h){let o=h.object;if(o.isLineSegments)o=o.parent;const k=this.dist.findIndex(d=>d.m===o);if(k>=0)return{type:"dist",i:k,obj:o,tag:T2(this.dist[k].name,this.dist[k].name)}}}
-      if(id==="portal"){const dv=[this.phoneG,this.tabG,this.lapG];h=first(dv);if(h){let o=h.object;while(o&&!dv.includes(o))o=o.parent;const k=dv.indexOf(o);return{type:"device",i:k,obj:o,tag:[T2("Field app","फ़ील्ड ऐप"),T2("Dashboard","डैशबोर्ड"),T2("Department GIS","विभागीय GIS")][k]}}}}
-    h=first(this.blocks.filter(b=>!ex||b.id!==ex.id).map(b=>b.hit));
-    if(h){const b=this.blocks.find(b=>b.hit===h.object);return{type:"block",id:b.id,obj:b.hit,tag:b.tag}}
-    return null}
+  /* Semantic targets are available in the story as well as Explore. Invisible / collapsed
+     objects never intercept a click; proxy volumes are only a fallback for small details. */
+  activate(hit){
+    if(hit.type==="analyst")this.greet(hit.i);
+    dispatchEvent(new CustomEvent("gt-pick",{detail:{type:hit.type,i:hit.i,id:hit.id}}));
+  }
+  greet(index){const a=this.analysts[index];if(a)a.greetAt=this.t}
+  explain(index){const a=this.analysts[index];if(a)a.explainAt=this.t}
+  pick(cx,cy){
+    const r=this.host.getBoundingClientRect();if(!r.width||!r.height||cx<r.left||cx>r.right||cy<r.top||cy>r.bottom)return null;
+    const v=new THREE.Vector2((cx-r.left)/r.width*2-1,-(cy-r.top)/r.height*2+1);
+    this.scene.updateMatrixWorld(true);this.cam.updateMatrixWorld(true);
+    this.ray=this.ray||new THREE.Raycaster();this.ray.setFromCamera(v,this.cam);
+    const visible=o=>{if(!o)return false;for(let p=o;p;p=p.parent)if(!p.visible||Math.max(p.scale.x,p.scale.y,p.scale.z)<.01)return false;return true};
+    const candidates=[];this.pickBounds=this.pickBounds||new WeakMap();
+    const bounds=new THREE.Box3();
+    const add=(obj,type,i,tag,id)=>{
+      if(!visible(obj))return;
+      let local=this.pickBounds.get(obj);
+      if(!local){local=new THREE.Box3().setFromObject(obj).applyMatrix4(obj.matrixWorld.clone().invert()).expandByScalar(.15);this.pickBounds.set(obj,local)}
+      if(this.ray.ray.intersectsBox(bounds.copy(local).applyMatrix4(obj.matrixWorld)))candidates.push({obj,type,i,tag,id});
+    };
+    this.docs.filter(o=>o.live).forEach(o=>add(o.card,"file",o.F.i,T2("Open file","फ़ाइल खोलें")));
+    (this.envs||[]).forEach((o,i)=>add(o,"file",i,T2("Open mail attachment","मेल की फ़ाइल खोलें")));
+    this.depts.forEach((d,i)=>add(d.g,"dept",i,d.d.short));
+    this.analysts.forEach((a,i)=>add(a.hit,"analyst",i,a.profile.name));
+    this.racks.forEach((q,i)=>add(q.hit,"rack",i,T2("Rack "+q.name,"रैक "+q.name)));
+    this.dist.forEach((d,i)=>add(d.m,"dist",i,T2(d.name,d.name)));
+    [this.phoneG,this.tabG,this.lapG].forEach((o,i)=>add(o,"device",i,[T2("Field app","फ़ील्ड ऐप"),T2("Dashboard","डैशबोर्ड"),T2("Department GIS","विभागीय GIS")][i]));
+    add(this.tsrv,"server",0,T2("Team server · checks","टीम सर्वर · जाँच"));
+    add(this.portalScr,"portal",0,T2("Open Geoportal","जियोपोर्टल खोलें"));
+    const layerNames=[T2("Boundaries","सीमाएँ"),T2("Forest","वन"),T2("Rivers","नदियाँ"),T2("Roads","सड़कें"),T2("Rail","रेल"),T2("Facilities","सुविधाएँ")];
+    (this.sheets||[]).forEach((o,i)=>add(o,"sheet",i,layerNames[i]));
+    const objects=candidates.map(c=>c.obj);
+    for(const h of this.ray.intersectObjects(objects,true)){
+      if(!visible(h.object))continue;
+      let o=h.object;while(o&&!objects.includes(o))o=o.parent;
+      const target=candidates.find(c=>c.obj===o);if(target)return target;
+    }
+    /* A desk's generous tap area also includes its keyboard, mug, chair and monitors. */
+    const desk=this.ray.intersectObjects(this.deskHits.filter(visible),false)[0];
+    if(desk){const i=this.deskHits.indexOf(desk.object);return{type:"desk",i,obj:desk.object,tag:T2("Workstation "+(i+1),"वर्कस्टेशन "+(i+1))}}
+    const blocks=this.blocks.filter(b=>visible(b.hit)&&(!this.ex||b.id!==this.ex.id)),h=this.ray.intersectObjects(blocks.map(b=>b.hit),false)[0];
+    if(h){const b=blocks.find(b=>b.hit===h.object);return{type:"block",id:b.id,obj:b.hit,tag:b.tag}}
+    return null;
+  }
   rectObj(o){const b=new THREE.Box3().setFromObject(o),r=this.host.getBoundingClientRect();let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
     for(let k=0;k<8;k++){const v=new THREE.Vector3(k&1?b.max.x:b.min.x,k&2?b.max.y:b.min.y,k&4?b.max.z:b.min.z).project(this.cam);const X=r.left+(v.x+1)/2*r.width,Y=r.top+(1-v.y)/2*r.height;x0=Math.min(x0,X);y0=Math.min(y0,Y);x1=Math.max(x1,X);y1=Math.max(y1,Y)}
     x0=Math.max(r.left+4,x0);y0=Math.max(r.top+4,y0);x1=Math.min(r.right-4,x1);y1=Math.min(r.bottom-4,y1);return{left:x0,top:y0,width:x1-x0,height:y1-y0,right:x1,bottom:y1}}
@@ -462,7 +486,7 @@ export class PipelineScene{
   exit(){this.ex=null;this.resize()}
   exCam(){const e=this.ex,V=(x,y,z)=>[x,y,z];
     if(e.id==="depts"){if(e.dept!=null){const b=this.depts[e.dept].g.position;return[V(b.x,48,b.z+44),V(b.x,9,b.z-2)]}return[V(-122,118,104),V(-122,0,-2)]}
-    if(e.id==="lab"){if(e.desk!=null){const a=this.analysts[e.desk],c=this.conv.position;return[V(c.x+a.x,12.5,c.z+a.z+10.5),V(c.x+a.x,5.2,c.z+a.z-1.5)]}return[V(-46,44,60),V(-46,4,0)]}
+    if(e.id==="lab"){if(e.server)return[V(-23,16,9),V(-32.4,5.5,-7.4)];if(e.desk!=null){const a=this.analysts[e.desk],c=this.conv.position;if(e.portrait)return[V(c.x+a.x+2.1,6.1,c.z+a.z+10.4),V(c.x+a.x,this.phone?4.9:4.55,c.z+a.z+2.5)];return[V(c.x+a.x+6.5,8.2,c.z+a.z+9),V(c.x+a.x+.5,3.9,c.z+a.z+.6)]}return[V(-46,44,60),V(-46,4,0)]}
     if(e.id==="dc"){if(e.rack!=null){const q=this.racks[e.rack],c=this.dc.position;return[V(c.x+q.x+5,13,c.z+q.z+22),V(c.x+q.x,7.5,c.z+q.z)]}return[V(14,42,80),V(14,9,0)]}
     if(e.id==="map"){if(e.dist!=null){const[x,z]=this.dist[e.dist].c;return[V(x,40,z+34),V(x,3,z)]}return[V(75,100,82),V(75,0,6)]}
     if(e.dev!=null){const sc=this.appScr[e.dev],p=sc.getWorldPosition(new THREE.Vector3()),n=sc.getWorldDirection(new THREE.Vector3()),d=[34,36,34][e.dev];return[V(p.x+n.x*d,p.y+n.y*d+3,p.z+n.z*d),V(p.x,p.y-(e.dev===2?1.5:0),p.z)]}return[V(75,32,62),V(75,22,-48)]}
@@ -499,12 +523,23 @@ export class PipelineScene{
       const hw=176,hh=(110*Math.sin(el)+50*Math.cos(el))/2,d=Math.max(hw/(Math.tan(hf)*useW),hh/(Math.tan(vf)*useH))*1.04/far;return[g.clone().addScaledVector(dir,d),g]};
     const K0=key(k0),K1=key(k1),pos=K0[0].lerp(K1[0],e),tgt=K0[1].lerp(K1[1],e);
     if(ex){pos.set(...ex.cam[0]);tgt.set(...ex.cam[1])}
-    pos.sub(tgt).multiplyScalar(far).add(tgt);pos.x+=this.mouse.x*6;pos.y-=this.mouse.y*4;
+    pos.sub(tgt).multiplyScalar(far).add(tgt);
+    /* Portraits hold still: cursor movement belongs to the eyes, not the camera. */
+    const focusLab=ex?.id==="lab"&&ex.desk!=null,portrait=focusLab&&ex.portrait,fov=this.phone?(portrait?34:48):32;
+    if(this.cam.fov!==fov){this.cam.fov=fov;this.cam.updateProjectionMatrix()}
+    const parallax=ex?.id==="lab"&&ex.desk!=null?(ex.portrait?0:.16):1;
+    pos.x+=this.mouse.x*6*parallax;pos.y-=this.mouse.y*4*parallax;
     this.applyOffset(false,ka);
     this.cam.position.lerp(pos,ka);this.look.lerp(tgt,ka);this.cam.lookAt(this.look);
     /* the floor path pulses while data moves; analysts type, glance between their two screens */
-    this.analysts.forEach((a,k)=>{a.head.rotation.y=Math.sin(t*.45+a.ph)*.3;a.head.rotation.x=.1+Math.sin(t*.8+a.ph)*.04;
-      a.arms.forEach((fa,m)=>{fa.position.y=1.22+Math.max(0,Math.sin(t*(8+k)+m*2.3+a.ph))*.06});a.mouse.position.x=a.x+2.2+Math.sin(t*1.3+a.ph)*.12});
+    this.analysts.forEach((a,k)=>{
+      a.station.visible=!focusLab||ex.desk===k;
+      animateAnalyst(a,t,dt,{hover:this.hoverHit?.type==="analyst"&&this.hoverHit.i===k,selected:ex?.id==="lab"&&ex.desk===k,portrait:ex?.id==="lab"&&ex.desk===k&&ex.portrait,reduced:this.reduced,pointer:this.ptr?this.mouse:null,working:ex?.id==="lab"&&ex.desk===k&&ex.labP<1});
+      a.chair.rotation.y=a.root.rotation.y;
+      if(!a.human)a.mouse.position.copy(a.mouseOrigin);
+      a.keyHomes.forEach((p,n)=>{a.keyMatrix.makeTranslation(p.x,p.y-a.keyPresses[n]*.018,p.z);a.keys.setMatrixAt(n,a.keyMatrix)});a.keys.instanceMatrix.needsUpdate=true;
+      if(a.deskPointer){const w=a.workState;a.deskPointer.visible=!!w&&!portrait;a.deskPointer.position.x=.45+(w?.dx||0)*3;a.deskPointer.position.y=-.2-(w?.dz||0)*3;a.deskPointer.userData.pulse.material.opacity=w?.click||0}
+    });
     /* departments: all of them in the overview, then one at a time; the one whose file is under the pointer lifts */
     const hh0=this.hoverHit,active=ex?(ex.id==="depts"&&ex.dept!=null?ex.dept:-1):STEPS[i].depts==="each"?Math.min(DEPTS.length-1,Math.floor(f*DEPTS.length)):-1,hvD=this.hover>=0?FILES[this.hover].d:hh0&&hh0.type==="dept"?hh0.i:-1;
     this.depts.forEach((dp,j)=>{const on=j===active||j===hvD;dp.g.position.y+=((on?.6:0)-dp.g.position.y)*.15;dp.acc.emissive.set(dp.d.col);dp.acc.emissiveIntensity+=((on?.8:0)-dp.acc.emissiveIntensity)*.15});
@@ -544,14 +579,14 @@ export class PipelineScene{
       const arr=F?sC+.05+F.i*.035+.4:0;let pr=F?Math.round(cl((s-arr-.15)/(sQ-.4-arr))*10)/10:0;
       if(ex&&ex.id==="lab"&&ex.desk===k&&ex.file!=null){F=FILES[ex.file];pr=Math.round((ex.labP??1)*20)/20}const d=F&&DEPTS[F.d];
       this.setScreen(an.scr[0],F?`${F.i}:${mine.length}`:"-",mailDraw(F,d,mine,DEPTS));this.setScreen(an.scr[1],F?`${F.i}:${pr}`:"-",gisDraw(F,d,pr))});
-    const hh=this.ptr&&!this.down?this.pick(this.ptr[0],this.ptr[1]):null;this.hoverHit=hh;this.hover=hh&&hh.type==="file"?hh.i:-1;this.hoverRect=hh?this.rectObj(hh.obj):null;this.hoverTag=hh?hh.tag:null;
+    const hh=this.ptr&&!this.down?this.pick(this.ptr[0],this.ptr[1]):null;this.hoverHit=hh;this.hover=hh&&hh.type==="file"?hh.i:-1;this.hoverRect=hh?this.rectObj(hh.obj):null;this.hoverTag=hh?hh.tag:null;this.host.style.cursor=hh?"pointer":"";
     this.blocks.forEach(b=>{const on=hh&&hh.type==="block"&&hh.id===b.id?.9:ex&&ex.id===b.id?.45:0;b.a+=(on-b.a)*.15;b.ring.material.opacity=b.a;b.ring.visible=b.a>.01});
     /* team server: the light bar checks (red while the reject goes back); LEDs flicker while data is on it */
     const rej=s>sQ+.25&&s<sQ+.85,rc=rej?0xff5a36:0x3fd6a0;this.qaLight.material.color.set(rc);this.qaLight.material.emissive.set(rc);
     const busyT=s>SI.conv1&&s<sG+.3;this.tsLeds.forEach((l,k)=>l.material.color.set(busyT&&Math.sin(t*12+k*1.7)>0?(rej?0xff5a36:0xffc93c):0x3fd6a0));
     /* data centre LEDs and floating geodatabase layers */
     const busy=seg(s,sQ+.5,sG+.2),c3=new THREE.Color(),bk=ex&&ex.backup!=null?t-ex.backup:-1;this.leds.forEach((l,k)=>{const on=(Math.sin(t*l.s*3+l.p)>.2-busy*.6);c3.set(on?(k%5===0?0xffc93c:0x3fd6a0):0x16324a);if(bk>=0&&bk<4)c3.set(Math.sin(t*14+k*.7)>0?0xffc93c:0x2a1e06);else if(bk>=4&&bk<7)c3.set(0x3fd6a0);this.ledMesh.setColorAt(k,c3)});
-    this.racks.forEach((q,k)=>{q.open+=((ex&&ex.id==="dc"&&ex.rack===k?1:0)-q.open)*.1;q.hinge.rotation.y=-q.open*1.7});this.ledMesh.instanceColor.needsUpdate=true;this.dcGlow.material.opacity=.08+busy*.14;
+    this.racks.forEach((q,k)=>{q.open+=((ex&&ex.id==="dc"&&ex.rack===k?1:hh?.type==="rack"&&hh.i===k?.16:0)-q.open)*.1;q.hinge.rotation.y=-q.open*1.7});this.ledMesh.instanceColor.needsUpdate=true;this.dcGlow.material.opacity=.08+busy*.14;
     const lay=seg(s,sG,sG+.6),toMap=seg(s,SI.map,SI.map+.5);
     this.sheets.forEach((sh,k)=>{const up=seg(s,sG+k*.07,sG+.35+k*.07);const y=mix(8,18+k*3,up);const mapPos=new THREE.Vector3(MX-dc.x,4+k*.1,1);
       sh.position.set(mix(0,mapPos.x,toMap),mix(y,mapPos.y+Math.sin(toMap*Math.PI)*28,toMap),mix(0,mapPos.z,toMap));sh.scale.setScalar(Math.max(.001,up*(1-sm((toMap-.7)/.3))));sh.rotation.y=Math.sin(t*.6+k)*.05*(1-toMap)});
@@ -578,7 +613,7 @@ export class PipelineScene{
     /* portal screen rises behind the map */
     const pr=Math.max(pv,seg(s,SI.portal-.5,SI.portal+.2));this.portal.position.y=mix(-40,24,pr);this.portal.visible=pr>0;
     /* apps pop up */
-    [[this.phoneG,0],[this.tabG,.12],[this.lapG,.24]].forEach(([o,d])=>{const a=Math.max(pv,seg(s,SI.apps-.45+d,SI.apps-.05+d));const e=a<1?1+2.7*Math.pow(a-1,3)+1.7*Math.pow(a-1,2):1;o.scale.setScalar(Math.max(.001,e));o.position.y+=Math.sin(t*1.5+d*10)*.004});
+    [[this.phoneG,0],[this.tabG,.12],[this.lapG,.24]].forEach(([o,d])=>{const a=Math.max(pv,seg(s,SI.apps-.45+d,SI.apps-.05+d));const e=a<1?1+2.7*Math.pow(a-1,3)+1.7*Math.pow(a-1,2):1;o.scale.setScalar(Math.max(.001,e)*(hh?.type==="device"&&hh.i===[this.phoneG,this.tabG,this.lapG].indexOf(o)?1.025:1));o.position.y+=Math.sin(t*1.5+d*10)*.004});
     /* the loop back from the field */
     const lp=seg(s,SI.loop-.2,SI.loop+.5);this.loop.geometry.setDrawRange(0,Math.floor(this.loop.userData.full*lp/3)*3);this.loopDots.visible=lp>.95;
     if(this.loopDots.visible){for(let k=0;k<6;k++){const u=((t*.08+k/6)%1);m4.makeTranslation(...this.loopCurve.getPointAt(u).toArray());this.loopDots.setMatrixAt(k,m4)}this.loopDots.instanceMatrix.needsUpdate=true}

@@ -4,6 +4,16 @@ From orbit down to Raipur, then a playable game: the state map is built in front
 data the departments send. English and Hindi. "Play the story" runs the whole thing by itself in
 about 3 minutes (flight, then the game in watch mode, then the ending).
 
+THE OPENING (globe.js, cinema.css): a continuous scroll-driven descent from a
+  softly lit dotted Earth to Chhattisgarh and Raipur. Four chapter buttons can
+  skip through the journey. Desktop uses a 500svh runway; mobile uses 460svh
+  and native touch scrolling. Reduced motion uses two fixed camera views.
+  Fraunces display type and Instrument Sans body type are self-hosted in
+  assets/fonts/ with their SIL Open Font License files. Hindi uses the existing
+  Anek Devanagari family. The pipeline keeps its established typography.
+  Browser checks: node site/tools/test-orbit-browser.cjs
+  Captures and results: output/cinematic-hero/
+
 THE PIPELINE (pipeline/): the main story, driven by scroll
   One sticky 3D scene (Three.js) that you move through by scrolling, 13 steps, each one screen:
     a department campus (7 named government buildings — secretariat, glass tower, school, hospital, forest
@@ -35,7 +45,43 @@ THE PIPELINE (pipeline/): the main story, driven by scroll
   each is drawn), pipeline/screens.js (inbox, mail client and GIS tool screens), pipeline/scene.js (3D), pipeline/pipeline.js
   (scroll → scene + overlay), pipeline/pipeline.css. The 3D loads only when the reader gets close.
 
-THE GAME (play.html, game/): the earlier hands-on game, kept as an optional page linked at the end.
+THE GAME (play.html, game/): Map Buddies, a simple picture adventure for younger players.
+  Open http://127.0.0.1:5500/site/play.html while your local server is running.
+  Eight short tasks: find places, match pictures, place a school pin, add nature, help friends,
+  discover a new school, choose a river color, and keep the finished map. Instructions are in
+  English and Hindi, with optional "Read to me" using the browser's installed voices.
+  Drag a large picture card into its matching box, or tap/click the picture and then the box.
+  Buttons also work with the keyboard. Missed drops return safely; there is no timer or penalty.
+  "Show me how" demonstrates the next move without solving it. Progress saves on this browser.
+  Bindu is an original articulated Three.js map-pin guide: walks to the target, points, waves,
+  follows the pointer with a gentle glance and celebrates. Phone layouts keep Bindu beside or
+  below the targets. Cards lift, travel into boxes, and return after missed drops; trees, rivers
+  and map pins reveal as they are added. Reduced motion uses static hints and gestures.
+  The final map can be downloaded as a PNG postcard. Play again resets only this adventure.
+  The earlier technical eight-level game remains at play.html?mode=original.
+  Sources: game/junior.js, junior-data.js, junior-motion.js, junior.css and map-buddy.js.
+  Motion references and implementation choices: game/MOTION-NOTES.md.
+  Browser checks (uses an existing Playwright installation):
+    node site/tools/test-junior-game.cjs
+
+3D CHARACTERS AND DIRECT INTERACTION
+  Click a building, analyst, workstation, server rack, map district, layer sheet or device directly in the
+  story to inspect it. Flying mail opens its attachment. Explore → CHiPS lab also lists all six illustrated
+  teammates as keyboard-accessible buttons. Pick a teammate, say hello, switch between the portrait and
+  workstation views, ask about their role, or process an assigned file. The team uses local skinned human
+  GLBs with independent skeletons, seated poses, anatomical arm IK, articulated typing fingers, blinking,
+  smiles and cursor gaze. Six different body/face models have authored Indian face textures, varied
+  complexions, black hair and brown eyes. Cloth and skin use real color/normal maps. The right hand and
+  physical mouse move together; key depressions and the GIS cursor follow the same motion. Chairs swivel
+  with each analyst. Portraits hold the
+  camera still and hide other workstations so monitors cannot obscure the selected person on phones.
+  Reduced motion keeps gestures and idle motion still. The illustrated rig is retained as a loading/error
+  fallback. Picking uses bounding boxes before checking geometry.
+  Sources: pipeline/humans.js, pipeline/characters.js. Asset provenance: assets/characters/README.md.
+  Local regression checks (no npm install required):
+    node --experimental-vm-modules site/tools/test-characters.mjs
+  Browser interaction + screenshot checks (uses an existing Playwright installation):
+    node site/tools/test-characters-browser.cjs
 
 FILES
   index.html        page shell (preloader, header, orbit stage, game section, outro, auto-play pill)

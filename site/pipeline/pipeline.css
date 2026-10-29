@@ -169,6 +169,21 @@ html[data-lang=hi] .ex-k{letter-spacing:0;text-transform:none;font:600 13px var(
 .ex-grid button:hover,.ex-grid button:focus-visible{transform:translateY(-3px);box-shadow:inset 4px 0 0 var(--c,var(--accent)),0 0 0 2px var(--c,var(--accent)),0 16px 30px -18px var(--c,var(--accent))}
 .ex-grid b{font:800 15px var(--sans)}.ex-grid small{font:600 12px var(--sans);color:var(--ink2)}
 .ex-grid.racks button{--c:#5fa8ff}.ex-grid.racks b{font:700 18px var(--mono)}
+.ex-team button{min-height:76px}.ex-team small{line-height:1.35}
+.ex-person{display:grid;gap:4px;padding:14px 16px;border-radius:14px;background:var(--card);border-left:4px solid var(--c)}
+.ex-person>small{font:600 11px var(--mono);color:var(--ink2)}
+.ex-person>b{font:800 26px/1.1 var(--sans)}
+.ex-person>span{font:600 13px var(--sans);color:var(--ink2)}
+.ex-conversation{position:relative;padding:16px 18px;border-radius:4px 18px 18px 18px;background:color-mix(in srgb,var(--c) 8%,var(--card));border:1px solid color-mix(in srgb,var(--c) 22%,var(--rule))}
+.ex-conversation>small{font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
+.ex-conversation p{margin:9px 0 0;font:500 16px/1.55 var(--sans);color:var(--ink)}
+.ex-actions .btn{flex:1;justify-content:center;min-height:44px}
+.ex-work{justify-content:center;min-height:46px;width:100%}
+.ex-person-note{margin:0;font:500 12px/1.5 var(--sans);color:var(--ink2)}
+.ex-process{min-height:18px;font:600 12px/1.4 var(--sans);color:var(--ink2)}
+.ex-body button:disabled{opacity:.55;cursor:wait;transform:none}
+.ex-team-nav{justify-content:space-between;gap:8px}.ex-team-nav button{min-height:40px;font:600 12px var(--sans);color:var(--ink2)}
+.ex-body button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 .ex-mail{list-style:none;margin:0;padding:0;display:grid;gap:4px}
 .ex-mail button{width:100%;display:grid;grid-template-columns:1fr auto;gap:0 8px;text-align:left;padding:8px 10px 8px 12px;border-radius:12px;background:var(--card);box-shadow:inset 3px 0 0 var(--c),0 0 0 1px var(--rule);transition:transform .2s}
 .ex-mail button:hover{transform:translateX(-3px)}.ex-mail b{font:800 13px var(--sans)}.ex-mail span{grid-row:2;font:500 11px var(--mono);color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -208,6 +223,12 @@ html[data-lang=hi] .ex-k{letter-spacing:0;text-transform:none;font:600 13px var(
   .pl-ex{left:8px;right:8px;width:auto;top:auto;bottom:68px;height:46svh}
   .pl-ex header{padding:10px 12px}.pl-ex header h3{font-size:20px}.ex-ic{width:34px;height:34px}
   .ex-body{padding:10px 12px}.pl-ex footer{display:none}
+  .pl-ex.meeting{height:52svh}
+  .meeting .ex-body{gap:7px}
+  .meeting .ex-person{padding:9px 12px;gap:2px}.meeting .ex-person>small{display:none}.meeting .ex-person>b{font-size:21px}
+  .meeting .ex-conversation{padding:10px 12px}.meeting .ex-conversation p{font-size:14px;line-height:1.4;margin-top:5px}
+  .meeting .ex-conversation>small{font-size:9px}.meeting .ex-person-note{display:none}
+  .meeting .ex-team-nav button{min-height:32px;font-size:11px}
 }
 
 /* live apps on the 3D screens (Explore → Geoportal) */

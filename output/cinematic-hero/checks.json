@@ -1,0 +1,425 @@
+{
+  "errors": [],
+  "report": [
+    {
+      "name": "desktop",
+      "phase": "orbit",
+      "p": 0,
+      "camera": {
+        "scale": 387,
+        "zoom": 1,
+        "lon": 65.92446772806012,
+        "lat": 12,
+        "cx": 979.2,
+        "cy": 459
+      },
+      "overflow": false,
+      "caption": {
+        "left": 86.390625,
+        "right": 705.578125,
+        "top": 316.5625,
+        "bottom": 605.4375
+      },
+      "navTop": 774,
+      "title": false
+    },
+    {
+      "name": "desktop",
+      "phase": "signal",
+      "p": 0.31,
+      "camera": {
+        "scale": 538.363211387414,
+        "zoom": 1.3911194092698038,
+        "lon": 74.51859261179119,
+        "lat": 17.18943678835263,
+        "cx": 979.2,
+        "cy": 459
+      },
+      "overflow": false,
+      "caption": {
+        "left": 86.390625,
+        "right": 705.578125,
+        "top": 305.5625,
+        "bottom": 594.4375
+      },
+      "navTop": 774,
+      "title": false
+    },
+    {
+      "name": "desktop",
+      "phase": "state",
+      "p": 0.59,
+      "camera": {
+        "scale": 4268.441835657063,
+        "zoom": 11.029565466814118,
+        "lon": 82.15,
+        "lat": 21.35,
+        "cx": 979.2,
+        "cy": 459
+      },
+      "overflow": false,
+      "caption": {
+        "left": 86.390625,
+        "right": 705.578125,
+        "top": 305.5625,
+        "bottom": 594.4375
+      },
+      "navTop": 774,
+      "title": false
+    },
+    {
+      "name": "desktop",
+      "phase": "raipur",
+      "p": 0.81,
+      "camera": {
+        "scale": 7942.019509221159,
+        "zoom": 20.522014235713588,
+        "lon": 82.07982522989383,
+        "lat": 21.336504851902657,
+        "cx": 972.302202,
+        "cy": 459
+      },
+      "overflow": false,
+      "caption": {
+        "left": 86.390625,
+        "right": 705.578125,
+        "top": 305.5625,
+        "bottom": 594.4375
+      },
+      "navTop": 774,
+      "title": false
+    },
+    {
+      "name": "desktop",
+      "phase": "landing",
+      "p": 0.985,
+      "camera": {
+        "scale": 11160.000000000004,
+        "zoom": 28.83720930232559,
+        "lon": 81.63,
+        "lat": 21.25,
+        "cx": 720,
+        "cy": 459
+      },
+      "overflow": false,
+      "caption": null,
+      "navTop": 774,
+      "title": true
+    },
+    {
+      "name": "mobile",
+      "phase": "orbit",
+      "p": 0,
+      "camera": {
+        "scale": 237.9,
+        "zoom": 1,
+        "lon": 67.89099504599082,
+        "lat": 12,
+        "cx": 195,
+        "cy": 270.08
+      },
+      "overflow": false,
+      "caption": {
+        "left": 27.296875,
+        "right": 362.6875,
+        "top": 528.78125,
+        "bottom": 700
+      },
+      "navTop": 730,
+      "title": false
+    },
+    {
+      "name": "mobile",
+      "phase": "signal",
+      "p": 0.31007241606319946,
+      "camera": {
+        "scale": 324.7334524319655,
+        "zoom": 1.3649998000502963,
+        "lon": 74.5231268552797,
+        "lat": 17.19190881031284,
+        "cx": 195,
+        "cy": 270.08
+      },
+      "overflow": false,
+      "caption": {
+        "left": 27.296875,
+        "right": 362.6875,
+        "top": 517.78125,
+        "bottom": 689
+      },
+      "navTop": 730,
+      "title": false
+    },
+    {
+      "name": "mobile",
+      "phase": "state",
+      "p": 0.5898617511520737,
+      "camera": {
+        "scale": 2278.6321277936395,
+        "zoom": 9.578108986101888,
+        "lon": 82.15,
+        "lat": 21.35,
+        "cx": 195,
+        "cy": 270.08
+      },
+      "overflow": false,
+      "caption": {
+        "left": 27.296875,
+        "right": 362.6875,
+        "top": 517.78125,
+        "bottom": 689
+      },
+      "navTop": 730,
+      "title": false
+    },
+    {
+      "name": "mobile",
+      "phase": "raipur",
+      "p": 0.8100724160631995,
+      "camera": {
+        "scale": 4108.582081357524,
+        "zoom": 17.270206310876517,
+        "lon": 82.07957241044392,
+        "lat": 21.336456232777678,
+        "cx": 195,
+        "cy": 270.08
+      },
+      "overflow": false,
+      "caption": {
+        "left": 27.296875,
+        "right": 362.6875,
+        "top": 517.78125,
+        "bottom": 689
+      },
+      "navTop": 730,
+      "title": false
+    },
+    {
+      "name": "mobile",
+      "phase": "landing",
+      "p": 0.9848584595128373,
+      "camera": {
+        "scale": 5772,
+        "zoom": 24.262295081967213,
+        "lon": 81.63,
+        "lat": 21.25,
+        "cx": 195,
+        "cy": 270.08
+      },
+      "overflow": false,
+      "caption": null,
+      "navTop": 730,
+      "title": true
+    },
+    {
+      "name": "compact",
+      "phase": "orbit",
+      "p": 0,
+      "camera": {
+        "scale": 219.6,
+        "zoom": 1,
+        "lon": 65.81722459590517,
+        "lat": 12,
+        "cx": 180,
+        "cy": 204.8
+      },
+      "overflow": false,
+      "caption": {
+        "left": 25.1875,
+        "right": 334.78125,
+        "top": 370.28125,
+        "bottom": 523
+      },
+      "navTop": 542,
+      "title": false
+    },
+    {
+      "name": "compact",
+      "phase": "signal",
+      "p": 0.3098958333333333,
+      "camera": {
+        "scale": 299.50918557622254,
+        "zoom": 1.3638851802195926,
+        "lon": 74.51206981013729,
+        "lat": 17.18588062535182,
+        "cx": 180,
+        "cy": 204.8
+      },
+      "overflow": false,
+      "caption": {
+        "left": 25.1875,
+        "right": 334.78125,
+        "top": 359.28125,
+        "bottom": 512
+      },
+      "navTop": 542,
+      "title": false
+    },
+    {
+      "name": "compact",
+      "phase": "state",
+      "p": 0.58984375,
+      "camera": {
+        "scale": 2103.127120613393,
+        "zoom": 9.577081605707619,
+        "lon": 82.15,
+        "lat": 21.35,
+        "cx": 180,
+        "cy": 204.8
+      },
+      "overflow": false,
+      "caption": {
+        "left": 25.1875,
+        "right": 334.78125,
+        "top": 359.28125,
+        "bottom": 512
+      },
+      "navTop": 542,
+      "title": false
+    },
+    {
+      "name": "compact",
+      "phase": "raipur",
+      "p": 0.8098958333333334,
+      "camera": {
+        "scale": 3790.4344636299734,
+        "zoom": 17.260630526548148,
+        "lon": 82.08018810749573,
+        "lat": 21.336574636056874,
+        "cx": 180,
+        "cy": 204.8
+      },
+      "overflow": false,
+      "caption": {
+        "left": 25.1875,
+        "right": 334.78125,
+        "top": 359.28125,
+        "bottom": 512
+      },
+      "navTop": 542,
+      "title": false
+    },
+    {
+      "name": "compact",
+      "phase": "landing",
+      "p": 0.9848090277777778,
+      "camera": {
+        "scale": 5328,
+        "zoom": 24.262295081967213,
+        "lon": 81.63,
+        "lat": 21.25,
+        "cx": 180,
+        "cy": 204.8
+      },
+      "overflow": false,
+      "caption": null,
+      "navTop": 542,
+      "title": true
+    },
+    {
+      "name": "reduced",
+      "phase": "orbit",
+      "p": 0,
+      "camera": {
+        "scale": 344,
+        "zoom": 1,
+        "lon": 65,
+        "lat": 12,
+        "cx": 870.4,
+        "cy": 408
+      },
+      "overflow": false,
+      "caption": {
+        "left": 76.796875,
+        "right": 627.1875,
+        "top": 267.296875,
+        "bottom": 532.703125
+      },
+      "navTop": 674,
+      "title": false
+    },
+    {
+      "name": "reduced",
+      "phase": "signal",
+      "p": 0.30972222222222223,
+      "camera": {
+        "scale": 344,
+        "zoom": 1,
+        "lon": 65,
+        "lat": 12,
+        "cx": 870.4,
+        "cy": 408
+      },
+      "overflow": false,
+      "caption": {
+        "left": 76.796875,
+        "right": 627.1875,
+        "top": 267.296875,
+        "bottom": 532.703125
+      },
+      "navTop": 674,
+      "title": false
+    },
+    {
+      "name": "reduced",
+      "phase": "state",
+      "p": 0.5902777777777778,
+      "camera": {
+        "scale": 6646.244643633309,
+        "zoom": 19.32047861521311,
+        "lon": 82.14400294670529,
+        "lat": 21.348846720520246,
+        "cx": 870.4,
+        "cy": 408
+      },
+      "overflow": false,
+      "caption": {
+        "left": 76.796875,
+        "right": 627.1875,
+        "top": 267.296875,
+        "bottom": 532.703125
+      },
+      "navTop": 674,
+      "title": false
+    },
+    {
+      "name": "reduced",
+      "phase": "raipur",
+      "p": 0.8097222222222222,
+      "camera": {
+        "scale": 6646.244643633309,
+        "zoom": 19.32047861521311,
+        "lon": 82.14400294670529,
+        "lat": 21.348846720520246,
+        "cx": 870.4,
+        "cy": 408
+      },
+      "overflow": false,
+      "caption": {
+        "left": 76.796875,
+        "right": 627.1875,
+        "top": 267.296875,
+        "bottom": 532.703125
+      },
+      "navTop": 674,
+      "title": false
+    },
+    {
+      "name": "reduced",
+      "phase": "landing",
+      "p": 0.9847222222222223,
+      "camera": {
+        "scale": 6646.244643633309,
+        "zoom": 19.32047861521311,
+        "lon": 82.14400294670529,
+        "lat": 21.348846720520246,
+        "cx": 870.4,
+        "cy": 408
+      },
+      "overflow": false,
+      "caption": null,
+      "navTop": 674,
+      "title": true
+    }
+  ]
+}

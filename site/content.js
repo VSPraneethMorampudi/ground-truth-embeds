@@ -26,10 +26,10 @@ window.GT = {
   },
   /* Opening flight: Earth → Chhattisgarh → Raipur. One caption per phase. */
   orbit: [
-    {k:{en:"Orbit",hi:"कक्षा"},t:{en:"Every place on Earth has a truth on the ground.",hi:"पृथ्वी की हर जगह का ज़मीन पर एक सच है।"}},
-    {k:{en:"Signal",hi:"संकेत"},t:{en:"High above, satellites watch the land below.",hi:"ऊपर से, उपग्रह नीचे की धरती को देखते हैं।"}},
-    {k:{en:"Zoom",hi:"ज़ूम"},t:{en:"Chhattisgarh: 1,35,192 km² and 33 districts.",hi:"छत्तीसगढ़: 1,35,192 वर्ग किमी और 33 ज़िले।"}},
-    {k:{en:"Touchdown",hi:"लैंडिंग"},t:{en:"Down to the ground: Raipur.",hi:"ज़मीन पर: रायपुर।"}}
+    {k:{en:"01 / A journey from orbit",hi:"01 / कक्षा से एक यात्रा"},t:{en:"Every place.\nA ground truth.",hi:"हर जगह।\nज़मीन पर एक सच।"},d:{en:"From high above Earth to the places that shape Chhattisgarh. Follow the signal down.",hi:"पृथ्वी की कक्षा से छत्तीसगढ़ की ज़मीन तक। संकेत के साथ नीचे चलिए।"}},
+    {k:{en:"02 / Follow the signal",hi:"02 / संकेत के साथ"},t:{en:"A different\nperspective.",hi:"एक नया\nनज़रिया।"},d:{en:"High above, satellites watch the land below. A state begins to come into focus.",hi:"ऊपर से, उपग्रह नीचे की धरती को देखते हैं। एक राज्य साफ़ दिखाई देने लगता है।"}},
+    {k:{en:"03 / Chhattisgarh",hi:"03 / छत्तीसगढ़"},t:{en:"One state.\n33 districts.",hi:"एक राज्य।\n33 ज़िले।"},d:{en:"1,35,192 km². Countless places, connected by one map.",hi:"1,35,192 वर्ग किमी। अनगिनत जगहें, एक नक्शे में जुड़ी हुई।"}},
+    {k:{en:"04 / Down to Raipur",hi:"04 / रायपुर की ओर"},t:{en:"Closer to\nwhat matters.",hi:"ज़मीन के\nऔर करीब।"},d:{en:"Raipur, Chhattisgarh. Where the map meets the ground.",hi:"रायपुर, छत्तीसगढ़। जहाँ नक्शा ज़मीन से मिलता है।"}}
   ],
   ui: {
     present:   {en:"Presentation mode",hi:"प्रस्तुति मोड"},

@@ -6,7 +6,7 @@
 <title>Ground Truth · Chhattisgarh State Geoportal</title>
 <meta name="description" content="From orbit to the ground: how Chhattisgarh turns places into reliable digital maps. An interactive story in English and Hindi.">
 <meta name="theme-color" content="#030814">
-<meta name="gt-build" content="202610261120">
+<meta name="gt-build" content="202610281700">
 <script>/* stale-page guard: browsers keep this page for a few minutes after a release. Ask the server for the
    current build (no cache); if this copy is older, reload once onto the new build. */
 (function(){var b=document.querySelector('meta[name="gt-build"]').content;try{fetch("version.txt?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.text():""}).then(function(v){v=(v||"").trim();
@@ -18,8 +18,11 @@
 (function(){var t=(location.search.match(/[?&]theme=(\w+)/)||[])[1];try{if(t)localStorage.setItem("gt-theme",t);else t=localStorage.getItem("gt-theme")}catch(e){}t=t||"mahanadi";if(t!=="default")document.documentElement.dataset.theme=t})();</script>
 <link rel="stylesheet" href="vendor/lenis.css">
 <link rel="stylesheet" href="style.css?v=202610261120">
-<link rel="stylesheet" href="pipeline/pipeline.css?v=202610261120">
+<link rel="stylesheet" href="pipeline/pipeline.css?v=202610272300">
 <link rel="stylesheet" href="fx.css?v=202610261120">
+<link rel="preload" href="assets/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/instrument-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="cinema.css?v=202610281700">
 </head>
 <body class="loading">
 <a class="skip" href="#pipeline">Skip to the story</a>
@@ -59,6 +62,12 @@
       <div class="obtns"><a class="btn" href="#ground" data-magnet id="oBegin"></a><button class="btn ghost" data-play data-magnet id="oPlay"></button></div>
     </div>
     <div class="ocue" aria-hidden="true"><i></i><span lang="en">Scroll to descend</span><span lang="hi">नीचे उतरने के लिए स्क्रॉल करें</span></div>
+    <nav class="orbit-chapters" aria-label="Opening journey">
+      <button data-orbit-stop="0" aria-current="step"><small>01</small><span lang="en">Orbit</span><span lang="hi">कक्षा</span></button>
+      <button data-orbit-stop="0.30"><small>02</small><span lang="en">Signal</span><span lang="hi">संकेत</span></button>
+      <button data-orbit-stop="0.59"><small>03</small><span lang="en">Chhattisgarh</span><span lang="hi">छत्तीसगढ़</span></button>
+      <button data-orbit-stop="0.81"><small>04</small><span lang="en">Raipur</span><span lang="hi">रायपुर</span></button>
+    </nav>
   </div>
 </section>
 
@@ -82,10 +91,10 @@
 <script src="fx.js?v=202610261120"></script>
 <script src="cursor.js?v=202610261120"></script>
 <script src="geo.js?v=202610261120"></script>
-<script src="content.js?v=202610261120"></script>
-<script src="globe.js?v=202610261120"></script>
-<script src="app.js?v=202610261120"></script>
+<script src="content.js?v=202610281700"></script>
+<script src="globe.js?v=202610281700"></script>
+<script src="app.js?v=202610281700"></script>
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
-<script type="module" src="pipeline/pipeline.js?v=202610261120"></script>
+<script type="module" src="pipeline/pipeline.js?v=202610272300"></script>
 </body>
 </html>

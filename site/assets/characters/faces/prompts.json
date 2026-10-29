@@ -1,0 +1,38 @@
+[
+  {
+    "name": "aarav",
+    "tool": "built-in image_gen",
+    "output": "aarav.jpg",
+    "prompt": "Use case: precise-object-edit. Asset type: production 3D human head diffuse UV texture atlas, square 1024x1024. Edit the attached atlas to depict a fictional Indian man aged 30, medium warm brown complexion, thick dark eyebrows, short neat jet-black hair, light closely trimmed moustache and stubble, calm professional face. IMPORTANT: This is an unwrapped texture, NOT a portrait or a render. Preserve EXACT existing UV island boundaries, the black unused background, face center, eye socket locations and outlines, ear positions, nose location, nostrils, lips location and outline, neck outline, hair silhouette, mouth interior island at lower left, and separate eyeball island at bottom. Do not reposition, resize, rotate, crop, zoom, or rearrange ANY part. Keep eye sockets empty exactly as source; change the separate eyeball iris to natural dark brown with black pupil, retain white sclera and tiny glint. Change skin/facial texture, eyebrows, hair and facial hair to the described Indian identity while fitting ALL the existing landmarks pixel-for-pixel. Maintain photographic pores, subtle natural skin variation and flat neutral diffuse lighting. No baked hard shadows or specular shine. No jewelry changes unless specified. No text, labels, clothing, extra portraits, or watermark. Keep all existing atlas geometry exactly registered."
+  },
+  {
+    "name": "meera",
+    "tool": "built-in image_gen",
+    "output": "meera.jpg",
+    "prompt": "Edit this production game HEAD texture atlas into a fictional Indian woman age 29, medium warm brown skin, full black eyebrows, oval face, naturally rose-brown lips, black bob haircut, no bindi. This is a neutral photographic face-and-hair diffuse UV map for a clothed office character. Keep the unwrapped UV map exactly registered to the source, square, edge-to-edge: all face landmarks, empty eye socket boundaries, ears, nose, lips, neck, black background and all small detached islands must remain at exactly their existing pixel positions and shapes. Make the identity look Indian through facial skin detail, brows, hairline and features. In the detached eyeball island use a dark brown iris and black pupil with the original white sclera. Retain realistic pores, subtle natural skin color variation and flat diffuse lighting. Preserve every island boundary and the black unused area. Do not make a portrait or a 3D render. No extra objects or text. Do not move or enlarge facial features."
+  },
+  {
+    "name": "kabir",
+    "tool": "built-in image_gen",
+    "output": "kabir.jpg",
+    "prompt": "Edit this production game HEAD texture atlas into a fictional Indian man age 39, deep warm brown skin, strong black eyebrows, black wavy hair, neat short full beard and moustache. This is a neutral photographic face-and-hair diffuse UV map for a clothed office character. Keep the unwrapped UV map exactly registered to the source, square, edge-to-edge: all face landmarks, empty eye socket boundaries, ears, nose, lips, neck, black background and all small detached islands must remain at exactly their existing pixel positions and shapes. Make the identity look Indian through facial skin detail, brows, hairline and features. In the detached eyeball island use a dark brown iris and black pupil with the original white sclera. Retain realistic pores, subtle natural skin color variation and flat diffuse lighting. Preserve every island boundary and the black unused area. Do not make a portrait or a 3D render. No extra objects or text. Do not move or enlarge facial features."
+  },
+  {
+    "name": "ananya",
+    "tool": "built-in image_gen",
+    "output": "ananya.jpg",
+    "prompt": "Edit this production game HEAD texture atlas into a fictional Indian woman age 34, rich deep brown skin, full black eyebrows, brown-rose lips, black tied-back hair, tiny maroon bindi and gold stud earrings. This is a neutral photographic face-and-hair diffuse UV map for a clothed office character. Keep the unwrapped UV map exactly registered to the source, square, edge-to-edge: all face landmarks, empty eye socket boundaries, ears, nose, lips, neck, black background and all small detached islands must remain at exactly their existing pixel positions and shapes. Make the identity look Indian through facial skin detail, brows, hairline and features. In the detached eyeball island use a dark brown iris and black pupil with the original white sclera. Retain realistic pores, subtle natural skin color variation and flat diffuse lighting. Preserve every island boundary and the black unused area. Do not make a portrait or a 3D render. No extra objects or text. Do not move or enlarge facial features."
+  },
+  {
+    "name": "isha",
+    "tool": "built-in image_gen",
+    "output": "isha.jpg",
+    "prompt": "Edit this production game HEAD texture atlas into a fictional Indian woman age 27, golden-brown skin, dark full eyebrows, brown-rose lips, shoulder-length black hair, no bindi. This is a neutral photographic face-and-hair diffuse UV map for a clothed office character. Keep the unwrapped UV map exactly registered to the source, square, edge-to-edge: all face landmarks, empty eye socket boundaries, ears, nose, lips, neck, black background and all small detached islands must remain at exactly their existing pixel positions and shapes. Make the identity look Indian through facial skin detail, brows, hairline and features. In the detached eyeball island use a dark brown iris and black pupil with the original white sclera. Retain realistic pores, subtle natural skin color variation and flat diffuse lighting. Preserve every island boundary and the black unused area. Do not make a portrait or a 3D render. No extra objects or text. Do not move or enlarge facial features."
+  },
+  {
+    "name": "rohan",
+    "tool": "built-in image_gen",
+    "output": "rohan.jpg",
+    "prompt": "Edit this production game HEAD texture atlas into a fictional Indian man age 35, medium-deep brown skin, black eyebrows and short black hair, a neat black moustache and clean-shaven chin. This is a neutral photographic face-and-hair diffuse UV map for a clothed office character. Keep the unwrapped UV map exactly registered to the source, square, edge-to-edge: all face landmarks, empty eye socket boundaries, ears, nose, lips, neck, black background and all small detached islands must remain at exactly their existing pixel positions and shapes. Make the identity look Indian through facial skin detail, brows, hairline and features. In the detached eyeball island use a dark brown iris and black pupil with the original white sclera. Retain realistic pores, subtle natural skin color variation and flat diffuse lighting. Preserve every island boundary and the black unused area. Do not make a portrait or a 3D render. No extra objects or text. Do not move or enlarge facial features."
+  }
+]

@@ -1,1 +1,10 @@
 source/dist4/
+output/.video-tools/
+
+# Downloaded and generated character build inputs (shipped assets live in site/assets/characters).
+output/human-sources/
+output/indian-faces-source/
+output/*-original.glb
+output/rocketbox-tree.json
+output/human-library-tree.json
+output/creator-repo.json

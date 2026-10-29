@@ -3,6 +3,7 @@ import {STEPS,DEPTS,CONV,USES,APPS} from "./steps.js?v=202610261120";
 import {FILES,FMTS,drawFile} from "./files.js?v=202610261120";
 import {mailDraw,gisDraw} from "./screens.js?v=202610261120";
 import {buildApps} from "./apps.js?v=202610261120";
+import {TEAM,INTRO} from "./characters.js?v=202610272300";
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const L2=o=>o?`<span lang="en">${o.en}</span><span lang="hi">${o.hi}</span>`:"";
 const T=(en,hi)=>({en,hi});
@@ -113,17 +114,34 @@ function exClose(){if(!EX)return;cancelAnimationFrame(labRaf);cancelAnimationFra
   $$("button",dock).forEach(b=>b.classList.remove("on"));cur=-1;$("#plSide").dataset.key="";ScrollTrigger.refresh()}
 function exSet(o,anim){Object.assign(EX,o);scene.exSet(o);exRender(anim)}
 function exRender(anim){const id=EX.id,b=BL.find(x=>x.id===id),k=BL.indexOf(b);$$("button[data-ex]",dock).forEach(x=>x.classList.toggle("on",x.dataset.ex===id));
+  exEl.classList.toggle("meeting",id==="lab"&&EX.desk!=null&&EX.portrait&&!EX.server);
   let body="";
   if(id==="depts"){if(EX.dept==null)body=`<p class="ex-hint">${L2(T("Pick a building. Click a file to open it.","कोई इमारत चुनें। फ़ाइल खोलने के लिए क्लिक करें।"))}</p>
       <div class="ex-grid">${DEPTS.map((d,q)=>`<button data-dept="${q}" style="--c:${d.col}"><b>${L2(d.short)}</b><small>${filesOf(q).length} ${L2(T("files","फ़ाइलें"))}</small></button>`).join("")}</div>`;
     else{const d=DEPTS[EX.dept];body=`<button class="ex-back" data-dept="">‹ ${L2(T("All departments","सभी विभाग"))}</button><div class="de" style="--c:${d.col}"><b>${L2(d.name)}</b>
       <ul class="de-files">${filesOf(EX.dept).map(F=>`<li><button data-file="${F.i}"><em style="--f:${FMTS[F.f].c}">${FMTS[F.f].n}</em><span><b>${F.name}</b><small>${L2(F.what)}</small></span><i class="${F.xy?"y":"n"}">${F.xy?L2(T("has XY","XY है")):L2(T("no XY","XY नहीं"))}</i></button></li>`).join("")}</ul></div>`}}
-  else if(id==="lab"){if(EX.desk==null)body=`<p class="ex-hint">${L2(T("Every department file arrives here by email. Pick a mail, or click a desk.","हर विभागीय फ़ाइल ईमेल से यहाँ आती है। कोई मेल चुनें, या डेस्क पर क्लिक करें।"))}</p>
-      <ul class="ex-mail">${FILES.map(F=>`<li><button data-mail="${F.i}" style="--c:${DEPTS[F.d].col}"><b>${L2(DEPTS[F.d].short)}</b><span>${F.name}</span><em style="--f:${FMTS[F.f].c}">${FMTS[F.f].n}</em></button></li>`).join("")}</ul>`;
+  else if(id==="lab"){if(EX.server)body=`<button class="ex-back" data-mail="">‹ ${L2(T("Team inbox","टीम इनबॉक्स"))}</button>
+      <p class="ex-k">${L2(T("Team server","टीम सर्वर"))}</p><h4>${L2(T("Check before publishing","प्रकाशन से पहले जाँच"))}</h4>
+      <p class="ex-hint">${L2(T("Converted features meet here. A missing code sends a record back to its department; clean features continue to the State Data Centre.","बदला हुआ डेटा यहाँ आता है। कोड न होने पर रिकॉर्ड विभाग को वापस जाता है; सही डेटा राज्य डेटा केंद्र को भेजा जाता है।"))}</p>
+      <ul class="qa"><li class="ok"><i></i>${L2(T("Coordinate system matches","निर्देशांक प्रणाली सही"))}</li><li class="ok"><i></i>${L2(T("Required fields present","ज़रूरी फ़ील्ड मौजूद"))}</li><li class="ok"><i></i>${L2(T("Geometry is valid","ज्यामिति मान्य"))}</li></ul>
+      <button class="btn" data-ex="dc">${L2(T("Follow to the data centre","डेटा केंद्र में देखें"))} →</button>`;
+    else if(EX.desk==null)body=`<p class="ex-hint">${L2(T("Every department file arrives here by email. Pick a mail, or click a desk.","हर विभागीय फ़ाइल ईमेल से यहाँ आती है। कोई मेल चुनें, या डेस्क पर क्लिक करें।"))}</p>
+      <p class="ex-k">${L2(T("Meet the illustrated GIS team","जीआईएस टीम से मिलें · चित्रण"))}</p>
+      <div class="ex-grid ex-team">${TEAM.map((a,k)=>`<button data-analyst="${k}" style="--c:#${a.shirt.toString(16).padStart(6,"0")}"><b>${L2(a.name)}</b><small>${L2(a.role)}</small></button>`).join("")}</div>
+      <button class="ex-back" data-team-server>${L2(T("Inspect the team server","टीम सर्वर देखें"))} →</button>
+      <p class="ex-k">${L2(T("Department mail","विभागीय मेल"))}</p><ul class="ex-mail">${FILES.map(F=>`<li><button data-mail="${F.i}" style="--c:${DEPTS[F.d].col}"><b>${L2(DEPTS[F.d].short)}</b><span>${F.name}</span><em style="--f:${FMTS[F.f].c}">${FMTS[F.f].n}</em></button></li>`).join("")}</ul>`;
     else{const F=FILES[EX.file],d=DEPTS[F.d],mine=FILES.filter(G=>G.i%6===EX.desk);body=`<button class="ex-back" data-mail="">‹ ${L2(T("Team inbox","टीम इनबॉक्स"))}</button>
-      <p class="ex-k">${L2(T(`Desk ${EX.desk+1}`,`डेस्क ${EX.desk+1}`))} · ${L2(d.short)}</p><canvas class="ex-scr" id="exMail" width="1024" height="640"></canvas><canvas class="ex-scr" id="exGis" width="1024" height="640"></canvas>
+      <div class="ex-person" style="--c:#${TEAM[EX.desk].shirt.toString(16).padStart(6,"0")}"><small>${L2(T(`Desk ${EX.desk+1}`,`डेस्क ${EX.desk+1}`))}</small><b>${L2(TEAM[EX.desk].name)}</b><span>${L2(TEAM[EX.desk].role)}</span></div>
+      <div class="ex-conversation" style="--c:#${TEAM[EX.desk].shirt.toString(16).padStart(6,"0")}"><small>${L2(EX.portrait?T("Meet your map makers","नक्शा बनाने वालों से मिलें"):T("At the workstation","वर्कस्टेशन पर"))}</small>
+      <p id="exHello" role="status" aria-live="polite">${L2(EX.portrait?INTRO[EX.desk]:T("Watch my current file move from the inbox into GIS.","मेरी मौजूदा फ़ाइल को इनबॉक्स से GIS में जाते देखें।"))}</p></div>
+      <div class="ex-row ex-actions"><button class="btn ghost" data-greet>${L2(T("Say hello","नमस्ते कहें"))}</button><button class="btn ghost" data-intro>${L2(T("Your role?","आपका काम?"))}</button></div>
+      <button class="btn ex-work" data-portrait aria-pressed="${!!EX.portrait}">${L2(EX.portrait?T("Show my work →","मेरा काम देखें →"):T("Meet analyst","विश्लेषक से मिलें"))}</button>
+      <div class="ex-row ex-team-nav"><button data-analyst="${(EX.desk+5)%6}">‹ ${L2(T("Previous analyst","पिछला विश्लेषक"))}</button><button data-analyst="${(EX.desk+1)%6}">${L2(T("Next analyst","अगला विश्लेषक"))} ›</button></div>
+      ${EX.portrait?`<p class="ex-person-note">${L2(T("An illustrated guide to the GIS team. Choose another teammate or explore their workstation.","GIS टीम का एक चित्रित परिचय। किसी दूसरे साथी से मिलें या उनका वर्कस्टेशन देखें।"))}</p>`:`<p class="ex-k">${L2(T("Current file","मौजूदा फ़ाइल"))} · ${F.name}</p>
+      <canvas class="ex-scr" id="exMail" width="1024" height="640"></canvas><canvas class="ex-scr" id="exGis" width="1024" height="640"></canvas>
       <div class="ex-row"><button class="btn" data-run>▶ ${L2(T("Process this file","इस फ़ाइल को प्रोसेस करें"))}</button><button class="btn ghost" data-file="${F.i}">${L2(T("Open file","फ़ाइल खोलें"))}</button></div>
-      <div class="ex-tabs">${mine.map(G=>`<button data-mail="${G.i}" class="${G===F?"on":""}" style="--f:${FMTS[G.f].c}">${FMTS[G.f].n}</button>`).join("")}</div>`}}
+      <div class="ex-process" role="status" aria-live="polite" id="exProcess"></div><div class="ex-bar"><i id="exLabBar"></i></div>
+      <div class="ex-tabs">${mine.map(G=>`<button data-mail="${G.i}" class="${G===F?"on":""}" style="--f:${FMTS[G.f].c}">${FMTS[G.f].n}</button>`).join("")}</div>`}`}}
   else if(id==="dc"){if(EX.rack==null)body=`<p class="ex-hint">${L2(T("Click a rack to open it.","रैक खोलने के लिए क्लिक करें।"))}</p>
       <div class="ex-grid racks">${scene.racks.map((q,r)=>`<button data-rack="${r}"><b>${q.name}</b><small>${L2(ROLES[r])}</small></button>`).join("")}</div>
       <div class="ex-bk"><button class="btn" data-backup>${ic("cloud-check")} ${L2(T("Run nightly backup","रात का बैकअप चलाएँ"))}</button><div class="ex-bar"><i id="exBk"></i></div><small id="exBkT">${L2(T("Last backup 02:00 · OK","पिछला बैकअप 02:00 · ठीक"))}</small></div>`;
@@ -144,22 +162,34 @@ function exRender(anim){const id=EX.id,b=BL.find(x=>x.id===id),k=BL.indexOf(b);$
   exEl.innerHTML=`<header><span class="ex-ic">${ic(b.ic)}</span><div><small>${L2(T("Explore","एक्सप्लोर"))} · ${k+1}/5</small><h3>${L2(b.t)}</h3></div>
     <button class="ex-x" data-ex-close aria-label="Back to the story">✕</button></header><div class="ex-body">${body}</div>
     <footer><button data-ex="${BL[(k+4)%5].id}">‹ ${L2(BL[(k+4)%5].t)}</button><button data-ex="${BL[(k+1)%5].id}">${L2(BL[(k+1)%5].t)} ›</button></footer>`;
-  if(id==="lab"&&EX.desk!=null)drawLab();
+  if(id==="lab"&&!EX.server&&EX.desk!=null)drawLab();
   if(anim&&!REDUCE)gsap.fromTo(exEl,{x:30,opacity:0},{x:0,opacity:1,duration:.55,ease:"expo.out"})}
 function drawLab(){const F=FILES[EX.file],d=DEPTS[F.d],mine=FILES.filter(G=>G.i%6===EX.desk),p=EX.labP??1;
   [["#exMail",mailDraw(F,d,mine,DEPTS)],["#exGis",gisDraw(F,d,p)]].forEach(([s,dr])=>{const c=$(s);if(!c)return;const x=c.getContext("2d");x.setTransform(2,0,0,2,0,0);x.clearRect(0,0,512,320);dr(x,512,320)})}
-function labRun(){cancelAnimationFrame(labRaf);const t0=performance.now();const go=now=>{const p=Math.min(1,(now-t0)/3800);EX.labP=p;scene.ex.labP=p;drawLab();if(p<1)labRaf=requestAnimationFrame(go)};labRaf=requestAnimationFrame(go)}
+function labRun(){cancelAnimationFrame(labRaf);if(!EX||EX.id!=="lab"||EX.desk==null||EX.portrait||EX.server)return;
+  const session=EX,button=$("[data-run]",exEl),status=$("#exProcess"),bar=$("#exLabBar"),t0=performance.now();
+  if(button)button.disabled=true;if(status)status.innerHTML=L2(T("Processing in GIS…","GIS में प्रोसेस हो रहा है…"));
+  const go=now=>{if(EX!==session||EX.portrait||EX.server)return;const p=Math.min(1,(now-t0)/3800);EX.labP=p;scene.ex.labP=p;drawLab();
+    if(bar)bar.style.transform=`scaleX(${p})`;if(p<1)labRaf=requestAnimationFrame(go);else{if(button)button.disabled=false;if(status)status.innerHTML=L2(T("Ready · file converted and validated","तैयार · फ़ाइल बदली और जाँची गई"))}};
+  labRaf=requestAnimationFrame(go)}
 function backup(){cancelAnimationFrame(bkRaf);scene.exSet({backup:scene.t});const t0=performance.now();
   const go=now=>{const p=Math.min(1,(now-t0)/4000),b=$("#exBk"),tx=$("#exBkT");if(b)b.style.transform=`scaleX(${p})`;
     if(tx)tx.innerHTML=p<1?L2(T(`Backing up 33 layers… ${Math.round(p*100)}%`,`33 परतों का बैकअप… ${Math.round(p*100)}%`)):L2(T("Backup complete · 0 errors ✓","बैकअप पूरा · 0 त्रुटि ✓"));if(p<1)bkRaf=requestAnimationFrame(go)};bkRaf=requestAnimationFrame(go)}
-function pickMail(i){const F=FILES[i];exSet({desk:i%6,file:i,labP:0},true);labRun()}
+function pickMail(i,portrait=false){cancelAnimationFrame(labRaf);const F=FILES[i];exSet({desk:i%6,file:i,labP:portrait?1:0,server:false,portrait},true);if(!portrait)labRun()}
+function pickAnalyst(k){const focus=exEl.contains(document.activeElement),mine=FILES.filter(F=>F.i%6===k);pickMail(mine[mine.length-1].i,true);scene.greet(k);if(focus)$("[data-greet]",exEl).focus({preventScroll:true})}
 document.addEventListener("click",e=>{const t=e.target;if(t.closest("[data-play]")){exClose();return}
   if(!t.closest("#plEx,#plDock,.end"))return;let b;
   if(b=t.closest("[data-ex-close]"))return exClose();
   if(b=t.closest("[data-ex]"))return exOpen(b.dataset.ex);
   if(!EX)return;
   if(b=t.closest("[data-dept]"))return exSet({dept:b.dataset.dept===""?null:+b.dataset.dept},true);
-  if(b=t.closest("[data-mail]"))return b.dataset.mail===""?exSet({desk:null,file:null},true):pickMail(+b.dataset.mail);
+  if(b=t.closest("[data-analyst]"))return pickAnalyst(+b.dataset.analyst);
+  if(b=t.closest("[data-team-server]")){cancelAnimationFrame(labRaf);return exSet({server:true,desk:null,file:null},true)}
+  if(b=t.closest("[data-greet]")){cancelAnimationFrame(labRaf);if(!EX.portrait)exSet({portrait:true,labP:1});scene.greet(EX.desk);
+    $("#exHello").innerHTML=L2(T(`Hi, I'm ${TEAM[EX.desk].name.en}. Good to meet you!`, `नमस्ते! मैं ${TEAM[EX.desk].name.hi} हूँ। आपसे मिलकर अच्छा लगा!`));$("[data-greet]",exEl).focus({preventScroll:true});return}
+  if(b=t.closest("[data-intro]")){cancelAnimationFrame(labRaf);if(!EX.portrait)exSet({portrait:true,labP:1});scene.explain(EX.desk);$("#exHello").innerHTML=L2(INTRO[EX.desk]);$("[data-intro]",exEl).focus({preventScroll:true});return}
+  if(b=t.closest("[data-portrait]")){cancelAnimationFrame(labRaf);exSet({portrait:!EX.portrait,labP:1});if(!EX.portrait){scene.analysts[EX.desk].greetAt=-100;labRun()}$("[data-portrait]",exEl).focus({preventScroll:true});return}
+  if(b=t.closest("[data-mail]"))return b.dataset.mail===""?(cancelAnimationFrame(labRaf),exSet({desk:null,file:null,server:false,portrait:false},true)):pickMail(+b.dataset.mail);
   if(b=t.closest("[data-run]"))return labRun();
   if(b=t.closest("[data-rack]"))return exSet({rack:b.dataset.rack===""?null:+b.dataset.rack},true);
   if(b=t.closest("[data-backup]"))return backup();
@@ -183,9 +213,19 @@ function liveTick(){if(!EX||EX.id!=="portal"||!scene){live.classList.remove("on"
   requestAnimationFrame(liveTick)}
 
 /* clicks in 3D: files open, block parts select, blocks enter explore */
-addEventListener("gt-pick",e=>{const h=e.detail;if(h.type==="file")return openFile(h.i);if(h.type==="block")return exOpen(h.id);if(!EX)return;
-  if(h.type==="dept")exSet({dept:h.i},true);else if(h.type==="desk"){const mine=FILES.filter(G=>G.i%6===h.i);pickMail(mine[mine.length-1].i)}
-  else if(h.type==="rack")exSet({rack:h.i},true);else if(h.type==="dist")exSet({dist:EX.dist===h.i?null:h.i});else if(h.type==="device")exSet({dev:h.i})});
+addEventListener("gt-pick",e=>{
+  const h=e.detail;if(h.type==="file")return openFile(h.i);if(h.type==="block")return exOpen(h.id);
+  const block={dept:"depts",analyst:"lab",desk:"lab",server:"lab",rack:"dc",dist:"map",sheet:"map",device:"portal",portal:"portal"}[h.type];
+  if(!block)return;if(!EX||EX.id!==block)exOpen(block);
+  if(h.type==="dept")exSet({dept:h.i},true);
+  else if(h.type==="analyst")pickAnalyst(h.i);
+  else if(h.type==="desk"){const mine=FILES.filter(G=>G.i%6===h.i);pickMail(mine[mine.length-1].i)}
+  else if(h.type==="server"){cancelAnimationFrame(labRaf);exSet({server:true,desk:null,file:null},true)}
+  else if(h.type==="rack")exSet({rack:EX.rack===h.i?null:h.i},true);
+  else if(h.type==="dist")exSet({dist:EX.dist===h.i?null:h.i});
+  else if(h.type==="sheet"){const layer=[null,"forest","rivers","roads","rail","fac"][h.i];exSet({off:Object.fromEntries(LAYERS.map(([key])=>[key,key!==layer]))})}
+  else if(h.type==="device")exSet({dev:h.i});
+});
 addEventListener("keydown",e=>{if(EX&&fv.hidden&&e.key==="Escape")exClose()});
 $("#pl3d").addEventListener("wheel",()=>{if(EX&&fv.hidden)exClose()},{passive:true});
 
@@ -197,5 +237,5 @@ addEventListener("gt-lang",()=>{const i=cur;cur=-1;$("#plSide").dataset.key="";u
 
 /* ---------- the 3D scene loads when the reader gets close ---------- */
 new IntersectionObserver(async es=>{const e=es[0];
-  if(e.isIntersecting&&!scene){const {PipelineScene}=await import("./scene.js?v=202610261120");scene=new PipelineScene($("#pl3d"));window.GTPipe=scene;ScrollTrigger.refresh()}
+  if(e.isIntersecting&&!scene){const {PipelineScene}=await import("./scene.js?v=202610272300");scene=new PipelineScene($("#pl3d"));window.GTPipe=scene;ScrollTrigger.refresh()}
   if(scene)scene.setVisible(e.isIntersecting)},{rootMargin:"600px"}).observe(sec);

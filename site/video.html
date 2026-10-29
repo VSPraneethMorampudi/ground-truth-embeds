@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en" data-theme="mahanadi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chhattisgarh State Centre of Geo-Informatics · Orbit to Raipur</title>
+<link rel="stylesheet" href="style.css">
+<style>
+@font-face{font-family:"Bricolage Grotesque";src:url('../fonts/GitLabSans-sub.woff2');font-weight:100 900}
+@font-face{font-family:"Geist Mono";src:url('../fonts/IBMPlexMono-500.woff2');font-weight:500}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#030814}
+#orbit{height:100vh}#globe{width:100%;height:100%}
+.video-hooks{display:none}
+</style>
+</head>
+<body>
+<section id="orbit"><canvas id="globe" aria-label="Flight from Earth orbit to Raipur, Chhattisgarh"></canvas></section>
+<div class="video-hooks"><span id="hAlt"></span><span id="hLat"></span><span id="hLon"></span><span id="hScan"></span></div>
+<script src="vendor/d3-array.min.js"></script>
+<script src="vendor/d3-geo.min.js"></script>
+<script src="geo.js"></script>
+<script>
+// Reuse the site's actual geography and renderer, with a deterministic export clock.
+window.videoReady=(async()=>{
+  await document.fonts.load('500 24px "Geist Mono"');
+  await document.fonts.load('400 64px "Bricolage Grotesque"');
+  await document.fonts.load('900 96px "Bricolage Grotesque"');
+  const logo=new Image();logo.src='assets/chips-logo.jpg';await logo.decode();
+  let seed=7641;
+  Math.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
+  let source=await (await fetch('globe.js')).text();
+  const original='function frame(now){requestAnimationFrame(frame);if(!visible)return;';
+  if(!source.includes(original))throw Error('The globe renderer changed: update the export adapter.');
+  source=source.replace(original,'function frame(now){');
+  source=source.replace(/const dt=Math\.min\(\.05,[\s\S]*?P=cl\(-r\.top\/span\);/,
+    'T=window.videoTime;P=window.videoProgress;');
+  source=source.replace('requestAnimationFrame(frame);','window.drawGlobeFrame=frame;');
+  (0,eval)(source);
+  const smooth=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)};
+  window.renderVideoFrame=seconds=>{
+    // Hold 2.5 s, descend for 19.5 s, then hold the map for 2 s.
+    const t=smooth((seconds-2.5)/19.5);
+    window.videoProgress=.925*t;
+    window.videoTime=75.621+seconds;
+    const canvas=document.getElementById('globe'),ctx=canvas.getContext('2d');
+    const w=canvas.clientWidth,h=canvas.clientHeight;
+    const logoWidth=Math.min(228,w*.135),logoHeight=logoWidth*logo.naturalHeight/logo.naturalWidth;
+    const logoX=w-w*.035-logoWidth,logoY=h*.045;
+    window.GT_LABEL_EXCLUSIONS=[[logoX-14,logoY-14,logoX+logoWidth+14,logoY+logoHeight+14]];
+    window.drawGlobeFrame(seconds*1000);
+    ctx.save();ctx.globalAlpha=1;ctx.drawImage(logo,logoX,logoY,logoWidth,logoHeight);ctx.restore();
+    const alpha=1-smooth((window.videoProgress-.08)/.12);
+    if(alpha>0){
+      ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle='#fff';
+      const size=Math.min(58,w*.036),left=w*.05,baseline=h*.675,lineHeight=size*1.12;
+      ctx.font=`900 ${size}px "Bricolage Grotesque",sans-serif`;
+      ctx.textBaseline='alphabetic';ctx.textAlign='left';
+      // React Bits-inspired Split Text + Blur Text: staggered masked rise,
+      // short rotation and deblur, all driven by the export clock.
+      for(const [lineIndex,line] of ['Chhattisgarh','State Centre of','Geo-Informatics'].entries()){
+        ctx.save();const y=baseline+lineIndex*lineHeight;
+        ctx.beginPath();ctx.rect(left-16,y-size*1.1,w*.55,size*1.32);ctx.clip();
+        let advance=0;
+        for(const [i,ch] of [...line].entries()){
+          const p=Math.max(0,Math.min(1,(seconds-.2-lineIndex*.28-i*.035)/.85)),e=1-Math.pow(1-p,4);
+          const width=ctx.measureText(ch).width;
+          ctx.save();ctx.globalAlpha=alpha*p;ctx.translate(left+advance,y+(1-e)*size*1.15);
+          ctx.rotate((1-e)*.13);ctx.filter=`blur(${(1-e)*9}px)`;
+          ctx.fillStyle=lineIndex===2?'#9fd0ff':'#fff';ctx.fillText(ch,0,0);ctx.restore();advance+=width-size*.018;
+        }
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+    // Draw the ending callout from the projected Raipur point so the leader
+    // stays attached to the pin while the camera settles.
+    const callout=smooth((seconds-19.8)/1.2),caption=smooth((seconds-20.6)/.7);
+    if(callout>0){
+      const pin=GT_ORBIT.raipur,elbow=[w*.715,h*.77],end=[w*.75,h*.77];
+      const length=Math.hypot(elbow[0]-pin[0],elbow[1]-pin[1])+end[0]-elbow[0];
+      ctx.save();ctx.globalAlpha=callout;ctx.strokeStyle='#9fd0ff';ctx.lineWidth=2;
+      ctx.setLineDash([length,length]);ctx.lineDashOffset=length*(1-callout);
+      ctx.beginPath();ctx.moveTo(pin[0]+10,pin[1]+10);ctx.lineTo(...elbow);ctx.lineTo(...end);ctx.stroke();ctx.setLineDash([]);
+      const size=Math.min(34,w*.022),left=w*.765,top=h*.77;
+      ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.font=`800 ${size}px "Bricolage Grotesque",sans-serif`;
+      ctx.lineJoin='round';ctx.lineWidth=4;ctx.strokeStyle='#030814';ctx.globalAlpha=caption;
+      ['Chhattisgarh','State Centre of','Geo-Informatics'].forEach((line,i)=>{
+        const y=top+i*size*1.22+(1-caption)*12;ctx.fillStyle=i===2?'#9fd0ff':'#fff';
+        ctx.strokeText(line,left,y);ctx.fillText(line,left,y);
+      });ctx.restore();
+    }
+    return {progress:window.videoProgress,time:window.videoTime};
+  };
+  window.renderVideoFrame(0);
+})();
+if(!new URLSearchParams(location.search).has('render'))videoReady.then(()=>{
+  let start;
+  const play=now=>{start??=now;renderVideoFrame(Math.min(24,(now-start)/1000));if(now-start<24000)requestAnimationFrame(play)};
+  requestAnimationFrame(play);
+});
+</script>
+</body>
+</html>

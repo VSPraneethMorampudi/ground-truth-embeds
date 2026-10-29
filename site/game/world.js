@@ -118,6 +118,7 @@ export class World{
 
   /* ---------------- per-frame ---------------- */
   frame(){const raw=this.clock.getDelta(),dt=Math.min(.05,raw);this.t+=dt;
+    this.onFrame?.(this.t,dt);
     /* adaptive quality: weak machines get fewer pixels and no shadows */
     if(this.ql<3&&raw<1){this.qn++;this.qs+=raw;if(this.qn===40){const avg=this.qs/40;this.qn=0;this.qs=0;
       if(avg>.034){this.ql++;const R=this.renderer;if(this.ql===1)R.setPixelRatio(1);if(this.ql===2){R.shadowMap.enabled=false;this.sun.castShadow=false;R.setPixelRatio(.75)}if(this.ql===3)R.setPixelRatio(.5);this.resize()}}}

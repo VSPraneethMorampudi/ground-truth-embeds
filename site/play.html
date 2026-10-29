@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ground Truth · The game</title>
-<meta name="description" content="From orbit to the ground: how Chhattisgarh turns places into reliable digital maps. An interactive story in English and Hindi.">
+<title>Map Buddies · Make a map</title>
+<meta name="description" content="Make a map with Bindu! Eight short picture adventures with easy drag and drop, tap controls, and English and Hindi instructions.">
 <meta name="theme-color" content="#030814">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="vendor/lenis.css">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="game/game.css">
+<link rel="stylesheet" href="game/junior.css?v=202610280002">
 <link rel="stylesheet" href="fx.css">
 <style>html,body{height:100%;overflow:hidden}#game{position:fixed;inset:0;height:100svh}</style>
 </head>
@@ -25,7 +26,6 @@
 <section id="game" aria-label="The game: build the state map"></section>
 <script src="icons.js"></script>
 <script src="fx.js"></script>
-<script src="cursor.js"></script>
 <script src="geo.js"></script>
 <script>
 /* language (the story page does this in app.js) */
@@ -37,8 +37,9 @@ document.documentElement.classList.add("in-game");
 </script>
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
 <script type="module">
-  import {Game} from "./game/game.js";
-  window.GTGame=new Game(document.getElementById("game"),{onLock(){},onUnlock(){},onFinish(){location.href="./"}});
+  const original=new URL(location.href).searchParams.get('mode')==='original';
+  if(original){const {Game}=await import('./game/game.js');window.GTGame=new Game(document.getElementById('game'),{onLock(){},onUnlock(){},onFinish(){location.href='./'}})}
+  else{const {JuniorGame}=await import('./game/junior.js?v=202610280002');window.GTGame=new JuniorGame(document.getElementById('game'))}
 </script>
 </body>
 </html>

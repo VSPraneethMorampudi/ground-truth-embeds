@@ -17,7 +17,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-setlang]")
 
 /* ---------- orbit copy ---------- */
 const C=G.cover;
-$("#ocaps").innerHTML=G.orbit.map(o=>`<div class="ocap"><div class="k">${L2(o.k)}</div><p>${L2(o.t)}</p></div>`).join("");
+$("#ocaps").innerHTML=G.orbit.map(o=>`<div class="ocap"><div class="k">${L2(o.k)}</div><p>${L2(o.t)}</p>${o.d?`<div class="odeck">${L2(o.d)}</div>`:""}</div>`).join("");
 $("#oKick").innerHTML=L2(C.kicker);
 $("#oTitle").innerHTML=`<span lang="en">Ground <i>Truth</i></span><span lang="hi">ज़मीनी <i>सच्चाई</i></span>`;
 $("#oSub").innerHTML=L2(C.sub);
@@ -35,10 +35,17 @@ $("#outro").innerHTML=`<canvas id="stars2" aria-hidden="true"></canvas><div clas
   <div class="foot"><span>${L2(G.ui.credits)}</span><button id="toOrbit">↑ ${L2(G.ui.backOrbit)}</button></div></div>`;
 
 /* ---------- smooth scroll ---------- */
-const lenis=new Lenis({lerp:REDUCE?1:.085,smoothWheel:!REDUCE,wheelMultiplier:.9});
+/* One scroll clock. Keep touch native, and let the reader scroll inside panels. */
+const lenis=new Lenis({lerp:REDUCE?1:.11,smoothWheel:!REDUCE,syncTouch:false,wheelMultiplier:1.05,
+  prevent:el=>el.matches(".pl-side,.ex-body,.fv-body,.fv-info,.pl-dock")});
 lenis.on("scroll",ScrollTrigger.update);
 gsap.ticker.add(t=>lenis.raf(t*1000));gsap.ticker.lagSmoothing(0);
-const goTo=(t,o={})=>lenis.scrollTo(t,{offset:0,duration:1.4,...o});
+const goTo=(t,o={})=>lenis.scrollTo(t,{offset:0,duration:1.4,easing:t=>1-Math.pow(1-t,4),...o,...(REDUCE?{immediate:true}:{})});
+
+document.querySelectorAll("[data-orbit-stop]").forEach(b=>b.addEventListener("click",()=>{
+  takeOver();const orbit=$("#orbit"),p=+b.dataset.orbitStop;
+  goTo(pageTop(orbit)+p*(orbit.offsetHeight-innerHeight),{duration:1.8});
+}));
 document.addEventListener("click",e=>{const a=e.target.closest('a[href^="#"]');if(!a)return;const t=$(a.getAttribute("href"));if(!t)return;e.preventDefault();
   goTo(a.getAttribute("href")==="#orbit"?0:pageTop(t),{duration:a.getAttribute("href")==="#pipeline"?2.2:1.6})});
 $("#toOrbit").onclick=()=>goTo(0,{duration:3.2});
@@ -66,7 +73,8 @@ lenis.on("scroll",({progress})=>{$("#readbar").style.transform=`scaleX(${progres
 function splitChars(el){let i=0;const walk=n=>{[...n.childNodes].forEach(c=>{if(c.nodeType===3){const f=document.createDocumentFragment();
   [...c.textContent].forEach(ch=>{if(ch===" "){f.append(" ");return}const s=document.createElement("span");s.className="ch";s.style.setProperty("--i",i++);s.textContent=ch;f.append(s)});c.replaceWith(f)}else if(c.nodeType===1)walk(c)})};
   [...el.querySelectorAll("[lang]")].forEach(x=>{i=0;walk(x)})}
-splitChars($("#oTitle"));splitChars($("#outro .gt"));
+/* The opening title reveals with scroll as a whole, preserving Hindi shaping. */
+splitChars($("#outro .gt"));
 gsap.matchMedia().add("(prefers-reduced-motion:no-preference)",()=>{
   /* the pipeline opens like a curtain as it scrolls in */
   gsap.fromTo("#pipeline .pl-stage",{clipPath:"inset(8% 4% 0% 4% round 56px)"},{clipPath:"inset(0% 0% 0% 0% round 0px)",ease:"none",scrollTrigger:{trigger:"#pipeline",start:"top bottom",end:"top top",scrub:true}});
@@ -123,7 +131,12 @@ $("#apFull").onclick=()=>{const d=document.documentElement;document.fullscreenEl
 function takeOver(){if(ap.on&&!ap.paused)apPause(true)}
 addEventListener("wheel",takeOver,{passive:true});
 addEventListener("touchstart",e=>{if(!e.target.closest("#ap"))takeOver()},{passive:true});
-addEventListener("keydown",e=>{if(!ap.on||document.body.classList.contains("fv-open"))return;if(e.key==="Escape")return apStop();if(e.target.closest&&e.target.closest("#ap"))return;
+addEventListener("keydown",e=>{
+  const editing=e.target.closest?.('input,textarea,select,[contenteditable]:not([contenteditable="false"])');
+  /* A keyboard scroll must take over even while wheel inertia is settling. */
+  if(!editing&&!MODAL&&!e.defaultPrevented&&[" ","ArrowDown","ArrowUp","PageDown","PageUp","Home","End"].includes(e.key))
+    lenis.scrollTo(lenis.scroll,{immediate:true,force:true});
+  if(editing||!ap.on||document.body.classList.contains("fv-open"))return;if(e.key==="Escape")return apStop();if(e.target.closest&&e.target.closest("#ap"))return;
   if(e.key===" "){e.preventDefault();$("#apPlay").click()}else if(e.key==="ArrowRight")$("#apNext").click();else if(e.key==="ArrowLeft")$("#apPrev").click();
   else if(["ArrowDown","ArrowUp","PageDown","PageUp","Home","End"].includes(e.key))takeOver()});
 

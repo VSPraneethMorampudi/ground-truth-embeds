@@ -1,0 +1,656 @@
+[
+  {
+    "name": "aarav",
+    "states": [
+      {
+        "phase": 2,
+        "mouse": 0,
+        "click": 0,
+        "wrists": [
+          0,
+          0
+        ],
+        "contacts": [
+          {
+            "finger": "Index",
+            "side": "Left",
+            "error": -0.001600893420807381
+          },
+          {
+            "finger": "Middle",
+            "side": "Left",
+            "error": 0.00011616981161965967
+          },
+          {
+            "finger": "Ring",
+            "side": "Left",
+            "error": -0.001017863254241469
+          },
+          {
+            "finger": "Pinky",
+            "side": "Left",
+            "error": 0.00021736156347484936
+          },
+          {
+            "finger": "Index",
+            "side": "Right",
+            "error": -0.0016001816955122372
+          },
+          {
+            "finger": "Middle",
+            "side": "Right",
+            "error": 0.00011585734482455479
+          },
+          {
+            "finger": "Ring",
+            "side": "Right",
+            "error": -0.0010181539159730413
+          },
+          {
+            "finger": "Pinky",
+            "side": "Right",
+            "error": 0.0002886142383582424
+          }
+        ],
+        "pressed": 1
+      },
+      {
+        "phase": 7.15,
+        "mouse": 1,
+        "click": 0.9999999999999852,
+        "wrists": [
+          0,
+          0
+        ],
+        "contacts": [
+          {
+            "finger": "Index",
+            "side": "Left",
+            "error": -0.001600893420807381
+          },
+          {
+            "finger": "Middle",
+            "side": "Left",
+            "error": 0.00011616981161965967
+          },
+          {
+            "finger": "Ring",
+            "side": "Left",
+            "error": -0.001017863254241469
+          },
+          {
+            "finger": "Pinky",
+            "side": "Left",
+            "error": 0.0002886722635127015
+          },
+          {
+            "finger": "Index",
+            "side": "Right",
+            "error": 0.0014529150209203756
+          },
+          {
+            "finger": "Middle",
+            "side": "Right",
+            "error": 0.002154729960142099
+          },
+          {
+            "finger": "Ring",
+            "side": "Right",
+            "error": -0.0008767689460285055
+          },
+          {
+            "finger": "Pinky",
+            "side": "Right",
+            "error": -0.0010368382145884425
+          }
+        ],
+        "pressed": 0
+      }
+    ]
+  },
+  {
+    "name": "meera",
+    "states": [
+      {
+        "phase": 2,
+        "mouse": 0,
+        "click": 0,
+        "wrists": [
+          0,
+          0
+        ],
+        "contacts": [
+          {
+            "finger": "Index",
+            "side": "Left",
+            "error": -0.000366476508067759
+          },
+          {
+            "finger": "Middle",
+            "side": "Left",
+            "error": 0.0018148315439128204
+          },
+          {
+            "finger": "Ring",
+            "side": "Left",
+            "error": 0.00030569551821635343
+          },
+          {
+            "finger": "Pinky",
+            "side": "Left",
+            "error": -0.0004626956407118854
+          },
+          {
+            "finger": "Index",
+            "side": "Right",
+            "error": -0.0003661808697930091
+          },
+          {
+            "finger": "Middle",
+            "side": "Right",
+            "error": -0.00035167875396657777
+          },
+          {
+            "finger": "Ring",
+            "side": "Right",
+            "error": 0.0011224699613294753
+          },
+          {
+            "finger": "Pinky",
+            "side": "Right",
+            "error": -0.0004626958712110607
+          }
+        ],
+        "pressed": 2
+      },
+      {
+        "phase": 7.15,
+        "mouse": 1,
+        "click": 0.9999999999999852,
+        "wrists": [
+          0,
+          0
+        ],
+        "contacts": [
+          {
+            "finger": "Index",
+            "side": "Left",
+            "error": -0.000366476508067759
+          },
+          {
+            "finger": "Middle",
+            "side": "Left",
+            "error": 0.0018148315439128204
+          },
+          {
+            "finger": "Ring",
+            "side": "Left",
+            "error": -0.0005469070921666486
+          },
+          {
+            "finger": "Pinky",
+            "side": "Left",
+            "error": 0.00018052376603661102
+          },
+          {
+            "finger": "Index",
+            "side": "Right",
+            "error": -0.001588725163326199
+          },
+          {
+            "finger": "Middle",
+            "side": "Right",
+            "error": -0.0004577101541407558
+          },
+          {
+            "finger": "Ring",
+            "side": "Right",
+            "error": 0.0004030247990032265
+          },
+          {
+            "finger": "Pinky",
+            "side": "Right",
+            "error": -0.0013659671007792973
+          }
+        ],
+        "pressed": 1
+      }
+    ]
+  },
+  {
+    "name": "kabir",
+    "states": [
+      {
+        "phase": 2,
+        "mouse": 0,
+        "click": 0,
+        "wrists": [
+          0,
+          0
+        ],
+        "contacts": [
+          {
+            "finger": "Index",
+            "side": "Left",
+            "error": 0.0011202988971930061
+          },
+          {
+            "finger": "Middle",
+            "side": "Left",
+            "error": 0.00011604191493796989
+          },
+          {
+            "finger": "Ring",
+            "side": "Left",
+            "error": -0.001017950686518443
+          },
+          {
+            "finger": "Pinky",
+            "side": "Left",
+            "error": 0.0002885906963925322
+          },
+          {
+            "finger": "Index",
+            "side": "Right",
+            "error": -0.0015995462990354703
+          },
+          {
+            "finger": "Middle",
+            "side": "Right",
+            "error": 0.00011595273112519067
+          },
+          {
+            "finger": "Ring",
+            "side": "Right",
+            "error": -0.0005867795596223857
+          },
+          {
+            "finger": "Pinky",
+            "side": "Right",
+            "error": 0.00028869882116566714
+          }
+        ],
+        "pressed": 2
+      },
+      {
+        "phase": 7.15,
+        "mouse": 1,
+        "click": 0.9999999999999852,
+        "wrists": [
+          0,
+          0
+        ],
+        "contacts": [
+          {
+            "finger": "Index",
+            "side": "Left",
+            "error": -0.0016009860346932747
+          },
+          {
+            "finger": "Middle",
+            "side": "Left",
+            "error": -0.002006174351563139
+          },
+          {
+            "finger": "Ring",
+            "side": "Left",
+            "error": -0.001017950686518443
+          },
+          {
+            "finger": "Pinky",
+            "side": "Left",
+            "error": 0.0002885906963925322
+          },
+          {
+            "finger": "Index",
+            "side": "Right",
+            "error": 0.001453537807738936
+          },
+          {
+            "finger": "Middle",
+            "side": "Right",
+            "error": 0.0021547446131036097
+          },
+          {
+            "finger": "Ring",
+            "side": "Right",
+            "error": -0.0008768468712361255
+          },
+          {
+            "finger": "Pinky",
+            "side": "Right",
+            "error": -0.0010368319695706063
+          }
+        ],
+        "pressed": 1
+      }
+    ]
+  },
+  {
+    "name": "ananya",
+    "states": [
+      {
+        "phase": 2,
+        "mouse": 0,
+        "click": 0,
+        "wrists": [
+          0,
+          0
+        ],
+        "contacts": [
+          {
+            "finger": "Index",
+            "side": "Left",
+            "error": -0.000366502740139385
+          },
+          {
+            "finger": "Middle",
+            "side": "Left",
+            "error": 0.0003056787601907196
+          },
+          {
+            "finger": "Ring",
+            "side": "Left",
+            "error": 0.0011314811827429772
+          },
+          {
+            "finger": "Pinky",
+            "side": "Left",
+            "error": -0.0003381408085609827
+          },
+          {
+            "finger": "Index",
+            "side": "Right",
+            "error": -0.0003660743931277466
+          },
+          {
+            "finger": "Middle",
+            "side": "Right",
+            "error": 0.00181437994885858
+          },
+          {
+            "finger": "Ring",
+            "side": "Right",
+            "error": 0.0011224438599186648
+          },
+          {
+            "finger": "Pinky",
+            "side": "Right",
+            "error": -0.00046253645041982594
+          }
+        ],
+        "pressed": 2
+      },
+      {
+        "phase": 7.15,
+        "mouse": 1,
+        "click": 0.9999999999999852,
+        "wrists": [
+          0,
+          0
+        ],
+        "contacts": [
+          {
+            "finger": "Index",
+            "side": "Left",
+            "error": 0.0013190729298768744
+          },
+          {
+            "finger": "Middle",
+            "side": "Left",
+            "error": 0.0018145657533157333
+          },
+          {
+            "finger": "Ring",
+            "side": "Left",
+            "error": 0.0011231627772456676
+          },
+          {
+            "finger": "Pinky",
+            "side": "Left",
+            "error": -0.00046315165588639573
+          },
+          {
+            "finger": "Index",
+            "side": "Right",
+            "error": -0.0015886833765903496
+          },
+          {
+            "finger": "Middle",
+            "side": "Right",
+            "error": -0.0004575777687394478
+          },
+          {
+            "finger": "Ring",
+            "side": "Right",
+            "error": 0.0004029829615119773
+          },
+          {
+            "finger": "Pinky",
+            "side": "Right",
+            "error": -0.0013657789984216073
+          }
+        ],
+        "pressed": 1
+      }
+    ]
+  },
+  {
+    "name": "isha",
+    "states": [
+      {
+        "phase": 2,
+        "mouse": 0,
+        "click": 0,
+        "wrists": [
+          0,
+          0
+        ],
+        "contacts": [
+          {
+            "finger": "Index",
+            "side": "Left",
+            "error": -0.00036647235876552386
+          },
+          {
+            "finger": "Middle",
+            "side": "Left",
+            "error": 0.0018148297751960918
+          },
+          {
+            "finger": "Ring",
+            "side": "Left",
+            "error": 0.0011231453342834818
+          },
+          {
+            "finger": "Pinky",
+            "side": "Left",
+            "error": -0.0004627030913968433
+          },
+          {
+            "finger": "Index",
+            "side": "Right",
+            "error": -0.0003661836640271865
+          },
+          {
+            "finger": "Middle",
+            "side": "Right",
+            "error": -0.000720537682266098
+          },
+          {
+            "finger": "Ring",
+            "side": "Right",
+            "error": 0.00023017808261505124
+          },
+          {
+            "finger": "Pinky",
+            "side": "Right",
+            "error": -0.00023391838363995276
+          }
+        ],
+        "pressed": 2
+      },
+      {
+        "phase": 7.15,
+        "mouse": 1,
+        "click": 0.9999999999999852,
+        "wrists": [
+          0,
+          2.220446049250313e-16
+        ],
+        "contacts": [
+          {
+            "finger": "Index",
+            "side": "Left",
+            "error": 0.0015153458230523498
+          },
+          {
+            "finger": "Middle",
+            "side": "Left",
+            "error": 0.0018148297751960918
+          },
+          {
+            "finger": "Ring",
+            "side": "Left",
+            "error": 0.0011231453342834818
+          },
+          {
+            "finger": "Pinky",
+            "side": "Left",
+            "error": 0.000598358877633931
+          },
+          {
+            "finger": "Index",
+            "side": "Right",
+            "error": -0.0015887276370372128
+          },
+          {
+            "finger": "Middle",
+            "side": "Right",
+            "error": -0.0004577087275055014
+          },
+          {
+            "finger": "Ring",
+            "side": "Right",
+            "error": 0.00040301309584922507
+          },
+          {
+            "finger": "Pinky",
+            "side": "Right",
+            "error": -0.0013659690436504945
+          }
+        ],
+        "pressed": 2
+      }
+    ]
+  },
+  {
+    "name": "rohan",
+    "states": [
+      {
+        "phase": 2,
+        "mouse": 0,
+        "click": 0,
+        "wrists": [
+          4.440892098500626e-16,
+          0
+        ],
+        "contacts": [
+          {
+            "finger": "Index",
+            "side": "Left",
+            "error": -0.001600885510933292
+          },
+          {
+            "finger": "Middle",
+            "side": "Left",
+            "error": 0.00011617180664424964
+          },
+          {
+            "finger": "Ring",
+            "side": "Left",
+            "error": -0.00015372275386660306
+          },
+          {
+            "finger": "Pinky",
+            "side": "Left",
+            "error": 0.0002887029204892144
+          },
+          {
+            "finger": "Index",
+            "side": "Right",
+            "error": 0.00047962260487866004
+          },
+          {
+            "finger": "Middle",
+            "side": "Right",
+            "error": 0.00011585763809085492
+          },
+          {
+            "finger": "Ring",
+            "side": "Right",
+            "error": -0.0010181537025903964
+          },
+          {
+            "finger": "Pinky",
+            "side": "Right",
+            "error": 0.00028861440174976494
+          }
+        ],
+        "pressed": 2
+      },
+      {
+        "phase": 7.15,
+        "mouse": 1,
+        "click": 0.9999999999999852,
+        "wrists": [
+          4.440892098500626e-16,
+          0
+        ],
+        "contacts": [
+          {
+            "finger": "Index",
+            "side": "Left",
+            "error": -0.001600885510933292
+          },
+          {
+            "finger": "Middle",
+            "side": "Left",
+            "error": 0.0002570443491745067
+          },
+          {
+            "finger": "Ring",
+            "side": "Left",
+            "error": -0.0010178624330405839
+          },
+          {
+            "finger": "Pinky",
+            "side": "Left",
+            "error": 0.0002887029204892144
+          },
+          {
+            "finger": "Index",
+            "side": "Right",
+            "error": 0.0014529154973925706
+          },
+          {
+            "finger": "Middle",
+            "side": "Right",
+            "error": 0.0021547302445066308
+          },
+          {
+            "finger": "Ring",
+            "side": "Right",
+            "error": -0.0008767687322324136
+          },
+          {
+            "finger": "Pinky",
+            "side": "Right",
+            "error": -0.001036838050236355
+          }
+        ],
+        "pressed": 1
+      }
+    ]
+  }
+]
