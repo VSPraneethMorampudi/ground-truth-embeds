@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="hi"><head><meta charset="utf-8">
+<style>
+@font-face{font-family:M;font-weight:400;src:url(assets/mukta-devanagari-400-normal.woff2)}
+@font-face{font-family:M;font-weight:600;src:url(assets/mukta-devanagari-600-normal.woff2)}
+@font-face{font-family:M;font-weight:700;src:url(assets/mukta-devanagari-700-normal.woff2)}
+@font-face{font-family:M;font-weight:800;src:url(assets/mukta-devanagari-800-normal.woff2)}
+@font-face{font-family:ML;font-weight:400;src:url(assets/mukta-latin-400-normal.woff2)}
+@font-face{font-family:ML;font-weight:600;src:url(assets/mukta-latin-600-normal.woff2)}
+@font-face{font-family:ML;font-weight:700;src:url(assets/mukta-latin-700-normal.woff2)}
+@font-face{font-family:ML;font-weight:800;src:url(assets/mukta-latin-800-normal.woff2)}
+:root{--navy:#07132b;--gold:#f6b73c;--gold2:#ffd98a;--cyan:#6fd3ff;--ink:#eaf2ff;--soft:#b9cbe6}
+*{box-sizing:border-box}
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#040a18;font-family:ML,M,sans-serif;color:var(--ink)}
+#cv{position:absolute;inset:0}
+#dom{position:absolute;inset:0;perspective:2400px}
+#vig{position:absolute;inset:0;background:radial-gradient(ellipse 85% 85% at 50% 50%,transparent 55%,rgba(0,0,0,.55) 100%);pointer-events:none}
+#grain{position:absolute;inset:0;width:1920px;height:1080px;opacity:.07;mix-blend-mode:overlay}
+#flash{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(150,220,255,.9),rgba(150,220,255,0) 70%);opacity:0;mix-blend-mode:screen}
+#bug{position:absolute;right:56px;bottom:44px;font:600 22px/1 M,ML;color:rgba(234,242,255,.78);display:flex;align-items:center;gap:12px;opacity:0}
+#bug i{display:block;width:10px;height:10px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px var(--gold)}
+#prog{position:absolute;left:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--cyan),var(--gold))}
+.txt{position:absolute;text-shadow:0 2px 24px rgba(0,8,24,.75)}
+.kick{font:600 26px/1 M,ML;color:var(--gold);letter-spacing:.06em;display:flex;align-items:center;gap:16px;margin-bottom:22px}
+.kick b{display:block;height:2px;width:64px;background:var(--gold);transform-origin:left}
+.kick .n{font:700 22px/1 ML;color:var(--cyan);letter-spacing:.14em}
+.ttl{white-space:nowrap;font:800 84px/1.12 M,ML;margin:0 0 6px}
+.h2{font:700 50px/1.2 M,ML;margin:0 0 18px}
+.big{font:800 150px/0.95 ML,M;letter-spacing:-.03em;background:linear-gradient(180deg,#fff2c9,var(--gold) 55%,#e08a1e);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 6px 30px rgba(246,183,60,.25));margin:0 0 4px;position:relative;display:inline-block}
+.big .shine{position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.9) 50%,transparent 70%);-webkit-background-clip:text;background-clip:text;color:transparent;background-size:300% 100%}
+.unit{font:700 40px/1.2 M,ML;color:#fff;margin:0 0 18px}
+.body{font:400 33px/1.55 M,ML;color:var(--soft);margin:0}
+.body .w{display:inline-block;white-space:pre}
+.body .hl{color:#fff;font-weight:600}
+.body .hg{color:var(--gold2);font-weight:600}
+.chips{display:flex;gap:16px;margin-top:30px;flex-wrap:wrap}
+.chip{font:600 30px/1 M,ML;padding:14px 24px 12px;border-radius:999px;border:1.5px solid rgba(111,211,255,.45);background:rgba(10,30,60,.55);color:#fff;display:flex;gap:12px;align-items:center}
+.chip svg{width:28px;height:28px}
+.chip.g{border-color:rgba(246,183,60,.6)}
+/* portal */
+.portal{position:absolute;left:760px;top:150px;width:1080px;height:680px;border-radius:18px;overflow:hidden;background:#0b1830;box-shadow:0 50px 140px rgba(0,0,0,.65),0 0 0 1px rgba(111,211,255,.18);transform-style:preserve-3d}
+.portal .hdr{height:64px;display:flex;align-items:center;gap:16px;padding:0 20px;background:#0f2142;border-bottom:1px solid rgba(111,211,255,.15)}
+.portal .hdr img{height:40px;border-radius:6px;background:#fff;padding:3px}
+.portal .hdr b{font:700 26px/1 M,ML;color:#fff}
+.portal .hdr span{margin-left:auto;font:500 18px/1 M,ML;color:var(--soft);border:1px solid rgba(111,211,255,.3);border-radius:999px;padding:9px 18px}
+.portal .side{position:absolute;left:0;top:64px;bottom:0;width:300px;padding:20px 18px;background:#0c1b36;border-right:1px solid rgba(111,211,255,.12)}
+.portal .side h6{margin:0 0 14px;font:700 17px/1 M,ML;color:var(--cyan);letter-spacing:.08em}
+.row{display:flex;align-items:center;gap:14px;padding:12px 10px;border-radius:10px;margin-bottom:6px;font:600 22px/1.1 M,ML;color:#dfe9f8}
+.row .sw{width:46px;height:26px;border-radius:13px;background:#26385a;position:relative;flex:none}
+.row .sw::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transform:translateX(var(--k,0px))}
+.row .lg{width:22px;height:4px;border-radius:2px;margin-left:auto;flex:none}
+.portal canvas{position:absolute;left:300px;top:64px}
+.pcard{position:absolute;width:420px;height:540px;border-radius:18px;overflow:hidden;background:#0b1830;box-shadow:0 40px 100px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.1)}
+.pcard .bar{height:44px;display:flex;align-items:center;gap:10px;padding:0 16px;font:700 20px/1 M,ML;color:#fff}
+.pcard .bar i{width:14px;height:14px;border-radius:4px}
+.pcard canvas{position:absolute;left:0;top:44px}
+.page{position:absolute;width:640px;height:760px;border-radius:6px 14px 14px 6px;overflow:hidden;background:#f3ecd9;box-shadow:0 30px 80px rgba(0,0,0,.5);transform-origin:0 50%;backface-visibility:hidden}
+.page canvas{position:absolute;left:0;top:0}
+.logo{display:inline-flex;background:#fff;border-radius:16px;padding:12px 16px;box-shadow:0 10px 40px rgba(0,0,0,.4)}
+.logo img{height:96px;display:block}
+.rule{height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:26px auto}
+</style></head><body>
+<canvas id="cv" width="1920" height="1080"></canvas>
+<div id="dom"></div>
+<div id="flash"></div>
+<div id="vig"></div>
+<img id="grain" src="assets/grain0.png">
+<div id="bug"><i></i><span>छत्तीसगढ़ राज्योत्सव 2026</span></div>
+<div id="prog"></div>
+<script src="d3-array.min.js"></script>
+<script src="d3-geo.min.js"></script>
+<script src="data.js"></script>
+<script src="engine.js"></script>
+</body></html>

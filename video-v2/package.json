@@ -1,0 +1,18 @@
+{
+  "name": "chips-gis-rajyotsav-2026-video",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "data": "node pre.mjs",
+    "grain": "python3 make-grain.py",
+    "stills": "node r.cjs stills-out stills 6,20,33,48,60,80,90,101",
+    "render": "node r.cjs out.mp4"
+  },
+  "devDependencies": {
+    "d3-delaunay": "^6.0.4",
+    "d3-geo": "^3.1.1",
+    "playwright": "^1.47.0",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2"
+  }
+}

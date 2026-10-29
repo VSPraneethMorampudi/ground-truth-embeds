@@ -1,0 +1,5 @@
+node_modules/
+out*.mp4
+part*.mp4
+stills-out/
+assets/grain*.png
